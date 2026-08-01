@@ -1,0 +1,38 @@
+{
+  "2026-07-18": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 27081480
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 161109141
+      }
+    },
+    "totalCost": 249.585332,
+    "totalTokens": 188190621
+  },
+  "2026-07-19": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 42086897
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 160522653
+      }
+    },
+    "totalCost": 288.1898205,
+    "totalTokens": 202609550
+  },
+  "2026-07-20": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 16240033
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 112010462
+      }
+    },
+    "totalCost": 212.0240255,
+    "totalTokens": 128250495
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "2026-07-09": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 131031598
+      }
+    },
+    "totalCost": 285.19543250000004,
+    "totalTokens": 131031598
+  },
+  "2026-07-10": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 27336295
+      }
+    },
+    "totalCost": 78.06151750000001,
+    "totalTokens": 27336295
+  }
+}

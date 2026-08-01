@@ -1,0 +1,62 @@
+{
+  "2026-06-10": {
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 111810
+      },
+      "mimo-v2.5-free": {
+        "totalTokens": 35232
+      }
+    },
+    "totalCost": 0.026414215,
+    "totalTokens": 147042
+  },
+  "2026-06-15": {
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 663304
+      }
+    },
+    "totalCost": 0.26499625800000004,
+    "totalTokens": 663304
+  },
+  "2026-06-24": {
+    "models": {
+      "glm-5.2": {
+        "totalTokens": 18757098
+      }
+    },
+    "totalCost": 27.044503199999987,
+    "totalTokens": 18757098
+  },
+  "2026-07-06": {
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 4670131
+      },
+      "glm-5.2": {
+        "totalTokens": 73675
+      }
+    },
+    "totalCost": 1.4451415029999994,
+    "totalTokens": 4743806
+  },
+  "2026-07-07": {
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 16177
+      }
+    },
+    "totalCost": 0.007044825,
+    "totalTokens": 16177
+  },
+  "2026-07-08": {
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 6228558
+      }
+    },
+    "totalCost": 1.8621020349999997,
+    "totalTokens": 6228558
+  }
+}
