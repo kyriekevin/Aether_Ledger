@@ -206,16 +206,16 @@
   "2026-08-01": {
     "models": {
       "codex-auto-review": {
-        "totalTokens": 2106084
+        "totalTokens": 8106171
       },
       "gpt-5": {
         "totalTokens": 15262335
       },
       "gpt-5.6-sol": {
-        "totalTokens": 49231890
+        "totalTokens": 89009351
       }
     },
-    "totalCost": 40.902044249999996,
-    "totalTokens": 66600309
+    "totalCost": 69.15832225,
+    "totalTokens": 112377857
   }
 }
