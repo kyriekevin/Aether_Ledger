@@ -2,7 +2,7 @@
 
 - This repository is designed to be public. Never commit usernames, hostnames, absolute user
   paths, repository names, session identifiers, prompts, or raw session exports.
-- Treat `{work,personal,devbox}/{claude,codex,opencode}.json` and `trail/**` as generated cumulative stores.
+- Treat `data/{work,personal,devbox}/{claude,codex,opencode}.json` and `data/trail/**` as generated cumulative stores.
   Do not hand-edit them.
 - Treat `assets/token-activity.svg` as generated. Change `scripts/render_dashboard.py`, then
   regenerate the asset.

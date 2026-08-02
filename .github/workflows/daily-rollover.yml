@@ -2,7 +2,9 @@ name: Daily usage rollover
 
 on:
   schedule:
-    - cron: "11 0 * * *"
+    # The second idempotent pass recovers if GitHub delays or drops the first
+    # scheduled event. A successful first pass leaves nothing for it to do.
+    - cron: "11,41 0 * * *"
       timezone: "Asia/Shanghai"
   workflow_dispatch:
 

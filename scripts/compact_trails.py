@@ -3,18 +3,18 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""Fold dead trail pods into trail/rollup, then prune their folders.
+"""Fold dead trail pods into data/trail/rollup, then prune their folders.
 
 Ephemeral workers each sync into a unique opaque nested folder
-`trail/node-<digest>/` (see sync_usage.py,
+`data/trail/node-<digest>/` (see sync_usage.py,
 CC_USAGE_TRAIL). Because k8s allocates a fresh pod every run, those folders
 would otherwise pile up forever and slow every clone/pull.
 
 Run this on the SINGLE writer machine only (single writer ⇒ the additive fold is
 race-free). It folds any trail pod whose newest data date is older than
-TRAIL_TTL_DAYS into the cumulative `trail/rollup/{claude,codex,opencode}.json`
+TRAIL_TTL_DAYS into the cumulative `data/trail/rollup/{claude,codex,opencode}.json`
 (ADDITIVE — each dead pod's data is final and distinct), then `git rm`s the pod
-folders in the SAME commit. The pusher (update_signature.py) sums trail/rollup
+folders in the SAME commit. The pusher (update_signature.py) sums data/trail/rollup
 and any still-live pods, so the cumulative total is preserved exactly while the
 repo stays bounded to (live pods + rollup).
 
@@ -41,7 +41,7 @@ from sync_usage import prepare_daily_branch
 
 # Data repo root: two levels up from this script (repo/scripts/compact_trails.py)
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
-TRAIL_DIR = DATA_REPO_DIR / "trail"
+TRAIL_DIR = DATA_REPO_DIR / "data" / "trail"
 ROLLUP_DIR = TRAIL_DIR / "rollup"
 AGENT_FILES = ("claude.json", "codex.json", "opencode.json")
 
@@ -92,8 +92,8 @@ def _abort_clean() -> None:
     files. The next run then recomputes the fold from the committed baseline.
     """
     _git(["reset", "-q", "HEAD"])
-    _git(["checkout", "-q", "--", "trail"])
-    _git(["clean", "-fdq", "trail/rollup"])
+    _git(["checkout", "-q", "--", "data/trail"])
+    _git(["clean", "-fdq", "data/trail/rollup"])
 
 
 def _atomic_write_json(path: Path, data: dict) -> None:
@@ -116,7 +116,7 @@ def _atomic_write_json(path: Path, data: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def _iter_trail_pods():
-    """Yield each live trail pod folder under trail/ (excluding the rollup)."""
+    """Yield each live trail pod folder under data/trail/ (excluding the rollup)."""
     if not TRAIL_DIR.exists():
         return
     for p in sorted(TRAIL_DIR.iterdir()):
@@ -158,7 +158,7 @@ def _load_committed_rollup(fname: str) -> dict:
     Reading HEAD (not the working file) keeps the fold idempotent even if a
     previous run crashed after writing the rollup but before committing.
     """
-    r = _git(["show", f"HEAD:trail/rollup/{fname}"])
+    r = _git(["show", f"HEAD:data/trail/rollup/{fname}"])
     if r.returncode != 0 or not r.stdout.strip():
         return {}
     try:
@@ -214,7 +214,7 @@ def main() -> int:
                   file=sys.stderr)
 
     if not TRAIL_DIR.exists():
-        print("no trail/ namespace; nothing to compact")
+        print("no data/trail/ namespace; nothing to compact")
         return 0
 
     cutoff = date.today() - timedelta(days=TRAIL_TTL_DAYS)
@@ -262,8 +262,8 @@ def main() -> int:
             _abort_clean()
             return 1
 
-    if _git(["add", "trail/rollup"]).returncode != 0:
-        print("git add trail/rollup failed; aborting compaction", file=sys.stderr)
+    if _git(["add", "data/trail/rollup"]).returncode != 0:
+        print("git add data/trail/rollup failed; aborting compaction", file=sys.stderr)
         _abort_clean()
         return 1
 
@@ -286,7 +286,7 @@ def main() -> int:
         print("git push failed after one rebase-retry; commit is local, "
               "will retry next run", file=sys.stderr)
         return 1
-    print(f"compacted {len(dead)} pod(s) → trail/rollup; pushed")
+    print(f"compacted {len(dead)} pod(s) → data/trail/rollup; pushed")
     return 0
 
 

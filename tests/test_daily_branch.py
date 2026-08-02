@@ -17,10 +17,18 @@ def result(returncode: int = 0, stdout: str = "", stderr: str = "") -> subproces
 
 
 class DailyBranchTests(unittest.TestCase):
+    def test_only_scheduled_durable_writers_are_rollover_watchdogs(self) -> None:
+        self.assertEqual(sync_usage.ROLLOVER_WATCHDOG_NODES, {"work", "personal"})
+        self.assertNotIn("devbox", sync_usage.ROLLOVER_WATCHDOG_NODES)
+
     def test_usage_commit_subject_is_conventional_and_stable(self) -> None:
         self.assertEqual(
-            sync_usage.usage_commit_message("node-a1b2c3d4e5f6"),
+            sync_usage.usage_commit_message("data/trail/node-a1b2c3d4e5f6"),
             "chore(data): sync node-a1b2c3d4e5f6 usage",
+        )
+        self.assertEqual(
+            sync_usage.usage_commit_message("data/personal"),
+            "chore(data): sync personal usage",
         )
 
     def test_rollover_uses_conventional_snapshot_subject(self) -> None:
@@ -31,6 +39,16 @@ class DailyBranchTests(unittest.TestCase):
             / "daily-rollover.yml"
         ).read_text()
         self.assertIn('git commit -m "chore(data): finalize $day snapshot"', workflow)
+
+    def test_rollover_has_an_idempotent_retry_schedule(self) -> None:
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "daily-rollover.yml"
+        ).read_text()
+        self.assertIn('cron: "11,41 0 * * *"', workflow)
+        self.assertIn('timezone: "Asia/Shanghai"', workflow)
 
     def test_rollover_audits_squashed_data_before_commit(self) -> None:
         workflow = (
@@ -59,6 +77,29 @@ class DailyBranchTests(unittest.TestCase):
         ):
             self.assertFalse(sync_usage.prepare_daily_branch(date(2026, 8, 1)))
         self.assertEqual(git.call_count, 2)  # clean-status check and fetch only
+
+    @patch.object(sync_usage, "_request_rollover_recovery", return_value=True)
+    @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
+    @patch.object(sync_usage, "_current_branch", return_value="main")
+    def test_external_writer_recovers_a_missed_rollover(
+        self,
+        _current,
+        _ahead,
+        request_recovery,
+    ) -> None:
+        pending = ["usage/2026-07-31"]
+        with (
+            patch.object(sync_usage, "_ref_exists", return_value=False),
+            patch.object(sync_usage, "_pending_daily_branches", return_value=pending),
+            patch.object(sync_usage, "_git", side_effect=[result(), result()]),
+        ):
+            self.assertFalse(
+                sync_usage.prepare_daily_branch(
+                    date(2026, 8, 1),
+                    recover_missed_rollover=True,
+                )
+            )
+        request_recovery.assert_called_once_with(pending)
 
     def test_lists_every_prior_date_branch_in_order(self) -> None:
         refs = "2026-07-31\nnot-a-date\n2026-07-29\n2026-08-01\n"

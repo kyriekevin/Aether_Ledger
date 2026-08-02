@@ -1,10 +1,28 @@
 # Aether Ledger
 
-An anonymized daily token archive for Claude Code, Codex, and OpenCode.
+[English](README.md) | [简体中文](README_zh-CN.md)
 
-![Token activity dashboard](assets/token-activity.svg)
+> The AI compute ledger of the **Nightglass Protocol**.
 
-Usage data updates throughout the day on `usage/YYYY-MM-DD`; this dashboard is finalized daily on
-`main`.
+Aether Ledger records how I use Claude Code, Codex, and OpenCode—and makes that activity visible.
+Tokens are not skill points; they are the compute resources I spend while turning ideas into
+useful work.
 
-Token totals include input, output, cache creation, and cache reads across all tracked machines.
+## Activity
+
+![Aether Ledger activity dashboard](assets/token-activity.svg)
+
+Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
+bill. Active days count every calendar day with a positive token total.
+
+## Ledger
+
+The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,
+`work`, and `devbox`) plus anonymized ephemeral `trail` workers. No prompts, sessions, repository
+names, hostnames, usernames, or working directories are recorded.
+
+## Automation
+
+Updates land throughout the day on `usage/YYYY-MM-DD`. After midnight in Asia/Shanghai, the
+rollover workflow squash-merges the completed day into `main`, refreshes the dashboard, and opens
+the new day's branch. See [Operations](docs/operations.md) for setup, schemas, and recovery.
