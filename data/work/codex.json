@@ -66,28 +66,37 @@
   "2026-05-19": {
     "imageCount": 30,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 13920017
+      },
       "gpt-5.5": {
-        "totalTokens": 81910032
+        "totalTokens": 67990015
       }
     },
-    "totalCost": 194.79343749999998,
+    "totalCost": 158.5087,
     "totalTokens": 81910032
   },
   "2026-05-20": {
     "imageCount": 11,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 15469635
+      },
       "gpt-5.5": {
-        "totalTokens": 67816756
+        "totalTokens": 52347121
       }
     },
-    "totalCost": 177.39811,
+    "totalCost": 130.74701000000002,
     "totalTokens": 67816756
   },
   "2026-05-21": {
     "imageCount": 32,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 29823712
+      },
       "gpt-5.5": {
-        "totalTokens": 123196948
+        "totalTokens": 93373236
       }
     },
     "totalCost": 199.05589250000003,
@@ -105,8 +114,11 @@
   },
   "2026-05-23": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 73892
+      },
       "gpt-5.5": {
-        "totalTokens": 11921161
+        "totalTokens": 11847269
       }
     },
     "totalCost": 38.882425,
@@ -134,14 +146,17 @@
   "2026-05-26": {
     "imageCount": 7,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 11418564
+      },
       "gpt-5.3-codex-spark": {
         "totalTokens": 1791866
       },
       "gpt-5.5": {
-        "totalTokens": 155262866
+        "totalTokens": 143844302
       }
     },
-    "totalCost": 369.6780006,
+    "totalCost": 316.8152106,
     "totalTokens": 157054732
   },
   "2026-05-27": {
@@ -164,11 +179,14 @@
   },
   "2026-05-29": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 210910
+      },
       "gpt-5.5": {
-        "totalTokens": 15598952
+        "totalTokens": 15388042
       }
     },
-    "totalCost": 52.074245000000005,
+    "totalCost": 50.6182725,
     "totalTokens": 15598952
   },
   "2026-05-30": {
@@ -182,31 +200,40 @@
   },
   "2026-05-31": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 155119
+      },
       "gpt-5.5": {
-        "totalTokens": 42964559
+        "totalTokens": 42809440
       }
     },
-    "totalCost": 138.21425000000002,
+    "totalCost": 137.2813725,
     "totalTokens": 42964559
   },
   "2026-06-01": {
     "imageCount": 26,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 36061261
+      },
       "gpt-5.5": {
-        "totalTokens": 185556738
+        "totalTokens": 149495477
       }
     },
-    "totalCost": 442.92537250000004,
+    "totalCost": 339.17785250000003,
     "totalTokens": 185556738
   },
   "2026-06-02": {
     "imageCount": 24,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 589887
+      },
       "gpt-5.5": {
-        "totalTokens": 19174051
+        "totalTokens": 18584164
       }
     },
-    "totalCost": 58.226887500000004,
+    "totalCost": 56.06968250000001,
     "totalTokens": 19174051
   },
   "2026-06-03": {
@@ -221,22 +248,28 @@
   },
   "2026-06-04": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 181327
+      },
       "gpt-5.5": {
-        "totalTokens": 20993307
+        "totalTokens": 37321954
       }
     },
-    "totalCost": 105.37870749999999,
-    "totalTokens": 31334482
+    "totalCost": 121.04910250000002,
+    "totalTokens": 37503281
   },
   "2026-06-05": {
     "imageCount": 4,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 14248
+      },
       "gpt-5.5": {
-        "totalTokens": 10398597
+        "totalTokens": 11418617
       }
     },
-    "totalCost": 44.772315000000006,
-    "totalTokens": 10398597
+    "totalCost": 50.80427,
+    "totalTokens": 11432865
   },
   "2026-06-06": {
     "imageCount": 2,
@@ -260,21 +293,27 @@
   },
   "2026-06-08": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 8456628
+      },
       "gpt-5.5": {
-        "totalTokens": 56766767
+        "totalTokens": 48310139
       }
     },
-    "totalCost": 145.517615,
+    "totalCost": 129.9769825,
     "totalTokens": 56766767
   },
   "2026-06-09": {
     "imageCount": 5,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 242655
+      },
       "gpt-5.5": {
-        "totalTokens": 5883491
+        "totalTokens": 5640836
       }
     },
-    "totalCost": 25.189750000000004,
+    "totalCost": 24.352477500000003,
     "totalTokens": 5883491
   },
   "2026-06-10": {
@@ -307,8 +346,11 @@
   },
   "2026-06-15": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 18914
+      },
       "gpt-5.5": {
-        "totalTokens": 15233993
+        "totalTokens": 15215079
       }
     },
     "totalCost": 26.476024499999998,
@@ -325,20 +367,26 @@
   },
   "2026-06-17": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 13632
+      },
       "gpt-5.5": {
-        "totalTokens": 405327
+        "totalTokens": 391695
       }
     },
-    "totalCost": 2.9376175,
+    "totalCost": 2.85802,
     "totalTokens": 405327
   },
   "2026-06-18": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 381262
+      },
       "gpt-5.5": {
-        "totalTokens": 2410841
+        "totalTokens": 2029579
       }
     },
-    "totalCost": 9.429505,
+    "totalCost": 7.8344875,
     "totalTokens": 2410841
   },
   "2026-06-19": {
@@ -370,124 +418,163 @@
   },
   "2026-06-22": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 784778
+      },
       "gpt-5.5": {
-        "totalTokens": 47091957
+        "totalTokens": 46307179
       }
     },
-    "totalCost": 126.1912825,
+    "totalCost": 123.00901750000001,
     "totalTokens": 47091957
   },
   "2026-06-23": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 5043674
+      },
       "gpt-5.5": {
-        "totalTokens": 68977641
+        "totalTokens": 63933967
       }
     },
-    "totalCost": 186.49070249999997,
+    "totalCost": 172.82559499999996,
     "totalTokens": 68977641
   },
   "2026-06-24": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 1863824
+      },
       "gpt-5.4-mini": {
         "totalTokens": 4547385
       },
       "gpt-5.5": {
-        "totalTokens": 77069456
+        "totalTokens": 75205632
       }
     },
-    "totalCost": 195.7058059,
+    "totalCost": 189.50361840000002,
     "totalTokens": 81616841
   },
   "2026-06-25": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 2834579
+      },
       "gpt-5.5": {
-        "totalTokens": 17941080
+        "totalTokens": 15106501
       }
     },
-    "totalCost": 45.942387499999995,
+    "totalCost": 40.783527500000005,
     "totalTokens": 17941080
   },
   "2026-06-26": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 8450348
+      },
       "gpt-5.5": {
-        "totalTokens": 59701848
+        "totalTokens": 51251500
       }
     },
-    "totalCost": 135.68221,
+    "totalCost": 118.25921749999999,
     "totalTokens": 59701848
   },
   "2026-06-29": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 14662988
+      },
       "gpt-5.4": {
         "totalTokens": 313685
       },
       "gpt-5.5": {
-        "totalTokens": 74976463
+        "totalTokens": 60313475
       }
     },
-    "totalCost": 158.34082049999998,
+    "totalCost": 126.95927049999999,
     "totalTokens": 75290148
   },
   "2026-06-30": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 6828433
+      },
       "gpt-5.5": {
-        "totalTokens": 42672961
+        "totalTokens": 35844528
       }
     },
-    "totalCost": 109.083565,
+    "totalCost": 94.520905,
     "totalTokens": 42672961
   },
   "2026-07-01": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 192559
+      },
       "gpt-5.5": {
-        "totalTokens": 3598812
+        "totalTokens": 3406253
       }
     },
-    "totalCost": 17.2428625,
+    "totalCost": 16.546727500000003,
     "totalTokens": 3598812
   },
   "2026-07-02": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 271063
+      },
       "gpt-5.5": {
-        "totalTokens": 2752871
+        "totalTokens": 2481808
       }
     },
-    "totalCost": 14.091790000000001,
+    "totalCost": 12.9863325,
     "totalTokens": 2752871
   },
   "2026-07-03": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 1017278
+      },
       "gpt-5.5": {
-        "totalTokens": 13962923
+        "totalTokens": 12945645
       }
     },
-    "totalCost": 43.58251500000001,
+    "totalCost": 40.688205,
     "totalTokens": 13962923
   },
   "2026-07-06": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 632505
+      },
       "gpt-5.5": {
-        "totalTokens": 21091446
+        "totalTokens": 20458941
       }
     },
-    "totalCost": 81.59707750000001,
+    "totalCost": 78.89718500000001,
     "totalTokens": 21091446
   },
   "2026-07-07": {
     "imageCount": 8,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 9958359
+      },
       "gpt-5.5": {
-        "totalTokens": 72211625
+        "totalTokens": 62253266
       }
     },
-    "totalCost": 198.62879250000003,
+    "totalCost": 159.7505475,
     "totalTokens": 72211625
   },
   "2026-07-08": {
     "imageCount": 4,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 10924110
+      },
       "gpt-5.5": {
-        "totalTokens": 53587010
+        "totalTokens": 42662900
       }
     },
     "totalCost": 54.8123255,
@@ -495,25 +582,31 @@
   },
   "2026-07-09": {
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 1331170
+      },
       "gpt-5.5": {
-        "totalTokens": 12579346
+        "totalTokens": 11248176
       }
     },
-    "totalCost": 36.27431000000001,
+    "totalCost": 32.583070000000006,
     "totalTokens": 12579346
   },
   "2026-07-10": {
     "imageCount": 7,
     "models": {
+      "codex-auto-review": {
+        "totalTokens": 10297380
+      },
       "gpt-5.5": {
-        "totalTokens": 21974662
+        "totalTokens": 11677282
       },
       "gpt-5.6-sol": {
-        "totalTokens": 36406003
+        "totalTokens": 36899502
       }
     },
-    "totalCost": 110.25610400000001,
-    "totalTokens": 58380665
+    "totalCost": 22.844005,
+    "totalTokens": 58874164
   },
   "2026-07-13": {
     "models": {
@@ -521,7 +614,7 @@
         "totalTokens": 919940
       }
     },
-    "totalCost": 3.785462,
+    "totalCost": 0.0,
     "totalTokens": 919940
   },
   "2026-07-14": {
@@ -530,81 +623,81 @@
         "totalTokens": 800252
       }
     },
-    "totalCost": 3.27461,
+    "totalCost": 0.0,
     "totalTokens": 800252
   },
   "2026-07-15": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 807127
       },
       "gpt-5.6-sol": {
-        "totalTokens": 15443916
+        "totalTokens": 46640042
       }
     },
-    "totalCost": 43.359803500000005,
-    "totalTokens": 16251043
+    "totalCost": 0.0,
+    "totalTokens": 47447169
   },
   "2026-07-16": {
     "imageCount": 2,
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 8310520
       },
       "gpt-5.6-sol": {
-        "totalTokens": 35344505
+        "totalTokens": 36306098
       }
     },
-    "totalCost": 89.6086905,
-    "totalTokens": 43655025
+    "totalCost": 0.0,
+    "totalTokens": 44616618
   },
   "2026-07-17": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 7655826
       },
       "gpt-5.6-sol": {
         "totalTokens": 29963957
       }
     },
-    "totalCost": 71.6833565,
+    "totalCost": 0.0,
     "totalTokens": 37619783
   },
   "2026-07-20": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 1805799
       },
       "gpt-5.6-sol": {
         "totalTokens": 41070525
       }
     },
-    "totalCost": 88.495037,
+    "totalCost": 0.0,
     "totalTokens": 42876324
   },
   "2026-07-21": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 3832864
       },
       "gpt-5.6-sol": {
-        "totalTokens": 32605088
+        "totalTokens": 49379630
       }
     },
-    "totalCost": 81.127384,
-    "totalTokens": 36437952
+    "totalCost": 0.0,
+    "totalTokens": 53212494
   },
   "2026-07-22": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 448979
       },
       "gpt-5.6-sol": {
-        "totalTokens": 38885736
+        "totalTokens": 77143126
       }
     },
-    "totalCost": 84.0309055,
-    "totalTokens": 39334715
+    "totalCost": 0.0,
+    "totalTokens": 77592105
   },
   "2026-07-23": {
     "models": {
@@ -612,7 +705,7 @@
         "totalTokens": 348233
       }
     },
-    "totalCost": 1.160502,
+    "totalCost": 0.0,
     "totalTokens": 348233
   },
   "2026-07-24": {
@@ -621,7 +714,7 @@
         "totalTokens": 1307047
       }
     },
-    "totalCost": 3.9559740000000003,
+    "totalCost": 0.0,
     "totalTokens": 1307047
   },
   "2026-07-25": {
@@ -630,32 +723,35 @@
         "totalTokens": 364649
       }
     },
-    "totalCost": 0.948046,
+    "totalCost": 0.0,
     "totalTokens": 364649
   },
   "2026-07-27": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 1021612
       },
       "gpt-5.6-sol": {
         "totalTokens": 5298780
       }
     },
-    "totalCost": 10.808792500000001,
+    "totalCost": 0.0,
     "totalTokens": 6320392
   },
   "2026-07-29": {
     "models": {
-      "gpt-5.5": {
+      "codex-auto-review": {
         "totalTokens": 255004
       },
+      "gpt-5": {
+        "totalTokens": 4788773
+      },
       "gpt-5.6-sol": {
-        "totalTokens": 31767755
+        "totalTokens": 72209360
       }
     },
-    "totalCost": 70.7279305,
-    "totalTokens": 32022759
+    "totalCost": 2.3014685000000004,
+    "totalTokens": 77253137
   },
   "2026-07-30": {
     "models": {
@@ -663,7 +759,7 @@
         "totalTokens": 1667241
       }
     },
-    "totalCost": 6.1137060000000005,
+    "totalCost": 0.0,
     "totalTokens": 1667241
   },
   "2026-07-31": {
@@ -672,7 +768,7 @@
         "totalTokens": 1164599
       }
     },
-    "totalCost": 3.755096,
+    "totalCost": 0.0,
     "totalTokens": 1164599
   }
 }

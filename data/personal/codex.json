@@ -206,16 +206,29 @@
   "2026-08-01": {
     "models": {
       "codex-auto-review": {
-        "totalTokens": 8106171
+        "totalTokens": 8664487
       },
       "gpt-5": {
         "totalTokens": 15262335
       },
       "gpt-5.6-sol": {
-        "totalTokens": 89009351
+        "totalTokens": 30069349
       }
     },
     "totalCost": 69.15832225,
     "totalTokens": 112377857
+  },
+  "2026-08-02": {
+    "imageCount": 2,
+    "models": {
+      "codex-auto-review": {
+        "totalTokens": 4092367
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 29278149
+      }
+    },
+    "totalCost": 40.089906,
+    "totalTokens": 57305920
   }
 }
