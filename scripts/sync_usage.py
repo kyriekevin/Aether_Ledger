@@ -6,7 +6,8 @@
 """Canonical per-machine data producer for Aether Ledger.
 
 Reads this machine's local ccusage usage data, persists daily totals into
-`<machine>/claude.json`, `<machine>/codex.json`, and `<machine>/opencode.json`
+`data/<machine>/claude.json`, `data/<machine>/codex.json`, and
+`data/<machine>/opencode.json`
 under this repo, and commits + pushes the result.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
@@ -18,10 +19,10 @@ Machine identity:
   - Durable machines read ~/.config/token-activity/node_name. The allowed
     public role labels are `work`, `personal`, and `devbox`.
   - Ephemeral workers set CC_USAGE_TRAIL=1. Only a SHA-256-derived opaque ID is
-    stored below trail/, so the hostname never appears in Git paths. Each worker
+    stored below data/trail/, so the hostname never appears in Git paths. Each worker
     owns one folder and concurrent workers sum instead of clobbering via the
     per-folder max() rotation guard. compact_trails.py later folds expired
-    workers into trail/rollup and prunes them.
+    workers into data/trail/rollup and prunes them.
 """
 import argparse
 import hashlib
@@ -43,6 +44,7 @@ DATA_REPO_DIR = Path(__file__).resolve().parents[1]
 CONFIG_DIR = Path.home() / ".config" / "token-activity"
 NODE_NAME_FILE = CONFIG_DIR / "node_name"
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
+ROLLOVER_WATCHDOG_NODES = frozenset({"work", "personal"})
 NODE_ID_RE = re.compile(r"node-[0-9a-f]{12}")
 
 # Set on ephemeral workers. "1"/"true"/"yes" uses the hostname; any other
@@ -57,14 +59,14 @@ def _opaque_node_id(raw: str) -> str:
 def resolve_machine() -> str:
     """This machine's data-repo folder name.
 
-    Ephemeral workers get a digest-only nested name under trail/, so hostnames
+    Ephemeral workers get a digest-only nested name under data/trail/, so hostnames
     and job identifiers never enter tracked paths. Durable machines use one of
     three intentionally public role labels.
     """
     trail = os.environ.get(TRAIL_ENV, "").strip()
     if trail:
         raw = socket.gethostname() if trail.lower() in ("1", "true", "yes") else trail
-        return f"trail/{_opaque_node_id(raw)}"
+        return f"data/trail/{_opaque_node_id(raw)}"
     if not NODE_NAME_FILE.exists():
         sys.exit(
             f"missing {NODE_NAME_FILE}: write one of {sorted(DURABLE_NODES)}, "
@@ -73,7 +75,7 @@ def resolve_machine() -> str:
     node_name = NODE_NAME_FILE.read_text().strip().lower()
     if node_name not in DURABLE_NODES:
         sys.exit(f"invalid {NODE_NAME_FILE}: expected one of {sorted(DURABLE_NODES)}")
-    return node_name
+    return f"data/{node_name}"
 
 # ccusage v20+ 的 `daily` 已合并所有 agent CLI（claude / codex / copilot / ...）
 # 到一次调用。我们仍按 modelName 前缀把行内 modelBreakdowns 拆回 cc / cx 两个
@@ -382,7 +384,30 @@ def _pending_daily_branches(before: date) -> list[str]:
     return [name for _, name in sorted(pending)]
 
 
-def prepare_daily_branch(today: date) -> bool:
+def _request_rollover_recovery(pending: list[str]) -> bool:
+    """Ask GitHub to run rollover when the external writer detects it was missed."""
+    try:
+        result = subprocess.run(
+            ["gh", "workflow", "run", "daily-rollover.yml", "--ref", "main"],
+            cwd=DATA_REPO_DIR,
+            capture_output=True,
+            text=True,
+            timeout=GIT_TIMEOUT_SECONDS,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        print(f"cannot request rollover recovery for {pending}: {exc}", file=sys.stderr)
+        return False
+    if result.returncode != 0:
+        print(
+            f"cannot request rollover recovery for {pending}: {result.stderr.strip()}",
+            file=sys.stderr,
+        )
+        return False
+    print(f"requested rollover recovery for {', '.join(pending)}", file=sys.stderr)
+    return True
+
+
+def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) -> bool:
     """Switch to today's shared branch, creating it only from a settled main.
 
     The writer must never create today's branch while yesterday still exists:
@@ -425,6 +450,8 @@ def prepare_daily_branch(today: date) -> bool:
 
     pending = _pending_daily_branches(today)
     if pending:
+        if recover_missed_rollover:
+            _request_rollover_recovery(pending)
         print(f"{branch} is not ready; waiting for {', '.join(pending)} to roll into main",
               file=sys.stderr)
         return False
@@ -481,7 +508,7 @@ def git_push(machine: str) -> None:
 
 def usage_commit_message(machine: str) -> str:
     """Return the stable Conventional Commit subject used by data writers."""
-    return f"chore(data): sync {machine} usage"
+    return f"chore(data): sync {Path(machine).name} usage"
 
 
 # ---------------------------------------------------------------------------
@@ -500,8 +527,16 @@ def main() -> int:
 
     machine = resolve_machine()
 
-    today = datetime.now(SHANGHAI).date()
-    if not args.no_push and not prepare_daily_branch(today):
+    now = datetime.now(SHANGHAI)
+    today = now.date()
+    recovery_grace_elapsed = (now.hour, now.minute) >= (0, 50)
+    recover_missed_rollover = (
+        Path(machine).name in ROLLOVER_WATCHDOG_NODES and recovery_grace_elapsed
+    )
+    if not args.no_push and not prepare_daily_branch(
+        today,
+        recover_missed_rollover=recover_missed_rollover,
+    ):
         return 0
 
     machine_dir = DATA_REPO_DIR / machine

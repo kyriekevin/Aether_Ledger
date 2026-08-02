@@ -45,7 +45,7 @@ class PublicAuditTests(unittest.TestCase):
                     "repository": "private-repo",
                 }
             },
-            Path("personal/codex.json"),
+            Path("data/personal/codex.json"),
             issues,
         )
         self.assertEqual(len(issues), 4)
@@ -64,7 +64,7 @@ class PublicAuditTests(unittest.TestCase):
             else:
                 os.environ[sync_usage.TRAIL_ENV] = previous
 
-        self.assertRegex(resolved, r"^trail/node-[0-9a-f]{12}$")
+        self.assertRegex(resolved, r"^data/trail/node-[0-9a-f]{12}$")
         self.assertNotIn(raw, resolved)
 
     def test_durable_machine_uses_approved_public_role(self) -> None:
@@ -75,7 +75,7 @@ class PublicAuditTests(unittest.TestCase):
                 patch.object(sync_usage, "NODE_NAME_FILE", node_name),
                 patch.dict(os.environ, {}, clear=True),
             ):
-                self.assertEqual(sync_usage.resolve_machine(), "personal")
+                self.assertEqual(sync_usage.resolve_machine(), "data/personal")
 
 
 if __name__ == "__main__":

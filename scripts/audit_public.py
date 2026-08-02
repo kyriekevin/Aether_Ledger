@@ -125,11 +125,13 @@ def audit_tree(root: Path) -> list[str]:
         if path.name in AGENT_FILES:
             parts = relative.parts
             valid_node = (
-                len(parts) == 2 and parts[0] in DURABLE_NODES
-            ) or (
                 len(parts) == 3
-                and parts[0] == "trail"
-                and (OPAQUE_NODE.fullmatch(parts[1]) is not None or parts[1] == "rollup")
+                and parts[0] == "data"
+                and parts[1] in DURABLE_NODES
+            ) or (
+                len(parts) == 4
+                and parts[:2] == ("data", "trail")
+                and (OPAQUE_NODE.fullmatch(parts[2]) is not None or parts[2] == "rollup")
             )
             if not valid_node:
                 issues.append(f"{relative}: usage store is not under an approved node label")

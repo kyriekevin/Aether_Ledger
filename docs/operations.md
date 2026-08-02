@@ -1,5 +1,7 @@
 # Operations
 
+[English](operations.md) | [简体中文](operations.zh-CN.md)
+
 ## Sources and retention
 
 Each writer reads local usage through `ccusage daily --json` and classifies model breakdowns into
@@ -19,12 +21,13 @@ A new machine can only recover dates still present in its local logs.
 - `uv`
 - `ccusage`
 - Git and authenticated push access to this repository
+- Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
 - Claude Code, Codex, or OpenCode local usage logs
 
 Install the command-line dependencies:
 
 ```sh
-brew install uv ccusage
+brew install uv ccusage gh
 ```
 
 ## Machine identity
@@ -38,7 +41,7 @@ printf 'personal\n' > ~/.config/token-activity/node_name
 ```
 
 Ephemeral trail workers set `CC_USAGE_TRAIL=1`, or set it to a stable worker ID. The producer
-stores only a SHA-256-derived `trail/node-<digest>` path, never the raw value.
+stores only a SHA-256-derived `data/trail/node-<digest>` path, never the raw value.
 
 ## Scheduled sync
 
@@ -65,7 +68,8 @@ Writers use `usage/YYYY-MM-DD`, based on the Asia/Shanghai calendar day. Multipl
 push the same branch because they own distinct directories and the producer retries a push race
 with a rebase.
 
-The `.github/workflows/daily-rollover.yml` workflow runs shortly after midnight:
+The `.github/workflows/daily-rollover.yml` workflow runs shortly after midnight and makes one
+idempotent retry 30 minutes later:
 
 1. Find every `usage/YYYY-MM-DD` branch older than today.
 2. Squash each completed day into `main` in date order.
@@ -78,7 +82,15 @@ exists. It exits cleanly and catches up on the next scheduled run. This prevents
 from being based on a `main` that lacks an earlier day's final data.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
-runs, and scanning all older date branches makes it safe to recover after missed schedules.
+runs, and scanning all older date branches makes both the retry and manual recovery safe after a
+missed schedule.
+
+The scheduled `work` and `personal` writers are external watchdogs for the GitHub scheduler.
+After a 00:50 grace period, their normal 15-minute sync checks for an older usage branch. If one
+still exists, they use the locally authenticated `gh` session to dispatch the rollover workflow.
+The workflow concurrency lock makes simultaneous recovery requests safe. `devbox` and ephemeral
+`trail` writers do not act as watchdogs because they are manually or workload triggered. A failed
+recovery request produces an explicit sync-log error and is retried on the next scheduled tick.
 
 ## Commit convention
 
@@ -96,28 +108,27 @@ will be up to one day behind by design.
 
 ## Dashboard
 
-`scripts/render_dashboard.py` recursively finds only canonical files named `claude.json`,
-`codex.json`, or `opencode.json`. Files such as `codex_by_repo.json` are deliberately excluded.
+`scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
+or `opencode.json`. Files such as `codex_by_repo.json` are deliberately excluded.
 
 The static SVG contains:
 
-- lifetime and peak tokens;
-- active days;
-- current and longest streaks;
+- latest completed snapshot, month, lifetime, and peak tokens with API-equivalent cost;
+- active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
 Only the rollover workflow commits the shared SVG. Individual machine writers commit only their
 own data directory, avoiding generated-asset conflicts when machines push concurrently.
 
 Intensity levels use distribution quartiles rather than a linear scale, so ordinary days remain
-visible when trail workloads create very large peaks. The SVG contains aggregate token counts but
-does not include cost, model, machine, path, prompt, or repository-level data.
+visible when trail workloads create very large peaks. The SVG contains aggregate token counts and
+API-equivalent cost, but does not include model, machine, path, prompt, or repository-level data.
 
 ## Public-data boundary
 
-Committed data is limited to date-keyed aggregate usage under the public durable roles `work`,
-`personal`, and `devbox`, or opaque IDs for ephemeral workers. The producer does not collect
-working directories, repository names, prompts, session identifiers, usernames, or hostnames.
+Committed data is limited to date-keyed aggregate usage under `data/`, using the public durable
+roles `work`, `personal`, and `devbox`, or opaque IDs for ephemeral workers. The producer does not
+collect working directories, repository names, prompts, session identifiers, usernames, or hostnames.
 Repository-level exports such as `codex_by_repo.json` are ignored and forbidden by the public-data
 audit.
 
@@ -163,7 +174,7 @@ on model family because current `ccusage` model breakdowns do not identify the i
 ## Trail compaction
 
 Run `scripts/compact_trails.py` on one writer only. Pods whose newest data is older than seven days
-are added into `trail/rollup` and removed in the same commit. The fold is additive because every
+are added into `data/trail/rollup` and removed in the same commit. The fold is additive because every
 ephemeral pod directory represents a distinct worker.
 
 Always preview first:

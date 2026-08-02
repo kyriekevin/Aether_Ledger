@@ -13,6 +13,7 @@ import json
 import os
 import tempfile
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from html import escape
 from pathlib import Path
@@ -30,27 +31,34 @@ PALETTE = ("#272b3a", "#164e63", "#0e7490", "#06b6d4", "#67e8f9")
 WIDTH = 1180
 CARD_X = 16
 CARD_WIDTH = WIDTH - CARD_X * 2
-GRID_LEFT = 34
-GRID_TOP = 198
-CELL_SIZE = 15
+GRID_LEFT = 58
+GRID_TOP = 218
+CELL_SIZE = 16
 CELL_GAP = 4
 CELL_STEP = CELL_SIZE + CELL_GAP
 WEEKS = 53
 
 
+@dataclass(frozen=True)
+class DailyTotals:
+    tokens: int = 0
+    cost: float = 0.0
+
+
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
     """Find only canonical per-agent stores, excluding caches and Git internals."""
     paths = []
-    for path in Path(root).rglob("*.json"):
+    for path in (Path(root) / "data").rglob("*.json"):
         if path.name not in AGENT_FILES or any(part in IGNORED_PARTS for part in path.parts):
             continue
         paths.append(path)
     return tuple(sorted(paths))
 
 
-def aggregate_daily(root: Path) -> dict[date, int]:
-    """Sum daily token totals across every durable machine, trail pod, and rollup."""
-    totals: defaultdict[date, int] = defaultdict(int)
+def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
+    """Sum daily tokens and API-equivalent cost across canonical stores."""
+    tokens_by_day: defaultdict[date, int] = defaultdict(int)
+    cost_by_day: defaultdict[date, float] = defaultdict(float)
     for path in discover_agent_files(root):
         try:
             store = json.loads(path.read_text(encoding="utf-8"))
@@ -67,28 +75,16 @@ def aggregate_daily(root: Path) -> dict[date, int]:
                 continue
             tokens = entry.get("totalTokens", 0)
             if isinstance(tokens, bool) or not isinstance(tokens, (int, float)):
-                continue
-            totals[day] += max(0, int(tokens))
-    return dict(sorted(totals.items()))
-
-
-def streaks(totals: dict[date, int], as_of: date) -> tuple[int, int]:
-    active = sorted(day for day, tokens in totals.items() if tokens > 0 and day <= as_of)
-    if not active:
-        return 0, 0
-
-    longest = run = 1
-    for previous, current in zip(active, active[1:]):
-        run = run + 1 if current == previous + timedelta(days=1) else 1
-        longest = max(longest, run)
-
-    active_set = set(active)
-    anchor = as_of if as_of in active_set else as_of - timedelta(days=1)
-    current = 0
-    while anchor in active_set:
-        current += 1
-        anchor -= timedelta(days=1)
-    return current, longest
+                tokens = 0
+            cost = entry.get("totalCost", 0.0)
+            if isinstance(cost, bool) or not isinstance(cost, (int, float)):
+                cost = 0.0
+            tokens_by_day[day] += max(0, int(tokens))
+            cost_by_day[day] += max(0.0, float(cost))
+    return {
+        day: DailyTotals(tokens=tokens_by_day[day], cost=cost_by_day[day])
+        for day in sorted(tokens_by_day.keys() | cost_by_day.keys())
+    }
 
 
 def _compact_number(value: int) -> str:
@@ -98,6 +94,16 @@ def _compact_number(value: int) -> str:
             digits = 0 if scaled >= 100 else 1
             return f"{scaled:.{digits}f}".rstrip("0").rstrip(".") + suffix
     return str(value)
+
+
+def _compact_cost(value: float) -> str:
+    if value >= 1_000_000:
+        return f"${value / 1_000_000:.1f}M".replace(".0M", "M")
+    if value >= 1_000:
+        return f"${value / 1_000:.1f}K".replace(".0K", "K")
+    if value >= 100:
+        return f"${value:.0f}"
+    return f"${value:.2f}"
 
 
 def _grid_bounds(as_of: date) -> tuple[date, date]:
@@ -112,24 +118,45 @@ def _thresholds(values: list[int]) -> tuple[int, int, int]:
     return tuple(ordered[min(len(ordered) - 1, int((len(ordered) - 1) * q))] for q in (.25, .5, .75))
 
 
-def render_svg(totals: dict[date, int], as_of: date) -> str:
-    positive = {day: value for day, value in totals.items() if value > 0 and day <= as_of}
-    lifetime = sum(positive.values())
-    peak_day, peak_tokens = max(positive.items(), key=lambda item: item[1], default=(None, 0))
-    current_streak, longest_streak = streaks(totals, as_of)
+def _sum_period(values: list[DailyTotals]) -> DailyTotals:
+    return DailyTotals(
+        tokens=sum(item.tokens for item in values),
+        cost=sum(item.cost for item in values),
+    )
+
+
+def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
+    recorded = {day: value for day, value in totals.items() if day <= as_of}
+    positive = {day: value for day, value in recorded.items() if value.tokens > 0}
+    lifetime = _sum_period(list(recorded.values()))
+    latest = recorded.get(as_of, DailyTotals())
+    month = _sum_period(
+        [
+            value
+            for day, value in recorded.items()
+            if (day.year, day.month) == (as_of.year, as_of.month)
+        ]
+    )
+    peak_day, peak = max(
+        positive.items(),
+        key=lambda item: item[1].tokens,
+        default=(None, DailyTotals()),
+    )
+    active_days = len(positive)
     grid_start, grid_end = _grid_bounds(as_of)
-    visible_values = [value for day, value in positive.items() if grid_start <= day <= grid_end]
+    visible_values = [
+        value.tokens for day, value in positive.items() if grid_start <= day <= grid_end
+    ]
     thresholds = _thresholds(visible_values)
 
     stats = (
-        (_compact_number(lifetime), "Lifetime tokens"),
-        (_compact_number(peak_tokens), "Peak tokens"),
-        (str(len(positive)), "Active days"),
-        (f"{current_streak} days", "Current streak"),
-        (f"{longest_streak} days", "Longest streak"),
+        (latest, f"Latest · {as_of.strftime('%b %-d')}"),
+        (month, f"Month · {as_of.strftime('%b')}"),
+        (lifetime, "Lifetime"),
+        (peak, f"Peak · {peak_day.strftime('%b %-d') if peak_day else '—'}"),
     )
-    height = 390
-    title = f"Token activity through {as_of.isoformat()}"
+    height = 410
+    title = f"AI compute activity through {as_of.isoformat()}"
     peak_text = peak_day.isoformat() if peak_day else "no activity"
     lines = [
         (
@@ -138,46 +165,70 @@ def render_svg(totals: dict[date, int], as_of: date) -> str:
         ),
         f"  <title id=\"title\">{escape(title)}</title>",
         (
-            f'  <desc id="desc">{_compact_number(lifetime)} lifetime tokens across '
-            f'{len(positive)} active days; peak {_compact_number(peak_tokens)} on {peak_text}.</desc>'
+            f'  <desc id="desc">{_compact_cost(lifetime.cost)} API-equivalent lifetime cost and '
+            f'{_compact_number(lifetime.tokens)} lifetime tokens across {active_days} active days; '
+            f'peak {_compact_number(peak.tokens)} tokens on {peak_text}.</desc>'
         ),
         f'  <rect width="{WIDTH}" height="{height}" rx="22" fill="#1d1e2c"/>',
         (
-            f'  <rect x="{CARD_X}" y="18" width="{CARD_WIDTH}" height="92" rx="18" '
+            f'  <rect x="{CARD_X}" y="18" width="{CARD_WIDTH}" height="112" rx="18" '
             'fill="none" stroke="#303246" stroke-width="2"/>'
         ),
     ]
 
-    stat_width = CARD_WIDTH / len(stats)
+    stat_width = CARD_WIDTH / 5
     for index, (value, label) in enumerate(stats):
         center = CARD_X + stat_width * index + stat_width / 2
         if index:
             divider = CARD_X + stat_width * index
             lines.append(
-                f'  <line x1="{divider:.1f}" y1="36" x2="{divider:.1f}" y2="92" '
+                f'  <line x1="{divider:.1f}" y1="36" x2="{divider:.1f}" y2="112" '
                 'stroke="#303246" stroke-width="1"/>'
             )
         lines.extend(
             (
-                f'  <text x="{center:.1f}" y="57" text-anchor="middle" fill="#d9ddf3" '
+                f'  <text x="{center:.1f}" y="52" text-anchor="middle" fill="#67e8f9" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="24" font-weight="500">{escape(value)}</text>',
-                f'  <text x="{center:.1f}" y="86" text-anchor="middle" fill="#9699b0" '
+                f'font-size="22" font-weight="600">{escape(_compact_number(value.tokens))} tokens</text>',
+                f'  <text x="{center:.1f}" y="78" text-anchor="middle" fill="#d9ddf3" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="17">{escape(label)}</text>',
+                f'font-size="16" font-weight="500">{escape(_compact_cost(value.cost))}</text>',
+                f'  <text x="{center:.1f}" y="106" text-anchor="middle" fill="#9699b0" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="14">{escape(label)}</text>',
             )
         )
 
+    active_center = CARD_X + stat_width * 4 + stat_width / 2
+    divider = CARD_X + stat_width * 4
     lines.extend(
         (
-            '  <text x="16" y="154" fill="#d9ddf3" '
+            f'  <line x1="{divider:.1f}" y1="36" x2="{divider:.1f}" y2="112" '
+            'stroke="#303246" stroke-width="1"/>',
+            f'  <text x="{active_center:.1f}" y="66" text-anchor="middle" fill="#d9ddf3" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="22" font-weight="500">Token activity</text>',
-            f'  <text x="{WIDTH - 18}" y="154" text-anchor="end" fill="#9699b0" '
+            f'font-size="25" font-weight="600">{active_days} days</text>',
+            f'  <text x="{active_center:.1f}" y="106" text-anchor="middle" fill="#9699b0" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="15">Daily · Asia/Shanghai · through {as_of.isoformat()}</text>',
+            'font-size="14">Active days</text>',
         )
     )
+
+    lines.extend(
+        (
+            '  <text x="16" y="174" fill="#d9ddf3" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="22" font-weight="500">Compute activity</text>',
+        )
+    )
+
+    for weekday, label in ((0, "Mon"), (2, "Wed"), (4, "Fri")):
+        y = GRID_TOP + weekday * CELL_STEP + 13
+        lines.append(
+            f'  <text x="16" y="{y}" fill="#85889f" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12">{label}</text>'
+        )
 
     seen_months: set[tuple[int, int]] = set()
     for week in range(WEEKS):
@@ -189,7 +240,7 @@ def render_svg(totals: dict[date, int], as_of: date) -> str:
         seen_months.add((month_day.year, month_day.month))
         x = GRID_LEFT + week * CELL_STEP
         lines.append(
-            f'  <text x="{x}" y="184" fill="#85889f" '
+            f'  <text x="{x}" y="204" fill="#85889f" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="13">{month_day.strftime("%b")}</text>'
         )
@@ -201,7 +252,7 @@ def render_svg(totals: dict[date, int], as_of: date) -> str:
             weekday = current.weekday()
             x = GRID_LEFT + week * CELL_STEP
             y = GRID_TOP + weekday * CELL_STEP
-            tokens = positive.get(current, 0)
+            tokens = positive.get(current, DailyTotals()).tokens
             level = 0 if tokens <= 0 else 1 + bisect.bisect_left(thresholds, tokens)
             level = min(level, 4)
             label = f"{current.isoformat()}: {_compact_number(tokens)} tokens"
@@ -263,7 +314,7 @@ def generate(
     totals = aggregate_daily(root)
     if as_of is None:
         as_of = max(
-            (day for day, tokens in totals.items() if tokens > 0),
+            (day for day, daily in totals.items() if daily.tokens > 0),
             default=datetime.now(SHANGHAI).date(),
         )
     expected = render_svg(totals, as_of)
