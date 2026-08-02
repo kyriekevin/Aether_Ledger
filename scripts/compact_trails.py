@@ -37,7 +37,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from render_dashboard import SHANGHAI
-from sync_usage import prepare_daily_branch
+from sync_usage import git_commit, prepare_daily_branch
 
 # Data repo root: two levels up from this script (repo/scripts/compact_trails.py)
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
@@ -275,7 +275,7 @@ def main() -> int:
         return 1
 
     msg = f"chore(data): compact {len(dead)} trail node(s) into rollup"
-    if _git(["commit", "-m", msg]).returncode != 0:
+    if git_commit(msg).returncode != 0:
         print("git commit failed; aborting compaction", file=sys.stderr)
         _abort_clean()
         return 1

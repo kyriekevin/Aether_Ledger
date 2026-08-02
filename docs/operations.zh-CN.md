@@ -94,6 +94,9 @@ watchdog。00:50 宽限期后，它们会在正常的 15 分钟同步中检查�
 `docs(readme): explain the activity ledger`。自动写入使用
 `chore(data): sync node-<digest> usage`；`main` 上的每日 squash 提交为
 `chore(data): finalize YYYY-MM-DD snapshot`。Trail 压缩同样使用 `chore(data)` scope。
+本地与 Kubernetes 写入脚本会强制使用公开安全的
+`Aether Ledger <noreply@github.com>` 身份创建自动提交，因此不依赖、也不会暴露宿主机的
+Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 
 ## 下游消费者
 
