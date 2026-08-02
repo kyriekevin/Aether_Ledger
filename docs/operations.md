@@ -98,6 +98,9 @@ Human changes use Conventional Commit subjects with a focused scope, for example
 `docs(readme): explain the activity ledger`. Automated writers use
 `chore(data): sync node-<digest> usage`; the daily squash commit on `main` is
 `chore(data): finalize YYYY-MM-DD snapshot`. Trail compaction also uses the `chore(data)` scope.
+Local and Kubernetes writers force the public-safe identity
+`Aether Ledger <noreply@github.com>` for automated commits, so they do not depend on or expose
+the host's Git identity. The rollover workflow uses the GitHub Actions bot identity.
 
 ## Downstream consumers
 

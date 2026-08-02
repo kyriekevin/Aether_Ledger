@@ -90,6 +90,11 @@ EPOCH = date(2024, 1, 1)
 # small repo over any sane link.
 GIT_TIMEOUT_SECONDS = 30
 
+# Automated commits must be safe for public history regardless of the writer's
+# global/local Git configuration (or an inherited GIT_AUTHOR_* environment).
+AUTOMATION_GIT_NAME = "Aether Ledger"
+AUTOMATION_GIT_EMAIL = "noreply@github.com"
+
 # High-frequency writes accumulate on one date branch. The daily rollover
 # workflow squash-merges it into main, so main grows by one commit per day.
 DAILY_BRANCH_PREFIX = "usage/"
@@ -304,12 +309,26 @@ def _atomic_write_json(path: Path, data: dict) -> None:
 # Git helpers
 # ---------------------------------------------------------------------------
 
-def _git(args: list[str]) -> subprocess.CompletedProcess:
+def _git(
+    args: list[str],
+    *,
+    automation_identity: bool = False,
+) -> subprocess.CompletedProcess:
+    env = None
+    if automation_identity:
+        env = os.environ.copy()
+        env.update({
+            "GIT_AUTHOR_NAME": AUTOMATION_GIT_NAME,
+            "GIT_AUTHOR_EMAIL": AUTOMATION_GIT_EMAIL,
+            "GIT_COMMITTER_NAME": AUTOMATION_GIT_NAME,
+            "GIT_COMMITTER_EMAIL": AUTOMATION_GIT_EMAIL,
+        })
     try:
         return subprocess.run(
             ["git", *args], cwd=DATA_REPO_DIR,
             capture_output=True, text=True,
             timeout=GIT_TIMEOUT_SECONDS,
+            env=env,
         )
     except subprocess.TimeoutExpired as e:
         # Synthesize a non-zero return so callers can treat it as any other
@@ -319,6 +338,11 @@ def _git(args: list[str]) -> subprocess.CompletedProcess:
             stdout=e.stdout.decode() if isinstance(e.stdout, bytes) else (e.stdout or ""),
             stderr=f"git timed out after {GIT_TIMEOUT_SECONDS}s",
         )
+
+
+def git_commit(message: str) -> subprocess.CompletedProcess:
+    """Create an automated commit with a public-safe, machine-independent identity."""
+    return _git(["commit", "-m", message], automation_identity=True)
 
 
 def git_pull() -> None:
@@ -499,7 +523,7 @@ def git_push(machine: str) -> None:
     if _git(["diff", "--cached", "--quiet"]).returncode == 0:
         return  # nothing new to commit
     msg = usage_commit_message(machine)
-    commit = _git(["commit", "-m", msg])
+    commit = git_commit(msg)
     if commit.returncode != 0:
         print(f"git commit failed: {commit.stderr.strip()}", file=sys.stderr)
         return

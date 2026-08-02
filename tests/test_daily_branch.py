@@ -17,6 +17,25 @@ def result(returncode: int = 0, stdout: str = "", stderr: str = "") -> subproces
 
 
 class DailyBranchTests(unittest.TestCase):
+    @patch.object(sync_usage.subprocess, "run", return_value=result())
+    def test_automated_commit_overrides_host_git_identity(self, run) -> None:
+        with patch.dict(
+            sync_usage.os.environ,
+            {
+                "GIT_AUTHOR_NAME": "Private Author",
+                "GIT_AUTHOR_EMAIL": "author@company.example",
+                "GIT_COMMITTER_NAME": "Private Committer",
+                "GIT_COMMITTER_EMAIL": "committer@company.example",
+            },
+        ):
+            sync_usage.git_commit("chore(data): sync personal usage")
+
+        env = run.call_args.kwargs["env"]
+        self.assertEqual(env["GIT_AUTHOR_NAME"], "Aether Ledger")
+        self.assertEqual(env["GIT_AUTHOR_EMAIL"], "noreply@github.com")
+        self.assertEqual(env["GIT_COMMITTER_NAME"], "Aether Ledger")
+        self.assertEqual(env["GIT_COMMITTER_EMAIL"], "noreply@github.com")
+
     def test_only_scheduled_durable_writers_are_rollover_watchdogs(self) -> None:
         self.assertEqual(sync_usage.ROLLOVER_WATCHDOG_NODES, {"work", "personal"})
         self.assertNotIn("devbox", sync_usage.ROLLOVER_WATCHDOG_NODES)
