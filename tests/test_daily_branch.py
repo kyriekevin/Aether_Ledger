@@ -87,6 +87,8 @@ class DailyBranchTests(unittest.TestCase):
     def test_waits_while_any_older_branch_still_exists(self, _current, _ahead) -> None:
         with (
             patch.object(sync_usage, "_ref_exists", return_value=False),
+            patch.object(sync_usage, "_sync_local_main"),
+            patch.object(sync_usage, "_cleanup_completed_local_branches"),
             patch.object(
                 sync_usage,
                 "_pending_daily_branches",
@@ -109,6 +111,8 @@ class DailyBranchTests(unittest.TestCase):
         pending = ["usage/2026-07-31"]
         with (
             patch.object(sync_usage, "_ref_exists", return_value=False),
+            patch.object(sync_usage, "_sync_local_main"),
+            patch.object(sync_usage, "_cleanup_completed_local_branches"),
             patch.object(sync_usage, "_pending_daily_branches", return_value=pending),
             patch.object(sync_usage, "_git", side_effect=[result(), result()]),
         ):
@@ -137,6 +141,8 @@ class DailyBranchTests(unittest.TestCase):
         }
         with (
             patch.object(sync_usage, "_ref_exists", side_effect=lambda ref: refs.get(ref, False)),
+            patch.object(sync_usage, "_sync_local_main"),
+            patch.object(sync_usage, "_cleanup_completed_local_branches"),
             patch.object(
                 sync_usage,
                 "_git",
@@ -159,6 +165,8 @@ class DailyBranchTests(unittest.TestCase):
     def test_bootstraps_today_only_after_yesterday_is_gone(self, _current, _ahead) -> None:
         with (
             patch.object(sync_usage, "_ref_exists", return_value=False),
+            patch.object(sync_usage, "_sync_local_main"),
+            patch.object(sync_usage, "_cleanup_completed_local_branches"),
             patch.object(sync_usage, "_pending_daily_branches", return_value=[]),
             patch.object(
                 sync_usage,
@@ -170,6 +178,76 @@ class DailyBranchTests(unittest.TestCase):
         commands = [call.args[0] for call in git.call_args_list]
         self.assertIn(["switch", "-c", "usage/2026-08-01", "origin/main"], commands)
         self.assertIn(["push", "-u", "origin", "usage/2026-08-01"], commands)
+
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    def test_fast_forwards_main_ref_while_usage_is_checked_out(self, _exists, _current) -> None:
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[result(), result()],
+        ) as git:
+            sync_usage._sync_local_main()
+        self.assertEqual(
+            [call.args[0] for call in git.call_args_list],
+            [
+                ["merge-base", "--is-ancestor", "main", "origin/main"],
+                ["branch", "-f", "main", "origin/main"],
+            ],
+        )
+
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    def test_keeps_diverged_local_main(self, _exists, _current) -> None:
+        with patch.object(sync_usage, "_git", return_value=result(returncode=1)) as git:
+            sync_usage._sync_local_main()
+        git.assert_called_once_with(["merge-base", "--is-ancestor", "main", "origin/main"])
+
+    @patch.object(
+        sync_usage,
+        "_completed_local_daily_branches",
+        return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
+    )
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    def test_deletes_completed_local_branch_matching_snapshot(self, _current, _completed) -> None:
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[result(stdout="snapshot\n"), result(), result()],
+        ) as git:
+            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        commands = [call.args[0] for call in git.call_args_list]
+        self.assertIn(
+            [
+                "diff",
+                "--quiet",
+                "snapshot",
+                "usage/2026-08-02",
+                "--",
+                ".",
+                ":(exclude)assets/token-activity.svg",
+            ],
+            commands,
+        )
+        self.assertIn(["branch", "-D", "usage/2026-08-02"], commands)
+
+    @patch.object(
+        sync_usage,
+        "_completed_local_daily_branches",
+        return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
+    )
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    def test_keeps_completed_local_branch_with_unfinalized_data(self, _current, _completed) -> None:
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[result(stdout="snapshot\n"), result(returncode=1)],
+        ) as git:
+            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertNotIn(
+            ["branch", "-D", "usage/2026-08-02"],
+            [call.args[0] for call in git.call_args_list],
+        )
 
 
 if __name__ == "__main__":

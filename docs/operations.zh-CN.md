@@ -78,6 +78,10 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 正常退出并在下一次定时同步时追赶。这样可以避免当天分支基于缺少前一日最终数据的
 `main` 创建。
 
+每次成功 fetch 后，写入设备还会在不存在本地独立提交时快进本地 `main`。已完成的远端
+usage 分支消失后，只有当本地分支除生成面板外的完整文件树与 `origin/main` 中对应的
+日结快照完全一致时，才会删除本地副本；发生分叉或被其他 worktree 检出的分支会保留。
+
 workflow 也支持手动触发。并发组会阻止 rollover 重叠运行；每次扫描全部旧日期分支，
 因此第二次定时触发和手动恢复都是幂等且安全的。
 
