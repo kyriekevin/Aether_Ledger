@@ -388,6 +388,92 @@ def _current_branch() -> str | None:
     return result.stdout.strip() if result.returncode == 0 and result.stdout.strip() else None
 
 
+def _sync_local_main() -> None:
+    """Fast-forward the local main ref without overwriting local-only work."""
+    remote_ref = "refs/remotes/origin/main"
+    local_ref = "refs/heads/main"
+    if not _ref_exists(remote_ref):
+        return
+    if not _ref_exists(local_ref):
+        created = _git(["branch", "--track", "main", "origin/main"])
+        if created.returncode != 0:
+            print(f"cannot create local main: {created.stderr.strip()}", file=sys.stderr)
+        return
+    ancestor = _git(["merge-base", "--is-ancestor", "main", "origin/main"])
+    if ancestor.returncode != 0:
+        print("local main has commits not in origin/main; leaving it unchanged", file=sys.stderr)
+        return
+    if _current_branch() == "main":
+        updated = _git(["merge", "--ff-only", "origin/main"])
+    else:
+        updated = _git(["branch", "-f", "main", "origin/main"])
+    if updated.returncode != 0:
+        print(f"cannot fast-forward local main: {updated.stderr.strip()}", file=sys.stderr)
+
+
+def _completed_local_daily_branches(before: date) -> list[tuple[date, str]]:
+    """List local dated usage branches whose remote branch has disappeared."""
+    result = _git([
+        "for-each-ref",
+        "--format=%(refname:strip=2)",
+        "refs/heads/usage/",
+    ])
+    if result.returncode != 0:
+        return []
+    completed: list[tuple[date, str]] = []
+    for branch in result.stdout.splitlines():
+        name = branch.removeprefix(DAILY_BRANCH_PREFIX)
+        try:
+            branch_date = date.fromisoformat(name)
+        except ValueError:
+            continue
+        remote_ref = f"refs/remotes/origin/{branch}"
+        if branch_date < before and not _ref_exists(remote_ref):
+            completed.append((branch_date, branch))
+    return sorted(completed)
+
+
+def _cleanup_completed_local_branches(before: date) -> None:
+    """Delete only local usage branches proven present in a finalized snapshot.
+
+    Daily branches are squash-merged, so Git cannot use ordinary ancestry to prove
+    they were merged. Compare the tracked tree with the corresponding snapshot
+    commit instead, excluding only the dashboard generated during rollover. Any
+    local-only data or code remains visible and blocks deletion.
+    """
+    current = _current_branch()
+    for branch_date, branch in _completed_local_daily_branches(before):
+        if branch == current:
+            continue
+        subject = f"chore(data): finalize {branch_date.isoformat()} snapshot"
+        snapshot = _git([
+            "log",
+            "-1",
+            "--format=%H",
+            "--fixed-strings",
+            f"--grep={subject}",
+            "origin/main",
+        ])
+        snapshot_commit = snapshot.stdout.strip()
+        if snapshot.returncode != 0 or not snapshot_commit:
+            continue
+        same_snapshot = _git([
+            "diff",
+            "--quiet",
+            snapshot_commit,
+            branch,
+            "--",
+            ".",
+            ":(exclude)assets/token-activity.svg",
+        ])
+        if same_snapshot.returncode != 0:
+            print(f"local {branch} differs from its finalized snapshot; keeping it", file=sys.stderr)
+            continue
+        deleted = _git(["branch", "-D", branch])
+        if deleted.returncode != 0:
+            print(f"cannot delete completed local {branch}: {deleted.stderr.strip()}", file=sys.stderr)
+
+
 def _pending_daily_branches(before: date) -> list[str]:
     """Return remote usage date branches older than *before*, oldest first."""
     result = _git([
@@ -453,6 +539,7 @@ def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) 
     if fetched.returncode != 0:
         print(f"git fetch failed; deferring sync: {fetched.stderr.strip()}", file=sys.stderr)
         return False
+    _sync_local_main()
 
     branch = f"{DAILY_BRANCH_PREFIX}{today.isoformat()}"
     remote_ref = f"refs/remotes/origin/{branch}"
@@ -470,6 +557,7 @@ def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) 
         if tracking.returncode != 0:
             print(f"cannot track origin/{branch}: {tracking.stderr.strip()}", file=sys.stderr)
             return False
+        _cleanup_completed_local_branches(today)
         return True
 
     pending = _pending_daily_branches(today)
@@ -492,6 +580,7 @@ def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) 
             return False
     pushed = _git(["push", "-u", "origin", branch])
     if pushed.returncode == 0:
+        _cleanup_completed_local_branches(today)
         return True
 
     # Another machine may have won the create race. Track and rebase onto it.
@@ -500,6 +589,7 @@ def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) 
         _git(["branch", "--set-upstream-to", f"origin/{branch}", branch])
         rebased = _git(["pull", "--rebase", "--autostash"])
         if rebased.returncode == 0:
+            _cleanup_completed_local_branches(today)
             return True
     print(f"cannot publish {branch}: {pushed.stderr.strip()}", file=sys.stderr)
     return False

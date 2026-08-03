@@ -81,6 +81,12 @@ If GitHub Actions is delayed, a writer will not create today while any older usa
 exists. It exits cleanly and catches up on the next scheduled run. This prevents today's branch
 from being based on a `main` that lacks an earlier day's final data.
 
+After each successful fetch, writers also fast-forward the local `main` ref when it has no
+local-only commits. Once a completed remote usage branch has disappeared, the writer deletes its
+local counterpart only when its tracked tree, excluding the generated dashboard, exactly matches
+the corresponding finalized snapshot on `origin/main`. Diverged branches and branches checked out
+by another worktree are kept.
+
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a
 missed schedule.
