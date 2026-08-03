@@ -292,79 +292,83 @@
     "totalTokens": 54628694
   },
   "2026-07-06": {
-    "totalCost": 0.0,
+    "totalCost": 122.30364299999998,
     "totalTokens": 68666402
   },
   "2026-07-07": {
-    "totalCost": 0.0,
+    "totalCost": 159.4953494,
     "totalTokens": 93419699
   },
   "2026-07-08": {
-    "totalCost": 0.11406585000000001,
+    "totalCost": 90.35507065000004,
     "totalTokens": 46960832
   },
   "2026-07-09": {
-    "totalCost": 4.0973845,
+    "totalCost": 144.580357,
     "totalTokens": 95406538
   },
   "2026-07-10": {
-    "totalCost": 0.0,
+    "totalCost": 9.435503200000003,
     "totalTokens": 4609349
   },
   "2026-07-13": {
-    "totalCost": 0.0,
+    "totalCost": 85.46755919999997,
     "totalTokens": 45948474
   },
   "2026-07-15": {
-    "totalCost": 0.0,
+    "totalCost": 91.60719459999999,
     "totalTokens": 47917372
   },
   "2026-07-20": {
-    "totalCost": 1.32634525,
+    "totalCost": 15.43064835,
     "totalTokens": 8334528
   },
   "2026-07-21": {
-    "totalCost": 0.0,
+    "totalCost": 5.452959000000001,
     "totalTokens": 1053441
   },
   "2026-07-23": {
-    "totalCost": 0.0,
+    "totalCost": 29.104492,
     "totalTokens": 12610603
   },
   "2026-07-24": {
-    "totalCost": 0.0,
+    "totalCost": 41.58374990000001,
     "totalTokens": 19436230
   },
   "2026-07-25": {
-    "totalCost": 0.0,
+    "totalCost": 31.201227999999997,
     "totalTokens": 7729194
   },
   "2026-07-26": {
-    "totalCost": 0.0,
+    "totalCost": 6.367735500000001,
     "totalTokens": 1004165
   },
   "2026-07-27": {
-    "totalCost": 0.0,
+    "totalCost": 67.46639725,
     "totalTokens": 35538709
   },
   "2026-07-28": {
-    "totalCost": 0.0,
+    "totalCost": 58.52567000000001,
     "totalTokens": 32510880
   },
   "2026-07-29": {
-    "totalCost": 0.0,
+    "totalCost": 52.12728130000001,
     "totalTokens": 42986042
   },
   "2026-07-30": {
-    "totalCost": 0.0,
+    "totalCost": 9.498998749999998,
     "totalTokens": 11681029
   },
   "2026-07-31": {
-    "totalCost": 0.0,
+    "totalCost": 22.5153085,
     "totalTokens": 13751445
   },
   "2026-08-02": {
-    "totalCost": 0.0,
+    "totalCost": 12.850485999999998,
     "totalTokens": 6654289
+  },
+  "2026-08-03": {
+    "totalCost": 7.517916500000002,
+    "totalTokens": 1577625
   }
 }
