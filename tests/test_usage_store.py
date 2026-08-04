@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import compact_trails  # noqa: E402
 import sync_usage  # noqa: E402
 
 
@@ -346,6 +347,62 @@ class CostTrustedMarkingTests(unittest.TestCase):
             {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.5},
         ])
         self.assertTrue(out["claude"]["costTrusted"])
+
+
+class IdenticalSourceTests(unittest.TestCase):
+    """The guard that stands between a duplicated worker and an additive fold."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.trail = Path(self._tmp.name)
+
+    def pod(self, name: str, days: dict[str, int]) -> Path:
+        d = self.trail / name
+        d.mkdir()
+        (d / "codex.json").write_text(
+            json.dumps({k: {"totalTokens": v, "totalCost": 1.0} for k, v in days.items()})
+        )
+        return d
+
+    def clashes(self) -> list[tuple[str, str, str, str, int]]:
+        return compact_trails._identical_sources(sorted(self.trail.iterdir()))
+
+    def test_distinct_pods_do_not_clash(self) -> None:
+        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 100})
+        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 200})
+        self.assertEqual(self.clashes(), [])
+
+    def test_two_pods_repeating_a_day_clash(self) -> None:
+        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 100})
+        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 100})
+        self.assertEqual(
+            self.clashes(),
+            [("codex.json", "2026-08-01", "node-aaaaaaaaaaaa", "node-bbbbbbbbbbbb", 100)],
+        )
+
+    def test_a_clash_between_later_pods_is_not_hidden_by_the_first(self) -> None:
+        """Keying on (file, date) alone compared b and c only against a, and missed them."""
+        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 999})
+        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 100})
+        self.pod("node-cccccccccccc", {"2026-08-01": 100})
+        self.assertEqual(
+            self.clashes(),
+            [("codex.json", "2026-08-01", "node-bbbbbbbbbbbb", "node-cccccccccccc", 100)],
+        )
+
+    def test_every_copy_beyond_the_first_is_reported(self) -> None:
+        for n in ("node-aaaaaaaaaaaa", "node-bbbbbbbbbbbb", "node-cccccccccccc"):
+            self.pod(n, {"2026-08-01": 100})
+        self.assertEqual(
+            [c[3] for c in self.clashes()],
+            ["node-bbbbbbbbbbbb", "node-cccccccccccc"],
+        )
+
+    def test_a_day_both_pods_recorded_as_zero_is_not_a_clash(self) -> None:
+        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 0})
+        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 0})
+        self.assertEqual(self.clashes(), [])
 
 
 if __name__ == "__main__":

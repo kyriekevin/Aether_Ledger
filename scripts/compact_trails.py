@@ -185,21 +185,26 @@ def _identical_sources(pods: list[Path]) -> list[tuple[str, str, str, str, int]]
     Two pods agreeing to the token on a day did not do the same work twice; they are
     one worker seen twice. Adding them is the single thing compaction must never do,
     and it cannot be undone from the rollup afterwards, so refuse the whole run.
+
+    The token count is part of the key, not something compared against one remembered
+    pod: three pods where only the last two agree are still two copies of one worker,
+    and keying on (file, date) alone would have compared each of them to the first
+    and reported nothing.
     """
-    seen: dict[tuple[str, str], tuple[str, int]] = {}
-    clashes: list[tuple[str, str, str, str, int]] = []
+    by_count: dict[tuple[str, str, int], list[str]] = {}
     for pod in sorted(pods):
         for fname in AGENT_FILES:
             for d, entry in _read_store(pod / fname).items():
                 tokens = entry.get("totalTokens", 0)
                 if not tokens:
                     continue
-                prior = seen.get((fname, d))
-                if prior is None:
-                    seen[(fname, d)] = (pod.name, tokens)
-                elif prior[1] == tokens:
-                    clashes.append((fname, d, prior[0], pod.name, tokens))
-    return clashes
+                by_count.setdefault((fname, d, tokens), []).append(pod.name)
+    return [
+        (fname, d, names[0], other, tokens)
+        for (fname, d, tokens), names in sorted(by_count.items())
+        if len(names) > 1
+        for other in names[1:]
+    ]
 
 
 def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
