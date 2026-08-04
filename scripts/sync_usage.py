@@ -25,6 +25,7 @@ Machine identity:
     workers into data/trail/rollup and prunes them.
 """
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -33,8 +34,11 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
+from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
+from typing import Iterator
 
 from render_dashboard import SHANGHAI
 
@@ -83,12 +87,33 @@ def resolve_machine() -> str:
 # rotation 拖低；分桶 max() 则各自独立守住历史峰值。
 CCUSAGE_CMD = ["ccusage", "daily", "--json"]
 
+# ccusage walks every session JSONL, so it is the slowest step here — and it runs
+# while this process holds the checkout-wide Git lock. An unbounded hang would
+# strand that lock for as long as launchd keeps the job alive, starving every
+# other Git user in the checkout. Bound it and let the run fall back to the
+# cached stores instead.
+CCUSAGE_TIMEOUT_SECONDS = 180
+
 # Earliest possible date for cumulative totals
 EPOCH = date(2024, 1, 1)
 
 # Git network ops hang forever on flaky DNS / TLS / proxy. 30s is enough for a
 # small repo over any sane link.
 GIT_TIMEOUT_SECONDS = 30
+
+# This writer is not the only scheduled process running Git inside the checkout:
+# the downstream Feishu signature pusher pulls the same working tree, and its
+# launchd WatchPaths fire on the very data files written below — so it wakes up
+# *while* this run is still mid-sync. Git has no cross-process lock for a working
+# tree: every fetch truncates and rewrites .git/FETCH_HEAD, so two concurrent
+# fetches leave two merge heads behind ("Cannot rebase onto multiple branches"),
+# remote-ref updates lose their compare-and-swap ("cannot lock ref ... is at X
+# but expected Y"), and a fetch can move the checked-out branch under the other
+# process. One advisory lock file, shared by every Git user of this checkout,
+# serializes them. Readers take it non-blocking and skip their pull instead of
+# queueing; this writer waits, because skipping means losing an observation.
+GIT_LOCK_PATH = Path.home() / ".cache" / "aether-ledger" / "git.lock"
+GIT_LOCK_WAIT_SECONDS = 60
 
 # Automated commits must be safe for public history regardless of the writer's
 # global/local Git configuration (or an inherited GIT_AUTHOR_* environment).
@@ -168,6 +193,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
     out = subprocess.run(
         CCUSAGE_CMD + ["--since", since.strftime("%Y%m%d")],
         capture_output=True, text=True, check=True,
+        timeout=CCUSAGE_TIMEOUT_SECONDS,
     )
     raw = json.loads(out.stdout).get("daily", [])
     fs_image_counts = count_codex_image_files_per_day()
@@ -309,6 +335,43 @@ def _atomic_write_json(path: Path, data: dict) -> None:
 # Git helpers
 # ---------------------------------------------------------------------------
 
+@contextmanager
+def repo_git_lock(wait_seconds: float) -> Iterator[bool]:
+    """Hold the checkout-wide Git lock, yielding whether it was acquired.
+
+    An advisory flock is enough because every process that runs Git here is ours.
+    The lock is released by the kernel on exit, so a crashed run cannot strand it.
+
+    Only contention (BlockingIOError) is retried. Any other OSError means locking
+    itself is broken here — an unsupported filesystem, a bad descriptor — and is
+    raised rather than silently reported as a busy peer.
+
+    Not reentrant: a nested acquire flocks a second descriptor against this
+    process's own lock, which conflicts even in one process. It would yield False
+    after the wait rather than hang, but the caller would then skip work for no
+    reason. Take the lock once, at the top of a run — see compact_trails.main().
+    """
+    GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+    deadline = time.monotonic() + wait_seconds
+    try:
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    yield False
+                    return
+                time.sleep(0.5)
+        try:
+            yield True
+        finally:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    finally:
+        os.close(fd)
+
+
 def _git(
     args: list[str],
     *,
@@ -434,12 +497,28 @@ def _completed_local_daily_branches(before: date) -> list[tuple[date, str]]:
 
 
 def _cleanup_completed_local_branches(before: date) -> None:
-    """Delete only local usage branches proven present in a finalized snapshot.
+    """Delete only local usage branches that hold nothing of their own.
 
     Daily branches are squash-merged, so Git cannot use ordinary ancestry to prove
-    they were merged. Compare the tracked tree with the corresponding snapshot
-    commit instead, excluding only the dashboard generated during rollover. Any
-    local-only data or code remains visible and blocks deletion.
+    they were merged. Two independent checks stand in for it:
+
+    1. the branch's `data/` matches the day's finalized snapshot on main, so every
+       observation it carries has been published; and
+    2. the branch introduced no change outside `data/` *relative to where it forked
+       from main*, so it is not hiding local-only work.
+
+    Check 2 deliberately compares against the fork point rather than the snapshot.
+    Comparing whole trees against the snapshot would resurrect every code and docs
+    commit main merged after the fork — routine while the repo is still moving —
+    and pin the branch forever behind a difference it never introduced.
+
+    Both checks read final trees, not commit history, so a branch whose commits
+    cancel out (a change and its revert, an empty commit) reads as holding nothing
+    and is deleted. `branch -D` drops that branch's reflog along with the ref, so
+    those commits keep only whatever other references still reach them — HEAD's
+    reflog, if the branch was ever checked out here — and become prunable once
+    none do. That is the accepted trade: a squash-merged branch leaves no
+    ancestry to test instead.
     """
     current = _current_branch()
     for branch_date, branch in _completed_local_daily_branches(before):
@@ -457,17 +536,39 @@ def _cleanup_completed_local_branches(before: date) -> None:
         snapshot_commit = snapshot.stdout.strip()
         if snapshot.returncode != 0 or not snapshot_commit:
             continue
-        same_snapshot = _git([
+        published = _git(["diff", "--quiet", snapshot_commit, branch, "--", "data"])
+        # `git diff --quiet` exits 1 for differences; anything above that is a
+        # real Git failure and must not be reported as unpublished data.
+        if published.returncode > 1:
+            print(f"cannot compare local {branch} with its finalized snapshot "
+                  f"({published.stderr.strip()}); keeping it", file=sys.stderr)
+            continue
+        if published.returncode == 1:
+            print(f"local {branch} holds data missing from its finalized snapshot; keeping it",
+                  file=sys.stderr)
+            continue
+        fork = _git(["merge-base", "origin/main", branch])
+        fork_point = fork.stdout.strip()
+        if fork.returncode != 0 or not fork_point:
+            print(f"cannot locate where local {branch} forked from main; keeping it",
+                  file=sys.stderr)
+            continue
+        own_work = _git([
             "diff",
             "--quiet",
-            snapshot_commit,
+            fork_point,
             branch,
             "--",
             ".",
-            ":(exclude)assets/token-activity.svg",
+            ":(exclude)data",
         ])
-        if same_snapshot.returncode != 0:
-            print(f"local {branch} differs from its finalized snapshot; keeping it", file=sys.stderr)
+        if own_work.returncode > 1:
+            print(f"cannot compare local {branch} with its fork point "
+                  f"({own_work.stderr.strip()}); keeping it", file=sys.stderr)
+            continue
+        if own_work.returncode == 1:
+            print(f"local {branch} carries its own changes outside data/; keeping it",
+                  file=sys.stderr)
             continue
         deleted = _git(["branch", "-D", branch])
         if deleted.returncode != 0:
@@ -641,13 +742,28 @@ def main() -> int:
 
     machine = resolve_machine()
 
+    # Held across the whole run — ccusage included — because the data files this
+    # writes are what wake the pusher up. Releasing early would just hand it the
+    # window we are still committing in.
+    with repo_git_lock(GIT_LOCK_WAIT_SECONDS) as acquired:
+        if not acquired:
+            print(
+                f"another process has held {GIT_LOCK_PATH} for "
+                f"{GIT_LOCK_WAIT_SECONDS}s; skipping this run",
+                file=sys.stderr,
+            )
+            return 0
+        return _sync(machine, no_push=args.no_push)
+
+
+def _sync(machine: str, *, no_push: bool) -> int:
     now = datetime.now(SHANGHAI)
     today = now.date()
     recovery_grace_elapsed = (now.hour, now.minute) >= (0, 50)
     recover_missed_rollover = (
         Path(machine).name in ROLLOVER_WATCHDOG_NODES and recovery_grace_elapsed
     )
-    if not args.no_push and not prepare_daily_branch(
+    if not no_push and not prepare_daily_branch(
         today,
         recover_missed_rollover=recover_missed_rollover,
     ):
@@ -665,16 +781,21 @@ def main() -> int:
     # Update only THIS machine's per-agent files from its own local ccusage state.
     try:
         cc_daily, cx_daily, op_daily = fetch_daily_since(EPOCH)
-    except (subprocess.CalledProcessError, FileNotFoundError, json.JSONDecodeError) as e:
-        # ccusage fetch failing (binary missing, malformed output) must not blank
-        # out either store — merging [] keeps existing rows intact via max().
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ) as e:
+        # ccusage fetch failing (binary missing, malformed output, hung run) must
+        # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
     merge_with_cumulative(cc_daily, cc_path)
     merge_with_cumulative(cx_daily, codex_path)
     merge_with_cumulative(op_daily, opencode_path)
 
-    if not args.no_push:
+    if not no_push:
         git_push(machine)
 
     return 0

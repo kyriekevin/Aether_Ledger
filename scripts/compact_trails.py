@@ -37,7 +37,13 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from render_dashboard import SHANGHAI
-from sync_usage import git_commit, prepare_daily_branch
+from sync_usage import (
+    GIT_LOCK_PATH,
+    GIT_LOCK_WAIT_SECONDS,
+    git_commit,
+    prepare_daily_branch,
+    repo_git_lock,
+)
 
 # Data repo root: two levels up from this script (repo/scripts/compact_trails.py)
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
@@ -194,6 +200,23 @@ def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
 def main() -> int:
     dry = "--dry-run" in sys.argv[1:]
 
+    # This is the third Git user of the shared checkout, after the 15-minute sync
+    # writer and the signature pusher, and it is the one a human starts by hand at
+    # an arbitrary moment. It must take the same lock or it reintroduces exactly
+    # the FETCH_HEAD and working-tree races that lock exists to prevent. Even a
+    # dry-run pulls before reporting, so it is no exception.
+    with repo_git_lock(GIT_LOCK_WAIT_SECONDS) as acquired:
+        if not acquired:
+            print(
+                f"another process has held {GIT_LOCK_PATH} for "
+                f"{GIT_LOCK_WAIT_SECONDS}s; try compaction again later",
+                file=sys.stderr,
+            )
+            return 0
+        return _compact(dry=dry)
+
+
+def _compact(*, dry: bool) -> int:
     # Compaction writes are ordinary usage updates and belong on today's branch.
     # A dry-run remains completely local and does not switch branches.
     if not dry and not prepare_daily_branch(datetime.now(SHANGHAI).date()):

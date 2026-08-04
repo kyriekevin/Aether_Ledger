@@ -62,6 +62,36 @@ Logs:
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
+### Concurrent Git access
+
+The writer is not the only scheduled process running Git in this checkout. The downstream Feishu
+signature pusher pulls the same working tree, and its launchd `WatchPaths` watch the very data
+files the writer produces, so a write wakes it up mid-sync. Git has no cross-process lock for a
+working tree: concurrent fetches truncate and rewrite `.git/FETCH_HEAD` under each other, which
+surfaces as `fatal: Cannot rebase onto multiple branches.`; remote-ref updates lose their
+compare-and-swap (`cannot lock ref ... is at X but expected Y`); and a concurrent fetch can update
+the checked-out branch's ref, after which `pull` tries to fast-forward the working tree under the
+other process.
+
+Every process that runs Git in this checkout therefore takes one advisory lock file,
+`~/.cache/aether-ledger/git.lock`:
+
+- The writer (`sync_usage.py`) waits up to 60 seconds and skips the run if the lock never frees.
+  Local stores are cumulative, so a skipped tick loses nothing as long as a later one runs. It
+  holds the lock for its whole run, `ccusage` included, which is why that call has its own timeout:
+  an unbounded hang would strand the lock and starve every other Git user here.
+- `compact_trails.py` takes the same lock, in both normal and `--dry-run` mode, because it pulls
+  before reporting. It is hand-started, so it reports and exits rather than retrying.
+- The signature pusher waits up to 30 seconds and holds the lock across its pull *and* its reads,
+  because the writer replaces the per-agent JSON files one at a time and an unlocked read can mix
+  generations. Only the lock guarantees that. If it never frees, the pusher skips the pull and
+  reads anyway, checking that no store's mtime moved across the read and retrying a few times —
+  weaker than the lock, since it catches a writer running *during* the read but not one paused
+  between two of its own file swaps. Skipping the run instead would let sustained contention
+  freeze the signature indefinitely, and one cycle of drift in a summed total self-corrects.
+
+Any new process added to this checkout must take the same lock.
+
 ## Daily branch lifecycle
 
 Writers use `usage/YYYY-MM-DD`, based on the Asia/Shanghai calendar day. Multiple machines can
@@ -83,9 +113,20 @@ from being based on a `main` that lacks an earlier day's final data.
 
 After each successful fetch, writers also fast-forward the local `main` ref when it has no
 local-only commits. Once a completed remote usage branch has disappeared, the writer deletes its
-local counterpart only when its tracked tree, excluding the generated dashboard, exactly matches
-the corresponding finalized snapshot on `origin/main`. Diverged branches and branches checked out
-by another worktree are kept.
+local counterpart only when the branch holds nothing of its own: its `data/` must match the day's
+finalized snapshot on `origin/main`, and it must introduce no change outside `data/` relative to
+the commit where it forked from `main`. The second check compares against the fork point on
+purpose. Comparing whole trees against the snapshot would count every code or docs commit that
+reached `main` after the fork — routine while the repo is still moving — as a local difference and
+pin the branch forever. Branches with unpublished data, with a net change of their own outside
+`data/`, or checked out by another worktree are kept, each with its own log line; so is any branch
+whose comparison fails outright, which is reported separately from a real difference.
+
+Both checks read final trees, not commit history, because a squash-merged branch leaves no
+ancestry to test. A branch whose own commits cancel out — a change and its revert, an empty commit
+— therefore reads as holding nothing and is deleted. `git branch -D` drops that branch's reflog
+along with the ref, so those commits keep only whatever other references still reach them — HEAD's
+reflog, if the branch was ever checked out here — and become prunable once none do.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a

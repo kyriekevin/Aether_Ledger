@@ -61,6 +61,34 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
+### Git 并发访问
+
+在这个 checkout 里跑 Git 的不止写入脚本一个进程：下游的飞书签名推送器会 pull 同一个
+工作区，而它的 launchd `WatchPaths` 监听的正是写入脚本产出的那几个数据文件，所以写入
+动作本身就会把它叫醒，二者必然重叠。Git 对一个工作区没有跨进程锁：并发 fetch 会互相
+截断重写 `.git/FETCH_HEAD`，表现为 `fatal: Cannot rebase onto multiple branches.`；
+远端 ref 更新会丢失 compare-and-swap（`cannot lock ref ... is at X but expected Y`）；
+并发 fetch 还可能更新当前检出分支的 ref，随后 `pull` 会在另一个进程眼皮底下试图快进
+工作树。
+
+因此所有在本 checkout 里执行 Git 的进程都要获取同一把建议锁
+`~/.cache/aether-ledger/git.lock`：
+
+- 写入脚本（`sync_usage.py`）最多等待 60 秒，拿不到就跳过本轮。本地 store 是累积的，
+  只要后续有一轮能跑起来，跳过就不丢数据。它在整个运行期间持锁（包括 `ccusage`），
+  所以那次调用必须自带超时——无限挂起会把锁永久攥住，饿死这个 checkout 里的其他进程。
+- `compact_trails.py` 同样获取这把锁，`--dry-run` 也不例外，因为它在汇报前也会 pull。
+  它是人工触发的，所以拿不到锁就直接报错退出，不重试。
+- 签名推送器最多等待 30 秒，并在 pull **和**读取数据文件的整个过程中持锁：写入脚本是
+  逐个替换各 agent 的 JSON 文件的，不持锁读取可能读到新旧混合的一份——只有持锁才能
+  真正杜绝这一点。等不到锁时它会跳过 pull 直接读，并校验读取前后所有 store 的 mtime
+  没有变动，不满足就重试几次。这个校验弱于锁：它能发现"读取期间正在写"的写入方，但
+  发现不了"停在自己两次文件替换之间"的写入方，那种情况下某个 agent 的 store 会比另一个
+  新一代。之所以不整轮跳过：持续竞争下签名可能永远不更新，而求和值上一代的偏差下一轮
+  就会自行纠正。
+
+以后新增任何读写这个 checkout 的进程，都必须获取同一把锁。
+
 ## 每日分支生命周期
 
 写入设备使用 Asia/Shanghai 自然日对应的 `usage/YYYY-MM-DD`。多台设备可以推送到同一
@@ -79,8 +107,19 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 `main` 创建。
 
 每次成功 fetch 后，写入设备还会在不存在本地独立提交时快进本地 `main`。已完成的远端
-usage 分支消失后，只有当本地分支除生成面板外的完整文件树与 `origin/main` 中对应的
-日结快照完全一致时，才会删除本地副本；发生分叉或被其他 worktree 检出的分支会保留。
+usage 分支消失后，只有当本地分支"没有任何属于它自己的东西"时才会删除本地副本，需要
+同时满足两个条件：它的 `data/` 与 `origin/main` 上当日的日结快照一致；并且相对于它从
+`main` 分叉出去的那个提交，它没有引入 `data/` 之外的任何改动。第二个条件特意与分叉点
+比较，而不是与日结快照比较——如果拿整棵树去比快照，那么分叉之后才合入 `main` 的代码或
+文档提交（仓库尚在演进期这很常见）都会被算成差异，把分支永久钉住。数据未发布、在
+`data/` 之外留下净改动、或被其他 worktree 检出的分支都会保留，并各自打印对应日志；
+比较本身失败（Git 报错）时同样保留，并与"存在差异"分开报告。
+
+两个条件比的都是最终文件树而非提交历史，因为 squash 合并根本没留下可判定的祖先关系。
+所以如果某个分支自己的提交互相抵消了（改了又还原、空提交），它会被判定为"没有自己的
+东西"而删除。`git branch -D` 会连同该分支的 reflog 一起删掉，那些提交此后只剩下其他
+引用还能够到它们（比如 HEAD 的 reflog——前提是这个分支曾在本地被检出过）；一旦没有
+任何引用指向它们，就会在 Git 清理（gc/prune）时被回收。
 
 workflow 也支持手动触发。并发组会阻止 rollover 重叠运行；每次扫描全部旧日期分支，
 因此第二次定时触发和手动恢复都是幂等且安全的。
