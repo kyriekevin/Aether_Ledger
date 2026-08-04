@@ -51,7 +51,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
 
     def test_unpriced_fetch_keeps_the_last_known_cost(self) -> None:
-        """ccusage reports cost 0 for every model when its pricing fetch fails."""
+        """Every model on the day lost its price, so the whole day comes back free."""
         self.write_store(
             {
                 "2026-07-06": {"totalTokens": 900, "totalCost": 30.0},
@@ -93,6 +93,80 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertEqual(
             self.read_store()["2026-08-04"], {"totalTokens": 250, "totalCost": 7.25}
         )
+
+    def test_a_new_model_still_back_fills_after_growing_unpriced(self) -> None:
+        """The whole life of a model upstream has not priced yet.
+
+        It is recorded free, keeps accruing tokens across several unpriced runs, and
+        must take the first real price it is offered. Nothing in the guard may pin
+        the day at 0 — that back-fill is the reason cost follows tokens at all.
+        """
+        for tokens in (250, 400, 900):
+            sync_usage.merge_with_cumulative(
+                [{"date": "2026-08-04", "totalTokens": tokens, "totalCost": 0.0}],
+                self.store,
+            )
+            self.assertEqual(self.read_store()["2026-08-04"]["totalCost"], 0.0)
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 12.5}], self.store
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 12.5}
+        )
+
+    def test_a_partly_priced_day_is_not_protected(self) -> None:
+        """Documents the limit of the guard rather than a behaviour worth having.
+
+        In the real failure only the models newer than ccusage's bundled snapshot
+        lose their price; the older ones still cost something, so the day's sum stays
+        truthy and understates. The guard fires on exactly 0 and cannot see this, and
+        the next complete fetch restores it.
+        """
+        self.write_store({"2026-08-04": {"totalTokens": 900, "totalCost": 40.0}})
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 4.0}], self.store
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 4.0}
+        )
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 41.5}], self.store
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 41.5}
+        )
+
+
+class UnpricedModelsTests(unittest.TestCase):
+    def test_reports_models_that_billed_tokens_for_free(self) -> None:
+        raw = [
+            {"period": "2026-08-03", "modelBreakdowns": [
+                {"modelName": "claude-opus-5", "inputTokens": 10, "cost": 0.0},
+                {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+            ]},
+            {"period": "2026-08-04", "modelBreakdowns": [
+                {"modelName": "claude-opus-5", "cacheReadTokens": 90, "cost": 0.0},
+            ]},
+        ]
+        self.assertEqual(sync_usage.unpriced_models(raw), {"claude-opus-5": 2})
+
+    def test_ignores_models_upstream_never_priced(self) -> None:
+        raw = [{"period": "2026-08-04", "modelBreakdowns": [
+            {"modelName": "codex-auto-review", "inputTokens": 500, "cost": 0.0},
+        ]}]
+        self.assertEqual(sync_usage.unpriced_models(raw), {})
+
+    def test_ignores_a_model_that_simply_had_no_usage(self) -> None:
+        raw = [{"period": "2026-08-04", "modelBreakdowns": [
+            {"modelName": "claude-opus-5", "inputTokens": 0, "cost": 0.0},
+        ]}]
+        self.assertEqual(sync_usage.unpriced_models(raw), {})
+
+    def test_a_fully_priced_run_is_silent(self) -> None:
+        raw = [{"period": "2026-08-04", "modelBreakdowns": [
+            {"modelName": "gpt-5.5", "inputTokens": 10, "outputTokens": 5, "cost": 1.5},
+        ]}]
+        self.assertEqual(sync_usage.unpriced_models(raw), {})
 
 
 if __name__ == "__main__":
