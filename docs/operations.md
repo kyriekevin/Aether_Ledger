@@ -84,10 +84,11 @@ Every process that runs Git in this checkout therefore takes one advisory lock f
   before reporting. It is hand-started, so it reports and exits rather than retrying.
 - The signature pusher waits up to 30 seconds and holds the lock across its pull *and* its reads,
   because the writer replaces the per-agent JSON files one at a time and an unlocked read can mix
-  generations. If the lock never frees it skips the pull and reads anyway, then verifies that no
-  store's mtime moved while it read, retrying a few times. Skipping the run instead would let
-  sustained contention freeze the signature indefinitely; this way the reader always makes
-  progress and still publishes exactly one generation.
+  generations. Only the lock guarantees that. If it never frees, the pusher skips the pull and
+  reads anyway, checking that no store's mtime moved across the read and retrying a few times —
+  weaker than the lock, since it catches a writer running *during* the read but not one paused
+  between two of its own file swaps. Skipping the run instead would let sustained contention
+  freeze the signature indefinitely, and one cycle of drift in a summed total self-corrects.
 
 Any new process added to this checkout must take the same lock.
 
