@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -114,27 +117,58 @@ class MergeWithCumulativeTests(unittest.TestCase):
             self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 12.5}
         )
 
-    def test_a_partly_priced_day_is_not_protected(self) -> None:
-        """Documents the limit of the guard rather than a behaviour worth having.
+    def test_a_partly_priced_day_keeps_its_cost(self) -> None:
+        """The shape the value test alone cannot see.
 
-        In the real failure only the models newer than ccusage's bundled snapshot
-        lose their price; the older ones still cost something, so the day's sum stays
-        truthy and understates. The guard fires on exactly 0 and cannot see this, and
-        the next complete fetch restores it.
+        Only the models newer than ccusage's bundled snapshot lose their price, so
+        the day's sum stays truthy and merely understates — $1.03 against a stored
+        $69.47 on the same day, in the run that prompted this. The fetch marks the
+        day untrusted; tokens still advance.
         """
-        self.write_store({"2026-08-04": {"totalTokens": 900, "totalCost": 40.0}})
+        self.write_store({"2026-08-04": {"totalTokens": 900, "totalCost": 69.47}})
         sync_usage.merge_with_cumulative(
-            [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 4.0}], self.store
+            [{
+                "date": "2026-08-04", "totalTokens": 1200, "totalCost": 1.03,
+                "costTrusted": False,
+            }],
+            self.store,
         )
         self.assertEqual(
-            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 4.0}
+            self.read_store()["2026-08-04"], {"totalTokens": 1200, "totalCost": 69.47}
         )
         sync_usage.merge_with_cumulative(
-            [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 41.5}], self.store
+            [{
+                "date": "2026-08-04", "totalTokens": 1200, "totalCost": 74.5,
+                "costTrusted": True,
+            }],
+            self.store,
         )
         self.assertEqual(
-            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 41.5}
+            self.read_store()["2026-08-04"], {"totalTokens": 1200, "totalCost": 74.5}
         )
+
+    def test_an_untrusted_day_with_no_stored_cost_still_records(self) -> None:
+        """Nothing to preserve, so the marking must not pin the day at nothing."""
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04", "totalTokens": 900, "totalCost": 1.03,
+                "costTrusted": False,
+            }],
+            self.store,
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"], {"totalTokens": 900, "totalCost": 1.03}
+        )
+
+    def test_the_marking_never_reaches_the_store(self) -> None:
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04", "totalTokens": 900, "totalCost": 2.0,
+                "costTrusted": True,
+            }],
+            self.store,
+        )
+        self.assertNotIn("costTrusted", self.read_store()["2026-08-04"])
 
 
 class UnpricedModelsTests(unittest.TestCase):
@@ -167,6 +201,59 @@ class UnpricedModelsTests(unittest.TestCase):
             {"modelName": "gpt-5.5", "inputTokens": 10, "outputTokens": 5, "cost": 1.5},
         ]}]
         self.assertEqual(sync_usage.unpriced_models(raw), {})
+
+
+class CostTrustedMarkingTests(unittest.TestCase):
+    """fetch_daily_since decides, per day and per agent, whether pricing was complete."""
+
+    def fetch(self, breakdowns: list[dict]) -> dict[str, dict]:
+        payload = json.dumps(
+            {"daily": [{"period": "2026-08-04", "modelBreakdowns": breakdowns}]}
+        )
+        completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
+        with patch.object(sync_usage.subprocess, "run", return_value=completed), \
+                patch.object(sync_usage, "count_codex_image_files_per_day",
+                             return_value={}):
+            cc, cx, op = sync_usage.fetch_daily_since(date(2026, 1, 1))
+        return {
+            "claude": cc[0] if cc else None,
+            "codex": cx[0] if cx else None,
+            "opencode": op[0] if op else None,
+        }
+
+    def test_one_unpriced_model_taints_only_its_own_agent(self) -> None:
+        out = self.fetch([
+            {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 0.0},
+            {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.03},
+            {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+        ])
+        # The Claude sum is short by whatever opus-5 should have cost...
+        self.assertFalse(out["claude"]["costTrusted"])
+        self.assertEqual(out["claude"]["totalCost"], 1.03)
+        # ...while Codex priced everything it saw and stays usable.
+        self.assertTrue(out["codex"]["costTrusted"])
+
+    def test_a_fully_priced_day_is_trusted(self) -> None:
+        out = self.fetch([
+            {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
+            {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+        ])
+        self.assertTrue(out["claude"]["costTrusted"])
+        self.assertTrue(out["codex"]["costTrusted"])
+
+    def test_a_model_upstream_never_prices_does_not_taint_its_day(self) -> None:
+        out = self.fetch([
+            {"modelName": "codex-auto-review", "inputTokens": 500, "cost": 0.0},
+            {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+        ])
+        self.assertTrue(out["codex"]["costTrusted"])
+
+    def test_a_model_with_no_usage_does_not_taint_its_day(self) -> None:
+        out = self.fetch([
+            {"modelName": "claude-opus-5", "inputTokens": 0, "cost": 0.0},
+            {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.5},
+        ])
+        self.assertTrue(out["claude"]["costTrusted"])
 
 
 if __name__ == "__main__":
