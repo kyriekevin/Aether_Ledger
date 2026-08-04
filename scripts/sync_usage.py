@@ -296,6 +296,20 @@ def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
             merged = {"totalTokens": entry["totalTokens"], "totalCost": entry["totalCost"]}
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
+        # ...except when the "reprice" is really a missing price. ccusage fetches
+        # its price table at run time, per agent family, and on a failed fetch
+        # silently falls back to the snapshot bundled in the binary: exit status 0,
+        # nothing on stderr, tokens still correct. Models released after that
+        # snapshot are simply absent from it and come back at cost exactly 0, which
+        # the rule above cannot tell apart from a vendor cut — so one such run zeroes
+        # the stored cost of every affected day and the signature publishes $0. A
+        # real reprice never lands on exactly 0 for a day that already cost
+        # something, so keep the last known cost there and let the next complete
+        # fetch overwrite it. A model that has never been priced (codex-auto-review
+        # is absent upstream) still starts at 0 and back-fills normally once the
+        # table gains it, because prev has no cost to preserve.
+        if not merged["totalCost"] and prev["totalCost"]:
+            merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (codex side only;
         # cc entries don't have this). Fresh fetch wins over stale stored copy.
         if entry.get("models"):
