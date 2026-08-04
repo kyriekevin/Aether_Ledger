@@ -250,25 +250,22 @@ class DailyBranchTests(unittest.TestCase):
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
     @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
-    def test_deletes_completed_local_branch_after_main_moved_on(
+    def test_keeps_completed_local_branch_when_the_comparison_itself_fails(
         self,
         _current,
         _completed,
     ) -> None:
-        """A code or docs commit merged into main after the fork must not pin the branch."""
+        """Exit codes above 1 are Git failures, not differences, and say so."""
         with patch.object(
             sync_usage,
             "_git",
             side_effect=[
                 result(stdout="snapshot\n"),
-                result(),  # data still matches the snapshot
-                result(stdout="forkpoint\n"),
-                result(),  # branch itself never touched anything outside data/
-                result(),
+                result(returncode=128, stderr="fatal: bad object"),
             ],
         ) as git:
             sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
-        self.assertIn(
+        self.assertNotIn(
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
@@ -317,6 +314,97 @@ class DailyBranchTests(unittest.TestCase):
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
+
+
+class RealRepositoryCleanupTests(unittest.TestCase):
+    """Drive the deletion rule against a real repository instead of mocked git.
+
+    The mocked tests above pin the command shape; these pin the actual Git
+    semantics the rule depends on — merge-base against a squash-merged branch,
+    and pathspec-scoped diffs — which no side_effect sequence can prove.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.repo = Path(self._tmp.name) / "repo"
+        self.repo.mkdir()
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.git("config", "commit.gpgsign", "false")
+        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def git(self, *args: str) -> str:
+        r = subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, f"git {' '.join(args)} failed: {r.stderr}")
+        return r.stdout.strip()
+
+    def write(self, rel: str, text: str) -> None:
+        path = self.repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+
+    def commit(self, subject: str) -> None:
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", subject)
+
+    def branches(self) -> list[str]:
+        return self.git("branch", "--format=%(refname:short)").splitlines()
+
+    def build_day_branch_that_main_outran(self) -> None:
+        """A finished day branch, plus a code commit main took on after the fork."""
+        self.write("data/work/claude.json", '{"2026-08-01": 1}\n')
+        self.write("scripts/sync_usage.py", "# v1\n")
+        self.commit("chore(data): finalize 2026-08-01 snapshot")
+
+        self.git("branch", "usage/2026-08-02")
+        self.git("switch", "-q", "usage/2026-08-02")
+        self.write("data/work/claude.json", '{"2026-08-02": 2}\n')
+        self.commit("chore(data): sync work usage")
+
+        self.git("switch", "-q", "main")
+        self.write("scripts/sync_usage.py", "# v2, merged while the day was open\n")
+        self.commit("feat(automation): land a PR mid-day (#3)")
+        self.write("data/work/claude.json", '{"2026-08-02": 2}\n')  # the squash
+        self.commit("chore(data): finalize 2026-08-02 snapshot")
+        self.git("update-ref", "refs/remotes/origin/main", "main")
+
+    def test_deletes_completed_branch_after_main_moved_on(self) -> None:
+        self.build_day_branch_that_main_outran()
+        snapshot = self.git("rev-parse", "main")
+        whole_tree = subprocess.run(
+            ["git", "diff", "--quiet", snapshot, "usage/2026-08-02"],
+            cwd=self.repo,
+        )
+        # Guards the scenario itself: whole trees differ, so the rule this
+        # replaced would have kept the branch here forever.
+        self.assertEqual(whole_tree.returncode, 1)
+
+        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertNotIn("usage/2026-08-02", self.branches())
+
+    def test_keeps_completed_branch_holding_its_own_code(self) -> None:
+        self.build_day_branch_that_main_outran()
+        self.git("switch", "-q", "usage/2026-08-02")
+        self.write("scripts/hotfix.py", "# never reached main\n")
+        self.commit("fix: something only this branch has")
+        self.git("switch", "-q", "main")
+
+        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertIn("usage/2026-08-02", self.branches())
+
+    def test_keeps_completed_branch_holding_unpublished_data(self) -> None:
+        self.build_day_branch_that_main_outran()
+        self.git("switch", "-q", "usage/2026-08-02")
+        self.write("data/work/claude.json", '{"2026-08-02": 3}\n')
+        self.commit("chore(data): sync work usage")
+        self.git("switch", "-q", "main")
+
+        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertIn("usage/2026-08-02", self.branches())
 
 
 class GitLockTests(unittest.TestCase):

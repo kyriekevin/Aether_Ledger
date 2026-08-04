@@ -69,17 +69,24 @@ signature pusher pulls the same working tree, and its launchd `WatchPaths` watch
 files the writer produces, so a write wakes it up mid-sync. Git has no cross-process lock for a
 working tree: concurrent fetches truncate and rewrite `.git/FETCH_HEAD` under each other, which
 surfaces as `fatal: Cannot rebase onto multiple branches.`; remote-ref updates lose their
-compare-and-swap (`cannot lock ref ... is at X but expected Y`); and a fetch can move the
-checked-out branch while the other process is reading it.
+compare-and-swap (`cannot lock ref ... is at X but expected Y`); and a concurrent fetch can update
+the checked-out branch's ref, after which `pull` tries to fast-forward the working tree under the
+other process.
 
 Every process that runs Git in this checkout therefore takes one advisory lock file,
 `~/.cache/aether-ledger/git.lock`:
 
-- The writer waits up to 60 seconds and skips the run if the lock never frees. Nothing is lost —
-  local stores are cumulative, so the next 15-minute tick catches up.
-- Read-only consumers take it non-blocking and continue with local state instead of queueing.
+- The writer (`sync_usage.py`) waits up to 60 seconds and skips the run if the lock never frees.
+  Local stores are cumulative, so a skipped tick loses nothing as long as a later one runs. It
+  holds the lock for its whole run, `ccusage` included, which is why that call has its own timeout:
+  an unbounded hang would strand the lock and starve every other Git user here.
+- `compact_trails.py` takes the same lock, in both normal and `--dry-run` mode, because it pulls
+  before reporting. It is hand-started, so it reports and exits rather than retrying.
+- Read-only consumers take it non-blocking and continue with local state instead of queueing. The
+  signature pusher holds it across its pull *and* its reads: the writer replaces the per-agent JSON
+  files one at a time, so an unlocked read can mix generations.
 
-Any new consumer added to this checkout must take the same lock.
+Any new process added to this checkout must take the same lock.
 
 ## Daily branch lifecycle
 
@@ -107,8 +114,14 @@ finalized snapshot on `origin/main`, and it must introduce no change outside `da
 the commit where it forked from `main`. The second check compares against the fork point on
 purpose. Comparing whole trees against the snapshot would count every code or docs commit that
 reached `main` after the fork — routine while the repo is still moving — as a local difference and
-pin the branch forever. Branches with unpublished data, with their own non-data commits, or
-checked out by another worktree are kept, each with its own log line.
+pin the branch forever. Branches with unpublished data, with a net change of their own outside
+`data/`, or checked out by another worktree are kept, each with its own log line; so is any branch
+whose comparison fails outright, which is reported separately from a real difference.
+
+Both checks read final trees, not commit history, because a squash-merged branch leaves no
+ancestry to test. A branch whose own commits cancel out — a change and its revert, an empty commit
+— therefore reads as holding nothing and is deleted, leaving those commits reachable only through
+the reflog.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a

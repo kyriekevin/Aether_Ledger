@@ -87,6 +87,13 @@ def resolve_machine() -> str:
 # rotation 拖低；分桶 max() 则各自独立守住历史峰值。
 CCUSAGE_CMD = ["ccusage", "daily", "--json"]
 
+# ccusage walks every session JSONL, so it is the slowest step here — and it runs
+# while this process holds the checkout-wide Git lock. An unbounded hang would
+# strand that lock for as long as launchd keeps the job alive, starving every
+# other Git user in the checkout. Bound it and let the run fall back to the
+# cached stores instead.
+CCUSAGE_TIMEOUT_SECONDS = 180
+
 # Earliest possible date for cumulative totals
 EPOCH = date(2024, 1, 1)
 
@@ -186,6 +193,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
     out = subprocess.run(
         CCUSAGE_CMD + ["--since", since.strftime("%Y%m%d")],
         capture_output=True, text=True, check=True,
+        timeout=CCUSAGE_TIMEOUT_SECONDS,
     )
     raw = json.loads(out.stdout).get("daily", [])
     fs_image_counts = count_codex_image_files_per_day()
@@ -333,6 +341,10 @@ def repo_git_lock(wait_seconds: float) -> Iterator[bool]:
 
     An advisory flock is enough because every process that runs Git here is ours.
     The lock is released by the kernel on exit, so a crashed run cannot strand it.
+
+    Only contention (BlockingIOError) is retried. Any other OSError means locking
+    itself is broken here — an unsupported filesystem, a bad descriptor — and is
+    raised rather than silently reported as a busy peer.
     """
     GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
@@ -342,7 +354,7 @@ def repo_git_lock(wait_seconds: float) -> Iterator[bool]:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 break
-            except OSError:
+            except BlockingIOError:
                 if time.monotonic() >= deadline:
                     yield False
                     return
@@ -494,6 +506,11 @@ def _cleanup_completed_local_branches(before: date) -> None:
     Comparing whole trees against the snapshot would resurrect every code and docs
     commit main merged after the fork — routine while the repo is still moving —
     and pin the branch forever behind a difference it never introduced.
+
+    Both checks read final trees, not commit history, so a branch whose commits
+    cancel out (a change and its revert, an empty commit) reads as holding nothing
+    and is deleted with its history reachable only through the reflog. That is the
+    accepted trade: squash-merged branches leave no ancestry to test instead.
     """
     current = _current_branch()
     for branch_date, branch in _completed_local_daily_branches(before):
@@ -512,7 +529,13 @@ def _cleanup_completed_local_branches(before: date) -> None:
         if snapshot.returncode != 0 or not snapshot_commit:
             continue
         published = _git(["diff", "--quiet", snapshot_commit, branch, "--", "data"])
-        if published.returncode != 0:
+        # `git diff --quiet` exits 1 for differences; anything above that is a
+        # real Git failure and must not be reported as unpublished data.
+        if published.returncode > 1:
+            print(f"cannot compare local {branch} with its finalized snapshot "
+                  f"({published.stderr.strip()}); keeping it", file=sys.stderr)
+            continue
+        if published.returncode == 1:
             print(f"local {branch} holds data missing from its finalized snapshot; keeping it",
                   file=sys.stderr)
             continue
@@ -531,7 +554,11 @@ def _cleanup_completed_local_branches(before: date) -> None:
             ".",
             ":(exclude)data",
         ])
-        if own_work.returncode != 0:
+        if own_work.returncode > 1:
+            print(f"cannot compare local {branch} with its fork point "
+                  f"({own_work.stderr.strip()}); keeping it", file=sys.stderr)
+            continue
+        if own_work.returncode == 1:
             print(f"local {branch} carries its own changes outside data/; keeping it",
                   file=sys.stderr)
             continue
@@ -746,9 +773,14 @@ def _sync(machine: str, *, no_push: bool) -> int:
     # Update only THIS machine's per-agent files from its own local ccusage state.
     try:
         cc_daily, cx_daily, op_daily = fetch_daily_since(EPOCH)
-    except (subprocess.CalledProcessError, FileNotFoundError, json.JSONDecodeError) as e:
-        # ccusage fetch failing (binary missing, malformed output) must not blank
-        # out either store — merging [] keeps existing rows intact via max().
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ) as e:
+        # ccusage fetch failing (binary missing, malformed output, hung run) must
+        # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
     merge_with_cumulative(cc_daily, cc_path)
