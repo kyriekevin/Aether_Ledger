@@ -27,6 +27,14 @@ restores a clean committed baseline.
 Usage:
     uv run --script scripts/compact_trails.py            # fold + prune + push
     uv run --script scripts/compact_trails.py --dry-run  # report only, no writes
+
+Exit status: 0 means nothing needs a human — which includes the runs that simply
+deferred, when the checkout lock stayed busy or today's usage branch was not ready
+yet, because the next run picks those up by itself. 1 means "read stderr", and
+covers both an outright failure AND a partial success: pods that report identical
+token counts are quarantined rather than folded, so a run can commit and push a
+real fold and still exit 1 because those pods need a human. Anything consuming
+this status must treat 1 as "work remains", not as "the fold did not happen".
 """
 import json
 import os
@@ -173,6 +181,40 @@ def _load_committed_rollup(fname: str) -> dict:
         return {}
 
 
+def _identical_sources(pods: list[Path]) -> list[tuple[str, str, str, str, int]]:
+    """Pods that report the same day with byte-identical token counts.
+
+    The additive fold below takes each pod's data as distinct, which held only while
+    a pod ID was unique per worker. It was not: deriving the ID from the hostname
+    gave one machine a fresh identity every time its hostname moved, its persistent
+    ~/.codex history was re-uploaded under each, and folding them multiplied those
+    days — one reached the signature six times over before this was caught.
+
+    Two pods agreeing to the token on a day did not do the same work twice; they are
+    one worker seen twice. Adding them is the single thing compaction must never do,
+    and it cannot be undone from the rollup afterwards, so refuse the whole run.
+
+    The token count is part of the key, not something compared against one remembered
+    pod: three pods where only the last two agree are still two copies of one worker,
+    and keying on (file, date) alone would have compared each of them to the first
+    and reported nothing.
+    """
+    by_count: dict[tuple[str, str, int], list[str]] = {}
+    for pod in sorted(pods):
+        for fname in AGENT_FILES:
+            for d, entry in _read_store(pod / fname).items():
+                tokens = entry.get("totalTokens", 0)
+                if not tokens:
+                    continue
+                by_count.setdefault((fname, d, tokens), []).append(pod.name)
+    return [
+        (fname, d, names[0], other, tokens)
+        for (fname, d, tokens), names in sorted(by_count.items())
+        if len(names) > 1
+        for other in names[1:]
+    ]
+
+
 def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
     """Add a dead pod's per-day {totalTokens, totalCost, imageCount} additively.
 
@@ -258,6 +300,32 @@ def _compact(*, dry: bool) -> int:
         print(f"no trail pods older than {TRAIL_TTL_DAYS}d; nothing to compact")
         return 0
 
+    # Check every pod, not only the dying ones: a live pod repeating a dead pod's
+    # days is the same duplication seen from the other side.
+    clashes = _identical_sources(list(_iter_trail_pods()))
+    if clashes:
+        # Quarantine the pods involved rather than the whole run. Folding them is
+        # what must never happen — it multiplies the total and the rollup cannot
+        # be un-added afterwards — but pods with no part in the clash are ordinary
+        # dead pods, and refusing those too would let data/trail grow without
+        # bound until someone notices, which is how this went unseen for weeks.
+        suspect = {name for _, _, a, b, _ in clashes for name in (a, b)}
+        print(
+            f"{len(suspect)} pod(s) report identical token counts, so they are one "
+            f"worker under several IDs and adding them would multiply the total. "
+            f"Leaving them in place; collapse data/trail by hand, then re-run.",
+            file=sys.stderr,
+        )
+        for fname, d, a, b, tokens in clashes[:10]:
+            print(f"  {fname} {d}: {a} and {b} both report {tokens:,} tokens",
+                  file=sys.stderr)
+        if len(clashes) > 10:
+            print(f"  ... and {len(clashes) - 10} more", file=sys.stderr)
+        dead = [(pod, newest) for pod, newest in dead if pod.name not in suspect]
+        if not dead:
+            print("every dead pod is implicated; nothing safe to fold", file=sys.stderr)
+            return 1
+
     rollups = {f: _load_committed_rollup(f) for f in AGENT_FILES}
     for pod, newest in dead:
         _fold_pod_into(rollups, pod)
@@ -267,7 +335,7 @@ def _compact(*, dry: bool) -> int:
         for f in AGENT_FILES:
             print(f"  rollup/{f}: {len(rollups[f])} day(s) after fold")
         print(f"DRY RUN: would remove {len(dead)} pod folder(s), no writes made")
-        return 0
+        return 1 if clashes else 0
 
     for f in AGENT_FILES:
         if rollups[f]:  # don't create an empty rollup file for an unused agent
@@ -310,7 +378,9 @@ def _compact(*, dry: bool) -> int:
               "will retry next run", file=sys.stderr)
         return 1
     print(f"compacted {len(dead)} pod(s) → data/trail/rollup; pushed")
-    return 0
+    # The fold succeeded, but quarantined pods still need a human, and a silent
+    # success would let them sit there indefinitely.
+    return 1 if clashes else 0
 
 
 if __name__ == "__main__":
