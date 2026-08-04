@@ -84,8 +84,10 @@ Every process that runs Git in this checkout therefore takes one advisory lock f
   before reporting. It is hand-started, so it reports and exits rather than retrying.
 - The signature pusher waits up to 30 seconds and holds the lock across its pull *and* its reads,
   because the writer replaces the per-agent JSON files one at a time and an unlocked read can mix
-  generations. If the lock never frees it skips the run rather than reading around the writer; the
-  next `WatchPaths` event or 15-minute tick republishes.
+  generations. If the lock never frees it skips the pull and reads anyway, then verifies that no
+  store's mtime moved while it read, retrying a few times. Skipping the run instead would let
+  sustained contention freeze the signature indefinitely; this way the reader always makes
+  progress and still publishes exactly one generation.
 
 Any new process added to this checkout must take the same lock.
 
@@ -122,7 +124,8 @@ whose comparison fails outright, which is reported separately from a real differ
 Both checks read final trees, not commit history, because a squash-merged branch leaves no
 ancestry to test. A branch whose own commits cancel out — a change and its revert, an empty commit
 — therefore reads as holding nothing and is deleted. `git branch -D` drops that branch's reflog
-along with the ref, so those commits are left dangling and survive only until Git prunes them.
+along with the ref, so those commits keep only whatever other references still reach them — HEAD's
+reflog, if the branch was ever checked out here — and become prunable once none do.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a

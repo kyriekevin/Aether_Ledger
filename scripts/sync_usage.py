@@ -514,9 +514,11 @@ def _cleanup_completed_local_branches(before: date) -> None:
 
     Both checks read final trees, not commit history, so a branch whose commits
     cancel out (a change and its revert, an empty commit) reads as holding nothing
-    and is deleted. `branch -D` drops that branch's reflog with it, leaving those
-    commits dangling until Git prunes them. That is the accepted trade: a
-    squash-merged branch leaves no ancestry to test instead.
+    and is deleted. `branch -D` drops that branch's reflog along with the ref, so
+    those commits keep only whatever other references still reach them — HEAD's
+    reflog, if the branch was ever checked out here — and become prunable once
+    none do. That is the accepted trade: a squash-merged branch leaves no
+    ancestry to test instead.
     """
     current = _current_branch()
     for branch_date, branch in _completed_local_daily_branches(before):
