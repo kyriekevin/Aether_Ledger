@@ -171,6 +171,98 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertNotIn("costTrusted", self.read_store()["2026-08-04"])
 
 
+class ReconcileTests(unittest.TestCase):
+    """The high-water rule is right on the schedule and wrong after an upgrade."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.store = Path(self._tmp.name) / "codex.json"
+        self.store.write_text(json.dumps(
+            {
+                "2026-07-10": {"totalTokens": 500, "totalCost": 10.0},
+                "2026-07-25": {"totalTokens": 900, "totalCost": 20.0},
+            }
+        ))
+        self.corrected = [
+            {"date": "2026-07-10", "totalTokens": 400, "totalCost": 8.0},
+            {"date": "2026-07-25", "totalTokens": 300, "totalCost": 6.0},
+        ]
+
+    def test_lower_counts_are_refused_by_default(self) -> None:
+        sync_usage.merge_with_cumulative(self.corrected, self.store)
+        store = json.loads(self.store.read_text())
+        self.assertEqual(store["2026-07-10"], {"totalTokens": 500, "totalCost": 10.0})
+        self.assertEqual(store["2026-07-25"], {"totalTokens": 900, "totalCost": 20.0})
+
+    def test_reconciling_takes_them_from_the_given_date_on(self) -> None:
+        sync_usage.merge_with_cumulative(
+            self.corrected, self.store, reconcile_since=date(2026, 7, 25)
+        )
+        store = json.loads(self.store.read_text())
+        # Before the window the high-water rule still stands...
+        self.assertEqual(store["2026-07-10"], {"totalTokens": 500, "totalCost": 10.0})
+        # ...and inside it the correction lands whole, cost with tokens.
+        self.assertEqual(store["2026-07-25"], {"totalTokens": 300, "totalCost": 6.0})
+
+    def test_reconciling_does_not_re_apply_the_unpriced_guard(self) -> None:
+        """Inside the window the fetch is authoritative, and was checked upstream."""
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-25", "totalTokens": 300, "totalCost": 0.0}],
+            self.store,
+            reconcile_since=date(2026, 7, 25),
+        )
+        self.assertEqual(
+            json.loads(self.store.read_text())["2026-07-25"],
+            {"totalTokens": 300, "totalCost": 0.0},
+        )
+
+
+class TrailIdentityTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.id_file = Path(self._tmp.name) / "trail_id"
+        p = patch.object(sync_usage, "TRAIL_ID_FILE", self.id_file)
+        p.start()
+        self.addCleanup(p.stop)
+
+    def resolve(self) -> str:
+        with patch.dict(sync_usage.os.environ, {sync_usage.TRAIL_ENV: "1"}):
+            return sync_usage.resolve_machine()
+
+    def test_the_identity_is_minted_once_and_reused(self) -> None:
+        first = self.resolve()
+        self.assertTrue(sync_usage.NODE_ID_RE.fullmatch(first.rsplit("/", 1)[-1]))
+        self.assertEqual(first, self.resolve())
+        self.assertEqual(first.rsplit("/", 1)[-1], self.id_file.read_text().strip())
+
+    def test_nothing_about_the_host_is_consulted(self) -> None:
+        """The hostname dependency is what let one machine become eight nodes."""
+        source = Path(sync_usage.__file__).read_text()
+        self.assertNotIn("gethostname", source)
+
+    def test_a_fresh_worker_mints_its_own(self) -> None:
+        first = self.resolve()
+        self.id_file.unlink()
+        self.assertNotEqual(first, self.resolve())
+
+    def test_an_existing_folder_can_be_adopted(self) -> None:
+        self.id_file.write_text("node-f4c49af3ff34\n")
+        self.assertEqual(self.resolve(), "data/trail/node-f4c49af3ff34")
+
+    def test_a_corrupt_file_is_replaced_not_trusted(self) -> None:
+        self.id_file.write_text("../../etc\n")
+        machine = self.resolve()
+        self.assertTrue(sync_usage.NODE_ID_RE.fullmatch(machine.rsplit("/", 1)[-1]))
+
+    def test_an_explicit_identity_still_hashes(self) -> None:
+        with patch.dict(sync_usage.os.environ, {sync_usage.TRAIL_ENV: "worker-7"}):
+            machine = sync_usage.resolve_machine()
+        self.assertEqual(machine, f"data/trail/{sync_usage._opaque_node_id('worker-7')}")
+        self.assertFalse(self.id_file.exists())
+
+
 class UnpricedModelsTests(unittest.TestCase):
     def test_reports_models_that_billed_tokens_for_free(self) -> None:
         raw = [

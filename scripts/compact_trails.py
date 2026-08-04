@@ -173,6 +173,35 @@ def _load_committed_rollup(fname: str) -> dict:
         return {}
 
 
+def _identical_sources(pods: list[Path]) -> list[tuple[str, str, str, str, int]]:
+    """Pods that report the same day with byte-identical token counts.
+
+    The additive fold below takes each pod's data as distinct, which held only while
+    a pod ID was unique per worker. It was not: deriving the ID from the hostname
+    gave one machine a fresh identity every time its hostname moved, its persistent
+    ~/.codex history was re-uploaded under each, and folding them multiplied those
+    days — one reached the signature six times over before this was caught.
+
+    Two pods agreeing to the token on a day did not do the same work twice; they are
+    one worker seen twice. Adding them is the single thing compaction must never do,
+    and it cannot be undone from the rollup afterwards, so refuse the whole run.
+    """
+    seen: dict[tuple[str, str], tuple[str, int]] = {}
+    clashes: list[tuple[str, str, str, str, int]] = []
+    for pod in sorted(pods):
+        for fname in AGENT_FILES:
+            for d, entry in _read_store(pod / fname).items():
+                tokens = entry.get("totalTokens", 0)
+                if not tokens:
+                    continue
+                prior = seen.get((fname, d))
+                if prior is None:
+                    seen[(fname, d)] = (pod.name, tokens)
+                elif prior[1] == tokens:
+                    clashes.append((fname, d, prior[0], pod.name, tokens))
+    return clashes
+
+
 def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
     """Add a dead pod's per-day {totalTokens, totalCost, imageCount} additively.
 
@@ -257,6 +286,23 @@ def _compact(*, dry: bool) -> int:
     if not dead:
         print(f"no trail pods older than {TRAIL_TTL_DAYS}d; nothing to compact")
         return 0
+
+    # Check every pod, not only the dying ones: a live pod repeating a dead pod's
+    # days is the same duplication seen from the other side.
+    clashes = _identical_sources(list(_iter_trail_pods()))
+    if clashes:
+        print(
+            "refusing to fold: pods report identical token counts, so they are one "
+            "worker under several IDs and adding them would multiply the total. "
+            "Collapse data/trail by hand first, then re-run.",
+            file=sys.stderr,
+        )
+        for fname, d, a, b, tokens in clashes[:10]:
+            print(f"  {fname} {d}: {a} and {b} both report {tokens:,} tokens",
+                  file=sys.stderr)
+        if len(clashes) > 10:
+            print(f"  ... and {len(clashes) - 10} more", file=sys.stderr)
+        return 1
 
     rollups = {f: _load_committed_rollup(f) for f in AGENT_FILES}
     for pod, newest in dead:

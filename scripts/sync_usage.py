@@ -18,10 +18,10 @@ pusher only; it reads from here but never writes here.
 Machine identity:
   - Durable machines read ~/.config/token-activity/node_name. The allowed
     public role labels are `work`, `personal`, and `devbox`.
-  - Ephemeral workers set CC_USAGE_TRAIL=1. Only a SHA-256-derived opaque ID is
-    stored below data/trail/, so the hostname never appears in Git paths. Each worker
-    owns one folder and concurrent workers sum instead of clobbering via the
-    per-folder max() rotation guard. compact_trails.py later folds expired
+  - Ephemeral workers set CC_USAGE_TRAIL=1 and mint an opaque ID once, kept in
+    ~/.config/token-activity/trail_id, so nothing about the host enters Git paths.
+    Each worker owns one folder and concurrent workers sum instead of clobbering
+    via the per-folder max() rotation guard. compact_trails.py later folds expired
     workers into data/trail/rollup and prunes them.
 """
 import argparse
@@ -30,7 +30,7 @@ import hashlib
 import json
 import os
 import re
-import socket
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -51,26 +51,54 @@ DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 ROLLOVER_WATCHDOG_NODES = frozenset({"work", "personal"})
 NODE_ID_RE = re.compile(r"node-[0-9a-f]{12}")
 
-# Set on ephemeral workers. "1"/"true"/"yes" uses the hostname; any other
+# Set on ephemeral workers. "1"/"true"/"yes" mints and reuses a local ID; any other
 # value is the raw worker identity. Only its SHA-256 digest enters the repo.
 TRAIL_ENV = "CC_USAGE_TRAIL"
+# Where the minted ID lives. Its whole job is to outlive a hostname change.
+TRAIL_ID_FILE = CONFIG_DIR / "trail_id"
 
 
 def _opaque_node_id(raw: str) -> str:
     return f"node-{hashlib.sha256(raw.encode('utf-8', 'replace')).hexdigest()[:12]}"
 
 
+def _minted_trail_node_id() -> str:
+    """This worker's folder name, minted once and then reused.
+
+    Deriving it from the hostname looked stable and was not: a box whose hostname
+    moves while its HOME persists comes back as a brand new node and re-uploads
+    every day it had already reported. One machine accumulated eight identities
+    that way, and compact_trails.py folds dead pods additively, so the same days
+    reached the signature up to six times over.
+
+    A minted ID cannot drift, and it still expresses what data/trail is for: a
+    genuinely fresh pod has a fresh HOME, finds no file, and mints its own. To
+    adopt an existing folder — after a hostname change, or when moving a worker —
+    write that node-<digest> name into TRAIL_ID_FILE before the next run.
+    """
+    try:
+        node_id = TRAIL_ID_FILE.read_text().strip()
+    except FileNotFoundError:
+        node_id = ""
+    if not NODE_ID_RE.fullmatch(node_id):
+        node_id = f"node-{secrets.token_hex(6)}"
+        TRAIL_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
+        TRAIL_ID_FILE.write_text(node_id + "\n")
+    return node_id
+
+
 def resolve_machine() -> str:
     """This machine's data-repo folder name.
 
-    Ephemeral workers get a digest-only nested name under data/trail/, so hostnames
+    Ephemeral workers get an opaque nested name under data/trail/, so hostnames
     and job identifiers never enter tracked paths. Durable machines use one of
     three intentionally public role labels.
     """
     trail = os.environ.get(TRAIL_ENV, "").strip()
     if trail:
-        raw = socket.gethostname() if trail.lower() in ("1", "true", "yes") else trail
-        return f"data/trail/{_opaque_node_id(raw)}"
+        if trail.lower() in ("1", "true", "yes"):
+            return f"data/trail/{_minted_trail_node_id()}"
+        return f"data/trail/{_opaque_node_id(trail)}"
     if not NODE_NAME_FILE.exists():
         sys.exit(
             f"missing {NODE_NAME_FILE}: write one of {sorted(DURABLE_NODES)}, "
@@ -331,18 +359,28 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
 # Persistence helpers
 # ---------------------------------------------------------------------------
 
-def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
+def merge_with_cumulative(
+    daily: list[dict], store_path: Path, *, reconcile_since: date | None = None
+) -> list[dict]:
     """Upsert daily entries into a local store; return merged list sorted by date.
 
     Why: ccusage / @ccusage/codex both read session JSONLs that get rotated by
     their host CLIs (cleanupPeriodDays etc). Without persisting locally, the
     cumulative total silently shrinks each day.
+
+    `reconcile_since` lifts that high-water rule for dates on or after it, so the
+    fetch wins even when it counts fewer tokens. See main() for when to reach for
+    it — never on the scheduled path.
     """
     store: dict[str, dict] = {}
     if store_path.exists():
         store = json.loads(store_path.read_text())
     for entry in daily:
         prev = store.get(entry["date"], {"totalTokens": 0, "totalCost": 0.0})
+        reconciling = (
+            reconcile_since is not None
+            and date.fromisoformat(entry["date"]) >= reconcile_since
+        )
         # Keep whichever observation saw the MOST tokens, and carry ITS cost.
         # max() on TOKENS alone is what guards against ccusage's window shrinking
         # when the host CLIs rotate session JSONLs (cleanupPeriodDays) — deleted
@@ -351,7 +389,7 @@ def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
         # ccusage's price table (e.g. a vendor cut), we want the fresh recalculated
         # cost, not a stale high-water price. `>=` lets a same-token reprice flow
         # through; only a genuine token regression (rotation) freezes the old pair.
-        if entry["totalTokens"] >= prev["totalTokens"]:
+        if reconciling or entry["totalTokens"] >= prev["totalTokens"]:
             merged = {"totalTokens": entry["totalTokens"], "totalCost": entry["totalCost"]}
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
@@ -374,7 +412,7 @@ def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
         # upstream has not priced yet leaves prev at 0, nothing is preserved, and
         # the first table that carries it wins. The value test stays as a fallback
         # for callers that pass no marking.
-        if prev["totalCost"] and (
+        if not reconciling and prev["totalCost"] and (
             not entry.get("costTrusted", True) or not merged["totalCost"]
         ):
             merged["totalCost"] = prev["totalCost"]
@@ -820,6 +858,11 @@ def main() -> int:
         "--no-push", action="store_true",
         help="update local data without switching branches, committing, or pushing",
     )
+    parser.add_argument(
+        "--reconcile-since", metavar="YYYY-MM-DD", type=date.fromisoformat,
+        help="accept LOWER token counts from this date on (run by hand after a "
+             "ccusage upgrade changes how usage is counted; never on a schedule)",
+    )
     args = parser.parse_args()
 
     machine = resolve_machine()
@@ -835,10 +878,11 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 0
-        return _sync(machine, no_push=args.no_push)
+        return _sync(machine, no_push=args.no_push,
+                     reconcile_since=args.reconcile_since)
 
 
-def _sync(machine: str, *, no_push: bool) -> int:
+def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -> int:
     now = datetime.now(SHANGHAI)
     today = now.date()
     recovery_grace_elapsed = (now.hour, now.minute) >= (0, 50)
@@ -873,9 +917,26 @@ def _sync(machine: str, *, no_push: bool) -> int:
         # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
-    merge_with_cumulative(cc_daily, cc_path)
-    merge_with_cumulative(cx_daily, codex_path)
-    merge_with_cumulative(op_daily, opencode_path)
+    # Reconciling rewrites history downward, so it must not run against a fetch
+    # that priced nothing: the fresh token count would land paired with a cost the
+    # price table never produced. Refuse and let the operator re-run.
+    if reconcile_since is not None:
+        if not (cc_daily or cx_daily or op_daily):
+            print("nothing fetched; refusing to reconcile against an empty read",
+                  file=sys.stderr)
+            return 1
+        if not all(e.get("costTrusted", True)
+                   for e in (*cc_daily, *cx_daily, *op_daily)):
+            print("this fetch priced some models at nothing; refusing to reconcile "
+                  "against it, re-run when the price table comes back complete",
+                  file=sys.stderr)
+            return 1
+        print(f"reconciling {reconcile_since} onward: the fetch wins even where it "
+              "counts fewer tokens", file=sys.stderr)
+
+    merge_with_cumulative(cc_daily, cc_path, reconcile_since=reconcile_since)
+    merge_with_cumulative(cx_daily, codex_path, reconcile_since=reconcile_since)
+    merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
 
     if not no_push:
         git_push(machine)
