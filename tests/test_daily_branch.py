@@ -276,6 +276,34 @@ class DailyBranchTests(unittest.TestCase):
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
     @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    def test_keeps_completed_local_branch_when_the_fork_comparison_fails(
+        self,
+        _current,
+        _completed,
+    ) -> None:
+        """The second comparison must fail closed too, not only the first."""
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[
+                result(stdout="snapshot\n"),
+                result(),  # data matches
+                result(stdout="forkpoint\n"),
+                result(returncode=128, stderr="fatal: bad revision"),
+            ],
+        ) as git:
+            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertNotIn(
+            ["branch", "-D", "usage/2026-08-02"],
+            [call.args[0] for call in git.call_args_list],
+        )
+
+    @patch.object(
+        sync_usage,
+        "_completed_local_daily_branches",
+        return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
+    )
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
     def test_keeps_completed_local_branch_carrying_its_own_code(
         self,
         _current,
@@ -329,6 +357,15 @@ class RealRepositoryCleanupTests(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.repo = Path(self._tmp.name) / "repo"
         self.repo.mkdir()
+        # Ignore the developer's own Git configuration: a global template dir,
+        # hooks path or alias must not decide whether these tests pass. The
+        # patch covers sync_usage._git too, which inherits os.environ.
+        env = patch.dict(
+            os.environ,
+            {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull},
+        )
+        env.start()
+        self.addCleanup(env.stop)
         self.git("init", "-q", "-b", "main")
         self.git("config", "user.name", "Test")
         self.git("config", "user.email", "test@example.invalid")

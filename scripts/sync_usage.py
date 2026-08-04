@@ -345,6 +345,11 @@ def repo_git_lock(wait_seconds: float) -> Iterator[bool]:
     Only contention (BlockingIOError) is retried. Any other OSError means locking
     itself is broken here — an unsupported filesystem, a bad descriptor — and is
     raised rather than silently reported as a busy peer.
+
+    Not reentrant: a nested acquire flocks a second descriptor against this
+    process's own lock, which conflicts even in one process. It would yield False
+    after the wait rather than hang, but the caller would then skip work for no
+    reason. Take the lock once, at the top of a run — see compact_trails.main().
     """
     GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
@@ -509,8 +514,9 @@ def _cleanup_completed_local_branches(before: date) -> None:
 
     Both checks read final trees, not commit history, so a branch whose commits
     cancel out (a change and its revert, an empty commit) reads as holding nothing
-    and is deleted with its history reachable only through the reflog. That is the
-    accepted trade: squash-merged branches leave no ancestry to test instead.
+    and is deleted. `branch -D` drops that branch's reflog with it, leaving those
+    commits dangling until Git prunes them. That is the accepted trade: a
+    squash-merged branch leaves no ancestry to test instead.
     """
     current = _current_branch()
     for branch_date, branch in _completed_local_daily_branches(before):

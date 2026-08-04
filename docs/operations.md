@@ -82,9 +82,10 @@ Every process that runs Git in this checkout therefore takes one advisory lock f
   an unbounded hang would strand the lock and starve every other Git user here.
 - `compact_trails.py` takes the same lock, in both normal and `--dry-run` mode, because it pulls
   before reporting. It is hand-started, so it reports and exits rather than retrying.
-- Read-only consumers take it non-blocking and continue with local state instead of queueing. The
-  signature pusher holds it across its pull *and* its reads: the writer replaces the per-agent JSON
-  files one at a time, so an unlocked read can mix generations.
+- The signature pusher waits up to 30 seconds and holds the lock across its pull *and* its reads,
+  because the writer replaces the per-agent JSON files one at a time and an unlocked read can mix
+  generations. If the lock never frees it skips the run rather than reading around the writer; the
+  next `WatchPaths` event or 15-minute tick republishes.
 
 Any new process added to this checkout must take the same lock.
 
@@ -120,8 +121,8 @@ whose comparison fails outright, which is reported separately from a real differ
 
 Both checks read final trees, not commit history, because a squash-merged branch leaves no
 ancestry to test. A branch whose own commits cancel out — a change and its revert, an empty commit
-— therefore reads as holding nothing and is deleted, leaving those commits reachable only through
-the reflog.
+— therefore reads as holding nothing and is deleted. `git branch -D` drops that branch's reflog
+along with the ref, so those commits are left dangling and survive only until Git prunes them.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a
