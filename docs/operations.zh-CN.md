@@ -61,6 +61,24 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
+### Git 并发访问
+
+在这个 checkout 里跑 Git 的不止写入脚本一个进程：下游的飞书签名推送器会 pull 同一个
+工作区，而它的 launchd `WatchPaths` 监听的正是写入脚本产出的那几个数据文件，所以写入
+动作本身就会把它叫醒，二者必然重叠。Git 对一个工作区没有跨进程锁：并发 fetch 会互相
+截断重写 `.git/FETCH_HEAD`，表现为 `fatal: Cannot rebase onto multiple branches.`；
+远端 ref 更新会丢失 compare-and-swap（`cannot lock ref ... is at X but expected Y`）；
+fetch 还可能在另一个进程读取时移动当前检出分支。
+
+因此所有在本 checkout 里执行 Git 的进程都要获取同一把建议锁
+`~/.cache/aether-ledger/git.lock`：
+
+- 写入脚本最多等待 60 秒，拿不到就跳过本轮。这不会丢数据——本地 store 是累积的，
+  下一个 15 分钟周期会补上。
+- 只读消费者以非阻塞方式获取，拿不到就直接使用本地状态，不排队等待。
+
+以后新增任何读写这个 checkout 的进程，都必须获取同一把锁。
+
 ## 每日分支生命周期
 
 写入设备使用 Asia/Shanghai 自然日对应的 `usage/YYYY-MM-DD`。多台设备可以推送到同一
@@ -79,8 +97,12 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 `main` 创建。
 
 每次成功 fetch 后，写入设备还会在不存在本地独立提交时快进本地 `main`。已完成的远端
-usage 分支消失后，只有当本地分支除生成面板外的完整文件树与 `origin/main` 中对应的
-日结快照完全一致时，才会删除本地副本；发生分叉或被其他 worktree 检出的分支会保留。
+usage 分支消失后，只有当本地分支"没有任何属于它自己的东西"时才会删除本地副本，需要
+同时满足两个条件：它的 `data/` 与 `origin/main` 上当日的日结快照一致；并且相对于它从
+`main` 分叉出去的那个提交，它没有引入 `data/` 之外的任何改动。第二个条件特意与分叉点
+比较，而不是与日结快照比较——如果拿整棵树去比快照，那么分叉之后才合入 `main` 的代码或
+文档提交（仓库尚在演进期这很常见）都会被算成差异，把分支永久钉住。数据未发布、带有
+自己的非 data 提交、或被其他 worktree 检出的分支都会保留，并各自打印对应日志。
 
 workflow 也支持手动触发。并发组会阻止 rollover 重叠运行；每次扫描全部旧日期分支，
 因此第二次定时触发和手动恢复都是幂等且安全的。

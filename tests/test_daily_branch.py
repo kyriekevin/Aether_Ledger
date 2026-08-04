@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import fcntl
+import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
@@ -213,23 +216,89 @@ class DailyBranchTests(unittest.TestCase):
         with patch.object(
             sync_usage,
             "_git",
-            side_effect=[result(stdout="snapshot\n"), result(), result()],
+            side_effect=[
+                result(stdout="snapshot\n"),  # locate the finalized snapshot
+                result(),  # data matches that snapshot
+                result(stdout="forkpoint\n"),  # locate the fork point
+                result(),  # nothing of its own outside data/
+                result(),  # delete
+            ],
         ) as git:
             sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
         commands = [call.args[0] for call in git.call_args_list]
         self.assertIn(
+            ["diff", "--quiet", "snapshot", "usage/2026-08-02", "--", "data"],
+            commands,
+        )
+        self.assertIn(
             [
                 "diff",
                 "--quiet",
-                "snapshot",
+                "forkpoint",
                 "usage/2026-08-02",
                 "--",
                 ".",
-                ":(exclude)assets/token-activity.svg",
+                ":(exclude)data",
             ],
             commands,
         )
         self.assertIn(["branch", "-D", "usage/2026-08-02"], commands)
+
+    @patch.object(
+        sync_usage,
+        "_completed_local_daily_branches",
+        return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
+    )
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    def test_deletes_completed_local_branch_after_main_moved_on(
+        self,
+        _current,
+        _completed,
+    ) -> None:
+        """A code or docs commit merged into main after the fork must not pin the branch."""
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[
+                result(stdout="snapshot\n"),
+                result(),  # data still matches the snapshot
+                result(stdout="forkpoint\n"),
+                result(),  # branch itself never touched anything outside data/
+                result(),
+            ],
+        ) as git:
+            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertIn(
+            ["branch", "-D", "usage/2026-08-02"],
+            [call.args[0] for call in git.call_args_list],
+        )
+
+    @patch.object(
+        sync_usage,
+        "_completed_local_daily_branches",
+        return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
+    )
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    def test_keeps_completed_local_branch_carrying_its_own_code(
+        self,
+        _current,
+        _completed,
+    ) -> None:
+        with patch.object(
+            sync_usage,
+            "_git",
+            side_effect=[
+                result(stdout="snapshot\n"),
+                result(),  # data is published
+                result(stdout="forkpoint\n"),
+                result(returncode=1),  # but the branch changed something outside data/
+            ],
+        ) as git:
+            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        self.assertNotIn(
+            ["branch", "-D", "usage/2026-08-02"],
+            [call.args[0] for call in git.call_args_list],
+        )
 
     @patch.object(
         sync_usage,
@@ -248,6 +317,46 @@ class DailyBranchTests(unittest.TestCase):
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
+
+
+class GitLockTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        patcher = patch.object(
+            sync_usage, "GIT_LOCK_PATH", Path(self._tmp.name) / "nested" / "git.lock"
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_acquires_and_releases_the_shared_lock(self) -> None:
+        with sync_usage.repo_git_lock(0) as acquired:
+            self.assertTrue(acquired)
+        # A second run must find it free again.
+        with sync_usage.repo_git_lock(0) as acquired:
+            self.assertTrue(acquired)
+
+    def test_reports_failure_when_another_process_holds_the_lock(self) -> None:
+        sync_usage.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(sync_usage.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+        self.addCleanup(os.close, fd)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with sync_usage.repo_git_lock(wait_seconds=0) as acquired:
+            self.assertFalse(acquired)
+
+    @patch.object(sync_usage, "resolve_machine", return_value="data/work")
+    def test_run_is_skipped_rather_than_racing_a_lock_holder(self, _machine) -> None:
+        with (
+            patch.object(sync_usage, "_sync") as sync,
+            patch.object(sync_usage.sys, "argv", ["sync_usage.py"]),
+        ):
+            sync_usage.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(sync_usage.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+            self.addCleanup(os.close, fd)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with patch.object(sync_usage, "GIT_LOCK_WAIT_SECONDS", 0):
+                self.assertEqual(sync_usage.main(), 0)
+        sync.assert_not_called()
 
 
 if __name__ == "__main__":

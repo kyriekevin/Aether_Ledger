@@ -62,6 +62,25 @@ Logs:
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
+### Concurrent Git access
+
+The writer is not the only scheduled process running Git in this checkout. The downstream Feishu
+signature pusher pulls the same working tree, and its launchd `WatchPaths` watch the very data
+files the writer produces, so a write wakes it up mid-sync. Git has no cross-process lock for a
+working tree: concurrent fetches truncate and rewrite `.git/FETCH_HEAD` under each other, which
+surfaces as `fatal: Cannot rebase onto multiple branches.`; remote-ref updates lose their
+compare-and-swap (`cannot lock ref ... is at X but expected Y`); and a fetch can move the
+checked-out branch while the other process is reading it.
+
+Every process that runs Git in this checkout therefore takes one advisory lock file,
+`~/.cache/aether-ledger/git.lock`:
+
+- The writer waits up to 60 seconds and skips the run if the lock never frees. Nothing is lost —
+  local stores are cumulative, so the next 15-minute tick catches up.
+- Read-only consumers take it non-blocking and continue with local state instead of queueing.
+
+Any new consumer added to this checkout must take the same lock.
+
 ## Daily branch lifecycle
 
 Writers use `usage/YYYY-MM-DD`, based on the Asia/Shanghai calendar day. Multiple machines can
@@ -83,9 +102,13 @@ from being based on a `main` that lacks an earlier day's final data.
 
 After each successful fetch, writers also fast-forward the local `main` ref when it has no
 local-only commits. Once a completed remote usage branch has disappeared, the writer deletes its
-local counterpart only when its tracked tree, excluding the generated dashboard, exactly matches
-the corresponding finalized snapshot on `origin/main`. Diverged branches and branches checked out
-by another worktree are kept.
+local counterpart only when the branch holds nothing of its own: its `data/` must match the day's
+finalized snapshot on `origin/main`, and it must introduce no change outside `data/` relative to
+the commit where it forked from `main`. The second check compares against the fork point on
+purpose. Comparing whole trees against the snapshot would count every code or docs commit that
+reached `main` after the fork — routine while the repo is still moving — as a local difference and
+pin the branch forever. Branches with unpublished data, with their own non-data commits, or
+checked out by another worktree are kept, each with its own log line.
 
 The workflow is also manually dispatchable. Its concurrency group prevents overlapping rollover
 runs, and scanning all older date branches makes both the retry and manual recovery safe after a
