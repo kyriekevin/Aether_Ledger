@@ -40,7 +40,24 @@ printf 'personal\n' > ~/.config/token-activity/node_name
 ```
 
 临时 trail worker 设置 `CC_USAGE_TRAIL=1`，也可以将其设为稳定的 worker ID。生产脚本
-只会保存经 SHA-256 派生的 `data/trail/node-<digest>` 路径，不会保存原始值。
+只会保存不透明的 `data/trail/node-<12 位十六进制>` 路径，不会保存原始值：稳定 worker ID
+以其 SHA-256 摘要落盘，而 `CC_USAGE_TRAIL=1` 会随机铸造一次 ID 并保存在
+`~/.config/token-activity/trail_id`。
+
+这个文件就是该 worker 的身份。它以前由主机名派生，而主机名会漂移：`$HOME` 持久但主机名
+变化的 worker 会以全新节点身份回来，把已经上报过的日子再传一遍；而折叠死亡 pod 是相加的，
+于是那些天被翻倍。
+
+**升级一台已经在某个 `node-…` 目录下有数据的 worker 时，请先做这一步**，否则它下次同步会
+铸造新 ID 并把原目录变成孤儿：
+
+```sh
+mkdir -p ~/.config/token-activity
+printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已有的目录名
+```
+
+全新 worker 不需要任何操作 —— 找不到文件就自己铸造。文件存在但格式不对时会直接中止，
+而不是覆盖掉一个正在使用的身份。
 
 ## 定时同步
 

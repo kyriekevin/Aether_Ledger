@@ -252,10 +252,37 @@ class TrailIdentityTests(unittest.TestCase):
         self.id_file.write_text("node-f4c49af3ff34\n")
         self.assertEqual(self.resolve(), "data/trail/node-f4c49af3ff34")
 
-    def test_a_corrupt_file_is_replaced_not_trusted(self) -> None:
+    def test_a_corrupt_file_stops_the_run_rather_than_reminting(self) -> None:
+        """Reminting over a damaged identity orphans the folder it points at."""
         self.id_file.write_text("../../etc\n")
-        machine = self.resolve()
-        self.assertTrue(sync_usage.NODE_ID_RE.fullmatch(machine.rsplit("/", 1)[-1]))
+        with self.assertRaises(SystemExit):
+            self.resolve()
+        self.assertEqual(self.id_file.read_text(), "../../etc\n")
+
+    def test_a_half_written_file_stops_the_run(self) -> None:
+        self.id_file.write_text("node-f4c49a")
+        with self.assertRaises(SystemExit):
+            self.resolve()
+
+    def test_an_id_minted_concurrently_is_adopted(self) -> None:
+        """Two first runs must converge, not split the history across two folders."""
+        real = sync_usage.os.link
+        def link_after_someone_else_won(src, dst):
+            Path(dst).write_text("node-aaaabbbbcccc\n")
+            return real(src, dst)
+        with patch.object(sync_usage.os, "link", link_after_someone_else_won):
+            self.assertEqual(self.resolve(), "data/trail/node-aaaabbbbcccc")
+
+    def test_a_partial_id_is_never_visible_to_a_reader(self) -> None:
+        """The file appears only once fully written, so a racing reader can't see half."""
+        seen = []
+        real = sync_usage.os.link
+        def record_then_link(src, dst):
+            seen.append(Path(src).read_text())
+            return real(src, dst)
+        with patch.object(sync_usage.os, "link", record_then_link):
+            minted = self.resolve().rsplit("/", 1)[-1]
+        self.assertEqual(seen, [minted + "\n"])
 
     def test_an_explicit_identity_still_hashes(self) -> None:
         with patch.dict(sync_usage.os.environ, {sync_usage.TRAIL_ENV: "worker-7"}):
@@ -403,6 +430,67 @@ class IdenticalSourceTests(unittest.TestCase):
         self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 0})
         self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 0})
         self.assertEqual(self.clashes(), [])
+
+
+class ReconcileStubTests(unittest.TestCase):
+    """--reconcile-since rewrites history downward; only real readings may drive it."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.store = Path(self._tmp.name) / "codex.json"
+        self.store.write_text(json.dumps({
+            "2026-07-25": {"totalTokens": 722_000_000, "totalCost": 90.0,
+                           "models": {"gpt-5.5": 722_000_000}},
+        }))
+
+    def read(self) -> dict:
+        return json.loads(self.store.read_text())
+
+    def test_an_image_stub_cannot_zero_a_reconciled_day(self) -> None:
+        """ccusage rotated the session away; the stub knows images, not tokens."""
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-25", "totalTokens": 0, "totalCost": 0.0,
+              "models": {}, "imageCount": 3, "tokensObserved": False}],
+            self.store,
+            reconcile_since=date(2026, 7, 18),
+        )
+        day = self.read()["2026-07-25"]
+        self.assertEqual(day["totalTokens"], 722_000_000)
+        self.assertEqual(day["imageCount"], 3)
+
+    def test_a_real_reading_still_corrects_downward(self) -> None:
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-25", "totalTokens": 223_000_000, "totalCost": 30.0}],
+            self.store,
+            reconcile_since=date(2026, 7, 18),
+        )
+        self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 223_000_000)
+
+    def test_reconciling_lets_an_emptied_breakdown_win(self) -> None:
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-25", "totalTokens": 223_000_000, "totalCost": 30.0,
+              "models": {}}],
+            self.store,
+            reconcile_since=date(2026, 7, 18),
+        )
+        self.assertEqual(self.read()["2026-07-25"]["models"], {})
+
+    def test_a_normal_merge_still_keeps_a_stale_breakdown(self) -> None:
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-25", "totalTokens": 800_000_000, "totalCost": 99.0,
+              "models": {}}],
+            self.store,
+        )
+        self.assertEqual(self.read()["2026-07-25"]["models"], {"gpt-5.5": 722_000_000})
+
+    def test_a_day_the_fetch_dropped_keeps_its_stored_value(self) -> None:
+        sync_usage.merge_with_cumulative(
+            [{"date": "2026-07-26", "totalTokens": 100, "totalCost": 1.0}],
+            self.store,
+            reconcile_since=date(2026, 7, 18),
+        )
+        self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 722_000_000)
 
 
 if __name__ == "__main__":

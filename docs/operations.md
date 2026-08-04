@@ -41,7 +41,24 @@ printf 'personal\n' > ~/.config/token-activity/node_name
 ```
 
 Ephemeral trail workers set `CC_USAGE_TRAIL=1`, or set it to a stable worker ID. The producer
-stores only a SHA-256-derived `data/trail/node-<digest>` path, never the raw value.
+stores only an opaque `data/trail/node-<12 hex digits>` path, never the raw value: a stable
+worker ID is stored as its SHA-256 digest, and `CC_USAGE_TRAIL=1` mints a random ID once and
+keeps it in `~/.config/token-activity/trail_id`.
+
+That file is the worker's identity. It used to be derived from the hostname, which drifts: a
+worker whose hostname moves while its `$HOME` persists comes back as a new node and re-uploads
+every day it had already reported, and compaction folds pods additively, so those days multiply.
+
+**Upgrading a worker that already has data under a `node-…` folder, do this first**, or its
+next sync mints a fresh ID and orphans that folder:
+
+```sh
+mkdir -p ~/.config/token-activity
+printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # its existing folder name
+```
+
+A genuinely new worker needs nothing — it finds no file and mints its own. A file that exists
+but does not parse stops the run rather than reminting over an identity in use.
 
 ## Scheduled sync
 

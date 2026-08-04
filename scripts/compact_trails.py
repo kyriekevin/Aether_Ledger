@@ -296,10 +296,16 @@ def _compact(*, dry: bool) -> int:
     # days is the same duplication seen from the other side.
     clashes = _identical_sources(list(_iter_trail_pods()))
     if clashes:
+        # Quarantine the pods involved rather than the whole run. Folding them is
+        # what must never happen — it multiplies the total and the rollup cannot
+        # be un-added afterwards — but pods with no part in the clash are ordinary
+        # dead pods, and refusing those too would let data/trail grow without
+        # bound until someone notices, which is how this went unseen for weeks.
+        suspect = {name for _, _, a, b, _ in clashes for name in (a, b)}
         print(
-            "refusing to fold: pods report identical token counts, so they are one "
-            "worker under several IDs and adding them would multiply the total. "
-            "Collapse data/trail by hand first, then re-run.",
+            f"{len(suspect)} pod(s) report identical token counts, so they are one "
+            f"worker under several IDs and adding them would multiply the total. "
+            f"Leaving them in place; collapse data/trail by hand, then re-run.",
             file=sys.stderr,
         )
         for fname, d, a, b, tokens in clashes[:10]:
@@ -307,7 +313,10 @@ def _compact(*, dry: bool) -> int:
                   file=sys.stderr)
         if len(clashes) > 10:
             print(f"  ... and {len(clashes) - 10} more", file=sys.stderr)
-        return 1
+        dead = [(pod, newest) for pod, newest in dead if pod.name not in suspect]
+        if not dead:
+            print("every dead pod is implicated; nothing safe to fold", file=sys.stderr)
+            return 1
 
     rollups = {f: _load_committed_rollup(f) for f in AGENT_FILES}
     for pod, newest in dead:
@@ -318,7 +327,7 @@ def _compact(*, dry: bool) -> int:
         for f in AGENT_FILES:
             print(f"  rollup/{f}: {len(rollups[f])} day(s) after fold")
         print(f"DRY RUN: would remove {len(dead)} pod folder(s), no writes made")
-        return 0
+        return 1 if clashes else 0
 
     for f in AGENT_FILES:
         if rollups[f]:  # don't create an empty rollup file for an unused agent
@@ -361,7 +370,9 @@ def _compact(*, dry: bool) -> int:
               "will retry next run", file=sys.stderr)
         return 1
     print(f"compacted {len(dead)} pod(s) → data/trail/rollup; pushed")
-    return 0
+    # The fold succeeded, but quarantined pods still need a human, and a silent
+    # success would let them sit there indefinitely.
+    return 1 if clashes else 0
 
 
 if __name__ == "__main__":

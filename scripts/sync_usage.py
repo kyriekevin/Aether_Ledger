@@ -75,16 +75,47 @@ def _minted_trail_node_id() -> str:
     genuinely fresh pod has a fresh HOME, finds no file, and mints its own. To
     adopt an existing folder — after a hostname change, or when moving a worker —
     write that node-<digest> name into TRAIL_ID_FILE before the next run.
+
+    Only the absence of the file may mint. A file that exists but does not parse
+    is a half-written or damaged identity, and reminting over it would orphan the
+    history it points at — the failure this whole function exists to prevent — so
+    that case stops and asks for a human. Minting itself publishes the ID by
+    linking a fully written temp file into place, which is atomic and fails if
+    another process got there first, so concurrent first runs converge on one ID
+    and no reader can observe a partial one.
     """
     try:
         node_id = TRAIL_ID_FILE.read_text().strip()
     except FileNotFoundError:
         node_id = ""
-    if not NODE_ID_RE.fullmatch(node_id):
-        node_id = f"node-{secrets.token_hex(6)}"
-        TRAIL_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
-        TRAIL_ID_FILE.write_text(node_id + "\n")
-    return node_id
+    except OSError as e:
+        sys.exit(f"cannot read {TRAIL_ID_FILE}: {e}")
+    if NODE_ID_RE.fullmatch(node_id):
+        return node_id
+    if node_id:
+        sys.exit(
+            f"{TRAIL_ID_FILE} holds {node_id!r}, which is not a node-<12 hex digits> "
+            f"name. Refusing to mint a replacement: this worker would start a second "
+            f"folder and re-upload history it has already reported. Write the correct "
+            f"existing name into the file, or delete it to start a genuinely new node."
+        )
+    TRAIL_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    minted = f"node-{secrets.token_hex(6)}"
+    fd, tmp = tempfile.mkstemp(dir=TRAIL_ID_FILE.parent, prefix=".trail_id.")
+    try:
+        with os.fdopen(fd, "w") as fh:
+            fh.write(minted + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+        try:
+            os.link(tmp, TRAIL_ID_FILE)
+        except FileExistsError:
+            # Another process minted between our read and our link. Its ID is as
+            # good as ours and it is the one on disk, so adopt it.
+            return _minted_trail_node_id()
+    finally:
+        os.unlink(tmp)
+    return minted
 
 
 def resolve_machine() -> str:
@@ -350,6 +381,11 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
         cx_daily.append({
             "date": d, "totalTokens": 0, "totalCost": 0.0,
             "models": {}, "imageCount": cnt,
+            # Says nothing about that day's tokens — ccusage no longer has the
+            # session at all. Only imageCount is real, so reconciliation, which
+            # otherwise lets a fetch overwrite history downward, must not read
+            # these zeros as "the day turned out to be empty".
+            "tokensObserved": False,
         })
 
     return cc_daily, cx_daily, op_daily
@@ -377,8 +413,13 @@ def merge_with_cumulative(
         store = json.loads(store_path.read_text())
     for entry in daily:
         prev = store.get(entry["date"], {"totalTokens": 0, "totalCost": 0.0})
+        # An entry that never observed tokens (the image-only stub built for a day
+        # whose session ccusage has already rotated away) carries zeros that mean
+        # "unknown", not "none". Reconciliation is the one path that would write
+        # them over real stored usage, so it never applies to those entries.
         reconciling = (
             reconcile_since is not None
+            and entry.get("tokensObserved", True)
             and date.fromisoformat(entry["date"]) >= reconcile_since
         )
         # Keep whichever observation saw the MOST tokens, and carry ITS cost.
@@ -418,7 +459,12 @@ def merge_with_cumulative(
             merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (codex side only;
         # cc entries don't have this). Fresh fetch wins over stale stored copy.
-        if entry.get("models"):
+        # While reconciling the fetch is authoritative even when it breaks the day
+        # down into nothing, so an emptied map must not leave the old one behind
+        # describing totals that no longer exist.
+        if reconciling and "models" in entry:
+            merged["models"] = entry["models"]
+        elif entry.get("models"):
             merged["models"] = entry["models"]
         elif "models" in prev:
             merged["models"] = prev["models"]
@@ -429,6 +475,26 @@ def merge_with_cumulative(
         if new_img or prev_img:
             merged["imageCount"] = max(new_img, prev_img)
         store[entry["date"]] = merged
+    if reconcile_since is not None:
+        # Reconciliation can only correct days the fetch still returns. A day it
+        # dropped entirely is either usage the upgrade folded away or a session
+        # that simply rotated out of ccusage's window, and nothing in the fetch
+        # tells those apart — so keep the stored value, which is the safe reading,
+        # and name the days so the operator can judge them.
+        observed = {e["date"] for e in daily if e.get("tokensObserved", True)}
+        stale = sorted(
+            d for d, v in store.items()
+            if date.fromisoformat(d) >= reconcile_since
+            and d not in observed
+            and v.get("totalTokens", 0)
+        )
+        if stale:
+            print(
+                f"{store_path.name}: {len(stale)} day(s) on or after {reconcile_since} "
+                f"were not in this fetch and keep their stored value: "
+                f"{', '.join(stale)}",
+                file=sys.stderr,
+            )
     _atomic_write_json(store_path, store)
     return [{"date": d, **v} for d, v in sorted(store.items())]
 
@@ -921,7 +987,10 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     # that priced nothing: the fresh token count would land paired with a cost the
     # price table never produced. Refuse and let the operator re-run.
     if reconcile_since is not None:
-        if not (cc_daily or cx_daily or op_daily):
+        # Entries that never observed tokens do not count as a read: a fetch made
+        # only of image stubs looks non-empty and knows nothing about usage.
+        if not [e for e in (*cc_daily, *cx_daily, *op_daily)
+                if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
                   file=sys.stderr)
             return 1
