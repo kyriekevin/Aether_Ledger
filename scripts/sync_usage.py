@@ -261,36 +261,52 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
         op_tokens = 0
         op_cost = 0.0
         op_models: dict[str, dict] = {}
+        # A model that billed tokens for free is one this run failed to price, and
+        # its whole bucket's sum for the day is short by an unknown amount. Track
+        # that per bucket: the sum is the only granularity the store keeps, so a
+        # single unpriced model taints the day's total for its agent and nothing
+        # wider. `codex-auto-review` bills free every run and is excluded, else no
+        # Codex day would ever be trusted.
+        cc_priced = cx_priced = op_priced = True
         for m in row.get("modelBreakdowns", []):
             tokens = _breakdown_tokens(m)
             cost = m.get("cost", 0.0)
             agent = _classify_agent(m["modelName"], row_agents)
+            unpriced = (
+                tokens and not cost and m["modelName"] not in UNPRICED_UPSTREAM_MODELS
+            )
             if agent == "claude":
                 cc_tokens += tokens
                 cc_cost += cost
+                cc_priced = cc_priced and not unpriced
             elif agent == "codex":
                 cx_tokens += tokens
                 cx_cost += cost
                 cx_models[m["modelName"]] = {"totalTokens": tokens}
+                cx_priced = cx_priced and not unpriced
             elif agent == "opencode":
                 op_tokens += tokens
                 op_cost += cost
                 op_models[m["modelName"]] = {"totalTokens": tokens}
+                op_priced = op_priced and not unpriced
         if cc_tokens or cc_cost:
             cc_daily.append({
                 "date": d, "totalTokens": cc_tokens, "totalCost": cc_cost,
+                "costTrusted": cc_priced,
             })
         if cx_tokens or cx_cost or cx_models:
             cx_daily.append({
                 "date": d, "totalTokens": cx_tokens, "totalCost": cx_cost,
                 "models": cx_models,
                 "imageCount": fs_image_counts.get(d, 0),
+                "costTrusted": cx_priced,
             })
             seen_codex_dates.add(d)
         if op_tokens or op_cost or op_models:
             op_daily.append({
                 "date": d, "totalTokens": op_tokens, "totalCost": op_cost,
                 "models": op_models,
+                "costTrusted": op_priced,
             })
 
     # Edge case: PNG 存在但 ccusage 那天的 session 已被 rotate — 补一个 stub 让
@@ -340,18 +356,27 @@ def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
         # ...except when the "reprice" is really a missing price. ccusage fetches
-        # its price table at run time, per agent family, and on a failed fetch
-        # silently falls back to the snapshot bundled in the binary: exit status 0,
-        # nothing on stderr, tokens still correct. Models released after that
-        # snapshot are simply absent from it and come back at cost exactly 0, which
-        # the rule above cannot tell apart from a vendor cut — so one such run zeroes
-        # the stored cost of every affected day and the signature publishes $0. A
-        # real reprice never lands on exactly 0 for a day that already cost
-        # something, so keep the last known cost there and let the next complete
-        # fetch overwrite it. A model that has never been priced (codex-auto-review
-        # is absent upstream) still starts at 0 and back-fills normally once the
-        # table gains it, because prev has no cost to preserve.
-        if not merged["totalCost"] and prev["totalCost"]:
+        # its price table at run time and on a failed fetch silently falls back to
+        # the snapshot bundled in the binary: exit status 0, nothing on stderr,
+        # tokens still correct. Models released after that snapshot are absent from
+        # it and come back free, which the rule above cannot tell apart from a
+        # vendor cut.
+        #
+        # The fetch marks a day untrusted when any model in this bucket billed
+        # tokens for free, which is what a missing price looks like. Judging the
+        # value instead of the fetch is not enough: when only SOME of the day's
+        # models lose their price the sum stays truthy and merely understates —
+        # observed at $1.03 against a stored $69.47 on the same day. Both shapes
+        # collapse to the same rule here, so keep the last known cost and let the
+        # next complete fetch overwrite it.
+        #
+        # Back-fill is unaffected, and is why cost follows tokens at all: a model
+        # upstream has not priced yet leaves prev at 0, nothing is preserved, and
+        # the first table that carries it wins. The value test stays as a fallback
+        # for callers that pass no marking.
+        if prev["totalCost"] and (
+            not entry.get("costTrusted", True) or not merged["totalCost"]
+        ):
             merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (codex side only;
         # cc entries don't have this). Fresh fetch wins over stale stored copy.
