@@ -87,6 +87,10 @@ def resolve_machine() -> str:
 # rotation 拖低；分桶 max() 则各自独立守住历史峰值。
 CCUSAGE_CMD = ["ccusage", "daily", "--json"]
 
+# Models upstream has no price entry for at all. They always come back free, so
+# they must not be read as the trace of a degraded fetch (see unpriced_models).
+UNPRICED_UPSTREAM_MODELS = frozenset({"codex-auto-review"})
+
 # ccusage walks every session JSONL, so it is the slowest step here — and it runs
 # while this process holds the checkout-wide Git lock. An unbounded hang would
 # strand that lock for as long as launchd keeps the job alive, starving every
@@ -172,6 +176,41 @@ def count_codex_image_files_per_day() -> dict[str, int]:
     return counts
 
 
+def _breakdown_tokens(m: dict) -> int:
+    """Total tokens on one modelBreakdowns entry; ccusage gives no rolled-up field."""
+    return (
+        m.get("inputTokens", 0)
+        + m.get("outputTokens", 0)
+        + m.get("cacheCreationTokens", 0)
+        + m.get("cacheReadTokens", 0)
+    )
+
+
+def unpriced_models(raw: list[dict]) -> dict[str, int]:
+    """Model → number of days it reported tokens but a cost of exactly 0.
+
+    ccusage fetches its price table at run time and, when that fails, falls back to
+    the snapshot bundled in its binary — silently, with a zero exit status, an empty
+    stderr and correct token counts. Models newer than that snapshot are absent from
+    it and come back free, which is the only externally visible trace of a degraded
+    fetch. Models upstream never priced are excluded so the signal stays rare enough
+    to mean something in the launchd log.
+
+    Reporting only: merge_with_cumulative already keeps the stored cost wherever one
+    exists, and a run whose prices are merely stale rather than missing leaves no
+    trace here at all.
+    """
+    unpriced: dict[str, int] = {}
+    for row in raw:
+        for m in row.get("modelBreakdowns", []):
+            name = m["modelName"]
+            if name in UNPRICED_UPSTREAM_MODELS or m.get("cost", 0.0):
+                continue
+            if _breakdown_tokens(m):
+                unpriced[name] = unpriced.get(name, 0) + 1
+    return unpriced
+
+
 def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
     """一次 ccusage daily,按可辨识来源拆出 (cc_daily, cx_daily, op_daily)。
 
@@ -196,6 +235,15 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
         timeout=CCUSAGE_TIMEOUT_SECONDS,
     )
     raw = json.loads(out.stdout).get("daily", [])
+    unpriced = unpriced_models(raw)
+    if unpriced:
+        print(
+            "ccusage priced nothing for "
+            + ", ".join(f"{name} ({days}d)" for name, days in sorted(unpriced.items()))
+            + "; its price table came back incomplete, so days that already have a "
+            "cost keep it",
+            file=sys.stderr,
+        )
     fs_image_counts = count_codex_image_files_per_day()
 
     cc_daily: list[dict] = []
@@ -214,12 +262,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
         op_cost = 0.0
         op_models: dict[str, dict] = {}
         for m in row.get("modelBreakdowns", []):
-            tokens = (
-                m.get("inputTokens", 0)
-                + m.get("outputTokens", 0)
-                + m.get("cacheCreationTokens", 0)
-                + m.get("cacheReadTokens", 0)
-            )
+            tokens = _breakdown_tokens(m)
             cost = m.get("cost", 0.0)
             agent = _classify_agent(m["modelName"], row_agents)
             if agent == "claude":
@@ -296,6 +339,20 @@ def merge_with_cumulative(daily: list[dict], store_path: Path) -> list[dict]:
             merged = {"totalTokens": entry["totalTokens"], "totalCost": entry["totalCost"]}
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
+        # ...except when the "reprice" is really a missing price. ccusage fetches
+        # its price table at run time, per agent family, and on a failed fetch
+        # silently falls back to the snapshot bundled in the binary: exit status 0,
+        # nothing on stderr, tokens still correct. Models released after that
+        # snapshot are simply absent from it and come back at cost exactly 0, which
+        # the rule above cannot tell apart from a vendor cut — so one such run zeroes
+        # the stored cost of every affected day and the signature publishes $0. A
+        # real reprice never lands on exactly 0 for a day that already cost
+        # something, so keep the last known cost there and let the next complete
+        # fetch overwrite it. A model that has never been priced (codex-auto-review
+        # is absent upstream) still starts at 0 and back-fills normally once the
+        # table gains it, because prev has no cost to preserve.
+        if not merged["totalCost"] and prev["totalCost"]:
+            merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (codex side only;
         # cc entries don't have this). Fresh fetch wins over stale stored copy.
         if entry.get("models"):
