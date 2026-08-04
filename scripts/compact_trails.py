@@ -27,6 +27,12 @@ restores a clean committed baseline.
 Usage:
     uv run --script scripts/compact_trails.py            # fold + prune + push
     uv run --script scripts/compact_trails.py --dry-run  # report only, no writes
+
+Exit status: 0 means nothing was left undone. 1 means "read stderr", which covers
+both an outright failure AND a partial success — pods that report identical token
+counts are quarantined rather than folded, so a run can commit and push a real
+fold and still exit 1 because those pods need a human. Anything consuming this
+status must treat 1 as "work remains", not as "the fold did not happen".
 """
 import json
 import os

@@ -264,6 +264,21 @@ class TrailIdentityTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.resolve()
 
+    def test_an_empty_file_stops_the_run(self) -> None:
+        """Emptiness is an unusable value, not a second kind of absence.
+
+        Treating it as absent means minting, failing to link over the file that
+        is already there, and reading the same emptiness again — forever.
+        """
+        self.id_file.write_text("")
+        with self.assertRaises(SystemExit):
+            self.resolve()
+
+    def test_a_whitespace_only_file_stops_the_run(self) -> None:
+        self.id_file.write_text("   \n")
+        with self.assertRaises(SystemExit):
+            self.resolve()
+
     def test_an_id_minted_concurrently_is_adopted(self) -> None:
         """Two first runs must converge, not split the history across two folders."""
         real = sync_usage.os.link

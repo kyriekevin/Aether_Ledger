@@ -76,23 +76,31 @@ def _minted_trail_node_id() -> str:
     adopt an existing folder — after a hostname change, or when moving a worker —
     write that node-<digest> name into TRAIL_ID_FILE before the next run.
 
-    Only the absence of the file may mint. A file that exists but does not parse
-    is a half-written or damaged identity, and reminting over it would orphan the
-    history it points at — the failure this whole function exists to prevent — so
-    that case stops and asks for a human. Minting itself publishes the ID by
-    linking a fully written temp file into place, which is atomic and fails if
-    another process got there first, so concurrent first runs converge on one ID
-    and no reader can observe a partial one.
+    Only the ABSENCE of the file may mint — not an unusable value in it. A file
+    that exists but does not parse is a half-written or damaged identity, and
+    reminting over it would orphan the history it points at, the failure this
+    whole function exists to prevent, so that case stops and asks for a human.
+    Emptiness is one of those values, not a second kind of absence: minting
+    publishes the ID by linking a fully written temp file into place, so an empty
+    file is never something this code produced, and treating it as absent means
+    minting, failing to link over the file that is already there, and reading the
+    same emptiness again.
+
+    Linking is what makes minting safe to race: it is atomic and fails if another
+    process got there first, so concurrent first runs converge on one ID and no
+    reader can observe a partial one. Losing that race re-enters this function
+    exactly once, because by then the file exists and must either parse or stop.
     """
+    exists = True
     try:
         node_id = TRAIL_ID_FILE.read_text().strip()
     except FileNotFoundError:
-        node_id = ""
+        exists, node_id = False, ""
     except OSError as e:
         sys.exit(f"cannot read {TRAIL_ID_FILE}: {e}")
     if NODE_ID_RE.fullmatch(node_id):
         return node_id
-    if node_id:
+    if exists:
         sys.exit(
             f"{TRAIL_ID_FILE} holds {node_id!r}, which is not a node-<12 hex digits> "
             f"name. Refusing to mint a replacement: this worker would start a second "
