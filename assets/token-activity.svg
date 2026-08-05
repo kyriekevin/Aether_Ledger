@@ -1,25 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="410" viewBox="0 0 1180 410" role="img" aria-labelledby="title desc">
-  <title id="title">AI compute activity through 2026-08-04</title>
-  <desc id="desc">$16K API-equivalent lifetime cost and 13.4B lifetime tokens across 104 active days; peak 731M tokens on 2026-07-25.</desc>
+  <title id="title">AI compute activity through 2026-08-05</title>
+  <desc id="desc">$18K API-equivalent lifetime cost and 14B lifetime tokens across 107 active days; peak 62M tokens on 2026-08-05.</desc>
   <rect width="1180" height="410" rx="22" fill="#1d1e2c"/>
   <rect x="16" y="18" width="1148" height="112" rx="18" fill="none" stroke="#303246" stroke-width="2"/>
-  <text x="130.8" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">112M tokens</text>
-  <text x="130.8" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$117</text>
-  <text x="130.8" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Aug 4</text>
+  <text x="130.8" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">62M tokens</text>
+  <text x="130.8" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$503</text>
+  <text x="130.8" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Aug 5</text>
   <line x1="245.6" y1="36" x2="245.6" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="360.4" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">309M tokens</text>
-  <text x="360.4" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$264</text>
+  <text x="360.4" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">1.2B tokens</text>
+  <text x="360.4" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$987</text>
   <text x="360.4" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Month · Aug</text>
   <line x1="475.2" y1="36" x2="475.2" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="590.0" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">13.4B tokens</text>
-  <text x="590.0" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$16K</text>
+  <text x="590.0" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">14B tokens</text>
+  <text x="590.0" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$18K</text>
   <text x="590.0" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Lifetime</text>
   <line x1="704.8" y1="36" x2="704.8" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="819.6" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">731M tokens</text>
-  <text x="819.6" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$523</text>
-  <text x="819.6" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Jul 25</text>
+  <text x="819.6" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">62M tokens</text>
+  <text x="819.6" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$503</text>
+  <text x="819.6" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Aug 5</text>
   <line x1="934.4" y1="36" x2="934.4" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="1049.2" y="66" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">104 days</text>
+  <text x="1049.2" y="66" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">107 days</text>
   <text x="1049.2" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Active days</text>
   <text x="16" y="174" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="500">Compute activity</text>
   <text x="16" y="231" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Mon</text>
@@ -815,14 +815,14 @@
   <rect x="778" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-04-19" data-tokens="182097044" data-level="4">
     <title>2026-04-19: 182M tokens</title>
   </rect>
-  <rect x="798" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-04-20" data-tokens="345119459" data-level="4">
+  <rect x="798" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-04-20" data-tokens="345000318" data-level="4">
     <title>2026-04-20: 345M tokens</title>
   </rect>
-  <rect x="798" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-21" data-tokens="78914568" data-level="2">
-    <title>2026-04-21: 78.9M tokens</title>
+  <rect x="798" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-21" data-tokens="78200656" data-level="2">
+    <title>2026-04-21: 78.2M tokens</title>
   </rect>
-  <rect x="798" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-22" data-tokens="53412664" data-level="2">
-    <title>2026-04-22: 53.4M tokens</title>
+  <rect x="798" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-22" data-tokens="52991142" data-level="2">
+    <title>2026-04-22: 53M tokens</title>
   </rect>
   <rect x="798" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-23" data-tokens="1598597" data-level="1">
     <title>2026-04-23: 1.6M tokens</title>
@@ -830,8 +830,8 @@
   <rect x="798" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-24" data-tokens="432960" data-level="1">
     <title>2026-04-24: 433K tokens</title>
   </rect>
-  <rect x="798" y="318" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-25" data-tokens="42948022" data-level="1">
-    <title>2026-04-25: 42.9M tokens</title>
+  <rect x="798" y="318" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-25" data-tokens="42751474" data-level="1">
+    <title>2026-04-25: 42.8M tokens</title>
   </rect>
   <rect x="798" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-26" data-tokens="20124151" data-level="1">
     <title>2026-04-26: 20.1M tokens</title>
@@ -884,47 +884,47 @@
   <rect x="858" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-12" data-tokens="36066507" data-level="1">
     <title>2026-05-12: 36.1M tokens</title>
   </rect>
-  <rect x="858" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-13" data-tokens="55000186" data-level="2">
-    <title>2026-05-13: 55M tokens</title>
+  <rect x="858" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-13" data-tokens="51221526" data-level="2">
+    <title>2026-05-13: 51.2M tokens</title>
   </rect>
-  <rect x="858" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-14" data-tokens="178108715" data-level="4">
-    <title>2026-05-14: 178M tokens</title>
+  <rect x="858" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-14" data-tokens="169393247" data-level="3">
+    <title>2026-05-14: 169M tokens</title>
   </rect>
-  <rect x="858" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-15" data-tokens="50582247" data-level="2">
-    <title>2026-05-15: 50.6M tokens</title>
+  <rect x="858" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-15" data-tokens="49060895" data-level="2">
+    <title>2026-05-15: 49.1M tokens</title>
   </rect>
-  <rect x="858" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-16" data-tokens="0" data-level="0">
-    <title>2026-05-16: 0 tokens</title>
+  <rect x="858" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-16" data-tokens="63360376" data-level="2">
+    <title>2026-05-16: 63.4M tokens</title>
   </rect>
-  <rect x="858" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-17" data-tokens="0" data-level="0">
-    <title>2026-05-17: 0 tokens</title>
+  <rect x="858" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-17" data-tokens="3723970" data-level="1">
+    <title>2026-05-17: 3.7M tokens</title>
   </rect>
-  <rect x="878" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-18" data-tokens="180162006" data-level="4">
-    <title>2026-05-18: 18M tokens</title>
+  <rect x="878" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-18" data-tokens="211286481" data-level="4">
+    <title>2026-05-18: 211M tokens</title>
   </rect>
-  <rect x="878" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-19" data-tokens="130383461" data-level="3">
-    <title>2026-05-19: 13M tokens</title>
+  <rect x="878" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-19" data-tokens="136335447" data-level="3">
+    <title>2026-05-19: 136M tokens</title>
   </rect>
   <rect x="878" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-20" data-tokens="179833123" data-level="4">
     <title>2026-05-20: 18M tokens</title>
   </rect>
-  <rect x="878" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-21" data-tokens="385996909" data-level="4">
-    <title>2026-05-21: 386M tokens</title>
+  <rect x="878" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-21" data-tokens="385492990" data-level="4">
+    <title>2026-05-21: 385M tokens</title>
   </rect>
-  <rect x="878" y="298" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-22" data-tokens="338063038" data-level="4">
-    <title>2026-05-22: 338M tokens</title>
+  <rect x="878" y="298" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-22" data-tokens="329977260" data-level="4">
+    <title>2026-05-22: 33M tokens</title>
   </rect>
-  <rect x="878" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-23" data-tokens="254753695" data-level="4">
-    <title>2026-05-23: 255M tokens</title>
+  <rect x="878" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-23" data-tokens="253140091" data-level="4">
+    <title>2026-05-23: 253M tokens</title>
   </rect>
-  <rect x="878" y="338" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-24" data-tokens="175361184" data-level="3">
-    <title>2026-05-24: 175M tokens</title>
+  <rect x="878" y="338" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-24" data-tokens="163962597" data-level="3">
+    <title>2026-05-24: 164M tokens</title>
   </rect>
-  <rect x="898" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-25" data-tokens="432081068" data-level="4">
-    <title>2026-05-25: 432M tokens</title>
+  <rect x="898" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-25" data-tokens="420052598" data-level="4">
+    <title>2026-05-25: 42M tokens</title>
   </rect>
-  <rect x="898" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-26" data-tokens="230314190" data-level="4">
-    <title>2026-05-26: 23M tokens</title>
+  <rect x="898" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-26" data-tokens="228654415" data-level="4">
+    <title>2026-05-26: 229M tokens</title>
   </rect>
   <rect x="898" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-27" data-tokens="75546704" data-level="2">
     <title>2026-05-27: 75.5M tokens</title>
@@ -932,44 +932,44 @@
   <rect x="898" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-28" data-tokens="141120221" data-level="3">
     <title>2026-05-28: 141M tokens</title>
   </rect>
-  <rect x="898" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-29" data-tokens="146557603" data-level="3">
-    <title>2026-05-29: 147M tokens</title>
+  <rect x="898" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-29" data-tokens="146312177" data-level="3">
+    <title>2026-05-29: 146M tokens</title>
   </rect>
-  <rect x="898" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-30" data-tokens="44507247" data-level="2">
-    <title>2026-05-30: 44.5M tokens</title>
+  <rect x="898" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-30" data-tokens="44995572" data-level="2">
+    <title>2026-05-30: 45M tokens</title>
   </rect>
-  <rect x="898" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-31" data-tokens="396667165" data-level="4">
-    <title>2026-05-31: 397M tokens</title>
+  <rect x="898" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-31" data-tokens="396448805" data-level="4">
+    <title>2026-05-31: 396M tokens</title>
   </rect>
-  <rect x="918" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-01" data-tokens="466272223" data-level="4">
+  <rect x="918" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-01" data-tokens="465567694" data-level="4">
     <title>2026-06-01: 466M tokens</title>
   </rect>
-  <rect x="918" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-02" data-tokens="105250304" data-level="2">
+  <rect x="918" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-02" data-tokens="105002566" data-level="2">
     <title>2026-06-02: 105M tokens</title>
   </rect>
   <rect x="918" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-03" data-tokens="74650388" data-level="2">
     <title>2026-06-03: 74.7M tokens</title>
   </rect>
-  <rect x="918" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-04" data-tokens="63550252" data-level="2">
-    <title>2026-06-04: 63.6M tokens</title>
+  <rect x="918" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-04" data-tokens="46987952" data-level="2">
+    <title>2026-06-04: 47M tokens</title>
   </rect>
-  <rect x="918" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-05" data-tokens="130813676" data-level="3">
-    <title>2026-06-05: 131M tokens</title>
+  <rect x="918" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-05" data-tokens="129865055" data-level="3">
+    <title>2026-06-05: 13M tokens</title>
   </rect>
-  <rect x="918" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-06" data-tokens="117075286" data-level="3">
-    <title>2026-06-06: 117M tokens</title>
+  <rect x="918" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-06" data-tokens="161973353" data-level="3">
+    <title>2026-06-06: 162M tokens</title>
   </rect>
   <rect x="918" y="338" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-07" data-tokens="178106790" data-level="3">
     <title>2026-06-07: 178M tokens</title>
   </rect>
-  <rect x="938" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-08" data-tokens="232392931" data-level="4">
+  <rect x="938" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-08" data-tokens="232358603" data-level="4">
     <title>2026-06-08: 232M tokens</title>
   </rect>
   <rect x="938" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-09" data-tokens="151230359" data-level="3">
     <title>2026-06-09: 151M tokens</title>
   </rect>
-  <rect x="938" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-10" data-tokens="25895392" data-level="1">
-    <title>2026-06-10: 25.9M tokens</title>
+  <rect x="938" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-10" data-tokens="13482801" data-level="1">
+    <title>2026-06-10: 13.5M tokens</title>
   </rect>
   <rect x="938" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-11" data-tokens="72342744" data-level="2">
     <title>2026-06-11: 72.3M tokens</title>
@@ -983,8 +983,8 @@
   <rect x="938" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-06-14" data-tokens="0" data-level="0">
     <title>2026-06-14: 0 tokens</title>
   </rect>
-  <rect x="958" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-15" data-tokens="174820812" data-level="3">
-    <title>2026-06-15: 175M tokens</title>
+  <rect x="958" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-15" data-tokens="170885086" data-level="3">
+    <title>2026-06-15: 171M tokens</title>
   </rect>
   <rect x="958" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-16" data-tokens="116962494" data-level="3">
     <title>2026-06-16: 117M tokens</title>
@@ -992,32 +992,32 @@
   <rect x="958" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-17" data-tokens="72501923" data-level="2">
     <title>2026-06-17: 72.5M tokens</title>
   </rect>
-  <rect x="958" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-18" data-tokens="34202528" data-level="1">
-    <title>2026-06-18: 34.2M tokens</title>
+  <rect x="958" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-18" data-tokens="34118766" data-level="1">
+    <title>2026-06-18: 34.1M tokens</title>
   </rect>
   <rect x="958" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-19" data-tokens="150844584" data-level="3">
     <title>2026-06-19: 151M tokens</title>
   </rect>
-  <rect x="958" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-20" data-tokens="124410356" data-level="3">
-    <title>2026-06-20: 124M tokens</title>
+  <rect x="958" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-20" data-tokens="136020341" data-level="3">
+    <title>2026-06-20: 136M tokens</title>
   </rect>
   <rect x="958" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-21" data-tokens="94730290" data-level="2">
     <title>2026-06-21: 94.7M tokens</title>
   </rect>
-  <rect x="978" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-22" data-tokens="191858408" data-level="4">
-    <title>2026-06-22: 192M tokens</title>
+  <rect x="978" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-22" data-tokens="191476853" data-level="4">
+    <title>2026-06-22: 191M tokens</title>
   </rect>
-  <rect x="978" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-23" data-tokens="201053712" data-level="4">
+  <rect x="978" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-23" data-tokens="200822799" data-level="4">
     <title>2026-06-23: 201M tokens</title>
   </rect>
-  <rect x="978" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-24" data-tokens="236893561" data-level="4">
-    <title>2026-06-24: 237M tokens</title>
+  <rect x="978" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-24" data-tokens="235996307" data-level="4">
+    <title>2026-06-24: 236M tokens</title>
   </rect>
-  <rect x="978" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-25" data-tokens="156203493" data-level="3">
+  <rect x="978" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-25" data-tokens="156071061" data-level="3">
     <title>2026-06-25: 156M tokens</title>
   </rect>
-  <rect x="978" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-26" data-tokens="140100379" data-level="3">
-    <title>2026-06-26: 14M tokens</title>
+  <rect x="978" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-26" data-tokens="139127643" data-level="3">
+    <title>2026-06-26: 139M tokens</title>
   </rect>
   <rect x="978" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-06-27" data-tokens="0" data-level="0">
     <title>2026-06-27: 0 tokens</title>
@@ -1025,11 +1025,11 @@
   <rect x="978" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-28" data-tokens="203756" data-level="1">
     <title>2026-06-28: 204K tokens</title>
   </rect>
-  <rect x="998" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-29" data-tokens="121093153" data-level="3">
-    <title>2026-06-29: 121M tokens</title>
+  <rect x="998" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-29" data-tokens="119775305" data-level="3">
+    <title>2026-06-29: 12M tokens</title>
   </rect>
-  <rect x="998" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-30" data-tokens="50714304" data-level="2">
-    <title>2026-06-30: 50.7M tokens</title>
+  <rect x="998" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-30" data-tokens="49112395" data-level="2">
+    <title>2026-06-30: 49.1M tokens</title>
   </rect>
   <rect x="998" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-01" data-tokens="44152008" data-level="1">
     <title>2026-07-01: 44.2M tokens</title>
@@ -1037,8 +1037,8 @@
   <rect x="998" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-02" data-tokens="26433104" data-level="1">
     <title>2026-07-02: 26.4M tokens</title>
   </rect>
-  <rect x="998" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-03" data-tokens="68591617" data-level="2">
-    <title>2026-07-03: 68.6M tokens</title>
+  <rect x="998" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-03" data-tokens="68148469" data-level="2">
+    <title>2026-07-03: 68.1M tokens</title>
   </rect>
   <rect x="998" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-04" data-tokens="0" data-level="0">
     <title>2026-07-04: 0 tokens</title>
@@ -1046,20 +1046,20 @@
   <rect x="998" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-05" data-tokens="0" data-level="0">
     <title>2026-07-05: 0 tokens</title>
   </rect>
-  <rect x="1018" y="218" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-06" data-tokens="94501654" data-level="2">
+  <rect x="1018" y="218" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-06" data-tokens="94478408" data-level="2">
     <title>2026-07-06: 94.5M tokens</title>
   </rect>
-  <rect x="1018" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-07" data-tokens="165647501" data-level="3">
-    <title>2026-07-07: 166M tokens</title>
+  <rect x="1018" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-07" data-tokens="164556170" data-level="3">
+    <title>2026-07-07: 165M tokens</title>
   </rect>
-  <rect x="1018" y="258" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-08" data-tokens="173863870" data-level="3">
-    <title>2026-07-08: 174M tokens</title>
+  <rect x="1018" y="258" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-08" data-tokens="169719887" data-level="3">
+    <title>2026-07-08: 17M tokens</title>
   </rect>
-  <rect x="1018" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-09" data-tokens="239798501" data-level="4">
+  <rect x="1018" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-09" data-tokens="239691188" data-level="4">
     <title>2026-07-09: 24M tokens</title>
   </rect>
-  <rect x="1018" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-10" data-tokens="90819808" data-level="2">
-    <title>2026-07-10: 90.8M tokens</title>
+  <rect x="1018" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-10" data-tokens="89622830" data-level="2">
+    <title>2026-07-10: 89.6M tokens</title>
   </rect>
   <rect x="1018" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-11" data-tokens="0" data-level="0">
     <title>2026-07-11: 0 tokens</title>
@@ -1073,68 +1073,71 @@
   <rect x="1038" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-14" data-tokens="13646599" data-level="1">
     <title>2026-07-14: 13.6M tokens</title>
   </rect>
-  <rect x="1038" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-15" data-tokens="236527345" data-level="4">
-    <title>2026-07-15: 237M tokens</title>
+  <rect x="1038" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-15" data-tokens="204733951" data-level="4">
+    <title>2026-07-15: 205M tokens</title>
   </rect>
-  <rect x="1038" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-16" data-tokens="46158273" data-level="2">
-    <title>2026-07-16: 46.2M tokens</title>
+  <rect x="1038" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-16" data-tokens="44331674" data-level="2">
+    <title>2026-07-16: 44.3M tokens</title>
   </rect>
-  <rect x="1038" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-17" data-tokens="39021312" data-level="1">
-    <title>2026-07-17: 39M tokens</title>
+  <rect x="1038" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-17" data-tokens="38702996" data-level="1">
+    <title>2026-07-17: 38.7M tokens</title>
   </rect>
-  <rect x="1038" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-18" data-tokens="188190621" data-level="4">
+  <rect x="1038" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-18" data-tokens="187947083" data-level="4">
     <title>2026-07-18: 188M tokens</title>
   </rect>
-  <rect x="1038" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-19" data-tokens="202609550" data-level="4">
-    <title>2026-07-19: 203M tokens</title>
+  <rect x="1038" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-19" data-tokens="223770482" data-level="4">
+    <title>2026-07-19: 224M tokens</title>
   </rect>
-  <rect x="1058" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-20" data-tokens="179461347" data-level="4">
-    <title>2026-07-20: 179M tokens</title>
+  <rect x="1058" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-20" data-tokens="178187450" data-level="3">
+    <title>2026-07-20: 178M tokens</title>
   </rect>
-  <rect x="1058" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-21" data-tokens="179970304" data-level="4">
-    <title>2026-07-21: 18M tokens</title>
+  <rect x="1058" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-21" data-tokens="161521994" data-level="3">
+    <title>2026-07-21: 162M tokens</title>
   </rect>
-  <rect x="1058" y="258" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-22" data-tokens="164113961" data-level="3">
-    <title>2026-07-22: 164M tokens</title>
+  <rect x="1058" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-22" data-tokens="219171594" data-level="4">
+    <title>2026-07-22: 219M tokens</title>
   </rect>
-  <rect x="1058" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-23" data-tokens="479288791" data-level="4">
-    <title>2026-07-23: 479M tokens</title>
+  <rect x="1058" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-23" data-tokens="477377960" data-level="4">
+    <title>2026-07-23: 477M tokens</title>
   </rect>
   <rect x="1058" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-24" data-tokens="156236265" data-level="3">
     <title>2026-07-24: 156M tokens</title>
   </rect>
-  <rect x="1058" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-25" data-tokens="730512273" data-level="4">
-    <title>2026-07-25: 731M tokens</title>
+  <rect x="1058" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-25" data-tokens="231832640" data-level="4">
+    <title>2026-07-25: 232M tokens</title>
   </rect>
   <rect x="1058" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-26" data-tokens="100995944" data-level="2">
     <title>2026-07-26: 101M tokens</title>
   </rect>
-  <rect x="1078" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-27" data-tokens="148294193" data-level="3">
+  <rect x="1078" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-27" data-tokens="148000221" data-level="3">
     <title>2026-07-27: 148M tokens</title>
   </rect>
-  <rect x="1078" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-28" data-tokens="188548695" data-level="4">
+  <rect x="1078" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-28" data-tokens="188513502" data-level="4">
     <title>2026-07-28: 189M tokens</title>
   </rect>
-  <rect x="1078" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-29" data-tokens="242131066" data-level="4">
-    <title>2026-07-29: 242M tokens</title>
+  <rect x="1078" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-29" data-tokens="237740343" data-level="4">
+    <title>2026-07-29: 238M tokens</title>
   </rect>
-  <rect x="1078" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-30" data-tokens="151991565" data-level="3">
-    <title>2026-07-30: 152M tokens</title>
+  <rect x="1078" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-30" data-tokens="260878185" data-level="4">
+    <title>2026-07-30: 261M tokens</title>
   </rect>
-  <rect x="1078" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-31" data-tokens="173174633" data-level="3">
+  <rect x="1078" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-31" data-tokens="172678469" data-level="3">
     <title>2026-07-31: 173M tokens</title>
   </rect>
   <rect x="1078" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-08-01" data-tokens="112377857" data-level="3">
     <title>2026-08-01: 112M tokens</title>
   </rect>
-  <rect x="1078" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-08-02" data-tokens="63960209" data-level="2">
-    <title>2026-08-02: 64M tokens</title>
+  <rect x="1078" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-08-02" data-tokens="64884454" data-level="2">
+    <title>2026-08-02: 64.9M tokens</title>
   </rect>
-  <rect x="1098" y="218" width="16" height="16" rx="4" fill="#164e63" data-date="2026-08-03" data-tokens="20964360" data-level="1">
-    <title>2026-08-03: 21M tokens</title>
+  <rect x="1098" y="218" width="16" height="16" rx="4" fill="#164e63" data-date="2026-08-03" data-tokens="27634160" data-level="1">
+    <title>2026-08-03: 27.6M tokens</title>
   </rect>
-  <rect x="1098" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-08-04" data-tokens="112025721" data-level="3">
-    <title>2026-08-04: 112M tokens</title>
+  <rect x="1098" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-08-04" data-tokens="348924858" data-level="4">
+    <title>2026-08-04: 349M tokens</title>
+  </rect>
+  <rect x="1098" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-08-05" data-tokens="619729565" data-level="4">
+    <title>2026-08-05: 62M tokens</title>
   </rect>
   <text x="58" y="385" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Less</text>
   <rect x="92" y="373" width="16" height="16" rx="4" fill="#272b3a"/>
