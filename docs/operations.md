@@ -99,9 +99,12 @@ Every process that runs Git in this checkout therefore takes one advisory lock f
   an unbounded hang would strand the lock and starve every other Git user here.
 - `compact_trails.py` takes the same lock, in both normal and `--dry-run` mode, because it pulls
   before reporting. It is hand-started, so it reports and exits rather than retrying.
-- The signature pusher waits up to 30 seconds and holds the lock across its pull *and* its reads,
-  because the writer replaces the per-agent JSON files one at a time and an unlocked read can mix
-  generations. Only the lock guarantees that. If it never frees, the pusher skips the pull and
+- The signature pusher runs no Git at all — it reads whatever the writer last left on disk, at
+  most one writer cycle behind. It used to fetch and rebase here, which bought nothing (it has no
+  commits of its own to replay) and made it the single largest source of the FETCH_HEAD race
+  above. It still waits up to 30 seconds for the lock and holds it across its reads, because the
+  writer replaces the per-agent JSON files one at a time and an unlocked read can mix
+  generations. Only the lock guarantees that. If it never frees, the pusher
   reads anyway, checking that no store's mtime moved across the read and retrying a few times —
   weaker than the lock, since it catches a writer running *during* the read but not one paused
   between two of its own file swaps. Skipping the run instead would let sustained contention

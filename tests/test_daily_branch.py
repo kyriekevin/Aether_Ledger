@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import fcntl
+import io
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from datetime import date
 from pathlib import Path
 from unittest.mock import patch
@@ -482,6 +484,178 @@ class GitLockTests(unittest.TestCase):
             with patch.object(sync_usage, "GIT_LOCK_WAIT_SECONDS", 0):
                 self.assertEqual(sync_usage.main(), 0)
         sync.assert_not_called()
+
+
+class GitCatchUpTests(unittest.TestCase):
+    """Catching up must not depend on FETCH_HEAD.
+
+    FETCH_HEAD is one file shared by every Git process in the checkout and
+    rewritten in full by each fetch, so `git pull --rebase` can read a view with
+    several merge heads and die. The advisory lock serializes the scheduled
+    writers but cannot cover a terminal or a second worktree.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        root = Path(self._tmp.name)
+        env = patch.dict(
+            os.environ,
+            {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull},
+        )
+        env.start()
+        self.addCleanup(env.stop)
+
+        self.remote = root / "remote.git"
+        subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(self.remote)],
+                       check=True)
+        self.repo = root / "repo"
+        subprocess.run(["git", "clone", "-q", str(self.remote), str(self.repo)],
+                       check=True)
+        for k, v in (("user.name", "Test"), ("user.email", "test@example.invalid"),
+                     ("commit.gpgsign", "false")):
+            self.git("config", k, v)
+        self.write("seed", "0\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "seed")
+        self.git("push", "-q", "-u", "origin", "main")
+
+        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def git(self, *args: str, check: bool = True) -> str:
+        r = subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True)
+        if check:
+            self.assertEqual(r.returncode, 0, f"git {' '.join(args)}: {r.stderr}")
+        return r.stdout.strip()
+
+    def write(self, rel: str, text: str) -> None:
+        (self.repo / rel).write_text(text)
+
+    def push_from_elsewhere(self, text: str) -> None:
+        """Another machine advances the branch behind our back."""
+        other = self.repo.parent / "other"
+        if not other.exists():
+            subprocess.run(["git", "clone", "-q", str(self.remote), str(other)],
+                           check=True)
+            for k, v in (("user.name", "Other"), ("user.email", "o@example.invalid"),
+                         ("commit.gpgsign", "false")):
+                subprocess.run(["git", "config", k, v], cwd=other, check=True)
+        (other / "seed").write_text(text)
+        for args in (["add", "-A"], ["commit", "-q", "-m", "elsewhere"], ["push", "-q"]):
+            subprocess.run(["git", *args], cwd=other, check=True)
+
+    def test_it_catches_up_with_the_upstream(self) -> None:
+        self.push_from_elsewhere("1\n")
+        self.assertTrue(sync_usage.git_catch_up())
+        self.assertEqual((self.repo / "seed").read_text(), "1\n")
+
+    def test_it_replays_local_commits_on_top(self) -> None:
+        self.write("mine", "local\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "mine")
+        self.push_from_elsewhere("1\n")
+        self.assertTrue(sync_usage.git_catch_up())
+        self.assertEqual((self.repo / "seed").read_text(), "1\n")
+        self.assertEqual((self.repo / "mine").read_text(), "local\n")
+
+    def test_it_rebases_onto_the_tracking_ref_and_never_pulls(self) -> None:
+        """The regression guard: going back to `git pull` reopens the race."""
+        calls: list[list[str]] = []
+        real = sync_usage._git
+
+        def record(args, **kw):
+            calls.append(args)
+            return real(args, **kw)
+
+        with patch.object(sync_usage, "_git", record):
+            sync_usage.git_catch_up()
+        verbs = [c[0] for c in calls]
+        self.assertNotIn("pull", verbs)
+        rebase = next(c for c in calls if c[0] == "rebase")
+        self.assertIn("origin/main", rebase)
+
+    def test_no_upstream_is_reported_not_crashed(self) -> None:
+        self.git("checkout", "-q", "-b", "orphan")
+        self.assertFalse(sync_usage.git_catch_up())
+
+    def test_uncommitted_work_survives_the_catch_up(self) -> None:
+        """--autostash must give the dirt back; the writer's tree is live data."""
+        self.push_from_elsewhere("1\n")
+        self.write("seed", "0\nuncommitted\n")
+        self.assertTrue(sync_usage.git_catch_up())
+        self.assertIn("uncommitted", (self.repo / "seed").read_text())
+
+    def test_a_failed_rebase_parks_uncommitted_work_recoverably(self) -> None:
+        """Not lost, just not in the tree — and the failure says where it went.
+
+        The catch-up used to run `rebase --abort` here, which handed the
+        autostash back. That was dropped: --abort cannot tell our rebase from a
+        human's, so it could unwind someone else's conflict resolution. A failed
+        rebase now stays parked until a human finishes or aborts it.
+
+        Where the edit goes is counter-intuitive and worth pinning: an autostash
+        held by a live rebase lives in the rebase state, NOT in `refs/stash`, so
+        `git stash list` prints nothing and pointing a human there would send
+        them to an empty list while their work sits somewhere else.
+        """
+        self.write("mine", "local\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "mine")
+        self.write("seed", "conflicting\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "conflict")
+        self.push_from_elsewhere("theirs\n")
+        self.write("mine", "still editing\n")
+
+        err = io.StringIO()
+        with redirect_stderr(err):
+            self.assertFalse(sync_usage.git_catch_up())
+
+        self.assertEqual((self.repo / "mine").read_text(), "local\n",
+                         "autostash took the edit out of the tree")
+        self.assertFalse(self.git("stash", "list"),
+                         "a live rebase's autostash is not a stash-list entry")
+        self.assertIn("git rebase --continue", err.getvalue(),
+                      "the log has to name the recovery that actually works")
+
+        # And that recovery really does hand the edit back.
+        self.git("rebase", "--abort")
+        self.assertEqual((self.repo / "mine").read_text(), "still editing\n")
+
+    def test_it_fetches_once(self) -> None:
+        fetches = self.count_verbs("fetch")
+        self.assertEqual(fetches, 1)
+
+    def test_a_caller_that_just_fetched_can_skip_the_round_trip(self) -> None:
+        """Each fetch is a network round trip taken while holding the shared lock."""
+        self.assertEqual(self.count_verbs("fetch", fetch=False), 0)
+
+    def count_verbs(self, verb: str, **kw) -> int:
+        seen: list[str] = []
+        real = sync_usage._git
+
+        def record(args, **inner):
+            seen.append(args[0])
+            return real(args, **inner)
+
+        with patch.object(sync_usage, "_git", record):
+            sync_usage.git_catch_up(**kw)
+        return seen.count(verb)
+
+    def test_a_failure_before_the_rebase_prescribes_no_rebase_recovery(self) -> None:
+        """Nothing started, so nothing is parked; sending a human to `git rebase
+        --abort` here points them at a checkout that is merely behind.
+        """
+        self.git("checkout", "-q", "-b", "orphan")
+        err = io.StringIO()
+        with redirect_stderr(err):
+            self.assertFalse(sync_usage.git_catch_up())
+        printed = err.getvalue()
+        self.assertIn("no upstream", printed)
+        self.assertNotIn("rebase --abort", printed)
+        self.assertNotIn("rebase --continue", printed)
 
 
 if __name__ == "__main__":
