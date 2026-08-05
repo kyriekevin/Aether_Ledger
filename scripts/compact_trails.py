@@ -48,6 +48,7 @@ from render_dashboard import SHANGHAI
 from sync_usage import (
     GIT_LOCK_PATH,
     GIT_LOCK_WAIT_SECONDS,
+    git_catch_up,
     git_commit,
     prepare_daily_branch,
     repo_git_lock,
@@ -93,7 +94,7 @@ def _push_with_retry() -> bool:
     """Push HEAD; on failure rebase onto upstream once and retry. True on success."""
     if _git(["push"]).returncode == 0:
         return True
-    if _git(["pull", "--rebase", "--autostash"]).returncode != 0:
+    if not git_catch_up():
         return False
     return _git(["push"]).returncode == 0
 
@@ -265,11 +266,21 @@ def _compact(*, dry: bool) -> int:
         print("today's usage branch is not ready; deferring compaction", file=sys.stderr)
         return 0
 
-    # Pull so we see the latest pod pushes and other machines' commits.
-    pull = _git(["pull", "--rebase", "--autostash"])
-    if pull.returncode != 0:
-        print(f"git pull failed (continuing with local state): {pull.stderr.strip()}",
+    # Catch up so we see the latest pod pushes and other machines' commits, and
+    # stop if we cannot. Every later decision here reads whether a pod's newest
+    # date is old enough to call it dead, so a stale view can fold a pod that is
+    # still reporting. That pod then pushes its folder back, cumulative totals and
+    # all, on top of the copy now sitting in the rollup — the additive fold cannot
+    # be undone, and this is exactly the duplication the guard below exists for.
+    # Compaction is hand-run and idempotent, so refusing costs one re-run.
+    #
+    # A live run already fetched inside prepare_daily_branch() above, under this
+    # same lock, so skip the redundant round trip there; a dry run skipped that
+    # call entirely (it never switches branches) and still needs its own fetch.
+    if not git_catch_up(fetch=dry):
+        print("cannot catch up with origin; refusing to compact against a stale view",
               file=sys.stderr)
+        return 1
 
     # A prior run may have committed a fold but failed to push it. Republish that
     # stranded commit first, before the early-returns below skip it forever.

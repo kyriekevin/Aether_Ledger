@@ -80,9 +80,11 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 
 ### Git 并发访问
 
-在这个 checkout 里跑 Git 的不止写入脚本一个进程：下游的飞书签名推送器会 pull 同一个
-工作区，而它的 launchd `WatchPaths` 监听的正是写入脚本产出的那几个数据文件，所以写入
-动作本身就会把它叫醒，二者必然重叠。Git 对一个工作区没有跨进程锁：并发 fetch 会互相
+在这个 checkout 里跑 Git 的不止写入脚本一个进程：还有 `compact_trails.py`，以及人手
+开的终端、编辑器和 linked worktree——后三者不受下面这把锁约束。下游的飞书签名推送器
+曾经也会 pull 同一个工作区，而它的 launchd `WatchPaths` 监听的正是写入脚本产出的那几
+个数据文件，所以写入动作本身就会把它叫醒，二者必然重叠；它贡献了下面这个竞态里最大
+的一份，现在已经完全不跑 Git 了（见下）。Git 对一个工作区没有跨进程锁：并发 fetch 会互相
 截断重写 `.git/FETCH_HEAD`，表现为 `fatal: Cannot rebase onto multiple branches.`；
 远端 ref 更新会丢失 compare-and-swap（`cannot lock ref ... is at X but expected Y`）；
 并发 fetch 还可能更新当前检出分支的 ref，随后 `pull` 会在另一个进程眼皮底下试图快进
@@ -96,9 +98,11 @@ launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
   所以那次调用必须自带超时——无限挂起会把锁永久攥住，饿死这个 checkout 里的其他进程。
 - `compact_trails.py` 同样获取这把锁，`--dry-run` 也不例外，因为它在汇报前也会 pull。
   它是人工触发的，所以拿不到锁就直接报错退出，不重试。
-- 签名推送器最多等待 30 秒，并在 pull **和**读取数据文件的整个过程中持锁：写入脚本是
-  逐个替换各 agent 的 JSON 文件的，不持锁读取可能读到新旧混合的一份——只有持锁才能
-  真正杜绝这一点。等不到锁时它会跳过 pull 直接读，并校验读取前后所有 store 的 mtime
+- 签名推送器完全不跑 Git，只读写入脚本上一轮落盘的内容，最多滞后一个写入周期。它以前
+  会在这里 fetch + rebase，但这毫无收益（它没有自己的提交需要重放），却让它成了上面那个
+  FETCH_HEAD 竞态最大的来源。它仍然最多等待 30 秒并在读取数据文件的整个过程中持锁：
+  写入脚本是逐个替换各 agent 的 JSON 文件的，不持锁读取可能读到新旧混合的一份——只有
+  持锁才能真正杜绝这一点。等不到锁时它会直接读，并校验读取前后所有 store 的 mtime
   没有变动，不满足就重试几次。这个校验弱于锁：它能发现"读取期间正在写"的写入方，但
   发现不了"停在自己两次文件替换之间"的写入方，那种情况下某个 agent 的 store 会比另一个
   新一代。之所以不整轮跳过：持续竞争下签名可能永远不更新，而求和值上一代的偏差下一轮

@@ -602,12 +602,51 @@ def git_commit(message: str) -> subprocess.CompletedProcess:
     return _git(["commit", "-m", message], automation_identity=True)
 
 
-def git_pull() -> None:
-    """Best-effort pull. --autostash is free insurance against unexpected dirt."""
-    r = _git(["pull", "--rebase", "--autostash"])
+def git_catch_up(*, fetch: bool = True) -> bool:
+    """Best-effort catch-up onto the current branch's upstream. True if we caught up.
+
+    Pass fetch=False when the caller already fetched in this run: each fetch is a
+    network round trip taken while holding the checkout-wide lock, and every extra
+    one widens the window in which the signature pusher gives up waiting and
+    publishes from a tree it could not refresh.
+
+    Deliberately not `git pull --rebase`. Pull rebases onto FETCH_HEAD, and that is
+    one file shared by every Git process in the checkout, truncated and rewritten in
+    full by each fetch. A fetch landing in another process while pull parses it
+    leaves more than one merge head in there and the whole run dies with "Cannot
+    rebase onto multiple branches", losing the catch-up. The shared advisory lock
+    serializes the scheduled writers but cannot cover a terminal, an editor, or a
+    second worktree, all of which share this same file.
+
+    Fetching and then rebasing onto the remote-tracking ref reads refs/remotes/
+    instead, which Git updates one ref at a time under a lockfile. A concurrent
+    fetch can then only ever land us on a different valid commit, never on a
+    half-written view of several branches at once.
+
+    A failure here is logged and the run continues against local state, exactly as
+    git pull did before; nothing here unwinds a rebase, because --abort cannot tell
+    our rebase from a human's and every writer only ever touches its own
+    data/<machine>/ subtree, so there is nothing to conflict on.
+    """
+    if fetch:
+        fetched = _git(["fetch", "--prune", "origin"])
+        if fetched.returncode != 0:
+            print(f"git fetch failed (continuing with local state): {fetched.stderr.strip()}", file=sys.stderr)
+            return False
+    upstream = _git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
+    if upstream.returncode != 0:
+        print("current branch has no upstream (continuing with local state)", file=sys.stderr)
+        return False
+    r = _git(["rebase", "--autostash", upstream.stdout.strip()])
     if r.returncode != 0:
-        print(f"git pull failed (continuing with local state): {r.stderr.strip()}",
+        print(f"git rebase failed (continuing with local state): {r.stderr.strip()}\n"
+              f"  If it stopped part-way, {DATA_REPO_DIR} stays parked until a human "
+              f"runs `git rebase --continue` or `--abort` there. Either one hands back "
+              f"whatever --autostash set aside; it is held in the rebase state, so "
+              f"`git stash list` will look empty and is not where to go looking.",
               file=sys.stderr)
+        return False
+    return True
 
 
 def _branch_is_ahead() -> bool:
@@ -625,9 +664,7 @@ def _try_push() -> bool:
     """
     if _git(["push"]).returncode == 0:
         return True
-    rebase = _git(["pull", "--rebase", "--autostash"])
-    if rebase.returncode != 0:
-        print(f"git push race-retry rebase failed: {rebase.stderr.strip()}", file=sys.stderr)
+    if not git_catch_up():
         return False
     retry = _git(["push"])
     if retry.returncode != 0:
@@ -881,11 +918,23 @@ def prepare_daily_branch(today: date, *, recover_missed_rollover: bool = False) 
     # Another machine may have won the create race. Track and rebase onto it.
     race_refspec = f"+refs/heads/{branch}:refs/remotes/origin/{branch}"
     if _git(["fetch", "origin", race_refspec]).returncode == 0:
-        _git(["branch", "--set-upstream-to", f"origin/{branch}", branch])
-        rebased = _git(["pull", "--rebase", "--autostash"])
+        tracked = _git(["branch", "--set-upstream-to", f"origin/{branch}", branch])
+        if tracked.returncode != 0:
+            # Without tracking, this run can still commit but nothing can push it,
+            # and the failure would surface later as an unrelated push error.
+            print(f"cannot track origin/{branch} after the create race: "
+                  f"{tracked.stderr.strip()}", file=sys.stderr)
+            return False
+        # The refspec above already updated the one ref we care about, so rebase
+        # straight onto it rather than going back through FETCH_HEAD.
+        rebased = _git(["rebase", "--autostash", f"origin/{branch}"])
         if rebased.returncode == 0:
             _cleanup_completed_local_branches(today)
             return True
+        # Report why the rebase failed before the push error below, which by then
+        # describes a race we already know we lost rather than what went wrong here.
+        print(f"lost the {branch} create race and could not rebase onto the winner: "
+              f"{rebased.stderr.strip()}", file=sys.stderr)
     print(f"cannot publish {branch}: {pushed.stderr.strip()}", file=sys.stderr)
     return False
 
@@ -975,8 +1024,16 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     opencode_path = machine_dir / "opencode.json"
     machine_dir.mkdir(parents=True, exist_ok=True)
 
-    # Pull first so we rebase cleanly onto the other machine's commits.
-    git_pull()
+    # Rebase onto the other machines' commits before writing, so the push at the
+    # end is a fast-forward. prepare_daily_branch fetched moments ago on this same
+    # path, so this only needs the rebase half; when it was skipped there is no
+    # push to keep clear of, and staying on local refs saves a round trip under
+    # the lock.
+    #
+    # Falling behind is survivable: a catch-up failure here is logged and the run
+    # continues against local state, same as every other caller of git_catch_up.
+    if not no_push:
+        git_catch_up(fetch=False)
 
     # Update only THIS machine's per-agent files from its own local ccusage state.
     try:
