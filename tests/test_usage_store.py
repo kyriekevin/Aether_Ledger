@@ -391,6 +391,79 @@ class CostTrustedMarkingTests(unittest.TestCase):
         self.assertTrue(out["claude"]["costTrusted"])
 
 
+class TraexFetchTests(unittest.TestCase):
+    """fetch_codex_home_daily reads traex's Codex-format sessions via CODEX_HOME.
+
+    The `codex daily` schema differs from the unified `daily`: dates arrive under
+    `date`, rows carry per-model tokens plus a single row-level `costUSD`, and
+    there is no per-model cost. Every model is a Codex-family model, so the whole
+    row is one bucket with no agent classification.
+    """
+
+    def fetch(self, daily: list[dict]) -> list[dict]:
+        payload = json.dumps({"daily": daily})
+        completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
+        captured: dict = {}
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            captured["env"] = kwargs.get("env")
+            return completed
+
+        with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
+            out = sync_usage.fetch_codex_home_daily(
+                date(2026, 1, 1), Path("/some/trae/home")
+            )
+        self.captured = captured
+        return out
+
+    def test_it_points_ccusage_at_the_given_codex_home(self) -> None:
+        self.fetch([])
+        self.assertEqual(self.captured["env"]["CODEX_HOME"], "/some/trae/home")
+        # Uses the codex subcommand, not the unified daily.
+        self.assertEqual(self.captured["cmd"][:3], ["ccusage", "codex", "daily"])
+
+    def test_a_priced_day_is_trusted(self) -> None:
+        out = self.fetch([{
+            "date": "2026-08-07", "totalTokens": 1000, "costUSD": 2.5,
+            "models": {"GPT-5.5": {"totalTokens": 1000}},
+        }])
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["totalTokens"], 1000)
+        self.assertEqual(out[0]["totalCost"], 2.5)
+        self.assertTrue(out[0]["costTrusted"])
+        self.assertEqual(out[0]["models"], {"GPT-5.5": {"totalTokens": 1000}})
+
+    def test_tokens_billed_free_mark_the_day_untrusted(self) -> None:
+        # traex's Claude aliases (openrouter-*) are absent from the price table
+        # and bill free: tokens are real, cost is not.
+        out = self.fetch([{
+            "date": "2026-08-07", "totalTokens": 4000, "costUSD": 0,
+            "models": {"openrouter-3o": {"totalTokens": 4000}},
+        }])
+        self.assertEqual(out[0]["totalTokens"], 4000)
+        self.assertFalse(out[0]["costTrusted"])
+
+    def test_a_mixed_priced_and_unpriced_day_is_untrusted(self) -> None:
+        # `codex daily` gives per-model tokens but only a row-level costUSD, so a
+        # day mixing a priced GPT-5.x with a free alias cannot be split: the
+        # positive costUSD still understates. Trusting it would let it overwrite a
+        # previously complete stored cost downward, so the whole day stays
+        # untrusted while its tokens still flow through.
+        out = self.fetch([{
+            "date": "2026-08-07", "totalTokens": 5000, "costUSD": 2.5,
+            "models": {
+                "GPT-5.5": {"totalTokens": 1000},
+                "openrouter-3o": {"totalTokens": 4000},
+            },
+        }])
+        self.assertEqual(out[0]["totalTokens"], 5000)
+        self.assertFalse(out[0]["costTrusted"])
+
+    def test_an_empty_home_yields_no_entries(self) -> None:
+        self.assertEqual(self.fetch([]), [])
+
+
 class IdenticalSourceTests(unittest.TestCase):
     """The guard that stands between a duplicated worker and an additive fold."""
 

@@ -4,7 +4,7 @@
 
 > **Nightglass Protocol** 的 AI 算力账本。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex 与 OpenCode，并让这些活动清晰可见。
+Aether Ledger 记录我如何使用 Claude Code、Codex、OpenCode 与 TRAE CLI，并让这些活动清晰可见。
 Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
 
 ## 活动

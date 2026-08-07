@@ -8,6 +8,17 @@ Each writer reads local usage through `ccusage daily --json` and classifies mode
 Claude, Codex, and OpenCode stores. Codex `image_gen` PNGs are counted separately by local file
 mtime because they do not appear as LLM token events.
 
+TRAE CLI (traex) is a Codex fork that writes the same `rollout-*.jsonl` session format under
+`~/.trae/cli` instead of `~/.codex`. `ccusage` has no `trae` agent, but its `codex` reader honours
+`CODEX_HOME`, so each writer runs a second, read-only `ccusage codex daily` with
+`CODEX_HOME=~/.trae/cli` and records the result in a separate `traex.json` store. That invocation
+never touches the real `~/.codex` tree, so Codex usage and the Codex CLI itself are unaffected.
+traex token counts are accurate; its costs are only as complete as the `ccusage` price table, which
+prices traex's real-name models (GPT-5.x, Gemini, DeepSeek, …) but not its anonymised Claude
+aliases (`openrouter-*`) or its Seed/Kimi/Qwen slugs. Days that billed tokens for zero cost are held
+untrusted, so a stored cost is never overwritten downward; traex is excluded from `--reconcile-since`
+for the same reason.
+
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
 Cost follows the winning token observation so a pricing-table refresh does not keep a stale
@@ -22,7 +33,7 @@ A new machine can only recover dates still present in its local logs.
 - `ccusage`
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
-- Claude Code, Codex, or OpenCode local usage logs
+- Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
 
 Install the command-line dependencies:
 
@@ -179,7 +190,7 @@ will be up to one day behind by design.
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
-or `opencode.json`. Files such as `codex_by_repo.json` are deliberately excluded.
+`opencode.json`, or `traex.json`. Files such as `codex_by_repo.json` are deliberately excluded.
 
 The static SVG contains:
 
@@ -240,6 +251,10 @@ Codex entries may also contain model token breakdowns and an image counter:
 
 OpenCode has the same date-keyed shape and may include per-model totals. Classification is based
 on model family because current `ccusage` model breakdowns do not identify the invoking agent.
+
+traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns keyed
+by TRAE CLI's own model slugs (e.g. `GPT-5.5`, `openrouter-3o`). `totalCost` is present only for
+models the `ccusage` price table knows; unpriced slugs contribute tokens with no cost.
 
 ## Trail compaction
 

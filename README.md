@@ -4,7 +4,8 @@
 
 > The AI compute ledger of the **Nightglass Protocol**.
 
-Aether Ledger records how I use Claude Code, Codex, and OpenCode—and makes that activity visible.
+Aether Ledger records how I use Claude Code, Codex, OpenCode, and TRAE CLI—and makes that activity
+visible.
 Tokens are not skill points; they are the compute resources I spend while turning ideas into
 useful work.
 

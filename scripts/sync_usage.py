@@ -6,8 +6,8 @@
 """Canonical per-machine data producer for Aether Ledger.
 
 Reads this machine's local ccusage usage data, persists daily totals into
-`data/<machine>/claude.json`, `data/<machine>/codex.json`, and
-`data/<machine>/opencode.json`
+`data/<machine>/claude.json`, `data/<machine>/codex.json`,
+`data/<machine>/opencode.json`, and `data/<machine>/traex.json`
 under this repo, and commits + pushes the result.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
@@ -199,6 +199,24 @@ DAILY_BRANCH_PREFIX = "usage/"
 # the session log records them as tool invocations, not LLM token_count events.
 # We count PNGs by mtime as a proxy for billable image generations.
 CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
+
+# TRAE CLI (traex) is a Codex fork: it writes the same rollout-*.jsonl session
+# format, only under ~/.trae/cli instead of ~/.codex. ccusage has no `trae` agent,
+# but its `codex` reader honours CODEX_HOME, so pointing it at ~/.trae/cli reads
+# traex's sessions with zero effect on the real ~/.codex tree. This is a separate,
+# READ-ONLY invocation kept fully apart from the Codex path so the two never mix:
+# traex lands in its own data/<machine>/traex.json store.
+#
+# Token counts come back accurate. Cost is only as good as ccusage's price table:
+# traex's real-name models (GPT-5.x, Gemini, DeepSeek, …) may price, while its
+# anonymised Claude aliases (openrouter-*) and Seed/Kimi/Qwen slugs are absent
+# from the table and bill free. We keep whatever cost ccusage produces and mark
+# the day untrusted when a model billed tokens for nothing, exactly as the Codex
+# path does — see fetch_codex_home_daily.
+TRAEX_CODEX_HOME = Path.home() / ".trae" / "cli"
+# ccusage `codex daily` (unlike the unified `daily`) reports per-model tokens but
+# only a row-level costUSD, and dates under key `date`, not `period`.
+CCUSAGE_CODEX_CMD = ["ccusage", "codex", "daily", "--json"]
 
 
 # ---------------------------------------------------------------------------
@@ -397,6 +415,64 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
         })
 
     return cc_daily, cx_daily, op_daily
+
+
+def fetch_codex_home_daily(since: date, codex_home: Path) -> list[dict]:
+    """`ccusage codex daily` against an alternate CODEX_HOME → per-day entries.
+
+    Used for traex, whose sessions live under ~/.trae/cli in the very format the
+    Codex reader expects. The invocation is read-only and touches nothing under
+    the real ~/.codex; we only override CODEX_HOME for this one child process.
+
+    The `codex daily` schema differs from the unified `daily` fetch_daily_since
+    parses: dates arrive under `date` (not `period`), each row carries per-model
+    {totalTokens, …} plus a single row-level `costUSD` (there is no per-model
+    cost), and every model here is already a Codex-family model, so no agent
+    classification is needed — the whole row is one bucket.
+
+    Cost handling mirrors the Codex path: a model that billed tokens for a cost of
+    exactly zero is one this run failed to price (a slug absent from ccusage's
+    table, which for traex includes the openrouter-* Claude aliases and the
+    Seed/Kimi/Qwen slugs). That marks the day untrusted so merge_with_cumulative
+    keeps any previously stored cost rather than overwriting it downward, while
+    tokens — always accurate — flow through unconditionally.
+    """
+    env = os.environ.copy()
+    env["CODEX_HOME"] = str(codex_home)
+    out = subprocess.run(
+        CCUSAGE_CODEX_CMD + ["--since", since.strftime("%Y%m%d")],
+        capture_output=True, text=True, check=True,
+        timeout=CCUSAGE_TIMEOUT_SECONDS, env=env,
+    )
+    raw = json.loads(out.stdout).get("daily", [])
+    daily: list[dict] = []
+    for row in raw:
+        d = row["date"]
+        tokens = row.get("totalTokens", 0)
+        cost = row.get("costUSD", 0.0)
+        models = {
+            name: {"totalTokens": m.get("totalTokens", 0)}
+            for name, m in row.get("models", {}).items()
+        }
+        # `ccusage codex daily` gives per-model tokens but only a row-level
+        # costUSD — there is no per-model cost to attribute. So the row's cost can
+        # only be trusted when it unambiguously covers what billed:
+        #   - a positive-token model that priced to nothing (costUSD == 0) is
+        #     unpriced, and
+        #   - a day mixing several models cannot be split, so a free alias
+        #     (openrouter-*, Seed/Kimi/Qwen) hiding beside a priced GPT-5.x still
+        #     understates the positive costUSD.
+        # Both collapse here: trust the cost only for a single-model priced day;
+        # anything else stays untrusted so merge_with_cumulative keeps whatever
+        # complete cost was stored before rather than overwriting it downward.
+        # Tokens are accurate regardless and flow through unconditionally.
+        priced = bool(cost) and len(models) <= 1
+        if tokens or cost or models:
+            daily.append({
+                "date": d, "totalTokens": tokens, "totalCost": cost,
+                "models": models, "costTrusted": priced,
+            })
+    return daily
 
 
 # ---------------------------------------------------------------------------
@@ -1022,6 +1098,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     cc_path = machine_dir / "claude.json"
     codex_path = machine_dir / "codex.json"
     opencode_path = machine_dir / "opencode.json"
+    traex_path = machine_dir / "traex.json"
     machine_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebase onto the other machines' commits before writing, so the push at the
@@ -1048,6 +1125,20 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
+    # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
+    # its failure is isolated: an empty fetch merges [] and keeps the cached store
+    # via max(), exactly like the Codex path above. A machine that never ran traex
+    # simply gets an empty tree here and writes nothing.
+    try:
+        tx_daily = fetch_codex_home_daily(EPOCH, TRAEX_CODEX_HOME)
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ) as e:
+        print(f"traex ccusage fetch failed, keeping cached store: {e}", file=sys.stderr)
+        tx_daily = []
     # Reconciling rewrites history downward, so it must not run against a fetch
     # that priced nothing: the fresh token count would land paired with a cost the
     # price table never produced. Refuse and let the operator re-run.
@@ -1071,6 +1162,10 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(cc_daily, cc_path, reconcile_since=reconcile_since)
     merge_with_cumulative(cx_daily, codex_path, reconcile_since=reconcile_since)
     merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
+    # traex never reconciles: its Claude aliases (openrouter-*) and Seed/Kimi/Qwen
+    # slugs bill free, so its cost is untrusted by construction and must never be
+    # rewritten downward. Tokens still ratchet up via the default max() path.
+    merge_with_cumulative(tx_daily, traex_path)
 
     if not no_push:
         git_push(machine)
