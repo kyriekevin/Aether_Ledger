@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
-AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json"})
+AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
