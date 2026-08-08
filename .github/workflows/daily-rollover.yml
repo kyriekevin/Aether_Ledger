@@ -54,7 +54,7 @@ jobs:
           merged=()
           for day in "${completed[@]}"; do
             branch="usage/$day"
-            git merge --squash "origin/$branch"
+            uv run --script scripts/squash_usage_branch.py "origin/$branch"
             uv run --script scripts/audit_public.py
             uv run --script scripts/render_dashboard.py --as-of "$day"
             git add assets/token-activity.svg

@@ -138,6 +138,13 @@ idempotent retry 30 minutes later:
 4. Push `main` and delete only the successfully published day branches.
 5. Create today's branch from the updated `main`.
 
+If a feature PR accidentally carried an earlier generated-store snapshot from the active usage
+branch, the squash can report a conflict even though the usage branch already contains that exact
+`main` blob in its post-fork history. The rollover accepts the usage branch's final version only
+when it can prove that relationship for every conflict and every path is a canonical generated
+store. Any unrelated data conflict, pre-fork match, or conflict outside those stores still fails
+closed for human review.
+
 If GitHub Actions is delayed, a writer will not create today while any older usage branch still
 exists. It exits cleanly and catches up on the next scheduled run. This prevents today's branch
 from being based on a `main` that lacks an earlier day's final data.
