@@ -416,6 +416,25 @@ class SquashUsageBranchTests(unittest.TestCase):
 
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
 
+    def test_refuses_blob_that_only_existed_before_the_daily_fork(self) -> None:
+        self.commit_store(1, "old snapshot")
+        old_snapshot = self.git("rev-parse", "HEAD").stdout.strip()
+        self.commit_store(2, "daily branch base")
+        self.git("switch", "-qc", "usage/2026-08-07")
+        self.commit_store(3, "final snapshot")
+        self.git("switch", "-q", "main")
+        self.git("checkout", old_snapshot, "--", "data/work/codex.json")
+        self.git("commit", "-qm", "intentional main reconciliation")
+
+        with patch.object(squash_usage_branch, "git") as mocked_git:
+            mocked_git.side_effect = lambda *args, **kwargs: subprocess.run(
+                ["git", *args], cwd=self.repo, check=False, text=True,
+                capture_output=kwargs.get("capture", False),
+            )
+            self.assertFalse(squash_usage_branch.squash("usage/2026-08-07"))
+
+        self.assertEqual(self.git("status", "--porcelain").stdout, "")
+
 
 class RealRepositoryCleanupTests(unittest.TestCase):
     """Drive the deletion rule against a real repository instead of mocked git.

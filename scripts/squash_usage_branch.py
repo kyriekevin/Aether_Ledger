@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
 """Squash a completed usage branch, resolving proven stale-store conflicts."""
 
 from __future__ import annotations
@@ -29,8 +33,16 @@ def blob_at(revision: str, path: str) -> str | None:
     return result.stdout.strip() if result.returncode == 0 else None
 
 
-def branch_contains_blob(branch: str, path: str, blob: str) -> bool:
-    history = git("log", "--format=%H", branch, "--", path, capture=True)
+def branch_contains_blob_after(branch: str, fork: str, path: str, blob: str) -> bool:
+    history = git(
+        "log",
+        "--first-parent",
+        "--format=%H",
+        f"{fork}..{branch}",
+        "--",
+        path,
+        capture=True,
+    )
     if history.returncode != 0:
         return False
     return any(blob_at(commit, path) == blob for commit in history.stdout.splitlines())
@@ -47,13 +59,16 @@ def squash(branch: str) -> bool:
         print(f"cannot squash {branch}: merge failed without resolvable conflicts", file=sys.stderr)
         return False
 
+    fork = git("merge-base", "HEAD", branch, capture=True)
+    fork_point = fork.stdout.strip() if fork.returncode == 0 else ""
     unsafe: list[str] = []
     for path in paths:
         main_blob = blob_at("HEAD", path)
         if (
             not GENERATED_STORE.fullmatch(path)
             or main_blob is None
-            or not branch_contains_blob(branch, path, main_blob)
+            or not fork_point
+            or not branch_contains_blob_after(branch, fork_point, path, main_blob)
         ):
             unsafe.append(path)
 
