@@ -21,11 +21,69 @@ from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
+DEFAULT_COMPOSITION_OUTPUT = REPO_ROOT / "assets" / "token-composition.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
+ROLE_ORDER = ("work", "personal", "devbox", "trail")
+COMPOSITION_ROLE_ORDER = ("work", "personal", "development")
+AGENT_ORDER = ("claude", "codex", "opencode", "traex")
+COMPOSITION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+ROLE_LABELS = {"work": "Work", "personal": "Personal", "development": "Development"}
+ROLE_BUCKETS = {
+    "work": "work",
+    "personal": "personal",
+    "devbox": "development",
+    "trail": "development",
+}
+AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
+AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
+ROLE_COLORS = {
+    "work": "#22d3ee",
+    "personal": "#38bdf8",
+    "development": "#64748b",
+}
+AGENT_COLORS = {
+    "claude": "#60a5fa",
+    "codex": "#22d3ee",
+    "traex": "#818cf8",
+    "legacy": "#64748b",
+}
+
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
+THEME_STYLE_LINES = (
+    "  <style>",
+    "    .dashboard-background { fill: #f6f8fa; }",
+    "    .dashboard-panel { fill: #ffffff; }",
+    "    .dashboard-primary { fill: #1f2328; }",
+    "    .dashboard-secondary { fill: #57606a; }",
+    "    .dashboard-muted { fill: #6e7781; }",
+    "    .dashboard-accent { fill: #0e7490; }",
+    "    .dashboard-border { stroke: #d8dee4; }",
+    "    .dashboard-track { fill: #e8ecf1; }",
+    "    .heatmap-level-0 { fill: #e8ecf1; }",
+    "    .heatmap-level-1 { fill: #67e8f9; }",
+    "    .heatmap-level-2 { fill: #06b6d4; }",
+    "    .heatmap-level-3 { fill: #0e7490; }",
+    "    .heatmap-level-4 { fill: #164e63; }",
+    "    @media (prefers-color-scheme: dark) {",
+    "      .dashboard-background { fill: #1d1e2c; }",
+    "      .dashboard-panel { fill: #222536; }",
+    "      .dashboard-primary { fill: #e6e9f2; }",
+    "      .dashboard-secondary { fill: #b8c1d8; }",
+    "      .dashboard-muted { fill: #8d99b2; }",
+    "      .dashboard-accent { fill: #67e8f9; }",
+    "      .dashboard-border { stroke: #34384a; }",
+    "      .dashboard-track { fill: #34384a; }",
+    "      .heatmap-level-0 { fill: #34384a; }",
+    "      .heatmap-level-1 { fill: #0e7490; }",
+    "      .heatmap-level-2 { fill: #0891b2; }",
+    "      .heatmap-level-3 { fill: #22d3ee; }",
+    "      .heatmap-level-4 { fill: #a5f3fc; }",
+    "    }",
+    "  </style>",
+)
 WIDTH = 1180
 CARD_X = 16
 CARD_WIDTH = WIDTH - CARD_X * 2
@@ -43,6 +101,25 @@ class DailyTotals:
     cost: float = 0.0
 
 
+@dataclass(frozen=True)
+class UsageRecord:
+    day: date
+    role: str
+    agent: str
+    tokens: int
+    cost: float
+
+
+@dataclass(frozen=True)
+class CompositionTotals:
+    as_of: date
+    recent_start: date
+    lifetime_roles: dict[str, int]
+    recent_roles: dict[str, int]
+    lifetime_agents: dict[str, int]
+    recent_agents: dict[str, int]
+
+
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
     """Find only canonical per-agent stores, excluding caches and Git internals."""
     paths = []
@@ -53,11 +130,19 @@ def discover_agent_files(root: Path) -> tuple[Path, ...]:
     return tuple(sorted(paths))
 
 
-def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
-    """Sum daily tokens and API-equivalent cost across canonical stores."""
-    tokens_by_day: defaultdict[date, int] = defaultdict(int)
-    cost_by_day: defaultdict[date, float] = defaultdict(float)
+def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
+    """Load public role, agent, day, token, and cost dimensions from canonical stores."""
+    root = Path(root)
+    data_root = root / "data"
+    records: list[UsageRecord] = []
     for path in discover_agent_files(root):
+        relative = path.relative_to(data_root)
+        role = relative.parts[0]
+        agent = path.stem
+        if role not in ROLE_ORDER:
+            raise ValueError(f"unexpected public role in {path}")
+        if agent not in AGENT_ORDER:
+            raise ValueError(f"unexpected canonical agent in {path}")
         try:
             store = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
@@ -77,12 +162,58 @@ def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
             cost = entry.get("totalCost", 0.0)
             if isinstance(cost, bool) or not isinstance(cost, (int, float)):
                 cost = 0.0
-            tokens_by_day[day] += max(0, int(tokens))
-            cost_by_day[day] += max(0.0, float(cost))
+            records.append(
+                UsageRecord(
+                    day=day,
+                    role=role,
+                    agent=agent,
+                    tokens=max(0, int(tokens)),
+                    cost=max(0.0, float(cost)),
+                )
+            )
+    return tuple(records)
+
+
+def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
+    """Sum daily tokens and API-equivalent cost across canonical stores."""
+    tokens_by_day: defaultdict[date, int] = defaultdict(int)
+    cost_by_day: defaultdict[date, float] = defaultdict(float)
+    for record in load_usage_records(root):
+        tokens_by_day[record.day] += record.tokens
+        cost_by_day[record.day] += record.cost
     return {
         day: DailyTotals(tokens=tokens_by_day[day], cost=cost_by_day[day])
         for day in sorted(tokens_by_day.keys() | cost_by_day.keys())
     }
+
+
+def aggregate_composition(root: Path, as_of: date) -> CompositionTotals:
+    """Aggregate lifetime and recent token composition."""
+    recent_start = as_of - timedelta(days=29)
+    lifetime_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
+    recent_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
+    lifetime_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
+    recent_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
+
+    for record in load_usage_records(root):
+        if record.day > as_of:
+            continue
+        role_bucket = ROLE_BUCKETS[record.role]
+        lifetime_roles[role_bucket] += record.tokens
+        agent_bucket = AGENT_BUCKETS[record.agent]
+        lifetime_agents[agent_bucket] += record.tokens
+        if record.day >= recent_start:
+            recent_roles[role_bucket] += record.tokens
+            recent_agents[agent_bucket] += record.tokens
+
+    return CompositionTotals(
+        as_of=as_of,
+        recent_start=recent_start,
+        lifetime_roles=lifetime_roles,
+        recent_roles=recent_roles,
+        lifetime_agents=lifetime_agents,
+        recent_agents=recent_agents,
+    )
 
 
 def _compact_number(value: int) -> str:
@@ -167,32 +298,7 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
             f'{_compact_number(lifetime.tokens)} lifetime tokens across {active_days} active days; '
             f'peak {_compact_number(peak.tokens)} tokens on {peak_text}.</desc>'
         ),
-        "  <style>",
-        "    .dashboard-background { fill: #f6f8fa; }",
-        "    .dashboard-primary { fill: #1f2328; }",
-        "    .dashboard-secondary { fill: #57606a; }",
-        "    .dashboard-muted { fill: #6e7781; }",
-        "    .dashboard-accent { fill: #0e7490; }",
-        "    .dashboard-border { stroke: #d8dee4; }",
-        "    .heatmap-level-0 { fill: #e8ecf1; }",
-        "    .heatmap-level-1 { fill: #67e8f9; }",
-        "    .heatmap-level-2 { fill: #06b6d4; }",
-        "    .heatmap-level-3 { fill: #0e7490; }",
-        "    .heatmap-level-4 { fill: #164e63; }",
-        "    @media (prefers-color-scheme: dark) {",
-        "      .dashboard-background { fill: #1d1e2c; }",
-        "      .dashboard-primary { fill: #e6e9f2; }",
-        "      .dashboard-secondary { fill: #b8c1d8; }",
-        "      .dashboard-muted { fill: #8d99b2; }",
-        "      .dashboard-accent { fill: #67e8f9; }",
-        "      .dashboard-border { stroke: #34384a; }",
-        "      .heatmap-level-0 { fill: #34384a; }",
-        "      .heatmap-level-1 { fill: #0e7490; }",
-        "      .heatmap-level-2 { fill: #0891b2; }",
-        "      .heatmap-level-3 { fill: #22d3ee; }",
-        "      .heatmap-level-4 { fill: #a5f3fc; }",
-        "    }",
-        "  </style>",
+        *THEME_STYLE_LINES,
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         (
             f'  <rect class="dashboard-border" x="{CARD_X}" y="18" '
@@ -211,16 +317,13 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
             )
         lines.extend(
             (
-                f'  <text class="dashboard-accent" x="{center:.1f}" y="52" '
-                'text-anchor="middle" '
+                f'  <text class="dashboard-accent" x="{center:.1f}" y="52" text-anchor="middle" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="22" font-weight="600">{escape(_compact_number(value.tokens))} tokens</text>',
-                f'  <text class="dashboard-primary" x="{center:.1f}" y="78" '
-                'text-anchor="middle" '
+                f'  <text class="dashboard-primary" x="{center:.1f}" y="78" text-anchor="middle" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="16" font-weight="500">{escape(_compact_cost(value.cost))}</text>',
-                f'  <text class="dashboard-muted" x="{center:.1f}" y="106" '
-                'text-anchor="middle" '
+                f'  <text class="dashboard-muted" x="{center:.1f}" y="106" text-anchor="middle" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="14">{escape(label)}</text>',
             )
@@ -232,12 +335,10 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
         (
             f'  <line class="dashboard-border" x1="{divider:.1f}" y1="36" '
             f'x2="{divider:.1f}" y2="112" stroke-width="1"/>',
-            f'  <text class="dashboard-primary" x="{active_center:.1f}" y="66" '
-            'text-anchor="middle" '
+            f'  <text class="dashboard-primary" x="{active_center:.1f}" y="66" text-anchor="middle" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="25" font-weight="600">{active_days} days</text>',
-            f'  <text class="dashboard-muted" x="{active_center:.1f}" y="106" '
-            'text-anchor="middle" '
+            f'  <text class="dashboard-muted" x="{active_center:.1f}" y="106" text-anchor="middle" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="14">Active days</text>',
         )
@@ -288,8 +389,7 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
             lines.extend(
                 (
                     f'  <rect class="{LEVEL_CLASSES[level]}" x="{x}" y="{y}" '
-                    f'width="{CELL_SIZE}" height="{CELL_SIZE}" rx="4" '
-                    f'data-date="{current.isoformat()}" '
+                    f'width="{CELL_SIZE}" height="{CELL_SIZE}" rx="4" data-date="{current.isoformat()}" '
                     f'data-tokens="{tokens}" data-level="{level}">',
                     f"    <title>{escape(label)}</title>",
                     "  </rect>",
@@ -320,6 +420,178 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _share(value: int, total: int) -> float:
+    return value / total if total > 0 else 0.0
+
+
+def _percent(value: int, total: int) -> str:
+    share = _share(value, total) * 100
+    if 0 < share < 0.1:
+        return "<0.1%"
+    return f"{share:.1f}%"
+
+
+def _render_composition_bar(
+    lines: list[str],
+    *,
+    bar_id: str,
+    y: int,
+    row_label: str,
+    values: dict[str, int],
+    order: tuple[str, ...],
+    labels: dict[str, str],
+    colors: dict[str, str],
+    height: int = 32,
+    emphasize: bool = True,
+) -> None:
+    bar_x = 170
+    bar_width = WIDTH - bar_x - 32
+    bar_height = height
+    total = sum(values.values())
+    label_class = "dashboard-primary" if emphasize else "dashboard-muted"
+    lines.extend(
+        (
+            f'  <text class="{label_class}" x="32" y="{y + height / 2 + 5:.1f}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="15" font-weight="500">{escape(row_label)}</text>',
+            f'  <rect class="dashboard-track" x="{bar_x}" y="{y}" '
+            f'width="{bar_width}" height="{bar_height}" rx="8"/>',
+            f'  <clipPath id="{bar_id}"><rect x="{bar_x}" y="{y}" width="{bar_width}" '
+            f'height="{bar_height}" rx="8"/></clipPath>',
+        )
+    )
+    cursor = float(bar_x)
+    for index, category in enumerate(order):
+        value = values.get(category, 0)
+        width = bar_width * _share(value, total)
+        if index == len(order) - 1 and value:
+            width = bar_x + bar_width - cursor
+        if width <= 0:
+            continue
+        share_text = _percent(value, total)
+        escaped_share = escape(share_text, quote=True)
+        lines.extend(
+            (
+                f'  <rect x="{cursor:.2f}" y="{y}" width="{width:.2f}" height="{bar_height}" '
+                f'fill="{colors[category]}" clip-path="url(#{bar_id})" '
+                f'data-category="{category}" data-tokens="{value}" data-share="{escaped_share}">',
+                f'    <title>{escape(labels[category])}: {_compact_number(value)} tokens '
+                f'({escaped_share})</title>',
+                "  </rect>",
+            )
+        )
+        if emphasize and width >= 112:
+            lines.append(
+                f'  <text x="{cursor + width / 2:.2f}" y="{y + 21}" text-anchor="middle" '
+                'fill="#111827" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="13" font-weight="700">{escape(labels[category])} {escaped_share}</text>'
+            )
+        cursor += width
+
+
+def _render_composition_legend(
+    lines: list[str],
+    *,
+    y: int,
+    order: tuple[str, ...],
+    labels: dict[str, str],
+    colors: dict[str, str],
+    lifetime: dict[str, int],
+    recent: dict[str, int],
+) -> None:
+    lifetime_total = sum(lifetime.values())
+    recent_total = sum(recent.values())
+    item_width = (WIDTH - 218) / len(order)
+    for index, category in enumerate(order):
+        x = 186 + index * item_width
+        comparison = (
+            f"{labels[category]} · {_percent(lifetime.get(category, 0), lifetime_total)}"
+            f" → {_percent(recent.get(category, 0), recent_total)}"
+        )
+        lines.extend(
+            (
+                f'  <rect x="{x:.2f}" y="{y - 11}" width="12" height="12" rx="3" '
+                f'fill="{colors[category]}"/>',
+                f'  <text class="dashboard-secondary" x="{x + 20:.2f}" y="{y}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="13">{escape(comparison)}</text>',
+            )
+        )
+
+
+def render_composition_svg(composition: CompositionTotals) -> str:
+    """Render lifetime-to-recent composition shifts as static SVG."""
+    lifetime_total = sum(composition.lifetime_roles.values())
+    recent_total = sum(composition.recent_roles.values())
+    title = f"AI compute composition through {composition.as_of.isoformat()}"
+    if recent_total:
+        dominant_role = max(
+            COMPOSITION_ROLE_ORDER, key=lambda role: composition.recent_roles[role]
+        )
+        dominant_agent = max(
+            COMPOSITION_AGENT_ORDER, key=lambda agent: composition.recent_agents[agent]
+        )
+        description = (
+            f"{_compact_number(lifetime_total)} lifetime tokens and "
+            f"{_compact_number(recent_total)} tokens in the trailing 30 days; recent activity "
+            f"is led by {ROLE_LABELS[dominant_role]} and {AGENT_LABELS[dominant_agent]}."
+        )
+    else:
+        description = (
+            f"{_compact_number(lifetime_total)} lifetime tokens; no token activity in the "
+            "trailing 30 days."
+        )
+    height = 500
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        f'  <desc id="desc">{escape(description)}</desc>',
+        *THEME_STYLE_LINES,
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="46" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute composition</text>',
+        f'  <text class="dashboard-muted" x="16" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Through {composition.as_of.isoformat()} · lifetime baseline vs {composition.recent_start.isoformat()}–{composition.as_of.isoformat()}</text>',
+        '  <rect class="dashboard-panel" x="16" y="94" width="1148" height="178" rx="16"/>',
+        '  <text class="dashboard-primary" x="32" y="124" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Environment</text>',
+        '  <text class="dashboard-muted" x="1138" y="124" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">RECENT EMPHASIZED</text>',
+    ]
+    _render_composition_bar(
+        lines, bar_id="role-recent", y=138, row_label="Recent 30d",
+        values=composition.recent_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
+        colors=ROLE_COLORS, height=34, emphasize=True,
+    )
+    _render_composition_bar(
+        lines, bar_id="role-lifetime", y=184, row_label="Lifetime",
+        values=composition.lifetime_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
+        colors=ROLE_COLORS, height=18, emphasize=False,
+    )
+    _render_composition_legend(
+        lines, y=242, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS, colors=ROLE_COLORS,
+        lifetime=composition.lifetime_roles, recent=composition.recent_roles,
+    )
+    lines.extend((
+        '  <rect class="dashboard-panel" x="16" y="288" width="1148" height="178" rx="16"/>',
+        '  <text class="dashboard-primary" x="32" y="318" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Agent</text>',
+        '  <text class="dashboard-muted" x="1138" y="318" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">OPENCODE INCLUDED IN LEGACY</text>',
+    ))
+    _render_composition_bar(
+        lines, bar_id="agent-recent", y=332, row_label="Recent 30d",
+        values=composition.recent_agents, order=COMPOSITION_AGENT_ORDER,
+        labels=AGENT_LABELS, colors=AGENT_COLORS, height=34, emphasize=True,
+    )
+    _render_composition_bar(
+        lines, bar_id="agent-lifetime", y=378, row_label="Lifetime",
+        values=composition.lifetime_agents, order=COMPOSITION_AGENT_ORDER,
+        labels=AGENT_LABELS, colors=AGENT_COLORS, height=18, emphasize=False,
+    )
+    _render_composition_legend(
+        lines, y=436, order=COMPOSITION_AGENT_ORDER, labels=AGENT_LABELS,
+        colors=AGENT_COLORS, lifetime=composition.lifetime_agents,
+        recent=composition.recent_agents,
+    )
+    lines.append("</svg>")
+    return "\n".join(lines) + "\n"
+
+
 def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
@@ -335,6 +607,24 @@ def _atomic_write(path: Path, content: str) -> None:
         raise
 
 
+def _update_output(path: Path, expected: str, *, check: bool) -> bool:
+    try:
+        actual = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        actual = None
+    changed = actual != expected
+    if changed and not check:
+        _atomic_write(path, expected)
+    return changed
+
+
+def _latest_activity_day(totals: dict[date, DailyTotals]) -> date:
+    return max(
+        (day for day, daily in totals.items() if daily.tokens > 0),
+        default=datetime.now(SHANGHAI).date(),
+    )
+
+
 def generate(
     root: Path,
     output: Path,
@@ -344,37 +634,56 @@ def generate(
 ) -> bool:
     totals = aggregate_daily(root)
     if as_of is None:
-        as_of = max(
-            (day for day, daily in totals.items() if daily.tokens > 0),
-            default=datetime.now(SHANGHAI).date(),
-        )
+        as_of = _latest_activity_day(totals)
     expected = render_svg(totals, as_of)
-    try:
-        actual = output.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        actual = None
-    changed = actual != expected
-    if changed and not check:
-        _atomic_write(output, expected)
-    return changed
+    return _update_output(output, expected, check=check)
+
+
+def generate_composition(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_composition_svg(aggregate_composition(root, as_of))
+    return _update_output(output, expected, check=check)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument(
+        "--composition-output",
+        type=Path,
+        default=DEFAULT_COMPOSITION_OUTPUT,
+    )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
-    parser.add_argument("--check", action="store_true", help="fail if the SVG is stale")
+    parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
     args = parser.parse_args()
-    changed = generate(args.root, args.output, args.as_of, check=args.check)
-    if args.check and changed:
-        print(f"stale dashboard: {args.output}")
-        return 1
-    if changed:
-        print(f"rendered {args.output}")
-    else:
-        print(f"dashboard is current: {args.output}")
-    return 0
+    outputs = (
+        (args.output, generate(args.root, args.output, args.as_of, check=args.check)),
+        (
+            args.composition_output,
+            generate_composition(
+                args.root,
+                args.composition_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+    )
+    for output, changed in outputs:
+        if args.check and changed:
+            print(f"stale dashboard: {output}")
+        elif changed:
+            print(f"rendered {output}")
+        else:
+            print(f"dashboard is current: {output}")
+    return 1 if args.check and any(changed for _, changed in outputs) else 0
 
 
 if __name__ == "__main__":
