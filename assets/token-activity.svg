@@ -1,1155 +1,1181 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="410" viewBox="0 0 1180 410" role="img" aria-labelledby="title desc">
   <title id="title">AI compute activity through 2026-08-07</title>
   <desc id="desc">$18.5K API-equivalent lifetime cost and 14.6B lifetime tokens across 109 active days; peak 621M tokens on 2026-08-05.</desc>
-  <rect width="1180" height="410" rx="22" fill="#1d1e2c"/>
-  <rect x="16" y="18" width="1148" height="112" rx="18" fill="none" stroke="#303246" stroke-width="2"/>
-  <text x="130.8" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">53.9M tokens</text>
-  <text x="130.8" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$73.21</text>
-  <text x="130.8" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Aug 7</text>
-  <line x1="245.6" y1="36" x2="245.6" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="360.4" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">1.8B tokens</text>
-  <text x="360.4" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$1.5K</text>
-  <text x="360.4" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Month · Aug</text>
-  <line x1="475.2" y1="36" x2="475.2" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="590.0" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">14.6B tokens</text>
-  <text x="590.0" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$18.5K</text>
-  <text x="590.0" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Lifetime</text>
-  <line x1="704.8" y1="36" x2="704.8" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="819.6" y="52" text-anchor="middle" fill="#67e8f9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">621M tokens</text>
-  <text x="819.6" y="78" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$503</text>
-  <text x="819.6" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Aug 5</text>
-  <line x1="934.4" y1="36" x2="934.4" y2="112" stroke="#303246" stroke-width="1"/>
-  <text x="1049.2" y="66" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">109 days</text>
-  <text x="1049.2" y="106" text-anchor="middle" fill="#9699b0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Active days</text>
-  <text x="16" y="174" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="500">Compute activity</text>
-  <text x="16" y="231" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Mon</text>
-  <text x="16" y="271" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Wed</text>
-  <text x="16" y="311" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Fri</text>
-  <text x="58" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Aug</text>
-  <text x="138" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Sep</text>
-  <text x="218" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Oct</text>
-  <text x="298" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Nov</text>
-  <text x="398" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Dec</text>
-  <text x="478" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jan</text>
-  <text x="558" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Feb</text>
-  <text x="638" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Mar</text>
-  <text x="738" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Apr</text>
-  <text x="818" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">May</text>
-  <text x="918" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jun</text>
-  <text x="998" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jul</text>
-  <text x="1078" y="204" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Aug</text>
-  <rect x="58" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-04" data-tokens="0" data-level="0">
+  <style>
+    .dashboard-background { fill: #f6f8fa; }
+    .dashboard-primary { fill: #1f2328; }
+    .dashboard-secondary { fill: #57606a; }
+    .dashboard-muted { fill: #6e7781; }
+    .dashboard-accent { fill: #0e7490; }
+    .dashboard-border { stroke: #d8dee4; }
+    .heatmap-level-0 { fill: #e8ecf1; }
+    .heatmap-level-1 { fill: #67e8f9; }
+    .heatmap-level-2 { fill: #06b6d4; }
+    .heatmap-level-3 { fill: #0e7490; }
+    .heatmap-level-4 { fill: #164e63; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1d1e2c; }
+      .dashboard-primary { fill: #e6e9f2; }
+      .dashboard-secondary { fill: #b8c1d8; }
+      .dashboard-muted { fill: #8d99b2; }
+      .dashboard-accent { fill: #67e8f9; }
+      .dashboard-border { stroke: #34384a; }
+      .heatmap-level-0 { fill: #34384a; }
+      .heatmap-level-1 { fill: #0e7490; }
+      .heatmap-level-2 { fill: #0891b2; }
+      .heatmap-level-3 { fill: #22d3ee; }
+      .heatmap-level-4 { fill: #a5f3fc; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="410" rx="22"/>
+  <rect class="dashboard-border" x="16" y="18" width="1148" height="112" rx="18" fill="none" stroke-width="2"/>
+  <text class="dashboard-accent" x="130.8" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">53.9M tokens</text>
+  <text class="dashboard-primary" x="130.8" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$73.21</text>
+  <text class="dashboard-muted" x="130.8" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Aug 7</text>
+  <line class="dashboard-border" x1="245.6" y1="36" x2="245.6" y2="112" stroke-width="1"/>
+  <text class="dashboard-accent" x="360.4" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">1.8B tokens</text>
+  <text class="dashboard-primary" x="360.4" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$1.5K</text>
+  <text class="dashboard-muted" x="360.4" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Month · Aug</text>
+  <line class="dashboard-border" x1="475.2" y1="36" x2="475.2" y2="112" stroke-width="1"/>
+  <text class="dashboard-accent" x="590.0" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">14.6B tokens</text>
+  <text class="dashboard-primary" x="590.0" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$18.5K</text>
+  <text class="dashboard-muted" x="590.0" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Lifetime</text>
+  <line class="dashboard-border" x1="704.8" y1="36" x2="704.8" y2="112" stroke-width="1"/>
+  <text class="dashboard-accent" x="819.6" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">621M tokens</text>
+  <text class="dashboard-primary" x="819.6" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$503</text>
+  <text class="dashboard-muted" x="819.6" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Aug 5</text>
+  <line class="dashboard-border" x1="934.4" y1="36" x2="934.4" y2="112" stroke-width="1"/>
+  <text class="dashboard-primary" x="1049.2" y="66" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">109 days</text>
+  <text class="dashboard-muted" x="1049.2" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Active days</text>
+  <text class="dashboard-primary" x="16" y="174" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="500">Compute activity</text>
+  <text class="dashboard-muted" x="16" y="231" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Mon</text>
+  <text class="dashboard-muted" x="16" y="271" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Wed</text>
+  <text class="dashboard-muted" x="16" y="311" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Fri</text>
+  <text class="dashboard-muted" x="58" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Aug</text>
+  <text class="dashboard-muted" x="138" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Sep</text>
+  <text class="dashboard-muted" x="218" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Oct</text>
+  <text class="dashboard-muted" x="298" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Nov</text>
+  <text class="dashboard-muted" x="398" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Dec</text>
+  <text class="dashboard-muted" x="478" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jan</text>
+  <text class="dashboard-muted" x="558" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Feb</text>
+  <text class="dashboard-muted" x="638" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Mar</text>
+  <text class="dashboard-muted" x="738" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Apr</text>
+  <text class="dashboard-muted" x="818" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">May</text>
+  <text class="dashboard-muted" x="918" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jun</text>
+  <text class="dashboard-muted" x="998" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Jul</text>
+  <text class="dashboard-muted" x="1078" y="204" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Aug</text>
+  <rect class="heatmap-level-0" x="58" y="218" width="16" height="16" rx="4" data-date="2025-08-04" data-tokens="0" data-level="0">
     <title>2025-08-04: 0 tokens</title>
   </rect>
-  <rect x="58" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="238" width="16" height="16" rx="4" data-date="2025-08-05" data-tokens="0" data-level="0">
     <title>2025-08-05: 0 tokens</title>
   </rect>
-  <rect x="58" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="258" width="16" height="16" rx="4" data-date="2025-08-06" data-tokens="0" data-level="0">
     <title>2025-08-06: 0 tokens</title>
   </rect>
-  <rect x="58" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="278" width="16" height="16" rx="4" data-date="2025-08-07" data-tokens="0" data-level="0">
     <title>2025-08-07: 0 tokens</title>
   </rect>
-  <rect x="58" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="298" width="16" height="16" rx="4" data-date="2025-08-08" data-tokens="0" data-level="0">
     <title>2025-08-08: 0 tokens</title>
   </rect>
-  <rect x="58" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="318" width="16" height="16" rx="4" data-date="2025-08-09" data-tokens="0" data-level="0">
     <title>2025-08-09: 0 tokens</title>
   </rect>
-  <rect x="58" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="58" y="338" width="16" height="16" rx="4" data-date="2025-08-10" data-tokens="0" data-level="0">
     <title>2025-08-10: 0 tokens</title>
   </rect>
-  <rect x="78" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="218" width="16" height="16" rx="4" data-date="2025-08-11" data-tokens="0" data-level="0">
     <title>2025-08-11: 0 tokens</title>
   </rect>
-  <rect x="78" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="238" width="16" height="16" rx="4" data-date="2025-08-12" data-tokens="0" data-level="0">
     <title>2025-08-12: 0 tokens</title>
   </rect>
-  <rect x="78" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="258" width="16" height="16" rx="4" data-date="2025-08-13" data-tokens="0" data-level="0">
     <title>2025-08-13: 0 tokens</title>
   </rect>
-  <rect x="78" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="278" width="16" height="16" rx="4" data-date="2025-08-14" data-tokens="0" data-level="0">
     <title>2025-08-14: 0 tokens</title>
   </rect>
-  <rect x="78" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="298" width="16" height="16" rx="4" data-date="2025-08-15" data-tokens="0" data-level="0">
     <title>2025-08-15: 0 tokens</title>
   </rect>
-  <rect x="78" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="318" width="16" height="16" rx="4" data-date="2025-08-16" data-tokens="0" data-level="0">
     <title>2025-08-16: 0 tokens</title>
   </rect>
-  <rect x="78" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="78" y="338" width="16" height="16" rx="4" data-date="2025-08-17" data-tokens="0" data-level="0">
     <title>2025-08-17: 0 tokens</title>
   </rect>
-  <rect x="98" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="218" width="16" height="16" rx="4" data-date="2025-08-18" data-tokens="0" data-level="0">
     <title>2025-08-18: 0 tokens</title>
   </rect>
-  <rect x="98" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="238" width="16" height="16" rx="4" data-date="2025-08-19" data-tokens="0" data-level="0">
     <title>2025-08-19: 0 tokens</title>
   </rect>
-  <rect x="98" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="258" width="16" height="16" rx="4" data-date="2025-08-20" data-tokens="0" data-level="0">
     <title>2025-08-20: 0 tokens</title>
   </rect>
-  <rect x="98" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="278" width="16" height="16" rx="4" data-date="2025-08-21" data-tokens="0" data-level="0">
     <title>2025-08-21: 0 tokens</title>
   </rect>
-  <rect x="98" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="298" width="16" height="16" rx="4" data-date="2025-08-22" data-tokens="0" data-level="0">
     <title>2025-08-22: 0 tokens</title>
   </rect>
-  <rect x="98" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="318" width="16" height="16" rx="4" data-date="2025-08-23" data-tokens="0" data-level="0">
     <title>2025-08-23: 0 tokens</title>
   </rect>
-  <rect x="98" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="98" y="338" width="16" height="16" rx="4" data-date="2025-08-24" data-tokens="0" data-level="0">
     <title>2025-08-24: 0 tokens</title>
   </rect>
-  <rect x="118" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="218" width="16" height="16" rx="4" data-date="2025-08-25" data-tokens="0" data-level="0">
     <title>2025-08-25: 0 tokens</title>
   </rect>
-  <rect x="118" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="238" width="16" height="16" rx="4" data-date="2025-08-26" data-tokens="0" data-level="0">
     <title>2025-08-26: 0 tokens</title>
   </rect>
-  <rect x="118" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="258" width="16" height="16" rx="4" data-date="2025-08-27" data-tokens="0" data-level="0">
     <title>2025-08-27: 0 tokens</title>
   </rect>
-  <rect x="118" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="278" width="16" height="16" rx="4" data-date="2025-08-28" data-tokens="0" data-level="0">
     <title>2025-08-28: 0 tokens</title>
   </rect>
-  <rect x="118" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="298" width="16" height="16" rx="4" data-date="2025-08-29" data-tokens="0" data-level="0">
     <title>2025-08-29: 0 tokens</title>
   </rect>
-  <rect x="118" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="318" width="16" height="16" rx="4" data-date="2025-08-30" data-tokens="0" data-level="0">
     <title>2025-08-30: 0 tokens</title>
   </rect>
-  <rect x="118" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-08-31" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="118" y="338" width="16" height="16" rx="4" data-date="2025-08-31" data-tokens="0" data-level="0">
     <title>2025-08-31: 0 tokens</title>
   </rect>
-  <rect x="138" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="218" width="16" height="16" rx="4" data-date="2025-09-01" data-tokens="0" data-level="0">
     <title>2025-09-01: 0 tokens</title>
   </rect>
-  <rect x="138" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="238" width="16" height="16" rx="4" data-date="2025-09-02" data-tokens="0" data-level="0">
     <title>2025-09-02: 0 tokens</title>
   </rect>
-  <rect x="138" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="258" width="16" height="16" rx="4" data-date="2025-09-03" data-tokens="0" data-level="0">
     <title>2025-09-03: 0 tokens</title>
   </rect>
-  <rect x="138" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="278" width="16" height="16" rx="4" data-date="2025-09-04" data-tokens="0" data-level="0">
     <title>2025-09-04: 0 tokens</title>
   </rect>
-  <rect x="138" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="298" width="16" height="16" rx="4" data-date="2025-09-05" data-tokens="0" data-level="0">
     <title>2025-09-05: 0 tokens</title>
   </rect>
-  <rect x="138" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="318" width="16" height="16" rx="4" data-date="2025-09-06" data-tokens="0" data-level="0">
     <title>2025-09-06: 0 tokens</title>
   </rect>
-  <rect x="138" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="138" y="338" width="16" height="16" rx="4" data-date="2025-09-07" data-tokens="0" data-level="0">
     <title>2025-09-07: 0 tokens</title>
   </rect>
-  <rect x="158" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="218" width="16" height="16" rx="4" data-date="2025-09-08" data-tokens="0" data-level="0">
     <title>2025-09-08: 0 tokens</title>
   </rect>
-  <rect x="158" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="238" width="16" height="16" rx="4" data-date="2025-09-09" data-tokens="0" data-level="0">
     <title>2025-09-09: 0 tokens</title>
   </rect>
-  <rect x="158" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="258" width="16" height="16" rx="4" data-date="2025-09-10" data-tokens="0" data-level="0">
     <title>2025-09-10: 0 tokens</title>
   </rect>
-  <rect x="158" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="278" width="16" height="16" rx="4" data-date="2025-09-11" data-tokens="0" data-level="0">
     <title>2025-09-11: 0 tokens</title>
   </rect>
-  <rect x="158" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="298" width="16" height="16" rx="4" data-date="2025-09-12" data-tokens="0" data-level="0">
     <title>2025-09-12: 0 tokens</title>
   </rect>
-  <rect x="158" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="318" width="16" height="16" rx="4" data-date="2025-09-13" data-tokens="0" data-level="0">
     <title>2025-09-13: 0 tokens</title>
   </rect>
-  <rect x="158" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="158" y="338" width="16" height="16" rx="4" data-date="2025-09-14" data-tokens="0" data-level="0">
     <title>2025-09-14: 0 tokens</title>
   </rect>
-  <rect x="178" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="218" width="16" height="16" rx="4" data-date="2025-09-15" data-tokens="0" data-level="0">
     <title>2025-09-15: 0 tokens</title>
   </rect>
-  <rect x="178" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="238" width="16" height="16" rx="4" data-date="2025-09-16" data-tokens="0" data-level="0">
     <title>2025-09-16: 0 tokens</title>
   </rect>
-  <rect x="178" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="258" width="16" height="16" rx="4" data-date="2025-09-17" data-tokens="0" data-level="0">
     <title>2025-09-17: 0 tokens</title>
   </rect>
-  <rect x="178" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="278" width="16" height="16" rx="4" data-date="2025-09-18" data-tokens="0" data-level="0">
     <title>2025-09-18: 0 tokens</title>
   </rect>
-  <rect x="178" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="298" width="16" height="16" rx="4" data-date="2025-09-19" data-tokens="0" data-level="0">
     <title>2025-09-19: 0 tokens</title>
   </rect>
-  <rect x="178" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="318" width="16" height="16" rx="4" data-date="2025-09-20" data-tokens="0" data-level="0">
     <title>2025-09-20: 0 tokens</title>
   </rect>
-  <rect x="178" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="178" y="338" width="16" height="16" rx="4" data-date="2025-09-21" data-tokens="0" data-level="0">
     <title>2025-09-21: 0 tokens</title>
   </rect>
-  <rect x="198" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="218" width="16" height="16" rx="4" data-date="2025-09-22" data-tokens="0" data-level="0">
     <title>2025-09-22: 0 tokens</title>
   </rect>
-  <rect x="198" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="238" width="16" height="16" rx="4" data-date="2025-09-23" data-tokens="0" data-level="0">
     <title>2025-09-23: 0 tokens</title>
   </rect>
-  <rect x="198" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="258" width="16" height="16" rx="4" data-date="2025-09-24" data-tokens="0" data-level="0">
     <title>2025-09-24: 0 tokens</title>
   </rect>
-  <rect x="198" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="278" width="16" height="16" rx="4" data-date="2025-09-25" data-tokens="0" data-level="0">
     <title>2025-09-25: 0 tokens</title>
   </rect>
-  <rect x="198" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="298" width="16" height="16" rx="4" data-date="2025-09-26" data-tokens="0" data-level="0">
     <title>2025-09-26: 0 tokens</title>
   </rect>
-  <rect x="198" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="318" width="16" height="16" rx="4" data-date="2025-09-27" data-tokens="0" data-level="0">
     <title>2025-09-27: 0 tokens</title>
   </rect>
-  <rect x="198" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="198" y="338" width="16" height="16" rx="4" data-date="2025-09-28" data-tokens="0" data-level="0">
     <title>2025-09-28: 0 tokens</title>
   </rect>
-  <rect x="218" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="218" width="16" height="16" rx="4" data-date="2025-09-29" data-tokens="0" data-level="0">
     <title>2025-09-29: 0 tokens</title>
   </rect>
-  <rect x="218" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-09-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="238" width="16" height="16" rx="4" data-date="2025-09-30" data-tokens="0" data-level="0">
     <title>2025-09-30: 0 tokens</title>
   </rect>
-  <rect x="218" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="258" width="16" height="16" rx="4" data-date="2025-10-01" data-tokens="0" data-level="0">
     <title>2025-10-01: 0 tokens</title>
   </rect>
-  <rect x="218" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="278" width="16" height="16" rx="4" data-date="2025-10-02" data-tokens="0" data-level="0">
     <title>2025-10-02: 0 tokens</title>
   </rect>
-  <rect x="218" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="298" width="16" height="16" rx="4" data-date="2025-10-03" data-tokens="0" data-level="0">
     <title>2025-10-03: 0 tokens</title>
   </rect>
-  <rect x="218" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="318" width="16" height="16" rx="4" data-date="2025-10-04" data-tokens="0" data-level="0">
     <title>2025-10-04: 0 tokens</title>
   </rect>
-  <rect x="218" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="218" y="338" width="16" height="16" rx="4" data-date="2025-10-05" data-tokens="0" data-level="0">
     <title>2025-10-05: 0 tokens</title>
   </rect>
-  <rect x="238" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="218" width="16" height="16" rx="4" data-date="2025-10-06" data-tokens="0" data-level="0">
     <title>2025-10-06: 0 tokens</title>
   </rect>
-  <rect x="238" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="238" width="16" height="16" rx="4" data-date="2025-10-07" data-tokens="0" data-level="0">
     <title>2025-10-07: 0 tokens</title>
   </rect>
-  <rect x="238" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="258" width="16" height="16" rx="4" data-date="2025-10-08" data-tokens="0" data-level="0">
     <title>2025-10-08: 0 tokens</title>
   </rect>
-  <rect x="238" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="278" width="16" height="16" rx="4" data-date="2025-10-09" data-tokens="0" data-level="0">
     <title>2025-10-09: 0 tokens</title>
   </rect>
-  <rect x="238" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="298" width="16" height="16" rx="4" data-date="2025-10-10" data-tokens="0" data-level="0">
     <title>2025-10-10: 0 tokens</title>
   </rect>
-  <rect x="238" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="318" width="16" height="16" rx="4" data-date="2025-10-11" data-tokens="0" data-level="0">
     <title>2025-10-11: 0 tokens</title>
   </rect>
-  <rect x="238" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="238" y="338" width="16" height="16" rx="4" data-date="2025-10-12" data-tokens="0" data-level="0">
     <title>2025-10-12: 0 tokens</title>
   </rect>
-  <rect x="258" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="218" width="16" height="16" rx="4" data-date="2025-10-13" data-tokens="0" data-level="0">
     <title>2025-10-13: 0 tokens</title>
   </rect>
-  <rect x="258" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="238" width="16" height="16" rx="4" data-date="2025-10-14" data-tokens="0" data-level="0">
     <title>2025-10-14: 0 tokens</title>
   </rect>
-  <rect x="258" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="258" width="16" height="16" rx="4" data-date="2025-10-15" data-tokens="0" data-level="0">
     <title>2025-10-15: 0 tokens</title>
   </rect>
-  <rect x="258" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="278" width="16" height="16" rx="4" data-date="2025-10-16" data-tokens="0" data-level="0">
     <title>2025-10-16: 0 tokens</title>
   </rect>
-  <rect x="258" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="298" width="16" height="16" rx="4" data-date="2025-10-17" data-tokens="0" data-level="0">
     <title>2025-10-17: 0 tokens</title>
   </rect>
-  <rect x="258" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="318" width="16" height="16" rx="4" data-date="2025-10-18" data-tokens="0" data-level="0">
     <title>2025-10-18: 0 tokens</title>
   </rect>
-  <rect x="258" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="258" y="338" width="16" height="16" rx="4" data-date="2025-10-19" data-tokens="0" data-level="0">
     <title>2025-10-19: 0 tokens</title>
   </rect>
-  <rect x="278" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="218" width="16" height="16" rx="4" data-date="2025-10-20" data-tokens="0" data-level="0">
     <title>2025-10-20: 0 tokens</title>
   </rect>
-  <rect x="278" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="238" width="16" height="16" rx="4" data-date="2025-10-21" data-tokens="0" data-level="0">
     <title>2025-10-21: 0 tokens</title>
   </rect>
-  <rect x="278" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="258" width="16" height="16" rx="4" data-date="2025-10-22" data-tokens="0" data-level="0">
     <title>2025-10-22: 0 tokens</title>
   </rect>
-  <rect x="278" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="278" width="16" height="16" rx="4" data-date="2025-10-23" data-tokens="0" data-level="0">
     <title>2025-10-23: 0 tokens</title>
   </rect>
-  <rect x="278" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="298" width="16" height="16" rx="4" data-date="2025-10-24" data-tokens="0" data-level="0">
     <title>2025-10-24: 0 tokens</title>
   </rect>
-  <rect x="278" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="318" width="16" height="16" rx="4" data-date="2025-10-25" data-tokens="0" data-level="0">
     <title>2025-10-25: 0 tokens</title>
   </rect>
-  <rect x="278" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="278" y="338" width="16" height="16" rx="4" data-date="2025-10-26" data-tokens="0" data-level="0">
     <title>2025-10-26: 0 tokens</title>
   </rect>
-  <rect x="298" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="218" width="16" height="16" rx="4" data-date="2025-10-27" data-tokens="0" data-level="0">
     <title>2025-10-27: 0 tokens</title>
   </rect>
-  <rect x="298" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="238" width="16" height="16" rx="4" data-date="2025-10-28" data-tokens="0" data-level="0">
     <title>2025-10-28: 0 tokens</title>
   </rect>
-  <rect x="298" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="258" width="16" height="16" rx="4" data-date="2025-10-29" data-tokens="0" data-level="0">
     <title>2025-10-29: 0 tokens</title>
   </rect>
-  <rect x="298" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="278" width="16" height="16" rx="4" data-date="2025-10-30" data-tokens="0" data-level="0">
     <title>2025-10-30: 0 tokens</title>
   </rect>
-  <rect x="298" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-10-31" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="298" width="16" height="16" rx="4" data-date="2025-10-31" data-tokens="0" data-level="0">
     <title>2025-10-31: 0 tokens</title>
   </rect>
-  <rect x="298" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="318" width="16" height="16" rx="4" data-date="2025-11-01" data-tokens="0" data-level="0">
     <title>2025-11-01: 0 tokens</title>
   </rect>
-  <rect x="298" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="298" y="338" width="16" height="16" rx="4" data-date="2025-11-02" data-tokens="0" data-level="0">
     <title>2025-11-02: 0 tokens</title>
   </rect>
-  <rect x="318" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="218" width="16" height="16" rx="4" data-date="2025-11-03" data-tokens="0" data-level="0">
     <title>2025-11-03: 0 tokens</title>
   </rect>
-  <rect x="318" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="238" width="16" height="16" rx="4" data-date="2025-11-04" data-tokens="0" data-level="0">
     <title>2025-11-04: 0 tokens</title>
   </rect>
-  <rect x="318" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="258" width="16" height="16" rx="4" data-date="2025-11-05" data-tokens="0" data-level="0">
     <title>2025-11-05: 0 tokens</title>
   </rect>
-  <rect x="318" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="278" width="16" height="16" rx="4" data-date="2025-11-06" data-tokens="0" data-level="0">
     <title>2025-11-06: 0 tokens</title>
   </rect>
-  <rect x="318" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="298" width="16" height="16" rx="4" data-date="2025-11-07" data-tokens="0" data-level="0">
     <title>2025-11-07: 0 tokens</title>
   </rect>
-  <rect x="318" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="318" width="16" height="16" rx="4" data-date="2025-11-08" data-tokens="0" data-level="0">
     <title>2025-11-08: 0 tokens</title>
   </rect>
-  <rect x="318" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="318" y="338" width="16" height="16" rx="4" data-date="2025-11-09" data-tokens="0" data-level="0">
     <title>2025-11-09: 0 tokens</title>
   </rect>
-  <rect x="338" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="218" width="16" height="16" rx="4" data-date="2025-11-10" data-tokens="0" data-level="0">
     <title>2025-11-10: 0 tokens</title>
   </rect>
-  <rect x="338" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="238" width="16" height="16" rx="4" data-date="2025-11-11" data-tokens="0" data-level="0">
     <title>2025-11-11: 0 tokens</title>
   </rect>
-  <rect x="338" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="258" width="16" height="16" rx="4" data-date="2025-11-12" data-tokens="0" data-level="0">
     <title>2025-11-12: 0 tokens</title>
   </rect>
-  <rect x="338" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="278" width="16" height="16" rx="4" data-date="2025-11-13" data-tokens="0" data-level="0">
     <title>2025-11-13: 0 tokens</title>
   </rect>
-  <rect x="338" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="298" width="16" height="16" rx="4" data-date="2025-11-14" data-tokens="0" data-level="0">
     <title>2025-11-14: 0 tokens</title>
   </rect>
-  <rect x="338" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="318" width="16" height="16" rx="4" data-date="2025-11-15" data-tokens="0" data-level="0">
     <title>2025-11-15: 0 tokens</title>
   </rect>
-  <rect x="338" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="338" y="338" width="16" height="16" rx="4" data-date="2025-11-16" data-tokens="0" data-level="0">
     <title>2025-11-16: 0 tokens</title>
   </rect>
-  <rect x="358" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="218" width="16" height="16" rx="4" data-date="2025-11-17" data-tokens="0" data-level="0">
     <title>2025-11-17: 0 tokens</title>
   </rect>
-  <rect x="358" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="238" width="16" height="16" rx="4" data-date="2025-11-18" data-tokens="0" data-level="0">
     <title>2025-11-18: 0 tokens</title>
   </rect>
-  <rect x="358" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="258" width="16" height="16" rx="4" data-date="2025-11-19" data-tokens="0" data-level="0">
     <title>2025-11-19: 0 tokens</title>
   </rect>
-  <rect x="358" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="278" width="16" height="16" rx="4" data-date="2025-11-20" data-tokens="0" data-level="0">
     <title>2025-11-20: 0 tokens</title>
   </rect>
-  <rect x="358" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="298" width="16" height="16" rx="4" data-date="2025-11-21" data-tokens="0" data-level="0">
     <title>2025-11-21: 0 tokens</title>
   </rect>
-  <rect x="358" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="318" width="16" height="16" rx="4" data-date="2025-11-22" data-tokens="0" data-level="0">
     <title>2025-11-22: 0 tokens</title>
   </rect>
-  <rect x="358" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="358" y="338" width="16" height="16" rx="4" data-date="2025-11-23" data-tokens="0" data-level="0">
     <title>2025-11-23: 0 tokens</title>
   </rect>
-  <rect x="378" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="218" width="16" height="16" rx="4" data-date="2025-11-24" data-tokens="0" data-level="0">
     <title>2025-11-24: 0 tokens</title>
   </rect>
-  <rect x="378" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="238" width="16" height="16" rx="4" data-date="2025-11-25" data-tokens="0" data-level="0">
     <title>2025-11-25: 0 tokens</title>
   </rect>
-  <rect x="378" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="258" width="16" height="16" rx="4" data-date="2025-11-26" data-tokens="0" data-level="0">
     <title>2025-11-26: 0 tokens</title>
   </rect>
-  <rect x="378" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="278" width="16" height="16" rx="4" data-date="2025-11-27" data-tokens="0" data-level="0">
     <title>2025-11-27: 0 tokens</title>
   </rect>
-  <rect x="378" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="298" width="16" height="16" rx="4" data-date="2025-11-28" data-tokens="0" data-level="0">
     <title>2025-11-28: 0 tokens</title>
   </rect>
-  <rect x="378" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="318" width="16" height="16" rx="4" data-date="2025-11-29" data-tokens="0" data-level="0">
     <title>2025-11-29: 0 tokens</title>
   </rect>
-  <rect x="378" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-11-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="378" y="338" width="16" height="16" rx="4" data-date="2025-11-30" data-tokens="0" data-level="0">
     <title>2025-11-30: 0 tokens</title>
   </rect>
-  <rect x="398" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="218" width="16" height="16" rx="4" data-date="2025-12-01" data-tokens="0" data-level="0">
     <title>2025-12-01: 0 tokens</title>
   </rect>
-  <rect x="398" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="238" width="16" height="16" rx="4" data-date="2025-12-02" data-tokens="0" data-level="0">
     <title>2025-12-02: 0 tokens</title>
   </rect>
-  <rect x="398" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="258" width="16" height="16" rx="4" data-date="2025-12-03" data-tokens="0" data-level="0">
     <title>2025-12-03: 0 tokens</title>
   </rect>
-  <rect x="398" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="278" width="16" height="16" rx="4" data-date="2025-12-04" data-tokens="0" data-level="0">
     <title>2025-12-04: 0 tokens</title>
   </rect>
-  <rect x="398" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="298" width="16" height="16" rx="4" data-date="2025-12-05" data-tokens="0" data-level="0">
     <title>2025-12-05: 0 tokens</title>
   </rect>
-  <rect x="398" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="318" width="16" height="16" rx="4" data-date="2025-12-06" data-tokens="0" data-level="0">
     <title>2025-12-06: 0 tokens</title>
   </rect>
-  <rect x="398" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="398" y="338" width="16" height="16" rx="4" data-date="2025-12-07" data-tokens="0" data-level="0">
     <title>2025-12-07: 0 tokens</title>
   </rect>
-  <rect x="418" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="218" width="16" height="16" rx="4" data-date="2025-12-08" data-tokens="0" data-level="0">
     <title>2025-12-08: 0 tokens</title>
   </rect>
-  <rect x="418" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="238" width="16" height="16" rx="4" data-date="2025-12-09" data-tokens="0" data-level="0">
     <title>2025-12-09: 0 tokens</title>
   </rect>
-  <rect x="418" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="258" width="16" height="16" rx="4" data-date="2025-12-10" data-tokens="0" data-level="0">
     <title>2025-12-10: 0 tokens</title>
   </rect>
-  <rect x="418" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="278" width="16" height="16" rx="4" data-date="2025-12-11" data-tokens="0" data-level="0">
     <title>2025-12-11: 0 tokens</title>
   </rect>
-  <rect x="418" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="298" width="16" height="16" rx="4" data-date="2025-12-12" data-tokens="0" data-level="0">
     <title>2025-12-12: 0 tokens</title>
   </rect>
-  <rect x="418" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="318" width="16" height="16" rx="4" data-date="2025-12-13" data-tokens="0" data-level="0">
     <title>2025-12-13: 0 tokens</title>
   </rect>
-  <rect x="418" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="418" y="338" width="16" height="16" rx="4" data-date="2025-12-14" data-tokens="0" data-level="0">
     <title>2025-12-14: 0 tokens</title>
   </rect>
-  <rect x="438" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="218" width="16" height="16" rx="4" data-date="2025-12-15" data-tokens="0" data-level="0">
     <title>2025-12-15: 0 tokens</title>
   </rect>
-  <rect x="438" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="238" width="16" height="16" rx="4" data-date="2025-12-16" data-tokens="0" data-level="0">
     <title>2025-12-16: 0 tokens</title>
   </rect>
-  <rect x="438" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="258" width="16" height="16" rx="4" data-date="2025-12-17" data-tokens="0" data-level="0">
     <title>2025-12-17: 0 tokens</title>
   </rect>
-  <rect x="438" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="278" width="16" height="16" rx="4" data-date="2025-12-18" data-tokens="0" data-level="0">
     <title>2025-12-18: 0 tokens</title>
   </rect>
-  <rect x="438" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="298" width="16" height="16" rx="4" data-date="2025-12-19" data-tokens="0" data-level="0">
     <title>2025-12-19: 0 tokens</title>
   </rect>
-  <rect x="438" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="318" width="16" height="16" rx="4" data-date="2025-12-20" data-tokens="0" data-level="0">
     <title>2025-12-20: 0 tokens</title>
   </rect>
-  <rect x="438" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="438" y="338" width="16" height="16" rx="4" data-date="2025-12-21" data-tokens="0" data-level="0">
     <title>2025-12-21: 0 tokens</title>
   </rect>
-  <rect x="458" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="218" width="16" height="16" rx="4" data-date="2025-12-22" data-tokens="0" data-level="0">
     <title>2025-12-22: 0 tokens</title>
   </rect>
-  <rect x="458" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="238" width="16" height="16" rx="4" data-date="2025-12-23" data-tokens="0" data-level="0">
     <title>2025-12-23: 0 tokens</title>
   </rect>
-  <rect x="458" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="258" width="16" height="16" rx="4" data-date="2025-12-24" data-tokens="0" data-level="0">
     <title>2025-12-24: 0 tokens</title>
   </rect>
-  <rect x="458" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="278" width="16" height="16" rx="4" data-date="2025-12-25" data-tokens="0" data-level="0">
     <title>2025-12-25: 0 tokens</title>
   </rect>
-  <rect x="458" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="298" width="16" height="16" rx="4" data-date="2025-12-26" data-tokens="0" data-level="0">
     <title>2025-12-26: 0 tokens</title>
   </rect>
-  <rect x="458" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="318" width="16" height="16" rx="4" data-date="2025-12-27" data-tokens="0" data-level="0">
     <title>2025-12-27: 0 tokens</title>
   </rect>
-  <rect x="458" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="458" y="338" width="16" height="16" rx="4" data-date="2025-12-28" data-tokens="0" data-level="0">
     <title>2025-12-28: 0 tokens</title>
   </rect>
-  <rect x="478" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="218" width="16" height="16" rx="4" data-date="2025-12-29" data-tokens="0" data-level="0">
     <title>2025-12-29: 0 tokens</title>
   </rect>
-  <rect x="478" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="238" width="16" height="16" rx="4" data-date="2025-12-30" data-tokens="0" data-level="0">
     <title>2025-12-30: 0 tokens</title>
   </rect>
-  <rect x="478" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2025-12-31" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="258" width="16" height="16" rx="4" data-date="2025-12-31" data-tokens="0" data-level="0">
     <title>2025-12-31: 0 tokens</title>
   </rect>
-  <rect x="478" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="278" width="16" height="16" rx="4" data-date="2026-01-01" data-tokens="0" data-level="0">
     <title>2026-01-01: 0 tokens</title>
   </rect>
-  <rect x="478" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="298" width="16" height="16" rx="4" data-date="2026-01-02" data-tokens="0" data-level="0">
     <title>2026-01-02: 0 tokens</title>
   </rect>
-  <rect x="478" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="318" width="16" height="16" rx="4" data-date="2026-01-03" data-tokens="0" data-level="0">
     <title>2026-01-03: 0 tokens</title>
   </rect>
-  <rect x="478" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="478" y="338" width="16" height="16" rx="4" data-date="2026-01-04" data-tokens="0" data-level="0">
     <title>2026-01-04: 0 tokens</title>
   </rect>
-  <rect x="498" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="218" width="16" height="16" rx="4" data-date="2026-01-05" data-tokens="0" data-level="0">
     <title>2026-01-05: 0 tokens</title>
   </rect>
-  <rect x="498" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="238" width="16" height="16" rx="4" data-date="2026-01-06" data-tokens="0" data-level="0">
     <title>2026-01-06: 0 tokens</title>
   </rect>
-  <rect x="498" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="258" width="16" height="16" rx="4" data-date="2026-01-07" data-tokens="0" data-level="0">
     <title>2026-01-07: 0 tokens</title>
   </rect>
-  <rect x="498" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="278" width="16" height="16" rx="4" data-date="2026-01-08" data-tokens="0" data-level="0">
     <title>2026-01-08: 0 tokens</title>
   </rect>
-  <rect x="498" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="298" width="16" height="16" rx="4" data-date="2026-01-09" data-tokens="0" data-level="0">
     <title>2026-01-09: 0 tokens</title>
   </rect>
-  <rect x="498" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="318" width="16" height="16" rx="4" data-date="2026-01-10" data-tokens="0" data-level="0">
     <title>2026-01-10: 0 tokens</title>
   </rect>
-  <rect x="498" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="498" y="338" width="16" height="16" rx="4" data-date="2026-01-11" data-tokens="0" data-level="0">
     <title>2026-01-11: 0 tokens</title>
   </rect>
-  <rect x="518" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="218" width="16" height="16" rx="4" data-date="2026-01-12" data-tokens="0" data-level="0">
     <title>2026-01-12: 0 tokens</title>
   </rect>
-  <rect x="518" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="238" width="16" height="16" rx="4" data-date="2026-01-13" data-tokens="0" data-level="0">
     <title>2026-01-13: 0 tokens</title>
   </rect>
-  <rect x="518" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="258" width="16" height="16" rx="4" data-date="2026-01-14" data-tokens="0" data-level="0">
     <title>2026-01-14: 0 tokens</title>
   </rect>
-  <rect x="518" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="278" width="16" height="16" rx="4" data-date="2026-01-15" data-tokens="0" data-level="0">
     <title>2026-01-15: 0 tokens</title>
   </rect>
-  <rect x="518" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="298" width="16" height="16" rx="4" data-date="2026-01-16" data-tokens="0" data-level="0">
     <title>2026-01-16: 0 tokens</title>
   </rect>
-  <rect x="518" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="318" width="16" height="16" rx="4" data-date="2026-01-17" data-tokens="0" data-level="0">
     <title>2026-01-17: 0 tokens</title>
   </rect>
-  <rect x="518" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="518" y="338" width="16" height="16" rx="4" data-date="2026-01-18" data-tokens="0" data-level="0">
     <title>2026-01-18: 0 tokens</title>
   </rect>
-  <rect x="538" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="218" width="16" height="16" rx="4" data-date="2026-01-19" data-tokens="0" data-level="0">
     <title>2026-01-19: 0 tokens</title>
   </rect>
-  <rect x="538" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="238" width="16" height="16" rx="4" data-date="2026-01-20" data-tokens="0" data-level="0">
     <title>2026-01-20: 0 tokens</title>
   </rect>
-  <rect x="538" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="258" width="16" height="16" rx="4" data-date="2026-01-21" data-tokens="0" data-level="0">
     <title>2026-01-21: 0 tokens</title>
   </rect>
-  <rect x="538" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="278" width="16" height="16" rx="4" data-date="2026-01-22" data-tokens="0" data-level="0">
     <title>2026-01-22: 0 tokens</title>
   </rect>
-  <rect x="538" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="298" width="16" height="16" rx="4" data-date="2026-01-23" data-tokens="0" data-level="0">
     <title>2026-01-23: 0 tokens</title>
   </rect>
-  <rect x="538" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="318" width="16" height="16" rx="4" data-date="2026-01-24" data-tokens="0" data-level="0">
     <title>2026-01-24: 0 tokens</title>
   </rect>
-  <rect x="538" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="538" y="338" width="16" height="16" rx="4" data-date="2026-01-25" data-tokens="0" data-level="0">
     <title>2026-01-25: 0 tokens</title>
   </rect>
-  <rect x="558" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="218" width="16" height="16" rx="4" data-date="2026-01-26" data-tokens="0" data-level="0">
     <title>2026-01-26: 0 tokens</title>
   </rect>
-  <rect x="558" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="238" width="16" height="16" rx="4" data-date="2026-01-27" data-tokens="0" data-level="0">
     <title>2026-01-27: 0 tokens</title>
   </rect>
-  <rect x="558" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="258" width="16" height="16" rx="4" data-date="2026-01-28" data-tokens="0" data-level="0">
     <title>2026-01-28: 0 tokens</title>
   </rect>
-  <rect x="558" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="278" width="16" height="16" rx="4" data-date="2026-01-29" data-tokens="0" data-level="0">
     <title>2026-01-29: 0 tokens</title>
   </rect>
-  <rect x="558" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="298" width="16" height="16" rx="4" data-date="2026-01-30" data-tokens="0" data-level="0">
     <title>2026-01-30: 0 tokens</title>
   </rect>
-  <rect x="558" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-01-31" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="318" width="16" height="16" rx="4" data-date="2026-01-31" data-tokens="0" data-level="0">
     <title>2026-01-31: 0 tokens</title>
   </rect>
-  <rect x="558" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="558" y="338" width="16" height="16" rx="4" data-date="2026-02-01" data-tokens="0" data-level="0">
     <title>2026-02-01: 0 tokens</title>
   </rect>
-  <rect x="578" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="218" width="16" height="16" rx="4" data-date="2026-02-02" data-tokens="0" data-level="0">
     <title>2026-02-02: 0 tokens</title>
   </rect>
-  <rect x="578" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="238" width="16" height="16" rx="4" data-date="2026-02-03" data-tokens="0" data-level="0">
     <title>2026-02-03: 0 tokens</title>
   </rect>
-  <rect x="578" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="258" width="16" height="16" rx="4" data-date="2026-02-04" data-tokens="0" data-level="0">
     <title>2026-02-04: 0 tokens</title>
   </rect>
-  <rect x="578" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="278" width="16" height="16" rx="4" data-date="2026-02-05" data-tokens="0" data-level="0">
     <title>2026-02-05: 0 tokens</title>
   </rect>
-  <rect x="578" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="298" width="16" height="16" rx="4" data-date="2026-02-06" data-tokens="0" data-level="0">
     <title>2026-02-06: 0 tokens</title>
   </rect>
-  <rect x="578" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="318" width="16" height="16" rx="4" data-date="2026-02-07" data-tokens="0" data-level="0">
     <title>2026-02-07: 0 tokens</title>
   </rect>
-  <rect x="578" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="578" y="338" width="16" height="16" rx="4" data-date="2026-02-08" data-tokens="0" data-level="0">
     <title>2026-02-08: 0 tokens</title>
   </rect>
-  <rect x="598" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="218" width="16" height="16" rx="4" data-date="2026-02-09" data-tokens="0" data-level="0">
     <title>2026-02-09: 0 tokens</title>
   </rect>
-  <rect x="598" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="238" width="16" height="16" rx="4" data-date="2026-02-10" data-tokens="0" data-level="0">
     <title>2026-02-10: 0 tokens</title>
   </rect>
-  <rect x="598" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="258" width="16" height="16" rx="4" data-date="2026-02-11" data-tokens="0" data-level="0">
     <title>2026-02-11: 0 tokens</title>
   </rect>
-  <rect x="598" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="278" width="16" height="16" rx="4" data-date="2026-02-12" data-tokens="0" data-level="0">
     <title>2026-02-12: 0 tokens</title>
   </rect>
-  <rect x="598" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="298" width="16" height="16" rx="4" data-date="2026-02-13" data-tokens="0" data-level="0">
     <title>2026-02-13: 0 tokens</title>
   </rect>
-  <rect x="598" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="318" width="16" height="16" rx="4" data-date="2026-02-14" data-tokens="0" data-level="0">
     <title>2026-02-14: 0 tokens</title>
   </rect>
-  <rect x="598" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="598" y="338" width="16" height="16" rx="4" data-date="2026-02-15" data-tokens="0" data-level="0">
     <title>2026-02-15: 0 tokens</title>
   </rect>
-  <rect x="618" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="218" width="16" height="16" rx="4" data-date="2026-02-16" data-tokens="0" data-level="0">
     <title>2026-02-16: 0 tokens</title>
   </rect>
-  <rect x="618" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="238" width="16" height="16" rx="4" data-date="2026-02-17" data-tokens="0" data-level="0">
     <title>2026-02-17: 0 tokens</title>
   </rect>
-  <rect x="618" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="258" width="16" height="16" rx="4" data-date="2026-02-18" data-tokens="0" data-level="0">
     <title>2026-02-18: 0 tokens</title>
   </rect>
-  <rect x="618" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="278" width="16" height="16" rx="4" data-date="2026-02-19" data-tokens="0" data-level="0">
     <title>2026-02-19: 0 tokens</title>
   </rect>
-  <rect x="618" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="298" width="16" height="16" rx="4" data-date="2026-02-20" data-tokens="0" data-level="0">
     <title>2026-02-20: 0 tokens</title>
   </rect>
-  <rect x="618" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="318" width="16" height="16" rx="4" data-date="2026-02-21" data-tokens="0" data-level="0">
     <title>2026-02-21: 0 tokens</title>
   </rect>
-  <rect x="618" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="618" y="338" width="16" height="16" rx="4" data-date="2026-02-22" data-tokens="0" data-level="0">
     <title>2026-02-22: 0 tokens</title>
   </rect>
-  <rect x="638" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="218" width="16" height="16" rx="4" data-date="2026-02-23" data-tokens="0" data-level="0">
     <title>2026-02-23: 0 tokens</title>
   </rect>
-  <rect x="638" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="238" width="16" height="16" rx="4" data-date="2026-02-24" data-tokens="0" data-level="0">
     <title>2026-02-24: 0 tokens</title>
   </rect>
-  <rect x="638" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="258" width="16" height="16" rx="4" data-date="2026-02-25" data-tokens="0" data-level="0">
     <title>2026-02-25: 0 tokens</title>
   </rect>
-  <rect x="638" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="278" width="16" height="16" rx="4" data-date="2026-02-26" data-tokens="0" data-level="0">
     <title>2026-02-26: 0 tokens</title>
   </rect>
-  <rect x="638" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="298" width="16" height="16" rx="4" data-date="2026-02-27" data-tokens="0" data-level="0">
     <title>2026-02-27: 0 tokens</title>
   </rect>
-  <rect x="638" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-02-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="318" width="16" height="16" rx="4" data-date="2026-02-28" data-tokens="0" data-level="0">
     <title>2026-02-28: 0 tokens</title>
   </rect>
-  <rect x="638" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="638" y="338" width="16" height="16" rx="4" data-date="2026-03-01" data-tokens="0" data-level="0">
     <title>2026-03-01: 0 tokens</title>
   </rect>
-  <rect x="658" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="218" width="16" height="16" rx="4" data-date="2026-03-02" data-tokens="0" data-level="0">
     <title>2026-03-02: 0 tokens</title>
   </rect>
-  <rect x="658" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="238" width="16" height="16" rx="4" data-date="2026-03-03" data-tokens="0" data-level="0">
     <title>2026-03-03: 0 tokens</title>
   </rect>
-  <rect x="658" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="258" width="16" height="16" rx="4" data-date="2026-03-04" data-tokens="0" data-level="0">
     <title>2026-03-04: 0 tokens</title>
   </rect>
-  <rect x="658" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="278" width="16" height="16" rx="4" data-date="2026-03-05" data-tokens="0" data-level="0">
     <title>2026-03-05: 0 tokens</title>
   </rect>
-  <rect x="658" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="298" width="16" height="16" rx="4" data-date="2026-03-06" data-tokens="0" data-level="0">
     <title>2026-03-06: 0 tokens</title>
   </rect>
-  <rect x="658" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-07" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="318" width="16" height="16" rx="4" data-date="2026-03-07" data-tokens="0" data-level="0">
     <title>2026-03-07: 0 tokens</title>
   </rect>
-  <rect x="658" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-08" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="658" y="338" width="16" height="16" rx="4" data-date="2026-03-08" data-tokens="0" data-level="0">
     <title>2026-03-08: 0 tokens</title>
   </rect>
-  <rect x="678" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-09" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="218" width="16" height="16" rx="4" data-date="2026-03-09" data-tokens="0" data-level="0">
     <title>2026-03-09: 0 tokens</title>
   </rect>
-  <rect x="678" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="238" width="16" height="16" rx="4" data-date="2026-03-10" data-tokens="0" data-level="0">
     <title>2026-03-10: 0 tokens</title>
   </rect>
-  <rect x="678" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="258" width="16" height="16" rx="4" data-date="2026-03-11" data-tokens="0" data-level="0">
     <title>2026-03-11: 0 tokens</title>
   </rect>
-  <rect x="678" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="278" width="16" height="16" rx="4" data-date="2026-03-12" data-tokens="0" data-level="0">
     <title>2026-03-12: 0 tokens</title>
   </rect>
-  <rect x="678" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="298" width="16" height="16" rx="4" data-date="2026-03-13" data-tokens="0" data-level="0">
     <title>2026-03-13: 0 tokens</title>
   </rect>
-  <rect x="678" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="318" width="16" height="16" rx="4" data-date="2026-03-14" data-tokens="0" data-level="0">
     <title>2026-03-14: 0 tokens</title>
   </rect>
-  <rect x="678" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-15" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="678" y="338" width="16" height="16" rx="4" data-date="2026-03-15" data-tokens="0" data-level="0">
     <title>2026-03-15: 0 tokens</title>
   </rect>
-  <rect x="698" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-16" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="218" width="16" height="16" rx="4" data-date="2026-03-16" data-tokens="0" data-level="0">
     <title>2026-03-16: 0 tokens</title>
   </rect>
-  <rect x="698" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-17" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="238" width="16" height="16" rx="4" data-date="2026-03-17" data-tokens="0" data-level="0">
     <title>2026-03-17: 0 tokens</title>
   </rect>
-  <rect x="698" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-18" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="258" width="16" height="16" rx="4" data-date="2026-03-18" data-tokens="0" data-level="0">
     <title>2026-03-18: 0 tokens</title>
   </rect>
-  <rect x="698" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-19" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="278" width="16" height="16" rx="4" data-date="2026-03-19" data-tokens="0" data-level="0">
     <title>2026-03-19: 0 tokens</title>
   </rect>
-  <rect x="698" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-20" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="298" width="16" height="16" rx="4" data-date="2026-03-20" data-tokens="0" data-level="0">
     <title>2026-03-20: 0 tokens</title>
   </rect>
-  <rect x="698" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-21" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="318" width="16" height="16" rx="4" data-date="2026-03-21" data-tokens="0" data-level="0">
     <title>2026-03-21: 0 tokens</title>
   </rect>
-  <rect x="698" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-22" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="698" y="338" width="16" height="16" rx="4" data-date="2026-03-22" data-tokens="0" data-level="0">
     <title>2026-03-22: 0 tokens</title>
   </rect>
-  <rect x="718" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-23" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="218" width="16" height="16" rx="4" data-date="2026-03-23" data-tokens="0" data-level="0">
     <title>2026-03-23: 0 tokens</title>
   </rect>
-  <rect x="718" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-24" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="238" width="16" height="16" rx="4" data-date="2026-03-24" data-tokens="0" data-level="0">
     <title>2026-03-24: 0 tokens</title>
   </rect>
-  <rect x="718" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-25" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="258" width="16" height="16" rx="4" data-date="2026-03-25" data-tokens="0" data-level="0">
     <title>2026-03-25: 0 tokens</title>
   </rect>
-  <rect x="718" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-26" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="278" width="16" height="16" rx="4" data-date="2026-03-26" data-tokens="0" data-level="0">
     <title>2026-03-26: 0 tokens</title>
   </rect>
-  <rect x="718" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="298" width="16" height="16" rx="4" data-date="2026-03-27" data-tokens="0" data-level="0">
     <title>2026-03-27: 0 tokens</title>
   </rect>
-  <rect x="718" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-28" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="318" width="16" height="16" rx="4" data-date="2026-03-28" data-tokens="0" data-level="0">
     <title>2026-03-28: 0 tokens</title>
   </rect>
-  <rect x="718" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-29" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="718" y="338" width="16" height="16" rx="4" data-date="2026-03-29" data-tokens="0" data-level="0">
     <title>2026-03-29: 0 tokens</title>
   </rect>
-  <rect x="738" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-30" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="218" width="16" height="16" rx="4" data-date="2026-03-30" data-tokens="0" data-level="0">
     <title>2026-03-30: 0 tokens</title>
   </rect>
-  <rect x="738" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-03-31" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="238" width="16" height="16" rx="4" data-date="2026-03-31" data-tokens="0" data-level="0">
     <title>2026-03-31: 0 tokens</title>
   </rect>
-  <rect x="738" y="258" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="258" width="16" height="16" rx="4" data-date="2026-04-01" data-tokens="0" data-level="0">
     <title>2026-04-01: 0 tokens</title>
   </rect>
-  <rect x="738" y="278" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="278" width="16" height="16" rx="4" data-date="2026-04-02" data-tokens="0" data-level="0">
     <title>2026-04-02: 0 tokens</title>
   </rect>
-  <rect x="738" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="298" width="16" height="16" rx="4" data-date="2026-04-03" data-tokens="0" data-level="0">
     <title>2026-04-03: 0 tokens</title>
   </rect>
-  <rect x="738" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="318" width="16" height="16" rx="4" data-date="2026-04-04" data-tokens="0" data-level="0">
     <title>2026-04-04: 0 tokens</title>
   </rect>
-  <rect x="738" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="738" y="338" width="16" height="16" rx="4" data-date="2026-04-05" data-tokens="0" data-level="0">
     <title>2026-04-05: 0 tokens</title>
   </rect>
-  <rect x="758" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-06" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="758" y="218" width="16" height="16" rx="4" data-date="2026-04-06" data-tokens="0" data-level="0">
     <title>2026-04-06: 0 tokens</title>
   </rect>
-  <rect x="758" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-07" data-tokens="8946720" data-level="1">
+  <rect class="heatmap-level-1" x="758" y="238" width="16" height="16" rx="4" data-date="2026-04-07" data-tokens="8946720" data-level="1">
     <title>2026-04-07: 8.9M tokens</title>
   </rect>
-  <rect x="758" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-08" data-tokens="41224530" data-level="1">
+  <rect class="heatmap-level-1" x="758" y="258" width="16" height="16" rx="4" data-date="2026-04-08" data-tokens="41224530" data-level="1">
     <title>2026-04-08: 41.2M tokens</title>
   </rect>
-  <rect x="758" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-09" data-tokens="82449060" data-level="2">
+  <rect class="heatmap-level-2" x="758" y="278" width="16" height="16" rx="4" data-date="2026-04-09" data-tokens="82449060" data-level="2">
     <title>2026-04-09: 82.4M tokens</title>
   </rect>
-  <rect x="758" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-10" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="758" y="298" width="16" height="16" rx="4" data-date="2026-04-10" data-tokens="0" data-level="0">
     <title>2026-04-10: 0 tokens</title>
   </rect>
-  <rect x="758" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="758" y="318" width="16" height="16" rx="4" data-date="2026-04-11" data-tokens="0" data-level="0">
     <title>2026-04-11: 0 tokens</title>
   </rect>
-  <rect x="758" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-04-12" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="758" y="338" width="16" height="16" rx="4" data-date="2026-04-12" data-tokens="0" data-level="0">
     <title>2026-04-12: 0 tokens</title>
   </rect>
-  <rect x="778" y="218" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-13" data-tokens="51804098" data-level="2">
+  <rect class="heatmap-level-2" x="778" y="218" width="16" height="16" rx="4" data-date="2026-04-13" data-tokens="51804098" data-level="2">
     <title>2026-04-13: 51.8M tokens</title>
   </rect>
-  <rect x="778" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-14" data-tokens="21629352" data-level="1">
+  <rect class="heatmap-level-1" x="778" y="238" width="16" height="16" rx="4" data-date="2026-04-14" data-tokens="21629352" data-level="1">
     <title>2026-04-14: 21.6M tokens</title>
   </rect>
-  <rect x="778" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-15" data-tokens="61989819" data-level="2">
+  <rect class="heatmap-level-2" x="778" y="258" width="16" height="16" rx="4" data-date="2026-04-15" data-tokens="61989819" data-level="2">
     <title>2026-04-15: 62M tokens</title>
   </rect>
-  <rect x="778" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-16" data-tokens="53345760" data-level="2">
+  <rect class="heatmap-level-2" x="778" y="278" width="16" height="16" rx="4" data-date="2026-04-16" data-tokens="53345760" data-level="2">
     <title>2026-04-16: 53.3M tokens</title>
   </rect>
-  <rect x="778" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-17" data-tokens="38844824" data-level="1">
+  <rect class="heatmap-level-1" x="778" y="298" width="16" height="16" rx="4" data-date="2026-04-17" data-tokens="38844824" data-level="1">
     <title>2026-04-17: 38.8M tokens</title>
   </rect>
-  <rect x="778" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-18" data-tokens="45028972" data-level="2">
+  <rect class="heatmap-level-2" x="778" y="318" width="16" height="16" rx="4" data-date="2026-04-18" data-tokens="45028972" data-level="2">
     <title>2026-04-18: 45M tokens</title>
   </rect>
-  <rect x="778" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-04-19" data-tokens="182097044" data-level="4">
+  <rect class="heatmap-level-4" x="778" y="338" width="16" height="16" rx="4" data-date="2026-04-19" data-tokens="182097044" data-level="4">
     <title>2026-04-19: 182M tokens</title>
   </rect>
-  <rect x="798" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-04-20" data-tokens="345000318" data-level="4">
+  <rect class="heatmap-level-4" x="798" y="218" width="16" height="16" rx="4" data-date="2026-04-20" data-tokens="345000318" data-level="4">
     <title>2026-04-20: 345M tokens</title>
   </rect>
-  <rect x="798" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-21" data-tokens="78200656" data-level="2">
+  <rect class="heatmap-level-2" x="798" y="238" width="16" height="16" rx="4" data-date="2026-04-21" data-tokens="78200656" data-level="2">
     <title>2026-04-21: 78.2M tokens</title>
   </rect>
-  <rect x="798" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-04-22" data-tokens="52991142" data-level="2">
+  <rect class="heatmap-level-2" x="798" y="258" width="16" height="16" rx="4" data-date="2026-04-22" data-tokens="52991142" data-level="2">
     <title>2026-04-22: 53M tokens</title>
   </rect>
-  <rect x="798" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-23" data-tokens="1598597" data-level="1">
+  <rect class="heatmap-level-1" x="798" y="278" width="16" height="16" rx="4" data-date="2026-04-23" data-tokens="1598597" data-level="1">
     <title>2026-04-23: 1.6M tokens</title>
   </rect>
-  <rect x="798" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-24" data-tokens="432960" data-level="1">
+  <rect class="heatmap-level-1" x="798" y="298" width="16" height="16" rx="4" data-date="2026-04-24" data-tokens="432960" data-level="1">
     <title>2026-04-24: 433K tokens</title>
   </rect>
-  <rect x="798" y="318" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-25" data-tokens="42751474" data-level="1">
+  <rect class="heatmap-level-1" x="798" y="318" width="16" height="16" rx="4" data-date="2026-04-25" data-tokens="42751474" data-level="1">
     <title>2026-04-25: 42.8M tokens</title>
   </rect>
-  <rect x="798" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-26" data-tokens="20124151" data-level="1">
+  <rect class="heatmap-level-1" x="798" y="338" width="16" height="16" rx="4" data-date="2026-04-26" data-tokens="20124151" data-level="1">
     <title>2026-04-26: 20.1M tokens</title>
   </rect>
-  <rect x="818" y="218" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-27" data-tokens="36480775" data-level="1">
+  <rect class="heatmap-level-1" x="818" y="218" width="16" height="16" rx="4" data-date="2026-04-27" data-tokens="36480775" data-level="1">
     <title>2026-04-27: 36.5M tokens</title>
   </rect>
-  <rect x="818" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-28" data-tokens="15866154" data-level="1">
+  <rect class="heatmap-level-1" x="818" y="238" width="16" height="16" rx="4" data-date="2026-04-28" data-tokens="15866154" data-level="1">
     <title>2026-04-28: 15.9M tokens</title>
   </rect>
-  <rect x="818" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-29" data-tokens="5935266" data-level="1">
+  <rect class="heatmap-level-1" x="818" y="258" width="16" height="16" rx="4" data-date="2026-04-29" data-tokens="5935266" data-level="1">
     <title>2026-04-29: 5.9M tokens</title>
   </rect>
-  <rect x="818" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-04-30" data-tokens="10711145" data-level="1">
+  <rect class="heatmap-level-1" x="818" y="278" width="16" height="16" rx="4" data-date="2026-04-30" data-tokens="10711145" data-level="1">
     <title>2026-04-30: 10.7M tokens</title>
   </rect>
-  <rect x="818" y="298" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-01" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="818" y="298" width="16" height="16" rx="4" data-date="2026-05-01" data-tokens="0" data-level="0">
     <title>2026-05-01: 0 tokens</title>
   </rect>
-  <rect x="818" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-02" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="818" y="318" width="16" height="16" rx="4" data-date="2026-05-02" data-tokens="0" data-level="0">
     <title>2026-05-02: 0 tokens</title>
   </rect>
-  <rect x="818" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-03" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="818" y="338" width="16" height="16" rx="4" data-date="2026-05-03" data-tokens="0" data-level="0">
     <title>2026-05-03: 0 tokens</title>
   </rect>
-  <rect x="838" y="218" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="838" y="218" width="16" height="16" rx="4" data-date="2026-05-04" data-tokens="0" data-level="0">
     <title>2026-05-04: 0 tokens</title>
   </rect>
-  <rect x="838" y="238" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-05-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="838" y="238" width="16" height="16" rx="4" data-date="2026-05-05" data-tokens="0" data-level="0">
     <title>2026-05-05: 0 tokens</title>
   </rect>
-  <rect x="838" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-06" data-tokens="81747438" data-level="2">
+  <rect class="heatmap-level-2" x="838" y="258" width="16" height="16" rx="4" data-date="2026-05-06" data-tokens="81747438" data-level="2">
     <title>2026-05-06: 81.7M tokens</title>
   </rect>
-  <rect x="838" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-07" data-tokens="119397461" data-level="3">
+  <rect class="heatmap-level-3" x="838" y="278" width="16" height="16" rx="4" data-date="2026-05-07" data-tokens="119397461" data-level="3">
     <title>2026-05-07: 119M tokens</title>
   </rect>
-  <rect x="838" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-08" data-tokens="43995016" data-level="1">
+  <rect class="heatmap-level-1" x="838" y="298" width="16" height="16" rx="4" data-date="2026-05-08" data-tokens="43995016" data-level="1">
     <title>2026-05-08: 44M tokens</title>
   </rect>
-  <rect x="838" y="318" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-09" data-tokens="12971019" data-level="1">
+  <rect class="heatmap-level-1" x="838" y="318" width="16" height="16" rx="4" data-date="2026-05-09" data-tokens="12971019" data-level="1">
     <title>2026-05-09: 13M tokens</title>
   </rect>
-  <rect x="838" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-10" data-tokens="21728452" data-level="1">
+  <rect class="heatmap-level-1" x="838" y="338" width="16" height="16" rx="4" data-date="2026-05-10" data-tokens="21728452" data-level="1">
     <title>2026-05-10: 21.7M tokens</title>
   </rect>
-  <rect x="858" y="218" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-11" data-tokens="55080991" data-level="2">
+  <rect class="heatmap-level-2" x="858" y="218" width="16" height="16" rx="4" data-date="2026-05-11" data-tokens="55080991" data-level="2">
     <title>2026-05-11: 55.1M tokens</title>
   </rect>
-  <rect x="858" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-12" data-tokens="36066507" data-level="1">
+  <rect class="heatmap-level-1" x="858" y="238" width="16" height="16" rx="4" data-date="2026-05-12" data-tokens="36066507" data-level="1">
     <title>2026-05-12: 36.1M tokens</title>
   </rect>
-  <rect x="858" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-13" data-tokens="51221526" data-level="2">
+  <rect class="heatmap-level-2" x="858" y="258" width="16" height="16" rx="4" data-date="2026-05-13" data-tokens="51221526" data-level="2">
     <title>2026-05-13: 51.2M tokens</title>
   </rect>
-  <rect x="858" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-14" data-tokens="169393247" data-level="3">
+  <rect class="heatmap-level-3" x="858" y="278" width="16" height="16" rx="4" data-date="2026-05-14" data-tokens="169393247" data-level="3">
     <title>2026-05-14: 169M tokens</title>
   </rect>
-  <rect x="858" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-15" data-tokens="49060895" data-level="2">
+  <rect class="heatmap-level-2" x="858" y="298" width="16" height="16" rx="4" data-date="2026-05-15" data-tokens="49060895" data-level="2">
     <title>2026-05-15: 49.1M tokens</title>
   </rect>
-  <rect x="858" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-16" data-tokens="63360376" data-level="2">
+  <rect class="heatmap-level-2" x="858" y="318" width="16" height="16" rx="4" data-date="2026-05-16" data-tokens="63360376" data-level="2">
     <title>2026-05-16: 63.4M tokens</title>
   </rect>
-  <rect x="858" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-05-17" data-tokens="3723970" data-level="1">
+  <rect class="heatmap-level-1" x="858" y="338" width="16" height="16" rx="4" data-date="2026-05-17" data-tokens="3723970" data-level="1">
     <title>2026-05-17: 3.7M tokens</title>
   </rect>
-  <rect x="878" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-18" data-tokens="211286481" data-level="4">
+  <rect class="heatmap-level-4" x="878" y="218" width="16" height="16" rx="4" data-date="2026-05-18" data-tokens="211286481" data-level="4">
     <title>2026-05-18: 211M tokens</title>
   </rect>
-  <rect x="878" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-19" data-tokens="136335447" data-level="3">
+  <rect class="heatmap-level-3" x="878" y="238" width="16" height="16" rx="4" data-date="2026-05-19" data-tokens="136335447" data-level="3">
     <title>2026-05-19: 136M tokens</title>
   </rect>
-  <rect x="878" y="258" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-20" data-tokens="179833123" data-level="3">
+  <rect class="heatmap-level-3" x="878" y="258" width="16" height="16" rx="4" data-date="2026-05-20" data-tokens="179833123" data-level="3">
     <title>2026-05-20: 18M tokens</title>
   </rect>
-  <rect x="878" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-21" data-tokens="385492990" data-level="4">
+  <rect class="heatmap-level-4" x="878" y="278" width="16" height="16" rx="4" data-date="2026-05-21" data-tokens="385492990" data-level="4">
     <title>2026-05-21: 385M tokens</title>
   </rect>
-  <rect x="878" y="298" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-22" data-tokens="329977260" data-level="4">
+  <rect class="heatmap-level-4" x="878" y="298" width="16" height="16" rx="4" data-date="2026-05-22" data-tokens="329977260" data-level="4">
     <title>2026-05-22: 33M tokens</title>
   </rect>
-  <rect x="878" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-23" data-tokens="253140091" data-level="4">
+  <rect class="heatmap-level-4" x="878" y="318" width="16" height="16" rx="4" data-date="2026-05-23" data-tokens="253140091" data-level="4">
     <title>2026-05-23: 253M tokens</title>
   </rect>
-  <rect x="878" y="338" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-24" data-tokens="163962597" data-level="3">
+  <rect class="heatmap-level-3" x="878" y="338" width="16" height="16" rx="4" data-date="2026-05-24" data-tokens="163962597" data-level="3">
     <title>2026-05-24: 164M tokens</title>
   </rect>
-  <rect x="898" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-25" data-tokens="420052598" data-level="4">
+  <rect class="heatmap-level-4" x="898" y="218" width="16" height="16" rx="4" data-date="2026-05-25" data-tokens="420052598" data-level="4">
     <title>2026-05-25: 42M tokens</title>
   </rect>
-  <rect x="898" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-26" data-tokens="228654415" data-level="4">
+  <rect class="heatmap-level-4" x="898" y="238" width="16" height="16" rx="4" data-date="2026-05-26" data-tokens="228654415" data-level="4">
     <title>2026-05-26: 229M tokens</title>
   </rect>
-  <rect x="898" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-27" data-tokens="75546704" data-level="2">
+  <rect class="heatmap-level-2" x="898" y="258" width="16" height="16" rx="4" data-date="2026-05-27" data-tokens="75546704" data-level="2">
     <title>2026-05-27: 75.5M tokens</title>
   </rect>
-  <rect x="898" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-28" data-tokens="141120221" data-level="3">
+  <rect class="heatmap-level-3" x="898" y="278" width="16" height="16" rx="4" data-date="2026-05-28" data-tokens="141120221" data-level="3">
     <title>2026-05-28: 141M tokens</title>
   </rect>
-  <rect x="898" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-05-29" data-tokens="146312177" data-level="3">
+  <rect class="heatmap-level-3" x="898" y="298" width="16" height="16" rx="4" data-date="2026-05-29" data-tokens="146312177" data-level="3">
     <title>2026-05-29: 146M tokens</title>
   </rect>
-  <rect x="898" y="318" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-05-30" data-tokens="44995572" data-level="2">
+  <rect class="heatmap-level-2" x="898" y="318" width="16" height="16" rx="4" data-date="2026-05-30" data-tokens="44995572" data-level="2">
     <title>2026-05-30: 45M tokens</title>
   </rect>
-  <rect x="898" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-05-31" data-tokens="396448805" data-level="4">
+  <rect class="heatmap-level-4" x="898" y="338" width="16" height="16" rx="4" data-date="2026-05-31" data-tokens="396448805" data-level="4">
     <title>2026-05-31: 396M tokens</title>
   </rect>
-  <rect x="918" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-01" data-tokens="465567694" data-level="4">
+  <rect class="heatmap-level-4" x="918" y="218" width="16" height="16" rx="4" data-date="2026-06-01" data-tokens="465567694" data-level="4">
     <title>2026-06-01: 466M tokens</title>
   </rect>
-  <rect x="918" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-02" data-tokens="105002566" data-level="2">
+  <rect class="heatmap-level-2" x="918" y="238" width="16" height="16" rx="4" data-date="2026-06-02" data-tokens="105002566" data-level="2">
     <title>2026-06-02: 105M tokens</title>
   </rect>
-  <rect x="918" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-03" data-tokens="74650388" data-level="2">
+  <rect class="heatmap-level-2" x="918" y="258" width="16" height="16" rx="4" data-date="2026-06-03" data-tokens="74650388" data-level="2">
     <title>2026-06-03: 74.7M tokens</title>
   </rect>
-  <rect x="918" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-04" data-tokens="46987952" data-level="2">
+  <rect class="heatmap-level-2" x="918" y="278" width="16" height="16" rx="4" data-date="2026-06-04" data-tokens="46987952" data-level="2">
     <title>2026-06-04: 47M tokens</title>
   </rect>
-  <rect x="918" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-05" data-tokens="129865055" data-level="3">
+  <rect class="heatmap-level-3" x="918" y="298" width="16" height="16" rx="4" data-date="2026-06-05" data-tokens="129865055" data-level="3">
     <title>2026-06-05: 13M tokens</title>
   </rect>
-  <rect x="918" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-06" data-tokens="161973353" data-level="3">
+  <rect class="heatmap-level-3" x="918" y="318" width="16" height="16" rx="4" data-date="2026-06-06" data-tokens="161973353" data-level="3">
     <title>2026-06-06: 162M tokens</title>
   </rect>
-  <rect x="918" y="338" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-07" data-tokens="178106790" data-level="3">
+  <rect class="heatmap-level-3" x="918" y="338" width="16" height="16" rx="4" data-date="2026-06-07" data-tokens="178106790" data-level="3">
     <title>2026-06-07: 178M tokens</title>
   </rect>
-  <rect x="938" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-08" data-tokens="232358603" data-level="4">
+  <rect class="heatmap-level-4" x="938" y="218" width="16" height="16" rx="4" data-date="2026-06-08" data-tokens="232358603" data-level="4">
     <title>2026-06-08: 232M tokens</title>
   </rect>
-  <rect x="938" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-09" data-tokens="151230359" data-level="3">
+  <rect class="heatmap-level-3" x="938" y="238" width="16" height="16" rx="4" data-date="2026-06-09" data-tokens="151230359" data-level="3">
     <title>2026-06-09: 151M tokens</title>
   </rect>
-  <rect x="938" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-10" data-tokens="13482801" data-level="1">
+  <rect class="heatmap-level-1" x="938" y="258" width="16" height="16" rx="4" data-date="2026-06-10" data-tokens="13482801" data-level="1">
     <title>2026-06-10: 13.5M tokens</title>
   </rect>
-  <rect x="938" y="278" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-11" data-tokens="72342744" data-level="2">
+  <rect class="heatmap-level-2" x="938" y="278" width="16" height="16" rx="4" data-date="2026-06-11" data-tokens="72342744" data-level="2">
     <title>2026-06-11: 72.3M tokens</title>
   </rect>
-  <rect x="938" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-12" data-tokens="27053373" data-level="1">
+  <rect class="heatmap-level-1" x="938" y="298" width="16" height="16" rx="4" data-date="2026-06-12" data-tokens="27053373" data-level="1">
     <title>2026-06-12: 27.1M tokens</title>
   </rect>
-  <rect x="938" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-06-13" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="938" y="318" width="16" height="16" rx="4" data-date="2026-06-13" data-tokens="0" data-level="0">
     <title>2026-06-13: 0 tokens</title>
   </rect>
-  <rect x="938" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-06-14" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="938" y="338" width="16" height="16" rx="4" data-date="2026-06-14" data-tokens="0" data-level="0">
     <title>2026-06-14: 0 tokens</title>
   </rect>
-  <rect x="958" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-15" data-tokens="170885086" data-level="3">
+  <rect class="heatmap-level-3" x="958" y="218" width="16" height="16" rx="4" data-date="2026-06-15" data-tokens="170885086" data-level="3">
     <title>2026-06-15: 171M tokens</title>
   </rect>
-  <rect x="958" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-16" data-tokens="116962494" data-level="3">
+  <rect class="heatmap-level-3" x="958" y="238" width="16" height="16" rx="4" data-date="2026-06-16" data-tokens="116962494" data-level="3">
     <title>2026-06-16: 117M tokens</title>
   </rect>
-  <rect x="958" y="258" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-17" data-tokens="72501923" data-level="2">
+  <rect class="heatmap-level-2" x="958" y="258" width="16" height="16" rx="4" data-date="2026-06-17" data-tokens="72501923" data-level="2">
     <title>2026-06-17: 72.5M tokens</title>
   </rect>
-  <rect x="958" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-18" data-tokens="34118766" data-level="1">
+  <rect class="heatmap-level-1" x="958" y="278" width="16" height="16" rx="4" data-date="2026-06-18" data-tokens="34118766" data-level="1">
     <title>2026-06-18: 34.1M tokens</title>
   </rect>
-  <rect x="958" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-19" data-tokens="150844584" data-level="3">
+  <rect class="heatmap-level-3" x="958" y="298" width="16" height="16" rx="4" data-date="2026-06-19" data-tokens="150844584" data-level="3">
     <title>2026-06-19: 151M tokens</title>
   </rect>
-  <rect x="958" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-20" data-tokens="136020341" data-level="3">
+  <rect class="heatmap-level-3" x="958" y="318" width="16" height="16" rx="4" data-date="2026-06-20" data-tokens="136020341" data-level="3">
     <title>2026-06-20: 136M tokens</title>
   </rect>
-  <rect x="958" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-21" data-tokens="94730290" data-level="2">
+  <rect class="heatmap-level-2" x="958" y="338" width="16" height="16" rx="4" data-date="2026-06-21" data-tokens="94730290" data-level="2">
     <title>2026-06-21: 94.7M tokens</title>
   </rect>
-  <rect x="978" y="218" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-22" data-tokens="191476853" data-level="4">
+  <rect class="heatmap-level-4" x="978" y="218" width="16" height="16" rx="4" data-date="2026-06-22" data-tokens="191476853" data-level="4">
     <title>2026-06-22: 191M tokens</title>
   </rect>
-  <rect x="978" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-23" data-tokens="200822799" data-level="4">
+  <rect class="heatmap-level-4" x="978" y="238" width="16" height="16" rx="4" data-date="2026-06-23" data-tokens="200822799" data-level="4">
     <title>2026-06-23: 201M tokens</title>
   </rect>
-  <rect x="978" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-06-24" data-tokens="235996307" data-level="4">
+  <rect class="heatmap-level-4" x="978" y="258" width="16" height="16" rx="4" data-date="2026-06-24" data-tokens="235996307" data-level="4">
     <title>2026-06-24: 236M tokens</title>
   </rect>
-  <rect x="978" y="278" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-25" data-tokens="156071061" data-level="3">
+  <rect class="heatmap-level-3" x="978" y="278" width="16" height="16" rx="4" data-date="2026-06-25" data-tokens="156071061" data-level="3">
     <title>2026-06-25: 156M tokens</title>
   </rect>
-  <rect x="978" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-26" data-tokens="139127643" data-level="3">
+  <rect class="heatmap-level-3" x="978" y="298" width="16" height="16" rx="4" data-date="2026-06-26" data-tokens="139127643" data-level="3">
     <title>2026-06-26: 139M tokens</title>
   </rect>
-  <rect x="978" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-06-27" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="978" y="318" width="16" height="16" rx="4" data-date="2026-06-27" data-tokens="0" data-level="0">
     <title>2026-06-27: 0 tokens</title>
   </rect>
-  <rect x="978" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-06-28" data-tokens="203756" data-level="1">
+  <rect class="heatmap-level-1" x="978" y="338" width="16" height="16" rx="4" data-date="2026-06-28" data-tokens="203756" data-level="1">
     <title>2026-06-28: 204K tokens</title>
   </rect>
-  <rect x="998" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-06-29" data-tokens="119775305" data-level="3">
+  <rect class="heatmap-level-3" x="998" y="218" width="16" height="16" rx="4" data-date="2026-06-29" data-tokens="119775305" data-level="3">
     <title>2026-06-29: 12M tokens</title>
   </rect>
-  <rect x="998" y="238" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-06-30" data-tokens="49112395" data-level="2">
+  <rect class="heatmap-level-2" x="998" y="238" width="16" height="16" rx="4" data-date="2026-06-30" data-tokens="49112395" data-level="2">
     <title>2026-06-30: 49.1M tokens</title>
   </rect>
-  <rect x="998" y="258" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-01" data-tokens="44152008" data-level="1">
+  <rect class="heatmap-level-1" x="998" y="258" width="16" height="16" rx="4" data-date="2026-07-01" data-tokens="44152008" data-level="1">
     <title>2026-07-01: 44.2M tokens</title>
   </rect>
-  <rect x="998" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-02" data-tokens="26433104" data-level="1">
+  <rect class="heatmap-level-1" x="998" y="278" width="16" height="16" rx="4" data-date="2026-07-02" data-tokens="26433104" data-level="1">
     <title>2026-07-02: 26.4M tokens</title>
   </rect>
-  <rect x="998" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-03" data-tokens="68148469" data-level="2">
+  <rect class="heatmap-level-2" x="998" y="298" width="16" height="16" rx="4" data-date="2026-07-03" data-tokens="68148469" data-level="2">
     <title>2026-07-03: 68.1M tokens</title>
   </rect>
-  <rect x="998" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-04" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="998" y="318" width="16" height="16" rx="4" data-date="2026-07-04" data-tokens="0" data-level="0">
     <title>2026-07-04: 0 tokens</title>
   </rect>
-  <rect x="998" y="338" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-05" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="998" y="338" width="16" height="16" rx="4" data-date="2026-07-05" data-tokens="0" data-level="0">
     <title>2026-07-05: 0 tokens</title>
   </rect>
-  <rect x="1018" y="218" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-06" data-tokens="94478408" data-level="2">
+  <rect class="heatmap-level-2" x="1018" y="218" width="16" height="16" rx="4" data-date="2026-07-06" data-tokens="94478408" data-level="2">
     <title>2026-07-06: 94.5M tokens</title>
   </rect>
-  <rect x="1018" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-07" data-tokens="164556170" data-level="3">
+  <rect class="heatmap-level-3" x="1018" y="238" width="16" height="16" rx="4" data-date="2026-07-07" data-tokens="164556170" data-level="3">
     <title>2026-07-07: 165M tokens</title>
   </rect>
-  <rect x="1018" y="258" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-08" data-tokens="169719887" data-level="3">
+  <rect class="heatmap-level-3" x="1018" y="258" width="16" height="16" rx="4" data-date="2026-07-08" data-tokens="169719887" data-level="3">
     <title>2026-07-08: 17M tokens</title>
   </rect>
-  <rect x="1018" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-09" data-tokens="239691188" data-level="4">
+  <rect class="heatmap-level-4" x="1018" y="278" width="16" height="16" rx="4" data-date="2026-07-09" data-tokens="239691188" data-level="4">
     <title>2026-07-09: 24M tokens</title>
   </rect>
-  <rect x="1018" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-10" data-tokens="89622830" data-level="2">
+  <rect class="heatmap-level-2" x="1018" y="298" width="16" height="16" rx="4" data-date="2026-07-10" data-tokens="89622830" data-level="2">
     <title>2026-07-10: 89.6M tokens</title>
   </rect>
-  <rect x="1018" y="318" width="16" height="16" rx="4" fill="#272b3a" data-date="2026-07-11" data-tokens="0" data-level="0">
+  <rect class="heatmap-level-0" x="1018" y="318" width="16" height="16" rx="4" data-date="2026-07-11" data-tokens="0" data-level="0">
     <title>2026-07-11: 0 tokens</title>
   </rect>
-  <rect x="1018" y="338" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-12" data-tokens="10013260" data-level="1">
+  <rect class="heatmap-level-1" x="1018" y="338" width="16" height="16" rx="4" data-date="2026-07-12" data-tokens="10013260" data-level="1">
     <title>2026-07-12: 10M tokens</title>
   </rect>
-  <rect x="1038" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-13" data-tokens="122276107" data-level="3">
+  <rect class="heatmap-level-3" x="1038" y="218" width="16" height="16" rx="4" data-date="2026-07-13" data-tokens="122276107" data-level="3">
     <title>2026-07-13: 122M tokens</title>
   </rect>
-  <rect x="1038" y="238" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-14" data-tokens="13646599" data-level="1">
+  <rect class="heatmap-level-1" x="1038" y="238" width="16" height="16" rx="4" data-date="2026-07-14" data-tokens="13646599" data-level="1">
     <title>2026-07-14: 13.6M tokens</title>
   </rect>
-  <rect x="1038" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-15" data-tokens="204733951" data-level="4">
+  <rect class="heatmap-level-4" x="1038" y="258" width="16" height="16" rx="4" data-date="2026-07-15" data-tokens="204733951" data-level="4">
     <title>2026-07-15: 205M tokens</title>
   </rect>
-  <rect x="1038" y="278" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-16" data-tokens="44331674" data-level="1">
+  <rect class="heatmap-level-1" x="1038" y="278" width="16" height="16" rx="4" data-date="2026-07-16" data-tokens="44331674" data-level="1">
     <title>2026-07-16: 44.3M tokens</title>
   </rect>
-  <rect x="1038" y="298" width="16" height="16" rx="4" fill="#164e63" data-date="2026-07-17" data-tokens="38702996" data-level="1">
+  <rect class="heatmap-level-1" x="1038" y="298" width="16" height="16" rx="4" data-date="2026-07-17" data-tokens="38702996" data-level="1">
     <title>2026-07-17: 38.7M tokens</title>
   </rect>
-  <rect x="1038" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-18" data-tokens="187947083" data-level="4">
+  <rect class="heatmap-level-4" x="1038" y="318" width="16" height="16" rx="4" data-date="2026-07-18" data-tokens="187947083" data-level="4">
     <title>2026-07-18: 188M tokens</title>
   </rect>
-  <rect x="1038" y="338" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-19" data-tokens="223770482" data-level="4">
+  <rect class="heatmap-level-4" x="1038" y="338" width="16" height="16" rx="4" data-date="2026-07-19" data-tokens="223770482" data-level="4">
     <title>2026-07-19: 224M tokens</title>
   </rect>
-  <rect x="1058" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-20" data-tokens="178187450" data-level="3">
+  <rect class="heatmap-level-3" x="1058" y="218" width="16" height="16" rx="4" data-date="2026-07-20" data-tokens="178187450" data-level="3">
     <title>2026-07-20: 178M tokens</title>
   </rect>
-  <rect x="1058" y="238" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-21" data-tokens="161521994" data-level="3">
+  <rect class="heatmap-level-3" x="1058" y="238" width="16" height="16" rx="4" data-date="2026-07-21" data-tokens="161521994" data-level="3">
     <title>2026-07-21: 162M tokens</title>
   </rect>
-  <rect x="1058" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-22" data-tokens="219171594" data-level="4">
+  <rect class="heatmap-level-4" x="1058" y="258" width="16" height="16" rx="4" data-date="2026-07-22" data-tokens="219171594" data-level="4">
     <title>2026-07-22: 219M tokens</title>
   </rect>
-  <rect x="1058" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-23" data-tokens="477377960" data-level="4">
+  <rect class="heatmap-level-4" x="1058" y="278" width="16" height="16" rx="4" data-date="2026-07-23" data-tokens="477377960" data-level="4">
     <title>2026-07-23: 477M tokens</title>
   </rect>
-  <rect x="1058" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-24" data-tokens="156236265" data-level="3">
+  <rect class="heatmap-level-3" x="1058" y="298" width="16" height="16" rx="4" data-date="2026-07-24" data-tokens="156236265" data-level="3">
     <title>2026-07-24: 156M tokens</title>
   </rect>
-  <rect x="1058" y="318" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-25" data-tokens="231832640" data-level="4">
+  <rect class="heatmap-level-4" x="1058" y="318" width="16" height="16" rx="4" data-date="2026-07-25" data-tokens="231832640" data-level="4">
     <title>2026-07-25: 232M tokens</title>
   </rect>
-  <rect x="1058" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-07-26" data-tokens="100995944" data-level="2">
+  <rect class="heatmap-level-2" x="1058" y="338" width="16" height="16" rx="4" data-date="2026-07-26" data-tokens="100995944" data-level="2">
     <title>2026-07-26: 101M tokens</title>
   </rect>
-  <rect x="1078" y="218" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-27" data-tokens="148000221" data-level="3">
+  <rect class="heatmap-level-3" x="1078" y="218" width="16" height="16" rx="4" data-date="2026-07-27" data-tokens="148000221" data-level="3">
     <title>2026-07-27: 148M tokens</title>
   </rect>
-  <rect x="1078" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-28" data-tokens="188513502" data-level="4">
+  <rect class="heatmap-level-4" x="1078" y="238" width="16" height="16" rx="4" data-date="2026-07-28" data-tokens="188513502" data-level="4">
     <title>2026-07-28: 189M tokens</title>
   </rect>
-  <rect x="1078" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-29" data-tokens="237740343" data-level="4">
+  <rect class="heatmap-level-4" x="1078" y="258" width="16" height="16" rx="4" data-date="2026-07-29" data-tokens="237740343" data-level="4">
     <title>2026-07-29: 238M tokens</title>
   </rect>
-  <rect x="1078" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-07-30" data-tokens="260878185" data-level="4">
+  <rect class="heatmap-level-4" x="1078" y="278" width="16" height="16" rx="4" data-date="2026-07-30" data-tokens="260878185" data-level="4">
     <title>2026-07-30: 261M tokens</title>
   </rect>
-  <rect x="1078" y="298" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-07-31" data-tokens="172678469" data-level="3">
+  <rect class="heatmap-level-3" x="1078" y="298" width="16" height="16" rx="4" data-date="2026-07-31" data-tokens="172678469" data-level="3">
     <title>2026-07-31: 173M tokens</title>
   </rect>
-  <rect x="1078" y="318" width="16" height="16" rx="4" fill="#06b6d4" data-date="2026-08-01" data-tokens="112377857" data-level="3">
+  <rect class="heatmap-level-3" x="1078" y="318" width="16" height="16" rx="4" data-date="2026-08-01" data-tokens="112377857" data-level="3">
     <title>2026-08-01: 112M tokens</title>
   </rect>
-  <rect x="1078" y="338" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-08-02" data-tokens="64884454" data-level="2">
+  <rect class="heatmap-level-2" x="1078" y="338" width="16" height="16" rx="4" data-date="2026-08-02" data-tokens="64884454" data-level="2">
     <title>2026-08-02: 64.9M tokens</title>
   </rect>
-  <rect x="1098" y="218" width="16" height="16" rx="4" fill="#164e63" data-date="2026-08-03" data-tokens="27634160" data-level="1">
+  <rect class="heatmap-level-1" x="1098" y="218" width="16" height="16" rx="4" data-date="2026-08-03" data-tokens="27634160" data-level="1">
     <title>2026-08-03: 27.6M tokens</title>
   </rect>
-  <rect x="1098" y="238" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-08-04" data-tokens="348924858" data-level="4">
+  <rect class="heatmap-level-4" x="1098" y="238" width="16" height="16" rx="4" data-date="2026-08-04" data-tokens="348924858" data-level="4">
     <title>2026-08-04: 349M tokens</title>
   </rect>
-  <rect x="1098" y="258" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-08-05" data-tokens="620524028" data-level="4">
+  <rect class="heatmap-level-4" x="1098" y="258" width="16" height="16" rx="4" data-date="2026-08-05" data-tokens="620524028" data-level="4">
     <title>2026-08-05: 621M tokens</title>
   </rect>
-  <rect x="1098" y="278" width="16" height="16" rx="4" fill="#67e8f9" data-date="2026-08-06" data-tokens="557780083" data-level="4">
+  <rect class="heatmap-level-4" x="1098" y="278" width="16" height="16" rx="4" data-date="2026-08-06" data-tokens="557780083" data-level="4">
     <title>2026-08-06: 558M tokens</title>
   </rect>
-  <rect x="1098" y="298" width="16" height="16" rx="4" fill="#0e7490" data-date="2026-08-07" data-tokens="53878791" data-level="2">
+  <rect class="heatmap-level-2" x="1098" y="298" width="16" height="16" rx="4" data-date="2026-08-07" data-tokens="53878791" data-level="2">
     <title>2026-08-07: 53.9M tokens</title>
   </rect>
-  <text x="58" y="385" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Less</text>
-  <rect x="92" y="373" width="16" height="16" rx="4" fill="#272b3a"/>
-  <rect x="112" y="373" width="16" height="16" rx="4" fill="#164e63"/>
-  <rect x="132" y="373" width="16" height="16" rx="4" fill="#0e7490"/>
-  <rect x="152" y="373" width="16" height="16" rx="4" fill="#06b6d4"/>
-  <rect x="172" y="373" width="16" height="16" rx="4" fill="#67e8f9"/>
-  <text x="194" y="385" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">More</text>
+  <text class="dashboard-muted" x="58" y="385" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Less</text>
+  <rect class="heatmap-level-0" x="92" y="373" width="16" height="16" rx="4"/>
+  <rect class="heatmap-level-1" x="112" y="373" width="16" height="16" rx="4"/>
+  <rect class="heatmap-level-2" x="132" y="373" width="16" height="16" rx="4"/>
+  <rect class="heatmap-level-3" x="152" y="373" width="16" height="16" rx="4"/>
+  <rect class="heatmap-level-4" x="172" y="373" width="16" height="16" rx="4"/>
+  <text class="dashboard-muted" x="194" y="385" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">More</text>
 </svg>

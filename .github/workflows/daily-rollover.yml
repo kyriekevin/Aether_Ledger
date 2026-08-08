@@ -57,7 +57,7 @@ jobs:
             uv run --script scripts/squash_usage_branch.py "origin/$branch"
             uv run --script scripts/audit_public.py
             uv run --script scripts/render_dashboard.py --as-of "$day"
-            git add assets/token-activity.svg assets/token-composition.svg assets/token-topology.svg
+            git add assets/token-activity.svg
             if git diff --cached --quiet; then
               git reset --merge
             else

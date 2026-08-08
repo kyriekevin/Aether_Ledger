@@ -205,20 +205,14 @@ The activity SVG contains:
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
-The composition SVG compares lifetime and trailing-30-day token shares by public environment role
-and agent. OpenCode-launched history is retained in a muted `Legacy` bucket. A separate topology
-SVG shows only agents active in the recent window and uses one intensity scale for role-by-agent
-shares. The recent window ends on the same completed snapshot as the activity SVG. Trail workers
-and persistent `devbox` stores are combined as `Development` in these two views; opaque trail node
-IDs never enter either asset. The underlying stores remain separate for collection and operations.
-
-Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
+Only the rollover workflow commits the shared SVG. Individual machine writers commit only their
 own data directory, avoiding generated-asset conflicts when machines push concurrently.
 
 Intensity levels use distribution quartiles rather than a linear scale, so ordinary days remain
-visible when trail workloads create very large peaks. The published SVGs contain aggregate token
-counts and, in the activity view, API-equivalent cost; they do not include model, machine, path,
-prompt, or repository-level data.
+visible when trail workloads create very large peaks. The SVG uses `prefers-color-scheme` to switch
+between matching light and dark semantic colors without duplicating the generated asset. It contains
+aggregate token counts and API-equivalent cost, but no model, machine, path, prompt, or
+repository-level data.
 
 ## Public-data boundary
 
