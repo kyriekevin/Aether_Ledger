@@ -2,31 +2,31 @@
   <title id="title">AI compute activity through 2026-08-07</title>
   <desc id="desc">$18.5K API-equivalent lifetime cost and 14.6B lifetime tokens across 109 active days; peak 621M tokens on 2026-08-05.</desc>
   <style>
-    .dashboard-background { fill: #f6f8fa; }
-    .dashboard-panel { fill: #ffffff; }
-    .dashboard-primary { fill: #1f2328; }
-    .dashboard-secondary { fill: #57606a; }
-    .dashboard-muted { fill: #6e7781; }
-    .dashboard-accent { fill: #0e7490; }
-    .dashboard-border { stroke: #d8dee4; }
-    .heatmap-level-0 { fill: #e8ecf1; }
-    .heatmap-level-1 { fill: #67e8f9; }
-    .heatmap-level-2 { fill: #06b6d4; }
-    .heatmap-level-3 { fill: #0e7490; }
-    .heatmap-level-4 { fill: #164e63; }
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
     @media (prefers-color-scheme: dark) {
-      .dashboard-background { fill: #1d1e2c; }
-      .dashboard-panel { fill: #222536; }
-      .dashboard-primary { fill: #e6e9f2; }
-      .dashboard-secondary { fill: #b8c1d8; }
-      .dashboard-muted { fill: #8d99b2; }
-      .dashboard-accent { fill: #67e8f9; }
-      .dashboard-border { stroke: #34384a; }
-      .heatmap-level-0 { fill: #34384a; }
-      .heatmap-level-1 { fill: #0e7490; }
-      .heatmap-level-2 { fill: #0891b2; }
-      .heatmap-level-3 { fill: #22d3ee; }
-      .heatmap-level-4 { fill: #a5f3fc; }
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
     }
   </style>
   <rect class="dashboard-background" width="1180" height="410" rx="22"/>

@@ -213,8 +213,8 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Both dashboard SVGs use `prefers-color-scheme` to share one semantic palette across GitHub's light
-and dark themes.
+Both dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
 own data directory, avoiding generated-asset conflicts when machines push concurrently.

@@ -126,7 +126,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("@media (prefers-color-scheme: dark)", svg)
         self.assertIn('class="dashboard-background"', svg)
         self.assertIn('class="dashboard-border"', svg)
-        for color in ("#f6f8fa", "#e8ecf1", "#1d1e2c", "#34384a", "#a5f3fc"):
+        for color in ("#eff1f5", "#ccd0da", "#179299", "#1e1e2e", "#313244", "#94e2d5"):
             self.assertIn(color, svg)
         for level in range(5):
             self.assertIn(f'class="heatmap-level-{level}"', svg)
@@ -173,9 +173,12 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('data-agent="codex"', svg)
             self.assertIn("hue is environment", svg)
             for role in ("work", "personal", "development"):
-                self.assertIn(f'class="topology-{role}-level-3"', svg)
-                for level in range(1, 5):
-                    self.assertIn(f".topology-{role}-level-{level}", svg)
+                self.assertIn(f'class="topology-{role}"', svg)
+                self.assertIn(f".topology-{role}", svg)
+            for level in range(1, 5):
+                self.assertIn(f".topology-level-{level}", svg)
+            for color in ("#fe640b", "#1e66f5", "#8839ef", "#fab387", "#89b4fa", "#cba6f7"):
+                self.assertIn(color, svg)
             self.assertIn(".heatmap-level-0", svg)
 
     def test_topology_reports_an_empty_recent_window(self) -> None:

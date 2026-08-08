@@ -45,78 +45,66 @@ LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
     light_levels = (
         (
-            "    .heatmap-label-0 { fill: #6e7781; }",
-            "    .heatmap-label-1, .heatmap-label-2 { fill: #083344; }",
-            "    .heatmap-label-3, .heatmap-label-4 { fill: #f0fdfa; }",
-            "    .topology-work-level-1 { fill: #fef3c7; }",
-            "    .topology-work-level-2 { fill: #fbbf24; }",
-            "    .topology-work-level-3 { fill: #b45309; }",
-            "    .topology-work-level-4 { fill: #78350f; }",
-            "    .topology-personal-level-1 { fill: #cffafe; }",
-            "    .topology-personal-level-2 { fill: #22d3ee; }",
-            "    .topology-personal-level-3 { fill: #0e7490; }",
-            "    .topology-personal-level-4 { fill: #164e63; }",
-            "    .topology-development-level-1 { fill: #ede9fe; }",
-            "    .topology-development-level-2 { fill: #a78bfa; }",
-            "    .topology-development-level-3 { fill: #7c3aed; }",
-            "    .topology-development-level-4 { fill: #5b21b6; }",
-            "    .heatmap-level-0 { fill: #e8ecf1; }",
+            "    .heatmap-label-0 { fill: #6c6f85; }",
+            "    .topology-label-1, .topology-label-2 { fill: #4c4f69; }",
+            "    .topology-label-3, .topology-label-4 { fill: #eff1f5; }",
+            "    .topology-label-work-3, .topology-label-work-4 { fill: #4c4f69; }",
+            "    .topology-work { fill: #fe640b; }",
+            "    .topology-personal { fill: #1e66f5; }",
+            "    .topology-development { fill: #8839ef; }",
+            "    .topology-level-1 { fill-opacity: 0.22; }",
+            "    .topology-level-2 { fill-opacity: 0.45; }",
+            "    .topology-level-3 { fill-opacity: 0.68; }",
+            "    .topology-level-4 { fill-opacity: 1; }",
+            "    .heatmap-level-0 { fill: #ccd0da; }",
         )
         if topology
         else (
-            "    .heatmap-level-0 { fill: #e8ecf1; }",
-            "    .heatmap-level-1 { fill: #67e8f9; }",
-            "    .heatmap-level-2 { fill: #06b6d4; }",
-            "    .heatmap-level-3 { fill: #0e7490; }",
-            "    .heatmap-level-4 { fill: #164e63; }",
+            "    .heatmap-level-0 { fill: #ccd0da; }",
+            "    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }",
+            "    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }",
+            "    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }",
+            "    .heatmap-level-4 { fill: #179299; }",
         )
     )
     dark_levels = (
         (
-            "      .heatmap-label-0 { fill: #8d99b2; }",
-            "      .heatmap-label-1, .heatmap-label-2 { fill: #f0fdfa; }",
-            "      .heatmap-label-3, .heatmap-label-4 { fill: #083344; }",
-            "      .topology-work-level-1 { fill: #92400e; }",
-            "      .topology-work-level-2 { fill: #d97706; }",
-            "      .topology-work-level-3 { fill: #fbbf24; }",
-            "      .topology-work-level-4 { fill: #fde68a; }",
-            "      .topology-personal-level-1 { fill: #0e7490; }",
-            "      .topology-personal-level-2 { fill: #0891b2; }",
-            "      .topology-personal-level-3 { fill: #22d3ee; }",
-            "      .topology-personal-level-4 { fill: #a5f3fc; }",
-            "      .topology-development-level-1 { fill: #5b21b6; }",
-            "      .topology-development-level-2 { fill: #7c3aed; }",
-            "      .topology-development-level-3 { fill: #a78bfa; }",
-            "      .topology-development-level-4 { fill: #ddd6fe; }",
-            "      .heatmap-level-0 { fill: #34384a; }",
+            "      .heatmap-label-0 { fill: #a6adc8; }",
+            "      .topology-label-1, .topology-label-2 { fill: #cdd6f4; }",
+            "      .topology-label-3, .topology-label-4,",
+            "      .topology-label-work-3, .topology-label-work-4 { fill: #1e1e2e; }",
+            "      .topology-work { fill: #fab387; }",
+            "      .topology-personal { fill: #89b4fa; }",
+            "      .topology-development { fill: #cba6f7; }",
+            "      .heatmap-level-0 { fill: #313244; }",
         )
         if topology
         else (
-            "      .heatmap-level-0 { fill: #34384a; }",
-            "      .heatmap-level-1 { fill: #0e7490; }",
-            "      .heatmap-level-2 { fill: #0891b2; }",
-            "      .heatmap-level-3 { fill: #22d3ee; }",
-            "      .heatmap-level-4 { fill: #a5f3fc; }",
+            "      .heatmap-level-0 { fill: #313244; }",
+            "      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }",
+            "      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }",
+            "      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }",
+            "      .heatmap-level-4 { fill: #94e2d5; }",
         )
     )
     return (
         "  <style>",
-        "    .dashboard-background { fill: #f6f8fa; }",
-        "    .dashboard-panel { fill: #ffffff; }",
-        "    .dashboard-primary { fill: #1f2328; }",
-        "    .dashboard-secondary { fill: #57606a; }",
-        "    .dashboard-muted { fill: #6e7781; }",
-        "    .dashboard-accent { fill: #0e7490; }",
-        "    .dashboard-border { stroke: #d8dee4; }",
+        "    .dashboard-background { fill: #eff1f5; }",
+        "    .dashboard-panel { fill: #e6e9ef; }",
+        "    .dashboard-primary { fill: #4c4f69; }",
+        "    .dashboard-secondary { fill: #5c5f77; }",
+        "    .dashboard-muted { fill: #6c6f85; }",
+        "    .dashboard-accent { fill: #179299; }",
+        "    .dashboard-border { stroke: #ccd0da; }",
         *light_levels,
         "    @media (prefers-color-scheme: dark) {",
-        "      .dashboard-background { fill: #1d1e2c; }",
-        "      .dashboard-panel { fill: #222536; }",
-        "      .dashboard-primary { fill: #e6e9f2; }",
-        "      .dashboard-secondary { fill: #b8c1d8; }",
-        "      .dashboard-muted { fill: #8d99b2; }",
-        "      .dashboard-accent { fill: #67e8f9; }",
-        "      .dashboard-border { stroke: #34384a; }",
+        "      .dashboard-background { fill: #1e1e2e; }",
+        "      .dashboard-panel { fill: #181825; }",
+        "      .dashboard-primary { fill: #cdd6f4; }",
+        "      .dashboard-secondary { fill: #bac2de; }",
+        "      .dashboard-muted { fill: #a6adc8; }",
+        "      .dashboard-accent { fill: #94e2d5; }",
+        "      .dashboard-border { stroke: #313244; }",
         *dark_levels,
         "    }",
         "  </style>",
@@ -535,7 +523,7 @@ def render_topology_svg(topology: TopologyTotals) -> str:
         role_total = sum(topology.recent_topology[(role, agent)] for agent in active_agents)
         lines.extend(
             (
-                f'  <circle class="topology-{role}-level-3" cx="36" cy="{y + 18}" r="5"/>',
+                f'  <circle class="topology-{role}" cx="36" cy="{y + 18}" r="5"/>',
                 f'  <text class="dashboard-primary" x="50" y="{y + 23}" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="15" font-weight="600">{escape(ROLE_LABELS[role])}</text>',
@@ -548,7 +536,11 @@ def render_topology_svg(topology: TopologyTotals) -> str:
             value = topology.recent_topology[(role, agent)]
             share = _share(value, role_total)
             level = _topology_level(share)
-            cell_class = "heatmap-level-0" if level == 0 else f"topology-{role}-level-{level}"
+            cell_class = (
+                "heatmap-level-0"
+                if level == 0
+                else f"topology-{role} topology-level-{level}"
+            )
             x = matrix_x + column * (cell_width + cell_gap)
             value_text = (
                 f"{_percent(value, role_total)} · {_compact_number(value)}" if value else "—"
@@ -562,7 +554,8 @@ def render_topology_svg(topology: TopologyTotals) -> str:
                     f'{escape(AGENT_LABELS[agent])}: {_compact_number(value)} tokens '
                     f'({escape(_percent(value, role_total))} of environment)</title>',
                     "  </rect>",
-                    f'  <text class="heatmap-label-{level}" x="{x + cell_width / 2:.1f}" '
+                    f'  <text class="topology-label-{level} topology-label-{role}-{level}" '
+                    f'x="{x + cell_width / 2:.1f}" '
                     f'y="{y + 32}" text-anchor="middle" '
                     'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                     f'font-size="14" font-weight="600">{escape(value_text)}</text>',

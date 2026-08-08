@@ -192,8 +192,8 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-两张 dashboard SVG 都通过 `prefers-color-scheme` 使用同一套语义配色，并适配 GitHub 的
-浅色与深色主题。
+两张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。
