@@ -21,15 +21,15 @@ from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
-DEFAULT_COMPOSITION_OUTPUT = REPO_ROOT / "assets" / "token-composition.svg"
+DEFAULT_TOPOLOGY_OUTPUT = REPO_ROOT / "assets" / "token-topology.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 ROLE_ORDER = ("work", "personal", "devbox", "trail")
-COMPOSITION_ROLE_ORDER = ("work", "personal", "development")
+TOPOLOGY_ROLE_ORDER = ("work", "personal", "development")
 AGENT_ORDER = ("claude", "codex", "opencode", "traex")
-COMPOSITION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+TOPOLOGY_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
 ROLE_LABELS = {"work": "Work", "personal": "Personal", "development": "Development"}
 ROLE_BUCKETS = {
     "work": "work",
@@ -39,18 +39,6 @@ ROLE_BUCKETS = {
 }
 AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
 AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
-ROLE_COLORS = {
-    "work": "#22d3ee",
-    "personal": "#38bdf8",
-    "development": "#64748b",
-}
-AGENT_COLORS = {
-    "claude": "#60a5fa",
-    "codex": "#22d3ee",
-    "traex": "#818cf8",
-    "legacy": "#64748b",
-}
-
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 THEME_STYLE_LINES = (
     "  <style>",
@@ -61,7 +49,9 @@ THEME_STYLE_LINES = (
     "    .dashboard-muted { fill: #6e7781; }",
     "    .dashboard-accent { fill: #0e7490; }",
     "    .dashboard-border { stroke: #d8dee4; }",
-    "    .dashboard-track { fill: #e8ecf1; }",
+    "    .heatmap-label-0 { fill: #6e7781; }",
+    "    .heatmap-label-1, .heatmap-label-2 { fill: #083344; }",
+    "    .heatmap-label-3, .heatmap-label-4 { fill: #f0fdfa; }",
     "    .heatmap-level-0 { fill: #e8ecf1; }",
     "    .heatmap-level-1 { fill: #67e8f9; }",
     "    .heatmap-level-2 { fill: #06b6d4; }",
@@ -75,7 +65,9 @@ THEME_STYLE_LINES = (
     "      .dashboard-muted { fill: #8d99b2; }",
     "      .dashboard-accent { fill: #67e8f9; }",
     "      .dashboard-border { stroke: #34384a; }",
-    "      .dashboard-track { fill: #34384a; }",
+    "      .heatmap-label-0 { fill: #8d99b2; }",
+    "      .heatmap-label-1, .heatmap-label-2 { fill: #f0fdfa; }",
+    "      .heatmap-label-3, .heatmap-label-4 { fill: #083344; }",
     "      .heatmap-level-0 { fill: #34384a; }",
     "      .heatmap-level-1 { fill: #0e7490; }",
     "      .heatmap-level-2 { fill: #0891b2; }",
@@ -111,13 +103,12 @@ class UsageRecord:
 
 
 @dataclass(frozen=True)
-class CompositionTotals:
+class TopologyTotals:
     as_of: date
     recent_start: date
-    lifetime_roles: dict[str, int]
     recent_roles: dict[str, int]
-    lifetime_agents: dict[str, int]
     recent_agents: dict[str, int]
+    recent_topology: dict[tuple[str, str], int]
 
 
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
@@ -187,32 +178,32 @@ def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
     }
 
 
-def aggregate_composition(root: Path, as_of: date) -> CompositionTotals:
-    """Aggregate lifetime and recent token composition."""
+def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
+    """Aggregate recent token usage by public environment and agent."""
     recent_start = as_of - timedelta(days=29)
-    lifetime_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
-    recent_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
-    lifetime_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
-    recent_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
+    recent_roles = {role: 0 for role in TOPOLOGY_ROLE_ORDER}
+    recent_agents = {agent: 0 for agent in TOPOLOGY_AGENT_ORDER}
+    recent_topology = {
+        (role, agent): 0
+        for role in TOPOLOGY_ROLE_ORDER
+        for agent in TOPOLOGY_AGENT_ORDER
+    }
 
     for record in load_usage_records(root):
-        if record.day > as_of:
+        if not recent_start <= record.day <= as_of:
             continue
         role_bucket = ROLE_BUCKETS[record.role]
-        lifetime_roles[role_bucket] += record.tokens
         agent_bucket = AGENT_BUCKETS[record.agent]
-        lifetime_agents[agent_bucket] += record.tokens
-        if record.day >= recent_start:
-            recent_roles[role_bucket] += record.tokens
-            recent_agents[agent_bucket] += record.tokens
+        recent_roles[role_bucket] += record.tokens
+        recent_agents[agent_bucket] += record.tokens
+        recent_topology[(role_bucket, agent_bucket)] += record.tokens
 
-    return CompositionTotals(
+    return TopologyTotals(
         as_of=as_of,
         recent_start=recent_start,
-        lifetime_roles=lifetime_roles,
         recent_roles=recent_roles,
-        lifetime_agents=lifetime_agents,
         recent_agents=recent_agents,
+        recent_topology=recent_topology,
     )
 
 
@@ -431,163 +422,105 @@ def _percent(value: int, total: int) -> str:
     return f"{share:.1f}%"
 
 
-def _render_composition_bar(
-    lines: list[str],
-    *,
-    bar_id: str,
-    y: int,
-    row_label: str,
-    values: dict[str, int],
-    order: tuple[str, ...],
-    labels: dict[str, str],
-    colors: dict[str, str],
-    height: int = 32,
-    emphasize: bool = True,
-) -> None:
-    bar_x = 170
-    bar_width = WIDTH - bar_x - 32
-    bar_height = height
-    total = sum(values.values())
-    label_class = "dashboard-primary" if emphasize else "dashboard-muted"
-    lines.extend(
-        (
-            f'  <text class="{label_class}" x="32" y="{y + height / 2 + 5:.1f}" '
-            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="15" font-weight="500">{escape(row_label)}</text>',
-            f'  <rect class="dashboard-track" x="{bar_x}" y="{y}" '
-            f'width="{bar_width}" height="{bar_height}" rx="8"/>',
-            f'  <clipPath id="{bar_id}"><rect x="{bar_x}" y="{y}" width="{bar_width}" '
-            f'height="{bar_height}" rx="8"/></clipPath>',
-        )
+
+def _topology_level(share: float) -> int:
+    if share <= 0:
+        return 0
+    return min(4, max(1, int(share * 4) + 1))
+
+
+def render_topology_svg(topology: TopologyTotals) -> str:
+    """Render recent environment-by-agent shares as an adaptive heatmap."""
+    active_agents = tuple(
+        agent for agent in TOPOLOGY_AGENT_ORDER if topology.recent_agents[agent] > 0
     )
-    cursor = float(bar_x)
-    for index, category in enumerate(order):
-        value = values.get(category, 0)
-        width = bar_width * _share(value, total)
-        if index == len(order) - 1 and value:
-            width = bar_x + bar_width - cursor
-        if width <= 0:
-            continue
-        share_text = _percent(value, total)
-        escaped_share = escape(share_text, quote=True)
-        lines.extend(
-            (
-                f'  <rect x="{cursor:.2f}" y="{y}" width="{width:.2f}" height="{bar_height}" '
-                f'fill="{colors[category]}" clip-path="url(#{bar_id})" '
-                f'data-category="{category}" data-tokens="{value}" data-share="{escaped_share}">',
-                f'    <title>{escape(labels[category])}: {_compact_number(value)} tokens '
-                f'({escaped_share})</title>',
-                "  </rect>",
-            )
-        )
-        if emphasize and width >= 112:
-            lines.append(
-                f'  <text x="{cursor + width / 2:.2f}" y="{y + 21}" text-anchor="middle" '
-                'fill="#111827" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="13" font-weight="700">{escape(labels[category])} {escaped_share}</text>'
-            )
-        cursor += width
-
-
-def _render_composition_legend(
-    lines: list[str],
-    *,
-    y: int,
-    order: tuple[str, ...],
-    labels: dict[str, str],
-    colors: dict[str, str],
-    lifetime: dict[str, int],
-    recent: dict[str, int],
-) -> None:
-    lifetime_total = sum(lifetime.values())
-    recent_total = sum(recent.values())
-    item_width = (WIDTH - 218) / len(order)
-    for index, category in enumerate(order):
-        x = 186 + index * item_width
-        comparison = (
-            f"{labels[category]} · {_percent(lifetime.get(category, 0), lifetime_total)}"
-            f" → {_percent(recent.get(category, 0), recent_total)}"
-        )
-        lines.extend(
-            (
-                f'  <rect x="{x:.2f}" y="{y - 11}" width="12" height="12" rx="3" '
-                f'fill="{colors[category]}"/>',
-                f'  <text class="dashboard-secondary" x="{x + 20:.2f}" y="{y}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="13">{escape(comparison)}</text>',
-            )
-        )
-
-
-def render_composition_svg(composition: CompositionTotals) -> str:
-    """Render lifetime-to-recent composition shifts as static SVG."""
-    lifetime_total = sum(composition.lifetime_roles.values())
-    recent_total = sum(composition.recent_roles.values())
-    title = f"AI compute composition through {composition.as_of.isoformat()}"
-    if recent_total:
-        dominant_role = max(
-            COMPOSITION_ROLE_ORDER, key=lambda role: composition.recent_roles[role]
-        )
-        dominant_agent = max(
-            COMPOSITION_AGENT_ORDER, key=lambda agent: composition.recent_agents[agent]
-        )
-        description = (
-            f"{_compact_number(lifetime_total)} lifetime tokens and "
-            f"{_compact_number(recent_total)} tokens in the trailing 30 days; recent activity "
-            f"is led by {ROLE_LABELS[dominant_role]} and {AGENT_LABELS[dominant_agent]}."
-        )
-    else:
-        description = (
-            f"{_compact_number(lifetime_total)} lifetime tokens; no token activity in the "
-            "trailing 30 days."
-        )
-    height = 500
+    recent_total = sum(topology.recent_roles.values())
+    title = f"Recent AI compute topology through {topology.as_of.isoformat()}"
+    height = 350
     lines = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        f'  <desc id="desc">{escape(description)}</desc>',
+        f'  <desc id="desc">Environment by active agent shares for '
+        f'{_compact_number(recent_total)} tokens in the trailing 30 days.</desc>',
         *THEME_STYLE_LINES,
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
-        '  <text class="dashboard-primary" x="16" y="46" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute composition</text>',
-        f'  <text class="dashboard-muted" x="16" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Through {composition.as_of.isoformat()} · lifetime baseline vs {composition.recent_start.isoformat()}–{composition.as_of.isoformat()}</text>',
-        '  <rect class="dashboard-panel" x="16" y="94" width="1148" height="178" rx="16"/>',
-        '  <text class="dashboard-primary" x="32" y="124" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Environment</text>',
-        '  <text class="dashboard-muted" x="1138" y="124" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">RECENT EMPHASIZED</text>',
+        '  <text class="dashboard-primary" x="16" y="46" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Recent compute topology</text>',
+        f'  <text class="dashboard-muted" x="16" y="72" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{topology.recent_start.isoformat()}–{topology.as_of.isoformat()} · active agents only · '
+        'intensity is share within each environment</text>',
     ]
-    _render_composition_bar(
-        lines, bar_id="role-recent", y=138, row_label="Recent 30d",
-        values=composition.recent_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
-        colors=ROLE_COLORS, height=34, emphasize=True,
-    )
-    _render_composition_bar(
-        lines, bar_id="role-lifetime", y=184, row_label="Lifetime",
-        values=composition.lifetime_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
-        colors=ROLE_COLORS, height=18, emphasize=False,
-    )
-    _render_composition_legend(
-        lines, y=242, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS, colors=ROLE_COLORS,
-        lifetime=composition.lifetime_roles, recent=composition.recent_roles,
-    )
-    lines.extend((
-        '  <rect class="dashboard-panel" x="16" y="288" width="1148" height="178" rx="16"/>',
-        '  <text class="dashboard-primary" x="32" y="318" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Agent</text>',
-        '  <text class="dashboard-muted" x="1138" y="318" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">OPENCODE INCLUDED IN LEGACY</text>',
-    ))
-    _render_composition_bar(
-        lines, bar_id="agent-recent", y=332, row_label="Recent 30d",
-        values=composition.recent_agents, order=COMPOSITION_AGENT_ORDER,
-        labels=AGENT_LABELS, colors=AGENT_COLORS, height=34, emphasize=True,
-    )
-    _render_composition_bar(
-        lines, bar_id="agent-lifetime", y=378, row_label="Lifetime",
-        values=composition.lifetime_agents, order=COMPOSITION_AGENT_ORDER,
-        labels=AGENT_LABELS, colors=AGENT_COLORS, height=18, emphasize=False,
-    )
-    _render_composition_legend(
-        lines, y=436, order=COMPOSITION_AGENT_ORDER, labels=AGENT_LABELS,
-        colors=AGENT_COLORS, lifetime=composition.lifetime_agents,
-        recent=composition.recent_agents,
-    )
+    if not active_agents:
+        lines.extend(
+            (
+                '  <rect class="dashboard-panel" x="16" y="104" width="1148" '
+                'height="214" rx="16"/>',
+                '  <text class="dashboard-primary" x="590" y="198" text-anchor="middle" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                'font-size="20" font-weight="600">No recent activity</text>',
+                '  <text class="dashboard-muted" x="590" y="228" text-anchor="middle" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                'font-size="13">No agents recorded token usage in this 30-day window.</text>',
+                "</svg>",
+            )
+        )
+        return "\n".join(lines) + "\n"
+
+    matrix_x = 260
+    matrix_right = 1164
+    cell_gap = 10
+    cell_width = (
+        matrix_right - matrix_x - cell_gap * (len(active_agents) - 1)
+    ) / len(active_agents)
+    matrix_y = 130
+    row_step = 66
+    for column, agent in enumerate(active_agents):
+        center = matrix_x + column * (cell_width + cell_gap) + cell_width / 2
+        lines.append(
+            f'  <text class="dashboard-secondary" x="{center:.1f}" y="112" '
+            'text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>'
+        )
+    for row, role in enumerate(TOPOLOGY_ROLE_ORDER):
+        y = matrix_y + row * row_step
+        role_total = sum(topology.recent_topology[(role, agent)] for agent in active_agents)
+        lines.extend(
+            (
+                f'  <text class="dashboard-primary" x="32" y="{y + 23}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="15" font-weight="600">{escape(ROLE_LABELS[role])}</text>',
+                f'  <text class="dashboard-muted" x="32" y="{y + 43}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{_compact_number(role_total)} tokens</text>',
+            )
+        )
+        for column, agent in enumerate(active_agents):
+            value = topology.recent_topology[(role, agent)]
+            share = _share(value, role_total)
+            level = _topology_level(share)
+            x = matrix_x + column * (cell_width + cell_gap)
+            value_text = (
+                f"{_percent(value, role_total)} · {_compact_number(value)}" if value else "—"
+            )
+            lines.extend(
+                (
+                    f'  <rect class="heatmap-level-{level}" x="{x:.1f}" y="{y}" '
+                    f'width="{cell_width:.1f}" height="52" rx="10" data-role="{role}" '
+                    f'data-agent="{agent}" data-tokens="{value}" data-level="{level}">',
+                    f'    <title>{escape(ROLE_LABELS[role])} × '
+                    f'{escape(AGENT_LABELS[agent])}: {_compact_number(value)} tokens '
+                    f'({escape(_percent(value, role_total))} of environment)</title>',
+                    "  </rect>",
+                    f'  <text class="heatmap-label-{level}" x="{x + cell_width / 2:.1f}" '
+                    f'y="{y + 32}" text-anchor="middle" '
+                    'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                    f'font-size="14" font-weight="600">{escape(value_text)}</text>',
+                )
+            )
     lines.append("</svg>")
     return "\n".join(lines) + "\n"
 
@@ -639,7 +572,7 @@ def generate(
     return _update_output(output, expected, check=check)
 
 
-def generate_composition(
+def generate_topology(
     root: Path,
     output: Path,
     as_of: date | None = None,
@@ -648,7 +581,7 @@ def generate_composition(
 ) -> bool:
     if as_of is None:
         as_of = _latest_activity_day(aggregate_daily(root))
-    expected = render_composition_svg(aggregate_composition(root, as_of))
+    expected = render_topology_svg(aggregate_topology(root, as_of))
     return _update_output(output, expected, check=check)
 
 
@@ -657,9 +590,9 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument(
-        "--composition-output",
+        "--topology-output",
         type=Path,
-        default=DEFAULT_COMPOSITION_OUTPUT,
+        default=DEFAULT_TOPOLOGY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -667,10 +600,10 @@ def main() -> int:
     outputs = (
         (args.output, generate(args.root, args.output, args.as_of, check=args.check)),
         (
-            args.composition_output,
-            generate_composition(
+            args.topology_output,
+            generate_topology(
                 args.root,
-                args.composition_output,
+                args.topology_output,
                 args.as_of,
                 check=args.check,
             ),

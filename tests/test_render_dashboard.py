@@ -12,12 +12,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from render_dashboard import (  # noqa: E402
     DailyTotals,
-    aggregate_composition,
+    aggregate_topology,
     aggregate_daily,
     generate,
-    generate_composition,
-    render_composition_svg,
+    generate_topology,
     render_svg,
+    render_topology_svg,
 )
 
 
@@ -53,7 +53,7 @@ class AggregateDailyTests(unittest.TestCase):
                 aggregate_daily(Path(directory))
 
 
-class AggregateCompositionTests(unittest.TestCase):
+class AggregateTopologyTests(unittest.TestCase):
     def test_keeps_public_role_agent_and_recent_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -91,19 +91,17 @@ class AggregateCompositionTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            totals = aggregate_composition(root, date(2026, 8, 1))
+            totals = aggregate_topology(root, date(2026, 8, 1))
 
             self.assertEqual(totals.recent_start, date(2026, 7, 3))
-            self.assertEqual(totals.lifetime_roles["work"], 150)
             self.assertEqual(totals.recent_roles["work"], 50)
-            self.assertEqual(totals.lifetime_roles["personal"], 275)
-            self.assertEqual(totals.lifetime_roles["development"], 460)
-            self.assertEqual(totals.lifetime_agents["claude"], 150)
-            self.assertEqual(totals.lifetime_agents["codex"], 710)
-            self.assertEqual(totals.lifetime_agents["legacy"], 25)
             self.assertEqual(totals.recent_agents["claude"], 50)
             self.assertEqual(totals.recent_agents["codex"], 710)
             self.assertEqual(totals.recent_agents["legacy"], 25)
+            self.assertEqual(totals.recent_topology[("work", "claude")], 50)
+            self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
+            self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
+            self.assertEqual(totals.recent_topology[("development", "codex")], 460)
 
 
 class DashboardTests(unittest.TestCase):
@@ -147,7 +145,7 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate(root, output, check=True))
 
-    def test_composition_svg_exposes_aggregates_without_node_ids(self) -> None:
+    def test_topology_svg_exposes_cross_dimension_shares_without_node_ids(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             store = root / "data" / "trail" / "node-private" / "codex.json"
@@ -160,22 +158,23 @@ class DashboardTests(unittest.TestCase):
                 json.dumps({"2026-08-01": {"totalTokens": 1}}),
                 encoding="utf-8",
             )
-            totals = aggregate_composition(root, date(2026, 8, 1))
-            svg = render_composition_svg(totals)
+            totals = aggregate_topology(root, date(2026, 8, 1))
+            svg = render_topology_svg(totals)
 
             ET.fromstring(svg)
-            self.assertIn("Compute composition", svg)
-            self.assertIn("Recent 30d", svg)
-            self.assertIn("Development 100.0%", svg)
+            self.assertIn("Recent compute topology", svg)
+            self.assertIn("Development", svg)
+            self.assertIn("100.0% · 2M", svg)
             self.assertIn("&lt;0.1%", svg)
-            self.assertIn("OPENCODE INCLUDED IN LEGACY", svg)
             self.assertNotIn("node-private", svg)
             self.assertIn("@media (prefers-color-scheme: dark)", svg)
             self.assertIn('class="dashboard-background"', svg)
-            self.assertIn('class="dashboard-panel"', svg)
-            self.assertIn('class="dashboard-track"', svg)
+            self.assertIn('data-role="development"', svg)
+            self.assertIn('data-agent="codex"', svg)
+            for level in range(5):
+                self.assertIn(f".heatmap-level-{level}", svg)
 
-    def test_composition_reports_an_empty_recent_window(self) -> None:
+    def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             store = root / "data" / "work" / "claude.json"
@@ -183,16 +182,15 @@ class DashboardTests(unittest.TestCase):
             store.write_text(
                 json.dumps({"2026-06-01": {"totalTokens": 500}}), encoding="utf-8"
             )
-            totals = aggregate_composition(root, date(2026, 8, 1))
+            totals = aggregate_topology(root, date(2026, 8, 1))
 
-            composition = render_composition_svg(totals)
+            topology = render_topology_svg(totals)
 
-            ET.fromstring(composition)
-            self.assertIn("500 lifetime tokens", composition)
-            self.assertIn("no token activity in the trailing 30 days", composition)
-            self.assertNotIn("recent activity is led by", composition)
+            ET.fromstring(topology)
+            self.assertIn("No recent activity", topology)
+            self.assertNotIn('data-agent="', topology)
 
-    def test_generate_composition_defaults_to_latest_activity(self) -> None:
+    def test_generate_topology_defaults_to_latest_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             store = root / "data" / "work" / "claude.json"
@@ -201,11 +199,11 @@ class DashboardTests(unittest.TestCase):
                 json.dumps({"2026-07-31": {"totalTokens": 100}}),
                 encoding="utf-8",
             )
-            output = root / "assets" / "composition.svg"
+            output = root / "assets" / "topology.svg"
 
-            self.assertTrue(generate_composition(root, output))
+            self.assertTrue(generate_topology(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
-            self.assertFalse(generate_composition(root, output, check=True))
+            self.assertFalse(generate_topology(root, output, check=True))
 
 if __name__ == "__main__":
     unittest.main()

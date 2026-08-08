@@ -205,11 +205,12 @@ The activity SVG contains:
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
-The composition SVG compares lifetime and trailing-30-day token shares by public environment role
-and agent. OpenCode-launched history is retained in a muted `Legacy` bucket. The recent window ends
-on the same completed snapshot as the activity SVG. Trail workers and persistent `devbox` stores
-are combined as `Development`; opaque trail node IDs never enter the asset. The underlying stores
-remain separate for collection and operations.
+The topology SVG crosses public environment roles with agents active in the trailing 30 days.
+Each row uses one cyan intensity scale to show an agent's share within that environment;
+OpenCode-launched history is retained as `Legacy`. The recent window ends on the same completed
+snapshot as the activity SVG. Trail workers and persistent `devbox` stores are combined as
+`Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
+for collection and operations.
 
 Both dashboard SVGs use `prefers-color-scheme` to share one semantic palette across GitHub's light
 and dark themes.

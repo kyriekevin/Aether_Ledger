@@ -185,10 +185,11 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
-构成 SVG 对比公开环境角色与 agent 的 Lifetime、最近 30 天 token 占比，历史上经 OpenCode
-启动的用量归入弱化显示的 `Legacy`。最近 30 天窗口与活动 SVG 使用同一个已完成快照作为
-截止日期。图中将常驻 `devbox` 与按需 GPU `trail` 合并为 `Development`，但底层数据仍分开
-保存以服务采集与运维；不透明 trail node ID 不会进入生成资源。
+拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent，每一行用同一套青色色阶表达
+agent 在该环境中的占比；历史上经 OpenCode 启动的用量归入 `Legacy`。最近 30 天窗口与
+活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与按需 GPU `trail`
+合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
+不会进入生成资源。
 
 两张 dashboard SVG 都通过 `prefers-color-scheme` 使用同一套语义配色，并适配 GitHub 的
 浅色与深色主题。

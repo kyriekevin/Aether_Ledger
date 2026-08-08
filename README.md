@@ -16,12 +16,12 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
-## Composition
+## Topology
 
-![Aether Ledger compute composition](assets/token-composition.svg)
+![Aether Ledger recent compute topology](assets/token-topology.svg)
 
-Composition highlights recent shifts against the lifetime baseline. `Development` combines
-persistent devboxes with on-demand GPU trail workers.
+Topology shows which active agents serve each public environment over the latest 30 days.
+`Development` combines persistent devboxes with on-demand GPU trail workers.
 
 ## Ledger
 
