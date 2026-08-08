@@ -185,11 +185,15 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
-构成 SVG 对比公开环境角色与 agent 的 Lifetime、最近 30 天 token 占比，历史上经 OpenCode
-启动的用量归入弱化显示的 `Legacy`。独立的拓扑 SVG 只展示最近窗口内活跃的 agent，并以
-同一色阶表达环境角色 × agent 占比。最近 30 天窗口与活动 SVG 使用同一个已完成快照作为
-截止日期。这两张图将常驻 `devbox` 与按需 GPU `trail` 合并为 `Development`，但底层数据仍
-分开保存以服务采集与运维；不透明 trail node ID 不会进入生成资源。
+拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent，每个环境使用独立但克制的色相，
+行内颜色强度表达 agent 在该环境中的占比；历史上经 OpenCode 启动的用量归入 `Legacy`。
+最近 30 天窗口与活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与
+按需 GPU `trail`
+合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
+不会进入生成资源。
+
+两张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。

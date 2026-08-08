@@ -15,14 +15,12 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
-## 构成
-
-![Aether Ledger 算力构成](assets/token-composition.svg)
+## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
-构成图突出最近 30 天相对 Lifetime 基线的变化；拓扑图则单独展示各公开环境角色正在使用的
-agent。`Development` 合并常驻开发机与按需申请的 GPU trail worker。
+拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
+开发机与按需申请的 GPU trail worker。
 
 ## 账本
 
