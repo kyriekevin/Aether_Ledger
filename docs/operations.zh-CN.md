@@ -176,21 +176,27 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 
 ## 活动面板
 
-`scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json` 或
-`opencode.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
+`scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、
+`opencode.json` 或 `traex.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
 
-静态 SVG 包含：
+活动 SVG 包含：
 
 - 最近一次完整快照、本月、累计和峰值的 token 与 API 等价成本；
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
+构成 SVG 对比公开环境角色与 agent 的 Lifetime、最近 30 天 token 占比，历史上经 OpenCode
+启动的用量归入弱化显示的 `Legacy`。独立的拓扑 SVG 只展示最近窗口内活跃的 agent，并以
+同一色阶表达环境角色 × agent 占比。最近 30 天窗口与活动 SVG 使用同一个已完成快照作为
+截止日期。这两张图将常驻 `devbox` 与按需 GPU `trail` 合并为 `Development`，但底层数据仍
+分开保存以服务采集与运维；不透明 trail node ID 不会进入生成资源。
+
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。
 
 颜色强度按分布四分位数计算，而不是线性缩放，因此 trail workload 产生巨大峰值时，
-普通日期仍然可见。SVG 只包含聚合 token 和 API 等价成本，不包含模型、设备、路径、
-提示词或仓库级数据。
+普通日期仍然可见。发布的 SVG 只包含聚合 token，并且仅在活动视图中包含 API 等价成本；
+它们不包含模型、设备、路径、提示词或仓库级数据。
 
 ## 公开数据边界
 

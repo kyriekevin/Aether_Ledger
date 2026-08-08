@@ -4,12 +4,23 @@ import json
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from render_dashboard import DailyTotals, aggregate_daily, generate, render_svg  # noqa: E402
+from render_dashboard import (  # noqa: E402
+    DailyTotals,
+    aggregate_composition,
+    aggregate_daily,
+    generate,
+    generate_composition,
+    generate_topology,
+    render_composition_svg,
+    render_svg,
+    render_topology_svg,
+)
 
 
 class AggregateDailyTests(unittest.TestCase):
@@ -42,6 +53,60 @@ class AggregateDailyTests(unittest.TestCase):
             path.write_text("[]", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "date-keyed object"):
                 aggregate_daily(Path(directory))
+
+
+class AggregateCompositionTests(unittest.TestCase):
+    def test_keeps_public_role_agent_and_recent_dimensions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "data" / "work"
+            personal = root / "data" / "personal"
+            devbox = root / "data" / "devbox"
+            trail = root / "data" / "trail" / "node-opaque"
+            work.mkdir(parents=True)
+            personal.mkdir()
+            devbox.mkdir()
+            trail.mkdir(parents=True)
+            (work / "claude.json").write_text(
+                json.dumps(
+                    {
+                        "2026-07-01": {"totalTokens": 100},
+                        "2026-08-01": {"totalTokens": 50},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (personal / "codex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 250}}),
+                encoding="utf-8",
+            )
+            (personal / "opencode.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 25}}),
+                encoding="utf-8",
+            )
+            (trail / "codex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 400}}),
+                encoding="utf-8",
+            )
+            (devbox / "codex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 60}}),
+                encoding="utf-8",
+            )
+
+            totals = aggregate_composition(root, date(2026, 8, 1))
+
+            self.assertEqual(totals.recent_start, date(2026, 7, 3))
+            self.assertEqual(totals.lifetime_roles["work"], 150)
+            self.assertEqual(totals.recent_roles["work"], 50)
+            self.assertEqual(totals.lifetime_roles["personal"], 275)
+            self.assertEqual(totals.lifetime_roles["development"], 460)
+            self.assertEqual(totals.lifetime_agents["claude"], 150)
+            self.assertEqual(totals.lifetime_agents["codex"], 710)
+            self.assertEqual(totals.lifetime_agents["legacy"], 25)
+            self.assertEqual(totals.recent_topology[("work", "claude")], 50)
+            self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
+            self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
+            self.assertEqual(totals.recent_topology[("development", "codex")], 460)
 
 
 class DashboardTests(unittest.TestCase):
@@ -77,6 +142,103 @@ class DashboardTests(unittest.TestCase):
             self.assertTrue(generate(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate(root, output, check=True))
+
+    def test_composition_svg_exposes_aggregates_without_node_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "trail" / "node-private" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 2_000_000}}),
+                encoding="utf-8",
+            )
+            (store.parent / "traex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 1}}),
+                encoding="utf-8",
+            )
+            totals = aggregate_composition(root, date(2026, 8, 1))
+            svg = render_composition_svg(totals)
+
+            ET.fromstring(svg)
+            self.assertIn("Compute composition", svg)
+            self.assertIn("Recent 30d", svg)
+            self.assertIn("Development 100.0%", svg)
+            self.assertIn("&lt;0.1%", svg)
+            self.assertIn("OPENCODE INCLUDED IN LEGACY", svg)
+            self.assertNotIn("node-private", svg)
+
+    def test_topology_svg_shows_only_active_recent_agents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "data" / "work"
+            work.mkdir(parents=True)
+            (work / "opencode.json").write_text(
+                json.dumps({"2026-06-01": {"totalTokens": 500}}), encoding="utf-8"
+            )
+            (work / "traex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 100}}), encoding="utf-8"
+            )
+
+            svg = render_topology_svg(aggregate_composition(root, date(2026, 8, 1)))
+
+            ET.fromstring(svg)
+            self.assertIn("Recent compute topology", svg)
+            self.assertIn(">TRAE</text>", svg)
+            self.assertNotIn(">Legacy</text>", svg)
+            self.assertNotIn("OpenCode", svg)
+            self.assertIn('data-agent="traex"', svg)
+
+    def test_recent_views_report_an_empty_window_without_inventing_an_agent(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-06-01": {"totalTokens": 500}}), encoding="utf-8"
+            )
+            totals = aggregate_composition(root, date(2026, 8, 1))
+
+            composition = render_composition_svg(totals)
+            topology = render_topology_svg(totals)
+
+            ET.fromstring(composition)
+            ET.fromstring(topology)
+            self.assertIn("500 lifetime tokens", composition)
+            self.assertIn("no token activity in the trailing 30 days", composition)
+            self.assertNotIn("recent activity is led by", composition)
+            self.assertIn("No recent activity", topology)
+            self.assertNotIn('data-agent="', topology)
+            for agent in ("Claude", "Codex", "TRAE", "Legacy"):
+                self.assertNotIn(f">{agent}</text>", topology)
+
+    def test_generate_composition_defaults_to_latest_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-07-31": {"totalTokens": 100}}),
+                encoding="utf-8",
+            )
+            output = root / "assets" / "composition.svg"
+
+            self.assertTrue(generate_composition(root, output))
+            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_composition(root, output, check=True))
+
+    def test_generate_topology_defaults_to_latest_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "traex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-07-31": {"totalTokens": 100}}), encoding="utf-8"
+            )
+            output = root / "assets" / "topology.svg"
+
+            self.assertTrue(generate_topology(root, output))
+            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_topology(root, output, check=True))
 
 
 if __name__ == "__main__":
