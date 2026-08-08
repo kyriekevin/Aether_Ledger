@@ -188,6 +188,29 @@ class DashboardTests(unittest.TestCase):
             self.assertNotIn("OpenCode", svg)
             self.assertIn('data-agent="traex"', svg)
 
+    def test_recent_views_report_an_empty_window_without_inventing_an_agent(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-06-01": {"totalTokens": 500}}), encoding="utf-8"
+            )
+            totals = aggregate_composition(root, date(2026, 8, 1))
+
+            composition = render_composition_svg(totals)
+            topology = render_topology_svg(totals)
+
+            ET.fromstring(composition)
+            ET.fromstring(topology)
+            self.assertIn("500 lifetime tokens", composition)
+            self.assertIn("no token activity in the trailing 30 days", composition)
+            self.assertNotIn("recent activity is led by", composition)
+            self.assertIn("No recent activity", topology)
+            self.assertNotIn('data-agent="', topology)
+            for agent in ("Claude", "Codex", "TRAE", "Legacy"):
+                self.assertNotIn(f">{agent}</text>", topology)
+
     def test_generate_composition_defaults_to_latest_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

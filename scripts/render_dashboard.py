@@ -502,18 +502,24 @@ def render_composition_svg(composition: CompositionTotals) -> str:
     """Render lifetime-to-recent composition shifts as static SVG."""
     lifetime_total = sum(composition.lifetime_roles.values())
     recent_total = sum(composition.recent_roles.values())
-    dominant_role = max(
-        COMPOSITION_ROLE_ORDER, key=lambda role: composition.recent_roles[role]
-    )
-    dominant_agent = max(
-        COMPOSITION_AGENT_ORDER, key=lambda agent: composition.recent_agents[agent]
-    )
     title = f"AI compute composition through {composition.as_of.isoformat()}"
-    description = (
-        f"{_compact_number(lifetime_total)} lifetime tokens and {_compact_number(recent_total)} "
-        f"tokens in the trailing 30 days; recent activity is led by {ROLE_LABELS[dominant_role]} "
-        f"and {AGENT_LABELS[dominant_agent]}."
-    )
+    if recent_total:
+        dominant_role = max(
+            COMPOSITION_ROLE_ORDER, key=lambda role: composition.recent_roles[role]
+        )
+        dominant_agent = max(
+            COMPOSITION_AGENT_ORDER, key=lambda agent: composition.recent_agents[agent]
+        )
+        description = (
+            f"{_compact_number(lifetime_total)} lifetime tokens and "
+            f"{_compact_number(recent_total)} tokens in the trailing 30 days; recent activity "
+            f"is led by {ROLE_LABELS[dominant_role]} and {AGENT_LABELS[dominant_agent]}."
+        )
+    else:
+        description = (
+            f"{_compact_number(lifetime_total)} lifetime tokens; no token activity in the "
+            "trailing 30 days."
+        )
     height = 500
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
@@ -568,7 +574,7 @@ def render_topology_svg(composition: CompositionTotals) -> str:
     """Render the recent environment-by-agent topology as a separate SVG."""
     active_agents = tuple(
         agent for agent in COMPOSITION_AGENT_ORDER if composition.recent_agents[agent] > 0
-    ) or ("codex",)
+    )
     recent_total = sum(composition.recent_roles.values())
     title = f"Recent AI compute topology through {composition.as_of.isoformat()}"
     height = 350
@@ -580,6 +586,15 @@ def render_topology_svg(composition: CompositionTotals) -> str:
         '  <text x="16" y="46" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Recent compute topology</text>',
         f'  <text x="16" y="72" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">{composition.recent_start.isoformat()}–{composition.as_of.isoformat()} · active agents only · intensity is share within each environment</text>',
     ]
+    if not active_agents:
+        lines.extend((
+            '  <rect x="16" y="104" width="1148" height="214" rx="16" fill="#222536"/>',
+            '  <text x="590" y="198" text-anchor="middle" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="600">No recent activity</text>',
+            '  <text x="590" y="228" text-anchor="middle" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">No agents recorded token usage in this 30-day window.</text>',
+            "</svg>",
+        ))
+        return "\n".join(lines) + "\n"
+
     matrix_x = 260
     matrix_right = 1164
     cell_gap = 10
