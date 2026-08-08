@@ -171,8 +171,12 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('class="dashboard-background"', svg)
             self.assertIn('data-role="development"', svg)
             self.assertIn('data-agent="codex"', svg)
-            for level in range(5):
-                self.assertIn(f".heatmap-level-{level}", svg)
+            self.assertIn("hue is environment", svg)
+            for role in ("work", "personal", "development"):
+                self.assertIn(f'class="topology-{role}-level-3"', svg)
+                for level in range(1, 5):
+                    self.assertIn(f".topology-{role}-level-{level}", svg)
+            self.assertIn(".heatmap-level-0", svg)
 
     def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

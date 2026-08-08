@@ -206,8 +206,9 @@ The activity SVG contains:
 - a trailing 53-week daily heatmap.
 
 The topology SVG crosses public environment roles with agents active in the trailing 30 days.
-Each row uses one cyan intensity scale to show an agent's share within that environment;
-OpenCode-launched history is retained as `Legacy`. The recent window ends on the same completed
+Each environment has its own restrained hue, while intensity within that row shows an agent's
+share of the environment. OpenCode-launched history is retained as `Legacy`. The recent window
+ends on the same completed
 snapshot as the activity SVG. Trail workers and persistent `devbox` stores are combined as
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
