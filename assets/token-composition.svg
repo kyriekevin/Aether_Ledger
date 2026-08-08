@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500" role="img" aria-labelledby="title desc">
   <title id="title">AI compute composition through 2026-08-07</title>
-  <desc id="desc">14.6B lifetime tokens and 5.5B tokens in the trailing 30 days; recent activity is led by Trail and Codex.</desc>
+  <desc id="desc">14.6B lifetime tokens and 5.5B tokens in the trailing 30 days; recent activity is led by Development and Codex.</desc>
   <rect width="1180" height="500" rx="22" fill="#1d1e2c"/>
   <text x="16" y="46" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute composition</text>
   <text x="16" y="72" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Through 2026-08-07 · lifetime baseline vs 2026-07-09–2026-08-07</text>
@@ -17,13 +17,10 @@
   <rect x="370.87" y="138" width="41.58" height="34" fill="#38bdf8" clip-path="url(#role-recent)" data-category="personal" data-tokens="233575718" data-share="4.3%">
     <title>Personal: 234M tokens (4.3%)</title>
   </rect>
-  <rect x="412.45" y="138" width="39.95" height="34" fill="#818cf8" clip-path="url(#role-recent)" data-category="devbox" data-tokens="224439468" data-share="4.1%">
-    <title>Devbox: 224M tokens (4.1%)</title>
+  <rect x="412.45" y="138" width="735.55" height="34" fill="#64748b" clip-path="url(#role-recent)" data-category="development" data-tokens="4131913442" data-share="75.2%">
+    <title>Development: 4.1B tokens (75.2%)</title>
   </rect>
-  <rect x="452.41" y="138" width="695.59" height="34" fill="#64748b" clip-path="url(#role-recent)" data-category="trail" data-tokens="3907473974" data-share="71.1%">
-    <title>Trail: 3.9B tokens (71.1%)</title>
-  </rect>
-  <text x="800.20" y="159" text-anchor="middle" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700">Trail 71.1%</text>
+  <text x="780.23" y="159" text-anchor="middle" fill="#111827" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="700">Development 75.2%</text>
   <text x="32" y="198.0" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="500">Lifetime</text>
   <rect x="170" y="184" width="978" height="18" rx="8" fill="#272b3a"/>
   <clipPath id="role-lifetime"><rect x="170" y="184" width="978" height="18" rx="8"/></clipPath>
@@ -33,20 +30,15 @@
   <rect x="774.20" y="184" width="84.03" height="18" fill="#38bdf8" clip-path="url(#role-lifetime)" data-category="personal" data-tokens="1254992429" data-share="8.6%">
     <title>Personal: 1.3B tokens (8.6%)</title>
   </rect>
-  <rect x="858.22" y="184" width="25.04" height="18" fill="#818cf8" clip-path="url(#role-lifetime)" data-category="devbox" data-tokens="373976760" data-share="2.6%">
-    <title>Devbox: 374M tokens (2.6%)</title>
-  </rect>
-  <rect x="883.26" y="184" width="264.74" height="18" fill="#64748b" clip-path="url(#role-lifetime)" data-category="trail" data-tokens="3953994862" data-share="27.1%">
-    <title>Trail: 4B tokens (27.1%)</title>
+  <rect x="858.22" y="184" width="289.78" height="18" fill="#64748b" clip-path="url(#role-lifetime)" data-category="development" data-tokens="4327971622" data-share="29.6%">
+    <title>Development: 4.3B tokens (29.6%)</title>
   </rect>
   <rect x="186.00" y="231" width="12" height="12" rx="3" fill="#22d3ee"/>
   <text x="206.00" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Work · 61.8% → 20.5%</text>
-  <rect x="426.50" y="231" width="12" height="12" rx="3" fill="#38bdf8"/>
-  <text x="446.50" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Personal · 8.6% → 4.3%</text>
-  <rect x="667.00" y="231" width="12" height="12" rx="3" fill="#818cf8"/>
-  <text x="687.00" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Devbox · 2.6% → 4.1%</text>
-  <rect x="907.50" y="231" width="12" height="12" rx="3" fill="#64748b"/>
-  <text x="927.50" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Trail · 27.1% → 71.1%</text>
+  <rect x="506.67" y="231" width="12" height="12" rx="3" fill="#38bdf8"/>
+  <text x="526.67" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Personal · 8.6% → 4.3%</text>
+  <rect x="827.33" y="231" width="12" height="12" rx="3" fill="#64748b"/>
+  <text x="847.33" y="242" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Development · 29.6% → 75.2%</text>
   <rect x="16" y="288" width="1148" height="178" rx="16" fill="#222536"/>
   <text x="32" y="318" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Agent</text>
   <text x="1138" y="318" text-anchor="end" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">OPENCODE INCLUDED IN LEGACY</text>

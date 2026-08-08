@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="350" viewBox="0 0 1180 350" role="img" aria-labelledby="title desc">
   <title id="title">Recent AI compute topology through 2026-08-07</title>
   <desc id="desc">Environment by active agent shares for 5.5B tokens in the trailing 30 days.</desc>
-  <rect width="1180" height="430" rx="22" fill="#1d1e2c"/>
+  <rect width="1180" height="350" rx="22" fill="#1d1e2c"/>
   <text x="16" y="46" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Recent compute topology</text>
   <text x="16" y="72" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-09–2026-08-07 · active agents only · intensity is share within each environment</text>
   <text x="407.3" y="112" text-anchor="middle" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
@@ -35,32 +35,18 @@
     <title>Personal × TRAE: 0 tokens (0.0% of environment)</title>
   </rect>
   <text x="1016.7" y="228" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
-  <text x="32" y="285" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Devbox</text>
-  <text x="32" y="305" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">224M tokens</text>
-  <rect x="260.0" y="262" width="294.7" height="52" rx="10" fill="#272b3a" fill-opacity="1.000" data-role="devbox" data-agent="claude" data-tokens="0">
-    <title>Devbox × Claude: 0 tokens (0.0% of environment)</title>
+  <text x="32" y="285" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Development</text>
+  <text x="32" y="305" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">4.1B tokens</text>
+  <rect x="260.0" y="262" width="294.7" height="52" rx="10" fill="#272b3a" fill-opacity="1.000" data-role="development" data-agent="claude" data-tokens="0">
+    <title>Development × Claude: 0 tokens (0.0% of environment)</title>
   </rect>
   <text x="407.3" y="294" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
-  <rect x="564.7" y="262" width="294.7" height="52" rx="10" fill="#22d3ee" fill-opacity="0.940" data-role="devbox" data-agent="codex" data-tokens="224439468">
-    <title>Devbox × Codex: 224M tokens (100.0% of environment)</title>
+  <rect x="564.7" y="262" width="294.7" height="52" rx="10" fill="#22d3ee" fill-opacity="0.940" data-role="development" data-agent="codex" data-tokens="4129956287">
+    <title>Development × Codex: 4.1B tokens (100.0% of environment)</title>
   </rect>
-  <text x="712.0" y="294" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">100.0% · 224M</text>
-  <rect x="869.3" y="262" width="294.7" height="52" rx="10" fill="#272b3a" fill-opacity="1.000" data-role="devbox" data-agent="traex" data-tokens="0">
-    <title>Devbox × TRAE: 0 tokens (0.0% of environment)</title>
+  <text x="712.0" y="294" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">100.0% · 4.1B</text>
+  <rect x="869.3" y="262" width="294.7" height="52" rx="10" fill="#22d3ee" fill-opacity="0.177" data-role="development" data-agent="traex" data-tokens="1957155">
+    <title>Development × TRAE: 2M tokens (&lt;0.1% of environment)</title>
   </rect>
-  <text x="1016.7" y="294" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
-  <text x="32" y="351" fill="#d9ddf3" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Trail</text>
-  <text x="32" y="371" fill="#85889f" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">3.9B tokens</text>
-  <rect x="260.0" y="328" width="294.7" height="52" rx="10" fill="#272b3a" fill-opacity="1.000" data-role="trail" data-agent="claude" data-tokens="0">
-    <title>Trail × Claude: 0 tokens (0.0% of environment)</title>
-  </rect>
-  <text x="407.3" y="360" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
-  <rect x="564.7" y="328" width="294.7" height="52" rx="10" fill="#22d3ee" fill-opacity="0.940" data-role="trail" data-agent="codex" data-tokens="3905516819">
-    <title>Trail × Codex: 3.9B tokens (99.9% of environment)</title>
-  </rect>
-  <text x="712.0" y="360" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">99.9% · 3.9B</text>
-  <rect x="869.3" y="328" width="294.7" height="52" rx="10" fill="#22d3ee" fill-opacity="0.177" data-role="trail" data-agent="traex" data-tokens="1957155">
-    <title>Trail × TRAE: 2M tokens (&lt;0.1% of environment)</title>
-  </rect>
-  <text x="1016.7" y="360" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">&lt;0.1% · 2M</text>
+  <text x="1016.7" y="294" text-anchor="middle" fill="#eef2ff" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">&lt;0.1% · 2M</text>
 </svg>

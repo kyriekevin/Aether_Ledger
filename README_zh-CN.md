@@ -22,7 +22,7 @@ token 总量大于零的自然日累计。
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
 构成图突出最近 30 天相对 Lifetime 基线的变化；拓扑图则单独展示各公开环境角色正在使用的
-agent。
+agent。`Development` 合并常驻开发机与按需申请的 GPU trail worker。
 
 ## 账本
 

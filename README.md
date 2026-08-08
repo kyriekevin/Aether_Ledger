@@ -23,7 +23,8 @@ bill. Active days count every calendar day with a positive token total.
 ![Aether Ledger recent compute topology](assets/token-topology.svg)
 
 Composition highlights recent shifts against the lifetime baseline; topology separately shows
-which active agents serve each public environment role.
+which active agents serve each public environment role. `Development` combines persistent devboxes
+with on-demand GPU trail workers.
 
 ## Ledger
 

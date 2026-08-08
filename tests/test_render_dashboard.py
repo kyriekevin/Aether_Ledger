@@ -61,9 +61,11 @@ class AggregateCompositionTests(unittest.TestCase):
             root = Path(directory)
             work = root / "data" / "work"
             personal = root / "data" / "personal"
+            devbox = root / "data" / "devbox"
             trail = root / "data" / "trail" / "node-opaque"
             work.mkdir(parents=True)
             personal.mkdir()
+            devbox.mkdir()
             trail.mkdir(parents=True)
             (work / "claude.json").write_text(
                 json.dumps(
@@ -83,7 +85,11 @@ class AggregateCompositionTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (trail / "codex.json").write_text(
-                json.dumps({"2026-08-02": {"totalTokens": 400}}),
+                json.dumps({"2026-08-01": {"totalTokens": 400}}),
+                encoding="utf-8",
+            )
+            (devbox / "codex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 60}}),
                 encoding="utf-8",
             )
 
@@ -93,13 +99,14 @@ class AggregateCompositionTests(unittest.TestCase):
             self.assertEqual(totals.lifetime_roles["work"], 150)
             self.assertEqual(totals.recent_roles["work"], 50)
             self.assertEqual(totals.lifetime_roles["personal"], 275)
-            self.assertEqual(totals.lifetime_roles["trail"], 0)
+            self.assertEqual(totals.lifetime_roles["development"], 460)
             self.assertEqual(totals.lifetime_agents["claude"], 150)
-            self.assertEqual(totals.lifetime_agents["codex"], 250)
+            self.assertEqual(totals.lifetime_agents["codex"], 710)
             self.assertEqual(totals.lifetime_agents["legacy"], 25)
             self.assertEqual(totals.recent_topology[("work", "claude")], 50)
             self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
             self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
+            self.assertEqual(totals.recent_topology[("development", "codex")], 460)
 
 
 class DashboardTests(unittest.TestCase):
@@ -155,7 +162,7 @@ class DashboardTests(unittest.TestCase):
             ET.fromstring(svg)
             self.assertIn("Compute composition", svg)
             self.assertIn("Recent 30d", svg)
-            self.assertIn("Trail 100.0%", svg)
+            self.assertIn("Development 100.0%", svg)
             self.assertIn("&lt;0.1%", svg)
             self.assertIn("OPENCODE INCLUDED IN LEGACY", svg)
             self.assertNotIn("node-private", svg)

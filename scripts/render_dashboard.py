@@ -29,16 +29,22 @@ IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 ROLE_ORDER = ("work", "personal", "devbox", "trail")
+COMPOSITION_ROLE_ORDER = ("work", "personal", "development")
 AGENT_ORDER = ("claude", "codex", "opencode", "traex")
 COMPOSITION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
-ROLE_LABELS = {"work": "Work", "personal": "Personal", "devbox": "Devbox", "trail": "Trail"}
+ROLE_LABELS = {"work": "Work", "personal": "Personal", "development": "Development"}
+ROLE_BUCKETS = {
+    "work": "work",
+    "personal": "personal",
+    "devbox": "development",
+    "trail": "development",
+}
 AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
 AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
 ROLE_COLORS = {
     "work": "#22d3ee",
     "personal": "#38bdf8",
-    "devbox": "#818cf8",
-    "trail": "#64748b",
+    "development": "#64748b",
 }
 AGENT_COLORS = {
     "claude": "#60a5fa",
@@ -157,24 +163,27 @@ def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
 def aggregate_composition(root: Path, as_of: date) -> CompositionTotals:
     """Aggregate lifetime comparison and recent role-by-agent topology."""
     recent_start = as_of - timedelta(days=29)
-    lifetime_roles = {role: 0 for role in ROLE_ORDER}
-    recent_roles = {role: 0 for role in ROLE_ORDER}
+    lifetime_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
+    recent_roles = {role: 0 for role in COMPOSITION_ROLE_ORDER}
     lifetime_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
     recent_agents = {agent: 0 for agent in COMPOSITION_AGENT_ORDER}
     recent_topology = {
-        (role, agent): 0 for role in ROLE_ORDER for agent in COMPOSITION_AGENT_ORDER
+        (role, agent): 0
+        for role in COMPOSITION_ROLE_ORDER
+        for agent in COMPOSITION_AGENT_ORDER
     }
 
     for record in load_usage_records(root):
         if record.day > as_of:
             continue
-        lifetime_roles[record.role] += record.tokens
+        role_bucket = ROLE_BUCKETS[record.role]
+        lifetime_roles[role_bucket] += record.tokens
         agent_bucket = AGENT_BUCKETS[record.agent]
         lifetime_agents[agent_bucket] += record.tokens
         if record.day >= recent_start:
-            recent_roles[record.role] += record.tokens
+            recent_roles[role_bucket] += record.tokens
             recent_agents[agent_bucket] += record.tokens
-            recent_topology[(record.role, agent_bucket)] += record.tokens
+            recent_topology[(role_bucket, agent_bucket)] += record.tokens
 
     return CompositionTotals(
         as_of=as_of,
@@ -493,7 +502,9 @@ def render_composition_svg(composition: CompositionTotals) -> str:
     """Render lifetime-to-recent composition shifts as static SVG."""
     lifetime_total = sum(composition.lifetime_roles.values())
     recent_total = sum(composition.recent_roles.values())
-    dominant_role = max(ROLE_ORDER, key=lambda role: composition.recent_roles[role])
+    dominant_role = max(
+        COMPOSITION_ROLE_ORDER, key=lambda role: composition.recent_roles[role]
+    )
     dominant_agent = max(
         COMPOSITION_AGENT_ORDER, key=lambda agent: composition.recent_agents[agent]
     )
@@ -517,16 +528,16 @@ def render_composition_svg(composition: CompositionTotals) -> str:
     ]
     _render_composition_bar(
         lines, bar_id="role-recent", y=138, row_label="Recent 30d",
-        values=composition.recent_roles, order=ROLE_ORDER, labels=ROLE_LABELS,
+        values=composition.recent_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
         colors=ROLE_COLORS, height=34, emphasize=True,
     )
     _render_composition_bar(
         lines, bar_id="role-lifetime", y=184, row_label="Lifetime",
-        values=composition.lifetime_roles, order=ROLE_ORDER, labels=ROLE_LABELS,
+        values=composition.lifetime_roles, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS,
         colors=ROLE_COLORS, height=18, emphasize=False,
     )
     _render_composition_legend(
-        lines, y=242, order=ROLE_ORDER, labels=ROLE_LABELS, colors=ROLE_COLORS,
+        lines, y=242, order=COMPOSITION_ROLE_ORDER, labels=ROLE_LABELS, colors=ROLE_COLORS,
         lifetime=composition.lifetime_roles, recent=composition.recent_roles,
     )
     lines.extend((
@@ -560,7 +571,7 @@ def render_topology_svg(composition: CompositionTotals) -> str:
     ) or ("codex",)
     recent_total = sum(composition.recent_roles.values())
     title = f"Recent AI compute topology through {composition.as_of.isoformat()}"
-    height = 430
+    height = 350
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
@@ -580,7 +591,7 @@ def render_topology_svg(composition: CompositionTotals) -> str:
         lines.append(
             f'  <text x="{center:.1f}" y="112" text-anchor="middle" fill="#b9bdd2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>'
         )
-    for row, role in enumerate(ROLE_ORDER):
+    for row, role in enumerate(COMPOSITION_ROLE_ORDER):
         y = matrix_y + row * row_step
         role_total = sum(composition.recent_topology[(role, agent)] for agent in active_agents)
         lines.extend((

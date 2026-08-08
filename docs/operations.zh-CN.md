@@ -188,7 +188,8 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 构成 SVG 对比公开环境角色与 agent 的 Lifetime、最近 30 天 token 占比，历史上经 OpenCode
 启动的用量归入弱化显示的 `Legacy`。独立的拓扑 SVG 只展示最近窗口内活跃的 agent，并以
 同一色阶表达环境角色 × agent 占比。最近 30 天窗口与活动 SVG 使用同一个已完成快照作为
-截止日期。所有临时 worker 都聚合为 `trail`，不透明 node ID 不会进入生成资源。
+截止日期。这两张图将常驻 `devbox` 与按需 GPU `trail` 合并为 `Development`，但底层数据仍
+分开保存以服务采集与运维；不透明 trail node ID 不会进入生成资源。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。
