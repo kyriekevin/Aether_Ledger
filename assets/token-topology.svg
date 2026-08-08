@@ -9,7 +9,7 @@
     .dashboard-muted { fill: #6c6f85; }
     .dashboard-accent { fill: #179299; }
     .dashboard-border { stroke: #ccd0da; }
-    .heatmap-label-0 { fill: #6c6f85; }
+    .topology-label-0 { fill: #6c6f85; }
     .topology-label-1, .topology-label-2 { fill: #4c4f69; }
     .topology-label-3, .topology-label-4 { fill: #eff1f5; }
     .topology-label-work-3, .topology-label-work-4 { fill: #4c4f69; }
@@ -29,7 +29,7 @@
       .dashboard-muted { fill: #a6adc8; }
       .dashboard-accent { fill: #94e2d5; }
       .dashboard-border { stroke: #313244; }
-      .heatmap-label-0 { fill: #a6adc8; }
+      .topology-label-0 { fill: #a6adc8; }
       .topology-label-1, .topology-label-2 { fill: #cdd6f4; }
       .topology-label-3, .topology-label-4,
       .topology-label-work-3, .topology-label-work-4 { fill: #1e1e2e; }

@@ -180,6 +180,9 @@ class DashboardTests(unittest.TestCase):
             for color in ("#fe640b", "#1e66f5", "#8839ef", "#fab387", "#89b4fa", "#cba6f7"):
                 self.assertIn(color, svg)
             self.assertIn(".heatmap-level-0", svg)
+            self.assertIn(".topology-label-0 { fill: #6c6f85; }", svg)
+            self.assertIn(".topology-label-0 { fill: #a6adc8; }", svg)
+            self.assertNotIn(".heatmap-label-0", svg)
 
     def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

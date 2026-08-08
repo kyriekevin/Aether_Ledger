@@ -45,7 +45,7 @@ LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
     light_levels = (
         (
-            "    .heatmap-label-0 { fill: #6c6f85; }",
+            "    .topology-label-0 { fill: #6c6f85; }",
             "    .topology-label-1, .topology-label-2 { fill: #4c4f69; }",
             "    .topology-label-3, .topology-label-4 { fill: #eff1f5; }",
             "    .topology-label-work-3, .topology-label-work-4 { fill: #4c4f69; }",
@@ -69,7 +69,7 @@ def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
     )
     dark_levels = (
         (
-            "      .heatmap-label-0 { fill: #a6adc8; }",
+            "      .topology-label-0 { fill: #a6adc8; }",
             "      .topology-label-1, .topology-label-2 { fill: #cdd6f4; }",
             "      .topology-label-3, .topology-label-4,",
             "      .topology-label-work-3, .topology-label-work-4 { fill: #1e1e2e; }",
