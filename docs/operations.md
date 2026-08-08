@@ -206,9 +206,10 @@ The activity SVG contains:
 - a trailing 53-week daily heatmap.
 
 The composition SVG compares lifetime and trailing-30-day token shares by public environment role
-and agent, then shows a lifetime role-by-agent topology matrix. The recent window ends on the same
-completed snapshot as the activity SVG. Trail workers are aggregated under `trail`; opaque node IDs
-never enter the asset.
+and agent. OpenCode-launched history is retained in a muted `Legacy` bucket. A separate topology
+SVG shows only agents active in the recent window and uses one intensity scale for role-by-agent
+shares. The recent window ends on the same completed snapshot as the activity SVG. Trail workers
+are aggregated under `trail`; opaque node IDs never enter either asset.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
 own data directory, avoiding generated-asset conflicts when machines push concurrently.

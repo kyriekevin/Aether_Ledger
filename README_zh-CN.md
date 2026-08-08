@@ -4,7 +4,8 @@
 
 > **Nightglass Protocol** 的 AI 算力账本。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex、OpenCode 与 TRAE CLI，并让这些活动清晰可见。
+Aether Ledger 记录我如何使用 Claude Code、Codex 与 TRAE CLI，并让这些活动清晰可见。
+历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
 Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
 
 ## 活动
@@ -18,7 +19,10 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 算力构成](assets/token-composition.svg)
 
-Lifetime 与最近 30 天的占比只使用公开环境角色和 agent 类别。
+![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
+
+构成图突出最近 30 天相对 Lifetime 基线的变化；拓扑图则单独展示各公开环境角色正在使用的
+agent。
 
 ## 账本
 
