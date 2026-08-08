@@ -4,12 +4,21 @@ import json
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from render_dashboard import DailyTotals, aggregate_daily, generate, render_svg  # noqa: E402
+from render_dashboard import (  # noqa: E402
+    DailyTotals,
+    aggregate_composition,
+    aggregate_daily,
+    generate,
+    generate_composition,
+    render_composition_svg,
+    render_svg,
+)
 
 
 class AggregateDailyTests(unittest.TestCase):
@@ -42,6 +51,47 @@ class AggregateDailyTests(unittest.TestCase):
             path.write_text("[]", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "date-keyed object"):
                 aggregate_daily(Path(directory))
+
+
+class AggregateCompositionTests(unittest.TestCase):
+    def test_keeps_public_role_agent_and_recent_dimensions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            work = root / "data" / "work"
+            personal = root / "data" / "personal"
+            trail = root / "data" / "trail" / "node-opaque"
+            work.mkdir(parents=True)
+            personal.mkdir()
+            trail.mkdir(parents=True)
+            (work / "claude.json").write_text(
+                json.dumps(
+                    {
+                        "2026-07-01": {"totalTokens": 100},
+                        "2026-08-01": {"totalTokens": 50},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (personal / "codex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 250}}),
+                encoding="utf-8",
+            )
+            (trail / "codex.json").write_text(
+                json.dumps({"2026-08-02": {"totalTokens": 400}}),
+                encoding="utf-8",
+            )
+
+            totals = aggregate_composition(root, date(2026, 8, 1))
+
+            self.assertEqual(totals.recent_start, date(2026, 7, 3))
+            self.assertEqual(totals.lifetime_roles["work"], 150)
+            self.assertEqual(totals.recent_roles["work"], 50)
+            self.assertEqual(totals.lifetime_roles["personal"], 250)
+            self.assertEqual(totals.lifetime_roles["trail"], 0)
+            self.assertEqual(totals.lifetime_agents["claude"], 150)
+            self.assertEqual(totals.lifetime_agents["codex"], 250)
+            self.assertEqual(totals.topology[("work", "claude")], 150)
+            self.assertEqual(totals.topology[("personal", "codex")], 250)
 
 
 class DashboardTests(unittest.TestCase):
@@ -77,6 +127,47 @@ class DashboardTests(unittest.TestCase):
             self.assertTrue(generate(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate(root, output, check=True))
+
+    def test_composition_svg_exposes_aggregates_without_node_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "trail" / "node-private" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 2_000_000}}),
+                encoding="utf-8",
+            )
+            (store.parent / "traex.json").write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 1}}),
+                encoding="utf-8",
+            )
+            totals = aggregate_composition(root, date(2026, 8, 1))
+            svg = render_composition_svg(totals)
+
+            ET.fromstring(svg)
+            self.assertIn("Compute composition", svg)
+            self.assertIn("Environment × Agent topology", svg)
+            self.assertIn("Recent 30d", svg)
+            self.assertIn('data-role="trail"', svg)
+            self.assertIn('data-agent="codex"', svg)
+            self.assertIn("Trail 100.0%", svg)
+            self.assertIn("&lt;0.1%", svg)
+            self.assertNotIn("node-private", svg)
+
+    def test_generate_composition_defaults_to_latest_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-07-31": {"totalTokens": 100}}),
+                encoding="utf-8",
+            )
+            output = root / "assets" / "composition.svg"
+
+            self.assertTrue(generate_composition(root, output))
+            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_composition(root, output, check=True))
 
 
 if __name__ == "__main__":

@@ -14,6 +14,12 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
+## 构成
+
+![Aether Ledger 算力构成](assets/token-composition.svg)
+
+Lifetime 与最近 30 天的占比只使用公开环境角色和 agent 类别。
+
 ## 账本
 
 适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、

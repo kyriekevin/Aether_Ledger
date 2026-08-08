@@ -16,6 +16,12 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
+## Composition
+
+![Aether Ledger compute composition](assets/token-composition.svg)
+
+Lifetime and trailing-30-day shares use public environment roles and agent families only.
+
 ## Ledger
 
 The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,

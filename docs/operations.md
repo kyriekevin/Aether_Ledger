@@ -199,18 +199,24 @@ will be up to one day behind by design.
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
 `opencode.json`, or `traex.json`. Files such as `codex_by_repo.json` are deliberately excluded.
 
-The static SVG contains:
+The activity SVG contains:
 
 - latest completed snapshot, month, lifetime, and peak tokens with API-equivalent cost;
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
-Only the rollover workflow commits the shared SVG. Individual machine writers commit only their
+The composition SVG compares lifetime and trailing-30-day token shares by public environment role
+and agent, then shows a lifetime role-by-agent topology matrix. The recent window ends on the same
+completed snapshot as the activity SVG. Trail workers are aggregated under `trail`; opaque node IDs
+never enter the asset.
+
+Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
 own data directory, avoiding generated-asset conflicts when machines push concurrently.
 
 Intensity levels use distribution quartiles rather than a linear scale, so ordinary days remain
-visible when trail workloads create very large peaks. The SVG contains aggregate token counts and
-API-equivalent cost, but does not include model, machine, path, prompt, or repository-level data.
+visible when trail workloads create very large peaks. The published SVGs contain aggregate token
+counts and, in the activity view, API-equivalent cost; they do not include model, machine, path,
+prompt, or repository-level data.
 
 ## Public-data boundary
 
