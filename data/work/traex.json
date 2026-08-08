@@ -1,0 +1,14 @@
+{
+  "2026-08-07": {
+    "models": {
+      "Gemini-3-Flash-Preview": {
+        "totalTokens": 877535
+      },
+      "openrouter-3o": {
+        "totalTokens": 9048143
+      }
+    },
+    "totalCost": 0,
+    "totalTokens": 9925678
+  }
+}

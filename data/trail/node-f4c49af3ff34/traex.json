@@ -1,0 +1,17 @@
+{
+  "2026-08-07": {
+    "models": {
+      "GPT-5.4": {
+        "totalTokens": 45400
+      },
+      "GPT-5.5": {
+        "totalTokens": 1486376
+      },
+      "Gemini-3-Flash-Preview": {
+        "totalTokens": 425379
+      }
+    },
+    "totalCost": 0,
+    "totalTokens": 1957155
+  }
+}
