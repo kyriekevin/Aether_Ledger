@@ -15,6 +15,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import sync_usage  # noqa: E402
+import squash_usage_branch  # noqa: E402
 
 
 def result(returncode: int = 0, stdout: str = "", stderr: str = "") -> subprocess.CompletedProcess:
@@ -81,11 +82,14 @@ class DailyBranchTests(unittest.TestCase):
             / "workflows"
             / "daily-rollover.yml"
         ).read_text()
-        merge = workflow.index('git merge --squash "origin/$branch"')
+        merge = workflow.index(
+            'uv run --script scripts/squash_usage_branch.py "origin/$branch"'
+        )
         audit = workflow.index("uv run --script scripts/audit_public.py", merge)
         commit = workflow.index('git commit -m "chore(data): finalize $day snapshot"')
         self.assertLess(merge, audit)
         self.assertLess(audit, commit)
+
 
     @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
     @patch.object(sync_usage, "_current_branch", return_value="main")
@@ -344,6 +348,73 @@ class DailyBranchTests(unittest.TestCase):
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
+
+
+class SquashUsageBranchTests(unittest.TestCase):
+    def git(self, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", *args],
+            cwd=self.repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def setUp(self) -> None:
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tempdir.cleanup)
+        self.repo = Path(self.tempdir.name)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.com")
+        (self.repo / "data/work").mkdir(parents=True)
+        (self.repo / "data/work/codex.json").write_text('{"tokens": 0}\n')
+        self.git("add", ".")
+        self.git("commit", "-qm", "base")
+
+    def commit_store(self, tokens: int, message: str) -> None:
+        (self.repo / "data/work/codex.json").write_text(f'{{"tokens": {tokens}}}\n')
+        self.git("add", "data/work/codex.json")
+        self.git("commit", "-qm", message)
+
+    def test_resolves_main_snapshot_already_present_in_usage_history(self) -> None:
+        self.git("switch", "-qc", "usage/2026-08-07")
+        self.commit_store(1, "partial snapshot")
+        partial = self.git("rev-parse", "HEAD").stdout.strip()
+        self.commit_store(2, "final snapshot")
+        self.git("switch", "-q", "main")
+        self.git("checkout", partial, "--", "data/work/codex.json")
+        (self.repo / "feature.txt").write_text("feature\n")
+        self.git("add", ".")
+        self.git("commit", "-qm", "feature with partial snapshot")
+
+        with patch.object(squash_usage_branch, "git") as mocked_git:
+            mocked_git.side_effect = lambda *args, **kwargs: subprocess.run(
+                ["git", *args], cwd=self.repo, check=False, text=True,
+                capture_output=kwargs.get("capture", False),
+            )
+            self.assertTrue(squash_usage_branch.squash("usage/2026-08-07"))
+
+        self.assertEqual(
+            (self.repo / "data/work/codex.json").read_text(),
+            '{"tokens": 2}\n',
+        )
+        self.assertEqual((self.repo / "feature.txt").read_text(), "feature\n")
+
+    def test_refuses_unrelated_generated_store_conflict(self) -> None:
+        self.git("switch", "-qc", "usage/2026-08-07")
+        self.commit_store(2, "final snapshot")
+        self.git("switch", "-q", "main")
+        self.commit_store(99, "unrelated main data")
+
+        with patch.object(squash_usage_branch, "git") as mocked_git:
+            mocked_git.side_effect = lambda *args, **kwargs: subprocess.run(
+                ["git", *args], cwd=self.repo, check=False, text=True,
+                capture_output=kwargs.get("capture", False),
+            )
+            self.assertFalse(squash_usage_branch.squash("usage/2026-08-07"))
+
+        self.assertEqual(self.git("status", "--porcelain").stdout, "")
 
 
 class RealRepositoryCleanupTests(unittest.TestCase):
