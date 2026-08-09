@@ -13,11 +13,16 @@ TRAE CLI (traex) is a Codex fork that writes the same `rollout-*.jsonl` session 
 `CODEX_HOME`, so each writer runs a second, read-only `ccusage codex daily` with
 `CODEX_HOME=~/.trae/cli` and records the result in a separate `traex.json` store. That invocation
 never touches the real `~/.codex` tree, so Codex usage and the Codex CLI itself are unaffected.
-traex token counts are accurate; its costs are only as complete as the `ccusage` price table, which
-prices traex's real-name models (GPT-5.x, Gemini, DeepSeek, …) but not its anonymised Claude
-aliases (`openrouter-*`) or its Seed/Kimi/Qwen slugs. Days that billed tokens for zero cost are held
-untrusted, so a stored cost is never overwritten downward; traex is excluded from `--reconcile-since`
-for the same reason.
+`ccusage`'s price lookup is case-sensitive against lowercase slugs, but TRAE CLI logs capitalised
+model names (`GPT-5.5`, `Gemini-3-Flash-Preview`), so before pricing, the writer mirrors the traex
+sessions into a temporary `CODEX_HOME` with only the `"model"` field lowercased; the real
+`~/.trae/cli` tree is never written. This lets `ccusage` price traex's real-name models (GPT-5.x,
+Gemini, DeepSeek, …). Its anonymised Claude aliases (`openrouter-*`) and Seed/Kimi/Qwen slugs are
+still absent from the price table and bill free even lowercased, so a traex day's recorded cost is a
+real but low-side figure, short by those aliases' unpriced tokens. A per-alias rate table would
+close that gap and is left as future work. A day whose cost is exactly zero (nothing priced) is held
+untrusted, so a stored cost is never overwritten downward; traex is excluded from
+`--reconcile-since` for the same reason.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
@@ -242,16 +247,23 @@ The daily workflow runs the same audit before merging usage branches.
 
 ## Store schemas
 
-Claude entries contain daily token and raw API-equivalent cost totals:
+Claude entries contain daily token and raw API-equivalent cost totals, and a per-model token
+breakdown:
 
 ```json
 {
   "2026-04-07": {
     "totalTokens": 8946720,
-    "totalCost": 0.44
+    "totalCost": 0.44,
+    "models": {
+      "claude-opus-5": {"totalTokens": 8946720}
+    }
   }
 }
 ```
+
+The `models` map is written going forward; days whose sessions `ccusage` has already rotated away
+keep their existing totals-only shape.
 
 Codex entries may also contain model token breakdowns and an image counter:
 
@@ -271,9 +283,10 @@ Codex entries may also contain model token breakdowns and an image counter:
 OpenCode has the same date-keyed shape and may include per-model totals. Classification is based
 on model family because current `ccusage` model breakdowns do not identify the invoking agent.
 
-traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns keyed
-by TRAE CLI's own model slugs (e.g. `GPT-5.5`, `openrouter-3o`). `totalCost` is present only for
-models the `ccusage` price table knows; unpriced slugs contribute tokens with no cost.
+traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns. Its
+`totalCost` is a real but low-side figure: model names are lowercased before pricing so `ccusage`
+can price the real-name models, while unpriced anonymised aliases (`openrouter-*`) and Seed/Kimi/Qwen
+slugs contribute tokens with no cost.
 
 ## Trail compaction
 
