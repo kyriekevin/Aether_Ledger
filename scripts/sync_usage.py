@@ -207,16 +207,21 @@ CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 # READ-ONLY invocation kept fully apart from the Codex path so the two never mix:
 # traex lands in its own data/<machine>/traex.json store.
 #
-# Token counts come back accurate. Cost is only as good as ccusage's price table,
-# and that lookup is case-sensitive: TRAE CLI logs model names capitalised
-# (GPT-5.5, Gemini-3-Flash-Preview, DeepSeek-V4-Pro), but the table keys are
-# lowercase slugs (gpt-5.5, …), so every real-name model priced to nothing until
-# we normalise the case. fetch_codex_home_daily reads a lowercased mirror of the
-# sessions (see _lowercased_codex_home) so those models price correctly. Its
-# anonymised Claude aliases (openrouter-*) and Seed/Kimi/Qwen slugs are still
-# absent from the table and bill free even lowercased; the recorded cost is
-# therefore a real but LOW-side figure, short by those aliases' unpriced tokens.
-# A per-alias rate table would close that gap and is left as future work.
+# Token counts come back accurate. Cost is only as good as ccusage's price table.
+# Two mismatches make traex's real names miss it, both fixed by normalising the
+# `"model"` field in a throwaway mirror before ccusage reads it (see
+# _lowercased_codex_home / _normalise_model):
+#   1. Case. The lookup is case-sensitive against lowercase slugs, but TRAE CLI
+#      logs names capitalised (GPT-5.5, Gemini-3-Flash-Preview, DeepSeek-V4-Pro),
+#      so every real-name model priced to nothing until lowercased.
+#   2. Opaque Claude aliases. TRAE CLI fronts Anthropic models under anonymised
+#      slugs (openrouter-1o/2o/3o, incl. __max variants) that carry no vendor
+#      root, so ccusage's substring match never finds them. _ALIAS_PREFIXES maps
+#      each to the real Opus slug it stands for.
+# What stays unpriced: other vendor-internal slugs (Seed/Doubao/Qwen) whose real
+# model and rate we have not pinned down. They bill free and the day's cost is a
+# real but LOW-side figure, short by their tokens; _KNOWN_UNPRICED_PREFIXES logs
+# them so a new one surfaces instead of silently costing nothing.
 TRAEX_CODEX_HOME = Path.home() / ".trae" / "cli"
 # ccusage `codex daily` (unlike the unified `daily`) reports per-model tokens but
 # only a row-level costUSD, and dates under key `date`, not `period`.
@@ -225,6 +230,37 @@ CCUSAGE_CODEX_CMD = ["ccusage", "codex", "daily", "--json"]
 # Session lines record the model as `"model":"<name>"`. We rewrite only that field
 # when mirroring, leaving every other byte untouched.
 _SESSION_MODEL_RE = re.compile(r'("model"\s*:\s*")([^"]+)(")')
+
+# Anonymised TRAE CLI aliases → the real Anthropic slug each fronts. Matched by
+# prefix so suffixed variants (openrouter-3o__max) resolve to the same model, and
+# so a rewrite lands whatever tier string follows. Families are disjoint, order
+# does not matter.
+_ALIAS_PREFIXES = (
+    ("openrouter-3o", "claude-opus-4-8"),
+    ("openrouter-2o", "claude-opus-4-7"),
+    ("openrouter-1o", "claude-opus-4-6"),
+)
+
+# Vendor-internal slugs we knowingly leave unpriced: ccusage's table has no key
+# for them and we have not pinned a real model/rate. Listed so a new one shows up
+# in the log rather than billing zero unseen. A leftover `openrouter-` here means
+# our alias map missed a variant.
+_KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
+
+
+def _normalise_model(name: str) -> str:
+    """Lowercase a session model name and resolve known opaque aliases.
+
+    Lowercasing alone lets ccusage's case-sensitive lookup price every real-name
+    model (GPT-5.x, Gemini, DeepSeek). Aliases in _ALIAS_PREFIXES carry no vendor
+    root for the substring match to catch, so they are additionally rewritten to
+    the real slug they front before the (already lowercased) name is returned.
+    """
+    lowered = name.lower()
+    for prefix, real in _ALIAS_PREFIXES:
+        if lowered.startswith(prefix):
+            return real
+    return lowered
 
 
 # ---------------------------------------------------------------------------
@@ -430,13 +466,14 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
 
 @contextmanager
 def _lowercased_codex_home(source: Path) -> Iterator[Path]:
-    """Yield a throwaway CODEX_HOME whose session model names are lowercased.
+    """Yield a throwaway CODEX_HOME whose session model names are normalised.
 
     ccusage reads the session JSONLs itself and prices them internally, so we
-    cannot fix the case of a model name after the fact — the only lever we have is
-    the bytes ccusage reads. This mirrors `source/sessions` into a tempdir, lowering
-    just the `"model":"…"` field on every line, and hands back the tempdir root for
-    use as CODEX_HOME. The real `source` tree is never written.
+    cannot fix a model name after the fact — the only lever we have is the bytes
+    ccusage reads. This mirrors `source/sessions` into a tempdir, rewriting just
+    the `"model":"…"` field on every line via _normalise_model (lowercase +
+    alias resolution), and hands back the tempdir root for use as CODEX_HOME. The
+    real `source` tree is never written.
 
     A source with no sessions (a machine that never ran traex) yields an empty
     mirror, which ccusage reports as no usage — the same as pointing it straight at
@@ -453,7 +490,8 @@ def _lowercased_codex_home(source: Path) -> Iterator[Path]:
                 text = src.read_text(encoding="utf-8")
                 dest.write_text(
                     _SESSION_MODEL_RE.sub(
-                        lambda m: m.group(1) + m.group(2).lower() + m.group(3), text
+                        lambda m: m.group(1) + _normalise_model(m.group(2)) + m.group(3),
+                        text,
                     ),
                     encoding="utf-8",
                 )
@@ -469,10 +507,11 @@ def fetch_codex_home_daily(
     Codex reader expects. The invocation is read-only and touches nothing under
     the real ~/.codex; we only override CODEX_HOME for this one child process.
 
-    `lowercase_models` runs ccusage against a lowercased mirror of the sessions
+    `lowercase_models` runs ccusage against a normalised mirror of the sessions
     (see _lowercased_codex_home) so TRAE CLI's capitalised model names match
-    ccusage's case-sensitive lowercase price keys. Without it every real-name
-    model (GPT-5.x, Gemini, DeepSeek) prices to nothing.
+    ccusage's case-sensitive lowercase price keys and its opaque Claude aliases
+    (openrouter-*) resolve to real Opus slugs. Without it every real-name model
+    (GPT-5.x, Gemini, DeepSeek) and every alias prices to nothing.
 
     The `codex daily` schema differs from the unified `daily` fetch_daily_since
     parses: dates arrive under `date` (not `period`), each row carries per-model
@@ -481,12 +520,12 @@ def fetch_codex_home_daily(
     classification is needed — the whole row is one bucket.
 
     A day whose costUSD is positive is trusted, even across several models. That
-    figure is real but LOW-side: traex's unpriced Claude aliases (openrouter-*) and
-    Seed/Kimi/Qwen slugs contribute tokens but no cost even lowercased, so the sum
+    figure may still be LOW-side: vendor-internal slugs we have not mapped
+    (Seed/Doubao/Qwen) contribute tokens but no cost even normalised, so the sum
     understates by their share. We accept the understatement rather than discard a
-    genuine cost — a future per-alias rate table would close it. merge_with_cumulative
-    still refuses to overwrite a stored cost with a bare zero, so a fully unpriced
-    fetch (every model free, costUSD == 0) never rewrites history downward.
+    genuine cost, and log any such slug so a new one surfaces instead of billing
+    zero unseen. merge_with_cumulative still refuses to overwrite a stored cost
+    with a bare zero, so a fully unpriced fetch never rewrites history downward.
     """
     if lowercase_models:
         with _lowercased_codex_home(codex_home) as mirror:
@@ -523,6 +562,22 @@ def fetch_codex_home_daily(
                 "date": d, "totalTokens": tokens, "totalCost": cost,
                 "models": models, "costTrusted": priced,
             })
+    # Surface slugs we knowingly leave unpriced (Seed/Doubao/Qwen) so a new one
+    # gets noticed rather than silently billing zero. A leftover openrouter-* here
+    # means _ALIAS_PREFIXES missed a variant and needs a new entry. Model names in
+    # `daily` are already normalised on the mirror path, so this only fires for
+    # slugs the normaliser did not resolve.
+    unpriced_days: dict[str, int] = {}
+    for entry in daily:
+        for name in entry["models"]:
+            if name.startswith(_KNOWN_UNPRICED_PREFIXES):
+                unpriced_days[name] = unpriced_days.get(name, 0) + 1
+    if unpriced_days:
+        print(
+            "traex left unpriced (no ccusage price key, cost is low-side): "
+            + ", ".join(f"{name} ({days}d)" for name, days in sorted(unpriced_days.items())),
+            file=sys.stderr,
+        )
     return daily
 
 

@@ -13,12 +13,15 @@ TRAE CLI（traex）是 Codex 的一个分支，会以相同的 `rollout-*.jsonl`
 `CODEX_HOME`，因此每台写入设备会额外跑一次只读的 `ccusage codex daily`，结果记入独立的
 `traex.json`，且完全不触碰真实的 `~/.codex` 树。`ccusage` 的价格查表大小写敏感、只认小写
 slug，而 TRAE CLI 记录的模型名带大写（`GPT-5.5`、`Gemini-3-Flash-Preview`），因此定价前会
-先把 traex 会话镜像到一个临时 `CODEX_HOME`，仅把其中的 `"model"` 字段转为小写，真实的
-`~/.trae/cli` 树不会被写入。这样 `ccusage` 就能为真名模型（GPT-5.x、Gemini、DeepSeek……）
-定价。其匿名 Claude 别名（`openrouter-*`）与 Seed/Kimi/Qwen slug 即便小写后仍不在价格表中、
-按免费计费，因此 traex 某天记录的成本是真实但偏低的值，缺的是这些别名未定价 token 的部分；
-以后可通过别名单价表补齐。成本恰为 0（当天无任何模型定价成功）的日子标为不可信，因此不会把
-已存成本向下覆盖；出于同样原因，traex 不参与 `--reconcile-since`。
+先把 traex 会话镜像到一个临时 `CODEX_HOME`，仅对其中的 `"model"` 字段做归一化，真实的
+`~/.trae/cli` 树不会被写入。归一化做两件事：转小写，让 `ccusage` 能为真名模型（GPT-5.x、
+Gemini、DeepSeek……）定价；并把 TRAE CLI 的匿名 Claude 别名（`openrouter-1o`/`2o`/`3o`，含
+`__max` 变体）解析为其背后的真实 Anthropic Opus slug（`claude-opus-4-6`/`4-7`/`4-8`），使其也能
+定价。其余尚未映射的厂商内部 slug（Seed/Doubao/Qwen）仍不在价格表中、按免费计费，因此 traex
+某天记录的成本是真实但偏低的值，缺的是这些 slug 未定价 token 的部分；写入器会把每个这类 slug
+记入日志，以便新出现的未定价家族被及时发现，而不是悄悄按 0 计费。成本恰为 0（当天无任何模型
+定价成功）的日子标为不可信，因此不会把已存成本向下覆盖；出于同样原因，traex 不参与
+`--reconcile-since`。
 
 本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
 设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测，
@@ -265,8 +268,9 @@ OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总�
 明细不标识调用它的 agent，因此归类基于模型家族。
 
 traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。其 `totalCost`
-是真实但偏低的值：定价前模型名会被转为小写，让 `ccusage` 能为真名模型定价，而未定价的匿名
-别名（`openrouter-*`）与 Seed/Kimi/Qwen slug 只贡献 token、不计成本。
+是真实但偏低的值：定价前模型名会被归一化（转小写，并把 `openrouter-*` Claude 别名解析为真实
+Opus slug），让 `ccusage` 能为它们定价，而尚未映射的厂商内部 slug（Seed/Doubao/Qwen）只贡献
+token、不计成本。
 
 ## Trail 压缩
 
