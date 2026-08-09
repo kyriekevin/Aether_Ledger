@@ -148,11 +148,11 @@ def resolve_machine() -> str:
         sys.exit(f"invalid {NODE_NAME_FILE}: expected one of {sorted(DURABLE_NODES)}")
     return f"data/{node_name}"
 
-# ccusage v20+ 的 `daily` 已合并所有 agent CLI（claude / codex / copilot / ...）
-# 到一次调用。我们仍按 modelName 前缀把行内 modelBreakdowns 拆回 cc / cx 两个
-# 本地 store，原因是 session rotation（>30d 清理）下，单文件 max() 会被部分
-# rotation 拖低；分桶 max() 则各自独立守住历史峰值。
-CCUSAGE_CMD = ["ccusage", "daily", "--json"]
+# ccusage v20.0.15+ 的 `daily --by-agent` 一次读取所有 agent CLI（claude / codex /
+# opencode / ...），并在每日行的 `agents` 中保留准确的调用端归属。模型名只作为
+# 明细保留，不能用于推断 agent：Claude Code 经代理或 cc-switch 路由后可能记录
+# 任意模型族。各 agent 仍写入独立 store，使 session rotation 下的高水位彼此隔离。
+CCUSAGE_CMD = ["ccusage", "daily", "--json", "--by-agent"]
 
 # Models upstream has no price entry for at all. They always come back free, so
 # they must not be read as the trace of a degraded fetch (see unpriced_models).
@@ -267,24 +267,6 @@ def _normalise_model(name: str) -> str:
 # Data collection helpers
 # ---------------------------------------------------------------------------
 
-def _classify_agent(model_name: str, row_agents: list[str] | None = None) -> str | None:
-    """ccusage 模型名 → 来源 agent CLI。
-
-    启发式:claude-* → Claude Code; gpt-* / codex-* → Codex CLI。
-    ccusage daily 当前不给每个 model breakdown 的 invoking agent,只有当天出现过的
-    agents 列表。所以若 opencode 调用了 claude/gpt 家族模型,仍会落进对应家族桶；
-    opencode 桶只兜住其余模型族,避免这部分 usage 被静默漏掉。Feishu 签名只显示
-    合计值,这个近似已经足够把此前未统计的 opencode usage 补进来。
-    """
-    if model_name.startswith("claude-"):
-        return "claude"
-    if model_name.startswith("gpt-") or model_name.startswith("codex-"):
-        return "codex"
-    if row_agents and "opencode" in row_agents:
-        return "opencode"
-    return None
-
-
 def count_codex_image_files_per_day() -> dict[str, int]:
     """Count Codex-generated PNG files per local date (by mtime).
 
@@ -341,22 +323,21 @@ def unpriced_models(raw: list[dict]) -> dict[str, int]:
 
 
 def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
-    """一次 ccusage daily,按可辨识来源拆出 (cc_daily, cx_daily, op_daily)。
+    """一次 ccusage daily --by-agent，拆出 (cc_daily, cx_daily, op_daily)。
 
     v20+ schema:
       - 日期字段 `period`(v18 是 `date`)
-      - 每行 modelBreakdowns[] 给到 per-model cost + 四类 tokens,但没有
+      - 每日行 `agents[]` 按实际调用端给出独立的 modelBreakdowns；模型名称
+        不参与 agent 归类，因此 Claude Code 路由到非 Claude 模型也不会漏记。
+      - 每个 modelBreakdowns[] 给到 per-model cost + 四类 tokens,但没有
         per-model totalTokens,需要把四类相加。
-      - 行级 totalCost / totalTokens 是该日所有 agent 的合计,不能直接用。
 
     Codex 桶额外带:
       - filesystem-derived imageCount (ccusage 无法捕获 gpt-image-2 计费)
       - per-model {totalTokens} 映射,供下游 debug
       - raw API-equiv cost,/fast 乘数和 image_gen 价格留给 pusher 在展示侧应用。
 
-    OpenCode/ttadk 桶只补非 claude/gpt/codex 家族的模型。因为 ccusage 暂无
-    per-breakdown agent 字段,无法把使用 claude/gpt 家族模型的 opencode 调用从
-    Claude Code / Codex CLI 中再精确拆出来。
+    其余 ccusage 支持的 agent 不属于本仓库的三个 store，保持忽略。
     """
     out = subprocess.run(
         CCUSAGE_CMD + ["--since", since.strftime("%Y%m%d")],
@@ -379,67 +360,43 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
     cx_daily: list[dict] = []
     op_daily: list[dict] = []
     seen_codex_dates: set[str] = set()
+    destinations = {"claude": cc_daily, "codex": cx_daily, "opencode": op_daily}
     for row in raw:
         d = row["period"]
-        row_agents = row.get("metadata", {}).get("agents", [])
-        cc_tokens = 0
-        cc_cost = 0.0
-        cc_models: dict[str, dict] = {}
-        cx_tokens = 0
-        cx_cost = 0.0
-        cx_models: dict[str, dict] = {}
-        op_tokens = 0
-        op_cost = 0.0
-        op_models: dict[str, dict] = {}
-        # A model that billed tokens for free is one this run failed to price, and
-        # its whole bucket's sum for the day is short by an unknown amount. Track
-        # that per bucket: the sum is the only granularity the store keeps, so a
-        # single unpriced model taints the day's total for its agent and nothing
-        # wider. `codex-auto-review` bills free every run and is excluded, else no
-        # Codex day would ever be trusted.
-        cc_priced = cx_priced = op_priced = True
-        for m in row.get("modelBreakdowns", []):
-            tokens = _breakdown_tokens(m)
-            cost = m.get("cost", 0.0)
-            agent = _classify_agent(m["modelName"], row_agents)
-            unpriced = (
-                tokens and not cost and m["modelName"] not in UNPRICED_UPSTREAM_MODELS
-            )
-            if agent == "claude":
-                cc_tokens += tokens
-                cc_cost += cost
-                cc_models[m["modelName"]] = {"totalTokens": tokens}
-                cc_priced = cc_priced and not unpriced
-            elif agent == "codex":
-                cx_tokens += tokens
-                cx_cost += cost
-                cx_models[m["modelName"]] = {"totalTokens": tokens}
-                cx_priced = cx_priced and not unpriced
-            elif agent == "opencode":
-                op_tokens += tokens
-                op_cost += cost
-                op_models[m["modelName"]] = {"totalTokens": tokens}
-                op_priced = op_priced and not unpriced
-        if cc_tokens or cc_cost or cc_models:
-            cc_daily.append({
-                "date": d, "totalTokens": cc_tokens, "totalCost": cc_cost,
-                "models": cc_models,
-                "costTrusted": cc_priced,
-            })
-        if cx_tokens or cx_cost or cx_models:
-            cx_daily.append({
-                "date": d, "totalTokens": cx_tokens, "totalCost": cx_cost,
-                "models": cx_models,
-                "imageCount": fs_image_counts.get(d, 0),
-                "costTrusted": cx_priced,
-            })
-            seen_codex_dates.add(d)
-        if op_tokens or op_cost or op_models:
-            op_daily.append({
-                "date": d, "totalTokens": op_tokens, "totalCost": op_cost,
-                "models": op_models,
-                "costTrusted": op_priced,
-            })
+        for agent_row in row.get("agents", []):
+            agent = agent_row.get("agent")
+            destination = destinations.get(agent)
+            if destination is None:
+                continue
+            tokens = 0
+            cost = 0.0
+            models: dict[str, dict] = {}
+            priced = True
+            # A model that billed tokens for free makes only its actual agent's
+            # daily cost untrusted. `codex-auto-review` is deliberately free and
+            # excluded, else every Codex day would be tainted.
+            for m in agent_row.get("modelBreakdowns", []):
+                model_tokens = _breakdown_tokens(m)
+                model_cost = m.get("cost", 0.0)
+                tokens += model_tokens
+                cost += model_cost
+                models[m["modelName"]] = {"totalTokens": model_tokens}
+                if (
+                    model_tokens
+                    and not model_cost
+                    and m["modelName"] not in UNPRICED_UPSTREAM_MODELS
+                ):
+                    priced = False
+            if not (tokens or cost or models):
+                continue
+            entry = {
+                "date": d, "totalTokens": tokens, "totalCost": cost,
+                "models": models, "costTrusted": priced,
+            }
+            if agent == "codex":
+                entry["imageCount"] = fs_image_counts.get(d, 0)
+                seen_codex_dates.add(d)
+            destination.append(entry)
 
     # Edge case: PNG 存在但 ccusage 那天的 session 已被 rotate — 补一个 stub 让
     # imageCount 仍能进入 cumulative store。

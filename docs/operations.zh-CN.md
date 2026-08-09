@@ -4,11 +4,14 @@
 
 ## 数据来源与留存
 
-每台写入设备通过 `ccusage daily --json` 读取本地用量，并按模型明细归类到 Claude、
-Codex 与 OpenCode 数据文件。Codex 的 `image_gen` PNG 会按本地文件修改时间单独计数，
-因为它们不会作为 LLM token 事件出现。
+每台写入设备通过 `ccusage daily --json --by-agent` 读取本地用量，并把准确的 agent 明细
+分别写入 Claude、Codex 与 OpenCode 数据文件。模型名只作为明细保留，不再用于推断调用端：
+因此 Claude Code 经 cc-switch 等路由器调用的模型仍归入 Claude，同时保留真实模型名。
+Codex 的 `image_gen` PNG 会按本地文件修改时间单独计数，因为它们不会作为 LLM token
+事件出现。
 
-TRAE CLI（traex）是 Codex 的一个分支，会以相同的 `rollout-*.jsonl` 会话格式写入
+TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支，会以相同的
+`rollout-*.jsonl` 会话格式写入
 `~/.trae/cli`（而非 `~/.codex`）。`ccusage` 没有 `trae` agent，但其 `codex` 读取器认
 `CODEX_HOME`，因此每台写入设备会额外跑一次只读的 `ccusage codex daily`，结果记入独立的
 `traex.json`，且完全不触碰真实的 `~/.codex` 树。`ccusage` 的价格查表大小写敏感、只认小写
@@ -33,7 +36,7 @@ Gemini、DeepSeek……）定价；并把 TRAE CLI 的匿名 Claude 别名（`op
 
 - 安装 Homebrew 的 macOS
 - `uv`
-- `ccusage`
+- `ccusage` 20.0.15 或更高版本（需支持 `--by-agent`）
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
 - Claude Code、Codex 或 OpenCode 的本地用量日志
@@ -264,8 +267,8 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
-OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总。由于当前 `ccusage` 的模型
-明细不标识调用它的 agent，因此归类基于模型家族。
+OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
+`--by-agent` 明细，而不是模型家族。
 
 traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。其 `totalCost`
 是真实但偏低的值：定价前模型名会被归一化（转小写，并把 `openrouter-*` Claude 别名解析为真实

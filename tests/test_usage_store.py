@@ -342,15 +342,33 @@ class UnpricedModelsTests(unittest.TestCase):
 class CostTrustedMarkingTests(unittest.TestCase):
     """fetch_daily_since decides, per day and per agent, whether pricing was complete."""
 
-    def fetch(self, breakdowns: list[dict]) -> dict[str, dict]:
+    def fetch(self, agent_breakdowns: dict[str, list[dict]]) -> dict[str, dict]:
+        agents = [
+            {"agent": agent, "modelBreakdowns": breakdowns}
+            for agent, breakdowns in agent_breakdowns.items()
+        ]
         payload = json.dumps(
-            {"daily": [{"period": "2026-08-04", "modelBreakdowns": breakdowns}]}
+            {"daily": [{
+                "period": "2026-08-04",
+                "agents": agents,
+                "modelBreakdowns": [
+                    model for breakdowns in agent_breakdowns.values()
+                    for model in breakdowns
+                ],
+            }]}
         )
         completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
-        with patch.object(sync_usage.subprocess, "run", return_value=completed), \
+        captured: dict = {}
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            return completed
+
+        with patch.object(sync_usage.subprocess, "run", side_effect=fake_run), \
                 patch.object(sync_usage, "count_codex_image_files_per_day",
                              return_value={}):
             cc, cx, op = sync_usage.fetch_daily_since(date(2026, 1, 1))
+        self.captured = captured
         return {
             "claude": cc[0] if cc else None,
             "codex": cx[0] if cx else None,
@@ -358,11 +376,15 @@ class CostTrustedMarkingTests(unittest.TestCase):
         }
 
     def test_one_unpriced_model_taints_only_its_own_agent(self) -> None:
-        out = self.fetch([
-            {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 0.0},
-            {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.03},
-            {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
-        ])
+        out = self.fetch({
+            "claude": [
+                {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 0.0},
+                {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.03},
+            ],
+            "codex": [
+                {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+            ],
+        })
         # The Claude sum is short by whatever opus-5 should have cost...
         self.assertFalse(out["claude"]["costTrusted"])
         self.assertEqual(out["claude"]["totalCost"], 1.03)
@@ -370,34 +392,38 @@ class CostTrustedMarkingTests(unittest.TestCase):
         self.assertTrue(out["codex"]["costTrusted"])
 
     def test_a_fully_priced_day_is_trusted(self) -> None:
-        out = self.fetch([
-            {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
-            {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
-        ])
+        out = self.fetch({
+            "claude": [
+                {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
+            ],
+            "codex": [
+                {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
+            ],
+        })
         self.assertTrue(out["claude"]["costTrusted"])
         self.assertTrue(out["codex"]["costTrusted"])
 
     def test_a_model_upstream_never_prices_does_not_taint_its_day(self) -> None:
-        out = self.fetch([
+        out = self.fetch({"codex": [
             {"modelName": "codex-auto-review", "inputTokens": 500, "cost": 0.0},
             {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
-        ])
+        ]})
         self.assertTrue(out["codex"]["costTrusted"])
 
     def test_a_model_with_no_usage_does_not_taint_its_day(self) -> None:
-        out = self.fetch([
+        out = self.fetch({"claude": [
             {"modelName": "claude-opus-5", "inputTokens": 0, "cost": 0.0},
             {"modelName": "claude-sonnet-5", "inputTokens": 50, "cost": 1.5},
-        ])
+        ]})
         self.assertTrue(out["claude"]["costTrusted"])
 
     def test_claude_now_carries_a_per_model_breakdown(self) -> None:
         # Claude was the one agent that stored only totals; it now mirrors codex
         # and opencode with a per-model token map.
-        out = self.fetch([
+        out = self.fetch({"claude": [
             {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
             {"modelName": "claude-sonnet-5", "outputTokens": 50, "cost": 1.5},
-        ])
+        ]})
         self.assertEqual(
             out["claude"]["models"],
             {
@@ -405,6 +431,33 @@ class CostTrustedMarkingTests(unittest.TestCase):
                 "claude-sonnet-5": {"totalTokens": 50},
             },
         )
+
+    def test_routed_models_stay_with_the_invoking_agent(self) -> None:
+        out = self.fetch({
+            "claude": [
+                {"modelName": "agnes-2.0-flash", "inputTokens": 100, "cost": 0.0},
+                {"modelName": "gpt-5.5", "outputTokens": 20, "cost": 0.4},
+            ],
+            "codex": [
+                {"modelName": "gpt-5.5", "inputTokens": 30, "cost": 0.6},
+            ],
+        })
+        self.assertEqual(out["claude"]["totalTokens"], 120)
+        self.assertEqual(
+            out["claude"]["models"],
+            {
+                "agnes-2.0-flash": {"totalTokens": 100},
+                "gpt-5.5": {"totalTokens": 20},
+            },
+        )
+        self.assertEqual(out["codex"]["totalTokens"], 30)
+        self.assertEqual(
+            out["codex"]["models"], {"gpt-5.5": {"totalTokens": 30}}
+        )
+
+    def test_requests_exact_agent_breakdowns(self) -> None:
+        self.fetch({})
+        self.assertIn("--by-agent", self.captured["cmd"])
 
 
 class TraexFetchTests(unittest.TestCase):
