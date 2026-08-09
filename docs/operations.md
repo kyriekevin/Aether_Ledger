@@ -4,11 +4,14 @@
 
 ## Sources and retention
 
-Each writer reads local usage through `ccusage daily --json` and classifies model breakdowns into
-Claude, Codex, and OpenCode stores. Codex `image_gen` PNGs are counted separately by local file
-mtime because they do not appear as LLM token events.
+Each writer reads local usage through `ccusage daily --json --by-agent` and writes its exact
+per-agent breakdowns into Claude, Codex, and OpenCode stores. Model names are retained as detail,
+not used to infer the invoking agent: a model reached through a Claude Code router such as
+cc-switch therefore remains Claude usage under its real model name. Codex `image_gen` PNGs are
+counted separately by local file mtime because they do not appear as LLM token events.
 
-TRAE CLI (traex) is a Codex fork that writes the same `rollout-*.jsonl` session format under
+TRAE CLI (traex) remains a separate collection path. It is a Codex fork that writes the same
+`rollout-*.jsonl` session format under
 `~/.trae/cli` instead of `~/.codex`. `ccusage` has no `trae` agent, but its `codex` reader honours
 `CODEX_HOME`, so each writer runs a second, read-only `ccusage codex daily` with
 `CODEX_HOME=~/.trae/cli` and records the result in a separate `traex.json` store. That invocation
@@ -283,8 +286,8 @@ Codex entries may also contain model token breakdowns and an image counter:
 }
 ```
 
-OpenCode has the same date-keyed shape and may include per-model totals. Classification is based
-on model family because current `ccusage` model breakdowns do not identify the invoking agent.
+OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
+comes directly from the `--by-agent` breakdown rather than from the model family.
 
 traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns. Its
 `totalCost` is a real but low-side figure: model names are normalised before pricing (lowercased,
