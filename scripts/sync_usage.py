@@ -148,7 +148,7 @@ def resolve_machine() -> str:
         sys.exit(f"invalid {NODE_NAME_FILE}: expected one of {sorted(DURABLE_NODES)}")
     return f"data/{node_name}"
 
-# ccusage v20+ 的 `daily --by-agent` 一次读取所有 agent CLI（claude / codex /
+# ccusage v20.0.15+ 的 `daily --by-agent` 一次读取所有 agent CLI（claude / codex /
 # opencode / ...），并在每日行的 `agents` 中保留准确的调用端归属。模型名只作为
 # 明细保留，不能用于推断 agent：Claude Code 经代理或 cc-switch 路由后可能记录
 # 任意模型族。各 agent 仍写入独立 store，使 session rotation 下的高水位彼此隔离。

@@ -36,7 +36,7 @@ Gemini、DeepSeek……）定价；并把 TRAE CLI 的匿名 Claude 别名（`op
 
 - 安装 Homebrew 的 macOS
 - `uv`
-- `ccusage`
+- `ccusage` 20.0.15 或更高版本（需支持 `--by-agent`）
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
 - Claude Code、Codex 或 OpenCode 的本地用量日志

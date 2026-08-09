@@ -41,7 +41,7 @@ A new machine can only recover dates still present in its local logs.
 
 - macOS with Homebrew
 - `uv`
-- `ccusage`
+- `ccusage` 20.0.15 or newer (`--by-agent` support)
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
 - Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
