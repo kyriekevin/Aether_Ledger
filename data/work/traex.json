@@ -1,14 +1,41 @@
 {
   "2026-08-07": {
     "models": {
-      "Gemini-3-Flash-Preview": {
-        "totalTokens": 877535
+      "claude-opus-4-8": {
+        "totalTokens": 12311427
       },
-      "openrouter-3o": {
-        "totalTokens": 9048143
+      "deepseek-v4-flash": {
+        "totalTokens": 1666804
+      },
+      "deepseek-v4-pro": {
+        "totalTokens": 2079934
+      },
+      "gemini-3-flash-preview": {
+        "totalTokens": 1535720
+      },
+      "gpt-5.5": {
+        "totalTokens": 4054711
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 108181
       }
     },
-    "totalCost": 0,
-    "totalTokens": 9925678
+    "totalCost": 14.643646274399998,
+    "totalTokens": 21756777
+  },
+  "2026-08-09": {
+    "models": {
+      "claude-opus-4-8": {
+        "totalTokens": 23224202
+      },
+      "gemini-3-flash-preview": {
+        "totalTokens": 7337826
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 13365597
+      }
+    },
+    "totalCost": 31.31534475,
+    "totalTokens": 43927625
   }
 }

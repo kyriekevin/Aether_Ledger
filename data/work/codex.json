@@ -738,5 +738,14 @@
     },
     "totalCost": 69.16333468,
     "totalTokens": 38150662
+  },
+  "2026-08-09": {
+    "models": {
+      "gpt-5.6-luna": {
+        "totalTokens": 474892
+      }
+    },
+    "totalCost": 0.06576856,
+    "totalTokens": 474892
   }
 }

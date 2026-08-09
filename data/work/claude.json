@@ -292,94 +292,269 @@
     "totalTokens": 54628694
   },
   "2026-07-06": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 56906967
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 11759435
+      }
+    },
     "totalCost": 137.93778300000005,
     "totalTokens": 68666402
   },
   "2026-07-07": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 81379513
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 2464720
+      }
+    },
     "totalCost": 173.85694940000002,
     "totalTokens": 93419699
   },
   "2026-07-08": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 46491054
+      },
+      "claude-haiku-4-5-20251001": {
+        "totalTokens": 360674
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 109104
+      }
+    },
     "totalCost": 101.82633564999993,
     "totalTokens": 46960832
   },
   "2026-07-09": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 91163717
+      },
+      "claude-opus-4-8": {
+        "totalTokens": 3362925
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 879896
+      }
+    },
     "totalCost": 159.02031400000007,
     "totalTokens": 95406538
   },
   "2026-07-10": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 4052206
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 557143
+      }
+    },
     "totalCost": 10.7830102,
     "totalTokens": 4609349
   },
   "2026-07-13": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 45354245
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 594229
+      }
+    },
     "totalCost": 95.56726170000006,
     "totalTokens": 45948474
   },
   "2026-07-15": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 47832525
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 84847
+      }
+    },
     "totalCost": 104.5046296,
     "totalTokens": 47917372
   },
   "2026-07-20": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 7557319
+      },
+      "claude-opus-4-8": {
+        "totalTokens": 631950
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 145259
+      }
+    },
     "totalCost": 16.724300850000002,
     "totalTokens": 8334528
   },
   "2026-07-21": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 1053441
+      }
+    },
     "totalCost": 6.282264,
     "totalTokens": 1053441
   },
   "2026-07-23": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 12610603
+      }
+    },
     "totalCost": 31.862512,
     "totalTokens": 12610603
   },
   "2026-07-24": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 19361821
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 74409
+      }
+    },
     "totalCost": 47.26524740000001,
     "totalTokens": 19436230
   },
   "2026-07-25": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 7729194
+      }
+    },
     "totalCost": 41.22622300000001,
     "totalTokens": 7729194
   },
   "2026-07-26": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 1004165
+      }
+    },
     "totalCost": 8.796003000000002,
     "totalTokens": 1004165
   },
   "2026-07-27": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 29414557
+      },
+      "claude-opus-5": {
+        "totalTokens": 6124152
+      }
+    },
     "totalCost": 76.76118850000003,
     "totalTokens": 35538709
   },
   "2026-07-28": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 20599897
+      },
+      "claude-opus-5": {
+        "totalTokens": 11910983
+      }
+    },
     "totalCost": 69.68381,
     "totalTokens": 32510880
   },
   "2026-07-29": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 8240293
+      },
+      "claude-opus-5": {
+        "totalTokens": 34709910
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 35839
+      }
+    },
     "totalCost": 57.284896299999986,
     "totalTokens": 42986042
   },
   "2026-07-30": {
+    "models": {
+      "claude-opus-5": {
+        "totalTokens": 11681029
+      }
+    },
     "totalCost": 10.219902500000005,
     "totalTokens": 11681029
   },
   "2026-07-31": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 13751445
+      }
+    },
     "totalCost": 24.69034599999999,
     "totalTokens": 13751445
   },
   "2026-08-02": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 6654289
+      }
+    },
     "totalCost": 14.043991000000004,
     "totalTokens": 6654289
   },
   "2026-08-03": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 1577625
+      }
+    },
     "totalCost": 8.804339,
     "totalTokens": 1577625
   },
   "2026-08-04": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 14824805
+      },
+      "claude-opus-5": {
+        "totalTokens": 88148880
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 584196
+      }
+    },
     "totalCost": 107.09515590000001,
     "totalTokens": 103557881
   },
   "2026-08-05": {
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 17494905
+      },
+      "claude-opus-5": {
+        "totalTokens": 69789791
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 15801140
+      }
+    },
     "totalCost": 123.62802575000003,
     "totalTokens": 103085836
   },
   "2026-08-06": {
+    "models": {
+      "claude-opus-5": {
+        "totalTokens": 10216138
+      }
+    },
     "totalCost": 22.363872500000003,
     "totalTokens": 10216138
   }

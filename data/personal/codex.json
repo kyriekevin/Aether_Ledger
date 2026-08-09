@@ -5,7 +5,7 @@
         "totalTokens": 63360376
       }
     },
-    "totalCost": 46.379496,
+    "totalCost": 115.94874,
     "totalTokens": 63360376
   },
   "2026-05-17": {
@@ -14,7 +14,7 @@
         "totalTokens": 3723970
       }
     },
-    "totalCost": 3.828668,
+    "totalCost": 9.57167,
     "totalTokens": 3723970
   },
   "2026-05-18": {
@@ -24,7 +24,7 @@
         "totalTokens": 211286481
       }
     },
-    "totalCost": 167.994947,
+    "totalCost": 419.9873675,
     "totalTokens": 211286481
   },
   "2026-05-19": {
@@ -34,7 +34,7 @@
         "totalTokens": 25018388
       }
     },
-    "totalCost": 22.931184000000002,
+    "totalCost": 57.327960000000004,
     "totalTokens": 25018388
   },
   "2026-05-20": {
@@ -75,7 +75,7 @@
         "totalTokens": 21985131
       }
     },
-    "totalCost": 18.1014017,
+    "totalCost": 44.887673400000004,
     "totalTokens": 23664923
   },
   "2026-05-26": {
@@ -84,7 +84,7 @@
         "totalTokens": 4258816
       }
     },
-    "totalCost": 5.126461,
+    "totalCost": 12.816152500000001,
     "totalTokens": 4258816
   },
   "2026-05-30": {
@@ -93,7 +93,7 @@
         "totalTokens": 4168716
       }
     },
-    "totalCost": 4.624804,
+    "totalCost": 11.56201,
     "totalTokens": 4168716
   },
   "2026-06-05": {
@@ -102,7 +102,7 @@
         "totalTokens": 47375186
       }
     },
-    "totalCost": 39.751737999999996,
+    "totalCost": 99.379345,
     "totalTokens": 47375186
   },
   "2026-06-06": {
@@ -111,7 +111,7 @@
         "totalTokens": 88425296
       }
     },
-    "totalCost": 73.04284899999999,
+    "totalCost": 182.60712249999997,
     "totalTokens": 88425296
   },
   "2026-06-07": {
@@ -131,7 +131,7 @@
         "totalTokens": 26108286
       }
     },
-    "totalCost": 22.143988999999998,
+    "totalCost": 55.35997249999999,
     "totalTokens": 26108286
   },
   "2026-06-17": {
@@ -140,7 +140,7 @@
         "totalTokens": 9306559
       }
     },
-    "totalCost": 6.755411999999999,
+    "totalCost": 16.888529999999996,
     "totalTokens": 9306559
   },
   "2026-06-19": {
@@ -161,7 +161,7 @@
         "totalTokens": 105086893
       }
     },
-    "totalCost": 92.943558,
+    "totalCost": 232.358895,
     "totalTokens": 105086893
   },
   "2026-06-21": {
@@ -170,7 +170,7 @@
         "totalTokens": 4231559
       }
     },
-    "totalCost": 5.598357,
+    "totalCost": 13.9958925,
     "totalTokens": 4231559
   },
   "2026-06-28": {
@@ -179,7 +179,7 @@
         "totalTokens": 203756
       }
     },
-    "totalCost": 0.5551130000000001,
+    "totalCost": 1.3877825000000001,
     "totalTokens": 203756
   },
   "2026-06-29": {
@@ -197,7 +197,7 @@
         "totalTokens": 234365
       }
     },
-    "totalCost": 1.176933,
+    "totalCost": 2.9423325,
     "totalTokens": 234365
   },
   "2026-07-12": {
@@ -224,7 +224,7 @@
         "totalTokens": 3295954
       }
     },
-    "totalCost": 3.8041649999999994,
+    "totalCost": 6.7326505,
     "totalTokens": 3466710
   },
   "2026-07-14": {
@@ -245,7 +245,7 @@
         "totalTokens": 491233
       }
     },
-    "totalCost": 1.330161,
+    "totalCost": 1.778116,
     "totalTokens": 491233
   },
   "2026-08-01": {
@@ -270,7 +270,7 @@
         "totalTokens": 54009473
       }
     },
-    "totalCost": 49.358948999999996,
+    "totalCost": 51.396643,
     "totalTokens": 58230165
   },
   "2026-08-03": {
@@ -282,7 +282,7 @@
         "totalTokens": 14524017
       }
     },
-    "totalCost": 14.653168,
+    "totalCost": 17.658168,
     "totalTokens": 16317278
   },
   "2026-08-04": {
@@ -294,7 +294,7 @@
         "totalTokens": 3664873
       }
     },
-    "totalCost": 4.140386,
+    "totalCost": 5.6467955000000005,
     "totalTokens": 3830183
   },
   "2026-08-05": {
@@ -306,7 +306,7 @@
         "totalTokens": 11999191
       }
     },
-    "totalCost": 10.537245,
+    "totalCost": 12.893206500000002,
     "totalTokens": 12381103
   },
   "2026-08-07": {
@@ -318,19 +318,34 @@
         "totalTokens": 3738346
       }
     },
-    "totalCost": 4.043924,
+    "totalCost": 5.267727,
     "totalTokens": 3845296
   },
   "2026-08-08": {
     "models": {
       "gpt-5.5": {
-        "totalTokens": 23452395
+        "totalTokens": 23806038
       },
       "gpt-5.6-sol": {
-        "totalTokens": 115438208
+        "totalTokens": 117467674
       }
     },
-    "totalCost": 102.360891,
-    "totalTokens": 138890603
+    "totalCost": 108.5260815,
+    "totalTokens": 141273712
+  },
+  "2026-08-09": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 22108228
+      },
+      "gpt-5.6-luna": {
+        "totalTokens": 46173
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 90380526
+      }
+    },
+    "totalCost": 173.0907487,
+    "totalTokens": 112534927
   }
 }
