@@ -390,6 +390,21 @@ class CostTrustedMarkingTests(unittest.TestCase):
         ])
         self.assertTrue(out["claude"]["costTrusted"])
 
+    def test_claude_now_carries_a_per_model_breakdown(self) -> None:
+        # Claude was the one agent that stored only totals; it now mirrors codex
+        # and opencode with a per-model token map.
+        out = self.fetch([
+            {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
+            {"modelName": "claude-sonnet-5", "outputTokens": 50, "cost": 1.5},
+        ])
+        self.assertEqual(
+            out["claude"]["models"],
+            {
+                "claude-opus-5": {"totalTokens": 100},
+                "claude-sonnet-5": {"totalTokens": 50},
+            },
+        )
+
 
 class TraexFetchTests(unittest.TestCase):
     """fetch_codex_home_daily reads traex's Codex-format sessions via CODEX_HOME.
@@ -444,24 +459,88 @@ class TraexFetchTests(unittest.TestCase):
         self.assertEqual(out[0]["totalTokens"], 4000)
         self.assertFalse(out[0]["costTrusted"])
 
-    def test_a_mixed_priced_and_unpriced_day_is_untrusted(self) -> None:
+    def test_a_mixed_priced_and_unpriced_day_is_trusted_low_side(self) -> None:
         # `codex daily` gives per-model tokens but only a row-level costUSD, so a
-        # day mixing a priced GPT-5.x with a free alias cannot be split: the
-        # positive costUSD still understates. Trusting it would let it overwrite a
-        # previously complete stored cost downward, so the whole day stays
-        # untrusted while its tokens still flow through.
+        # day mixing a priced GPT-5.x with a free alias cannot be split. We trust
+        # the positive costUSD anyway: it is a real, low-side figure (short by the
+        # alias's unpriced tokens), and keeping it beats dropping the whole day to
+        # zero. merge_with_cumulative still refuses to overwrite a stored cost with
+        # a bare zero, so a fully unpriced fetch never rewrites history downward.
         out = self.fetch([{
             "date": "2026-08-07", "totalTokens": 5000, "costUSD": 2.5,
             "models": {
-                "GPT-5.5": {"totalTokens": 1000},
+                "gpt-5.5": {"totalTokens": 1000},
                 "openrouter-3o": {"totalTokens": 4000},
             },
         }])
         self.assertEqual(out[0]["totalTokens"], 5000)
-        self.assertFalse(out[0]["costTrusted"])
+        self.assertEqual(out[0]["totalCost"], 2.5)
+        self.assertTrue(out[0]["costTrusted"])
 
     def test_an_empty_home_yields_no_entries(self) -> None:
         self.assertEqual(self.fetch([]), [])
+
+
+class LowercasedCodexHomeTests(unittest.TestCase):
+    """The mirror that lets ccusage price TRAE CLI's capitalised model names.
+
+    ccusage's price lookup is case-sensitive against lowercase slugs, but TRAE CLI
+    logs `GPT-5.5`, `Gemini-3-Flash-Preview`, etc. The mirror rewrites only the
+    `"model"` field to lowercase, never touching the real source tree.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.home = Path(self._tmp.name)
+        self.sessions = self.home / "sessions" / "2026" / "08" / "07"
+        self.sessions.mkdir(parents=True)
+
+    def write(self, name: str, text: str) -> Path:
+        path = self.sessions / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_only_the_model_field_is_lowercased(self) -> None:
+        original = (
+            '{"model":"GPT-5.5","text":"Keep This CASED","payload":"Mixed-Case"}\n'
+            '{"model":"Gemini-3-Flash-Preview"}\n'
+        )
+        src = self.write("rollout-a.jsonl", original)
+        with sync_usage._lowercased_codex_home(self.home) as mirror:
+            mirrored = (mirror / "sessions" / "2026" / "08" / "07" / "rollout-a.jsonl").read_text()
+        # Model names dropped to lowercase...
+        self.assertIn('"model":"gpt-5.5"', mirrored)
+        self.assertIn('"model":"gemini-3-flash-preview"', mirrored)
+        # ...but nothing else changed, and the real source file is untouched.
+        self.assertIn('"text":"Keep This CASED"', mirrored)
+        self.assertIn('"payload":"Mixed-Case"', mirrored)
+        self.assertEqual(src.read_text(encoding="utf-8"), original)
+
+    def test_a_source_without_sessions_yields_an_empty_mirror(self) -> None:
+        empty = Path(self._tmp.name) / "no-sessions-here"
+        empty.mkdir()
+        with sync_usage._lowercased_codex_home(empty) as mirror:
+            self.assertFalse((mirror / "sessions").exists())
+
+    def test_lowercase_flag_routes_through_a_mirror(self) -> None:
+        # With lowercase_models set, ccusage must be pointed at a tempdir mirror,
+        # not the real home passed in.
+        self.write("rollout-b.jsonl", '{"model":"GPT-5.5"}\n')
+        payload = json.dumps({"daily": []})
+        completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
+        seen: dict = {}
+
+        def fake_run(cmd, **kwargs):
+            seen["home"] = kwargs.get("env", {}).get("CODEX_HOME")
+            return completed
+
+        with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
+            sync_usage.fetch_codex_home_daily(
+                date(2026, 1, 1), self.home, lowercase_models=True
+            )
+        self.assertIsNotNone(seen["home"])
+        self.assertNotEqual(seen["home"], str(self.home))
 
 
 class IdenticalSourceTests(unittest.TestCase):
