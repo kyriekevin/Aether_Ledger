@@ -15,12 +15,15 @@ TRAE CLI (traex) is a Codex fork that writes the same `rollout-*.jsonl` session 
 never touches the real `~/.codex` tree, so Codex usage and the Codex CLI itself are unaffected.
 `ccusage`'s price lookup is case-sensitive against lowercase slugs, but TRAE CLI logs capitalised
 model names (`GPT-5.5`, `Gemini-3-Flash-Preview`), so before pricing, the writer mirrors the traex
-sessions into a temporary `CODEX_HOME` with only the `"model"` field lowercased; the real
-`~/.trae/cli` tree is never written. This lets `ccusage` price traex's real-name models (GPT-5.x,
-Gemini, DeepSeek, …). Its anonymised Claude aliases (`openrouter-*`) and Seed/Kimi/Qwen slugs are
-still absent from the price table and bill free even lowercased, so a traex day's recorded cost is a
-real but low-side figure, short by those aliases' unpriced tokens. A per-alias rate table would
-close that gap and is left as future work. A day whose cost is exactly zero (nothing priced) is held
+sessions into a temporary `CODEX_HOME` with only the `"model"` field normalised; the real
+`~/.trae/cli` tree is never written. Normalisation does two things: it lowercases the name so
+`ccusage` can price traex's real-name models (GPT-5.x, Gemini, DeepSeek, …), and it resolves TRAE
+CLI's opaque Claude aliases (`openrouter-1o`/`2o`/`3o`, including `__max` variants) to the real
+Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`) so those price too. Other
+vendor-internal slugs we have not mapped (Seed/Doubao/Qwen) remain absent from the price table and
+bill free, so a traex day's recorded cost is a real but low-side figure, short by their unpriced
+tokens; the writer logs each such slug so a new unpriced family gets noticed instead of billing zero
+unseen. A day whose cost is exactly zero (nothing priced) is held
 untrusted, so a stored cost is never overwritten downward; traex is excluded from
 `--reconcile-since` for the same reason.
 
@@ -284,9 +287,9 @@ OpenCode has the same date-keyed shape and may include per-model totals. Classif
 on model family because current `ccusage` model breakdowns do not identify the invoking agent.
 
 traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns. Its
-`totalCost` is a real but low-side figure: model names are lowercased before pricing so `ccusage`
-can price the real-name models, while unpriced anonymised aliases (`openrouter-*`) and Seed/Kimi/Qwen
-slugs contribute tokens with no cost.
+`totalCost` is a real but low-side figure: model names are normalised before pricing (lowercased,
+and `openrouter-*` Claude aliases resolved to real Opus slugs) so `ccusage` can price them, while
+unmapped vendor-internal slugs (Seed/Doubao/Qwen) contribute tokens with no cost.
 
 ## Trail compaction
 

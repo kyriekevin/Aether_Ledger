@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import subprocess
 import sys
@@ -480,6 +481,22 @@ class TraexFetchTests(unittest.TestCase):
     def test_an_empty_home_yields_no_entries(self) -> None:
         self.assertEqual(self.fetch([]), [])
 
+    def test_unmapped_opaque_slugs_are_logged(self) -> None:
+        # Seed/Doubao/Qwen have no ccusage price key and we have not mapped them,
+        # so they bill free. The day still keeps its positive cost, but the slug is
+        # logged so a new unpriced family gets noticed instead of billing zero.
+        with patch.object(sync_usage.sys, "stderr", io.StringIO()) as err:
+            out = self.fetch([{
+                "date": "2026-08-07", "totalTokens": 3000, "costUSD": 1.0,
+                "models": {
+                    "gpt-5.5": {"totalTokens": 1000},
+                    "seed-1.6": {"totalTokens": 2000},
+                },
+            }])
+        self.assertTrue(out[0]["costTrusted"])
+        self.assertIn("seed-1.6", err.getvalue())
+        self.assertNotIn("gpt-5.5", err.getvalue())
+
 
 class LowercasedCodexHomeTests(unittest.TestCase):
     """The mirror that lets ccusage price TRAE CLI's capitalised model names.
@@ -516,6 +533,41 @@ class LowercasedCodexHomeTests(unittest.TestCase):
         self.assertIn('"text":"Keep This CASED"', mirrored)
         self.assertIn('"payload":"Mixed-Case"', mirrored)
         self.assertEqual(src.read_text(encoding="utf-8"), original)
+
+    def test_normalise_model_lowercases_and_resolves_aliases(self) -> None:
+        # Real names only need casing; opaque aliases resolve to real Opus slugs.
+        self.assertEqual(sync_usage._normalise_model("GPT-5.5"), "gpt-5.5")
+        self.assertEqual(sync_usage._normalise_model("openrouter-1o"), "claude-opus-4-6")
+        self.assertEqual(sync_usage._normalise_model("openrouter-2o"), "claude-opus-4-7")
+        self.assertEqual(sync_usage._normalise_model("openrouter-3o"), "claude-opus-4-8")
+        self.assertEqual(
+            sync_usage._normalise_model("OpenRouter-3o__max"), "claude-opus-4-8"
+        )
+        # An unmapped opaque slug is only lowercased, staying unpriced.
+        self.assertEqual(sync_usage._normalise_model("Seed-1.6"), "seed-1.6")
+
+    def test_opaque_claude_aliases_resolve_to_real_opus_slugs(self) -> None:
+        # openrouter-1o/2o/3o front Anthropic Opus 4.6/4.7/4.8; suffixed variants
+        # (__max) and capitalisation must resolve to the same real slug so ccusage
+        # can price them.
+        original = (
+            '{"model":"openrouter-1o"}\n'
+            '{"model":"openrouter-2o"}\n'
+            '{"model":"openrouter-3o"}\n'
+            '{"model":"openrouter-3o__max"}\n'
+            '{"model":"OpenRouter-3o"}\n'
+        )
+        self.write("rollout-alias.jsonl", original)
+        with sync_usage._lowercased_codex_home(self.home) as mirror:
+            mirrored = (
+                mirror / "sessions" / "2026" / "08" / "07" / "rollout-alias.jsonl"
+            ).read_text()
+        self.assertIn('"model":"claude-opus-4-6"', mirrored)
+        self.assertIn('"model":"claude-opus-4-7"', mirrored)
+        # 3o, its __max variant, and the capitalised form all collapse to 4-8.
+        self.assertEqual(mirrored.count('"model":"claude-opus-4-8"'), 3)
+        # No unresolved alias slug survives into what ccusage reads.
+        self.assertNotIn("openrouter", mirrored)
 
     def test_a_source_without_sessions_yields_an_empty_mirror(self) -> None:
         empty = Path(self._tmp.name) / "no-sessions-here"
