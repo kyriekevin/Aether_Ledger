@@ -191,11 +191,18 @@ idempotent retry 30 minutes later:
 5. Push `main` and delete only the successfully published day branches.
 6. Create today's branch from the updated `main`.
 
-Step 4 is the last point at which a bad merge is still recoverable: CI on `push: main` can only
-report a problem after it has landed, and step 5 deletes the day branches immediately. A failure
-there leaves `main` untouched and the day branches intact, so the next scheduled pass retries.
-The freshness check deliberately omits `--as-of`, matching what CI runs, so that a drift between
-the pinned per-day render and the data-derived one cannot land as a permanently red `main`.
+Step 4 is the only gate these commits get. The push is authenticated with `GITHUB_TOKEN`, and a
+push made with that token does not start another workflow run, so `ci.yml` never sees them. It is
+also the last point at which a bad merge is still recoverable, because step 5 deletes the day
+branches immediately. A failure there leaves `main` untouched and the day branches intact, so the
+next scheduled pass retries.
+
+Step 3 renders without `--as-of` on purpose. The renderer derives the day from the data, and step 4
+verifies the result the same way, so the two cannot disagree. Pinning the calendar day instead
+would render a day with no activity as the newest column while the check expected the last active
+one; that mismatch would fail every retry, strand the day branch, and stop today's branch from
+being created — halting the sync entirely, since writers refuse to open today while an older day
+branch survives. An idle day now simply produces no snapshot commit.
 
 If a feature PR accidentally carried an earlier generated-store snapshot from the active usage
 branch, the squash can report a conflict even though the usage branch already contains that exact
@@ -240,7 +247,11 @@ recovery request produces an explicit sync-log error and is retried on the next 
 
 `.github/workflows/ci.yml` runs the hand-off checklist on every pull request, on every push to
 `main`, and on manual dispatch. It holds `contents: read` only, and supersedes stale pull-request
-runs while letting `main` runs finish, because those are the record of what actually landed.
+runs while grouping every other run by commit, so those never cancel or queue behind each other.
+
+It does not see the daily rollover. That push is authenticated with `GITHUB_TOKEN`, which does not
+start another workflow run, which is why the rollover validates before it publishes. In practice
+CI covers pull requests and the merge commit each one produces on `main`.
 
 | Check | Catches |
 | --- | --- |
@@ -252,8 +263,14 @@ runs while letting `main` runs finish, because those are the record of what actu
 | `audit_public.py --history` | new commits carrying a personal email address |
 
 The last two run over the incoming commit range rather than the working tree, which is empty on a
-fresh checkout. On a pull request the range is the base commit to `HEAD`; on a push it is the
-previous tip. The commit-identity audit is scoped this way on purpose: it must block new leaks
+fresh checkout. On a pull request the range runs from the base commit to the branch tip, not to
+`HEAD`: `HEAD` is GitHub's synthetic merge commit, which is authored with the account's primary
+email and discarded after the run, so auditing it would report a leak on every pull request. On a
+push the range starts at the previous tip. Where no base exists — a branch's first push, a
+force-push over a discarded tip, a manual dispatch — both range checks are skipped and say so,
+rather than falling back to a single commit and reporting coverage that is not there.
+
+The commit-identity audit is scoped to the incoming range on purpose: it must block new leaks
 without failing on commits that predate the check.
 
 Usage commits never open a pull request and land on `usage/YYYY-MM-DD`, so limiting the push

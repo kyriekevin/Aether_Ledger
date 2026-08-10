@@ -57,7 +57,14 @@ jobs:
             branch="usage/$day"
             uv run --script scripts/squash_usage_branch.py "origin/$branch"
             uv run --script scripts/audit_public.py
-            uv run --script scripts/render_dashboard.py --as-of "$day"
+            # No --as-of: the renderer derives the day from the data, the same
+            # way the freshness check below and CI do. Pinning it here would
+            # render a day with no activity as the newest column while the
+            # check expects the last active one, and that disagreement would
+            # fail every retry, stranding the day branch and stopping today's
+            # branch from ever being created. An idle day now simply produces
+            # no snapshot commit.
+            uv run --script scripts/render_dashboard.py
             git add assets/token-activity.svg assets/token-topology.svg
             if git diff --cached --quiet; then
               git reset --merge
@@ -68,16 +75,13 @@ jobs:
           done
 
           if ((${#merged[@]})); then
-            # Validate before publishing. `push: main` CI can only report on a
-            # bad rollover after it has already landed, and the day branches are
-            # deleted right after the push, so the last point at which a bad
-            # merge is still recoverable is here. Failing leaves main untouched
-            # and the day branches intact for the next scheduled pass.
-            #
-            # The dashboard check deliberately omits --as-of so it matches what
-            # CI runs: the per-day renders above pin the day being finalized,
-            # while CI derives it from the data. Any drift between the two would
-            # otherwise land as a permanently red main.
+            # Validate before publishing. This push is authenticated with
+            # GITHUB_TOKEN, which by design does not start another workflow run,
+            # so ci.yml never sees these commits and this block is their only
+            # gate. It is also the last point at which a bad merge is still
+            # recoverable: the day branches are deleted immediately after.
+            # Failing leaves main untouched and the day branches intact for the
+            # next scheduled pass.
             uv run --script scripts/audit_public.py
             uv run --script scripts/render_dashboard.py --check
             uv run --script scripts/audit_public.py --history "origin/main..HEAD"

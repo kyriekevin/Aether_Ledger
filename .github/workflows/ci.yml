@@ -13,14 +13,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  # Superseded pull-request runs are noise; main runs are the audit trail of
-  # what actually landed, so let them finish.
+  # Pull requests group by number so a new commit supersedes the previous run.
+  # Everything else groups by commit, which is unique, so those runs neither
+  # cancel nor queue behind each other: only one run per group may sit pending,
+  # and a newer one would evict it.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
     runs-on: ubuntu-latest
+    # Usage branches carry only generated data and are squashed into main by
+    # daily-rollover.yml, never by a pull request. Skipping them keeps an
+    # accidental usage pull request from running CI on every 15-minute commit.
+    if: ${{ !startsWith(github.head_ref, 'usage/') }}
     env:
       TZ: Asia/Shanghai
     steps:
@@ -73,13 +79,18 @@ jobs:
           exists() { [ -n "$1" ] && git cat-file -e "$1^{commit}" 2>/dev/null; }
           # A fork's head commit is not always fetched under the merge ref.
           exists "$tip" || tip="$(git rev-parse --verify --quiet 'HEAD^2' || echo HEAD)"
-          # A first push, a force-push over a deleted tip, or a manual dispatch
-          # leaves no usable base. Fall back to the first parent, and skip only
-          # when even that is absent (the root commit).
-          exists "$base" || base="$(git rev-parse --verify --quiet "$tip^" || true)"
+          # A branch's first push, a force-push over a discarded tip, or a
+          # manual dispatch leaves no base to diff against. Report that and let
+          # the range steps skip: falling back to the first parent would review
+          # only the newest commit and silently pass over everything behind it,
+          # which reads as coverage that is not there.
+          if ! exists "$base"; then
+            echo "no reviewable base for ${{ github.event_name }}; skipping range checks"
+            base=""
+          fi
           echo "base=$base" >>"$GITHUB_OUTPUT"
           echo "tip=$tip" >>"$GITHUB_OUTPUT"
-          echo "reviewing $base..$tip"
+          echo "reviewing ${base:-<none>}..$tip"
 
       - name: Whitespace and conflict-marker check
         if: steps.range.outputs.base != ''
