@@ -107,12 +107,28 @@ but does not parse stops the run rather than reminting over an identity in use.
 
 ## Scheduled sync
 
-The bundled launchd agent runs at minutes 0, 15, 30, and 45 of every hour. Render its template
-for the current checkout and reload it:
+The bundled launchd agent runs at minutes 0, 15, 30, and 45 of every hour. Keep the checkout used
+for development off the active `usage/YYYY-MM-DD` branch, update `main`, then install:
 
 ```sh
+git switch main
+git pull --ff-only
 uv run --script scripts/install_launchd.py
 ```
+
+The installer creates `~/.cache/aether-ledger/writer` as a linked, launchd-only Git worktree and
+renders that path into the agent. If today's usage branch already exists, the writer checks it out;
+otherwise it starts detached from `main` and lets the normal rollover guard create the branch.
+The source checkout must not still have today's usage branch checked out, because Git permits one
+worktree per local branch. Use `--writer-worktree PATH` to choose a different location.
+
+The writer pins the code inherited when the daily branch was created. Changes merged into `main`
+during the day are never merged into the active usage branch. When the writer switches to the next
+daily branch it ends that tick before reading usage, so the following invocation starts from the
+new code snapshot. This keeps scheduled commits data-only and isolates development branch switches
+and dirty files from launchd. Linked worktrees still share Git metadata: a concurrent fetch, pull,
+or rebase in another worktree can make one tick defer, and the next scheduled run retries it.
+Re-running the installer reuses the registered writer worktree and reloads the agent.
 
 The installer migrates an existing approved `machine_name`, then unloads and removes the legacy
 `com.kyriekevin.cc-cx-usage-data` agent. It atomically installs and reloads the current agent so

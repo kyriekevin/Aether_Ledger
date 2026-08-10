@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import plistlib
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -12,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from install_launchd import (  # noqa: E402
     LABEL,
     LEGACY_LABEL,
+    ensure_writer_worktree,
     migrate_legacy_node_name,
     reload_agent,
     remove_legacy_agent,
@@ -19,7 +23,99 @@ from install_launchd import (  # noqa: E402
 )
 
 
+def git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
 class InstallLaunchdTests(unittest.TestCase):
+    def make_repo(self, root: Path) -> Path:
+        root.mkdir(parents=True, exist_ok=True)
+        repo = root / "source"
+        git(root, "init", "-b", "main", str(repo))
+        git(repo, "config", "user.name", "Test")
+        git(repo, "config", "user.email", "test@example.com")
+        (repo / "README.md").write_text("base\n")
+        git(repo, "add", "README.md")
+        git(repo, "commit", "-m", "base")
+        return repo
+
+    def test_creates_writer_on_the_existing_daily_branch(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root)
+            git(repo, "branch", "usage/2026-08-10")
+            writer = root / "writer"
+
+            self.assertEqual(
+                ensure_writer_worktree(writer, repo, date(2026, 8, 10)),
+                writer.resolve(),
+            )
+
+            self.assertEqual(git(repo, "branch", "--show-current").stdout.strip(), "main")
+            self.assertEqual(
+                git(writer, "branch", "--show-current").stdout.strip(),
+                "usage/2026-08-10",
+            )
+            self.assertEqual(
+                ensure_writer_worktree(writer, repo, date(2026, 8, 10)),
+                writer.resolve(),
+            )
+
+    def test_creates_detached_writer_from_main_before_the_daily_branch_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root)
+            writer = root / "writer"
+
+            ensure_writer_worktree(writer, repo, date(2026, 8, 10))
+
+            self.assertEqual(git(writer, "branch", "--show-current").stdout.strip(), "")
+            self.assertEqual(
+                git(writer, "rev-parse", "HEAD").stdout,
+                git(repo, "rev-parse", "main").stdout,
+            )
+
+    def test_refuses_to_steal_the_daily_branch_from_the_source_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root)
+            git(repo, "switch", "-c", "usage/2026-08-10")
+
+            with self.assertRaisesRegex(RuntimeError, "switch the source checkout off"):
+                ensure_writer_worktree(root / "writer", repo, date(2026, 8, 10))
+
+    def test_refuses_an_unrelated_repository_at_the_writer_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root / "source-parent")
+            unrelated = self.make_repo(root / "writer-parent")
+
+            with self.assertRaisesRegex(RuntimeError, "different Git repository"):
+                ensure_writer_worktree(unrelated, repo, date(2026, 8, 10))
+
+    def test_recovers_a_registered_writer_after_its_cache_directory_was_removed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root)
+            git(repo, "branch", "usage/2026-08-10")
+            writer = root / "writer"
+            ensure_writer_worktree(writer, repo, date(2026, 8, 10))
+            shutil.rmtree(writer)
+
+            self.assertEqual(
+                ensure_writer_worktree(writer, repo, date(2026, 8, 10)),
+                writer.resolve(),
+            )
+            self.assertEqual(
+                git(writer, "branch", "--show-current").stdout.strip(),
+                "usage/2026-08-10",
+            )
+
     def test_rendered_plist_uses_current_paths_without_placeholders(self) -> None:
         home = Path("/tmp/example & home")
         repo = Path("/tmp/example & repo")
