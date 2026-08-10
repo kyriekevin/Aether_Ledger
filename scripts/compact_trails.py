@@ -12,7 +12,8 @@ would otherwise pile up forever and slow every clone/pull.
 
 Run this on the SINGLE writer machine only (single writer ⇒ the additive fold is
 race-free). It folds any trail pod whose newest data date is older than
-TRAIL_TTL_DAYS into the cumulative `data/trail/rollup/{claude,codex,opencode}.json`
+TRAIL_TTL_DAYS into the cumulative
+`data/trail/rollup/{claude,codex,opencode,traex}.json`
 (ADDITIVE — each dead pod's data is final and distinct), then `git rm`s the pod
 folders in the SAME commit. The pusher (update_signature.py) sums data/trail/rollup
 and any still-live pods, so the cumulative total is preserved exactly while the
@@ -58,7 +59,7 @@ from sync_usage import (
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
 TRAIL_DIR = DATA_REPO_DIR / "data" / "trail"
 ROLLUP_DIR = TRAIL_DIR / "rollup"
-AGENT_FILES = ("claude.json", "codex.json", "opencode.json")
+AGENT_FILES = ("claude.json", "codex.json", "opencode.json", "traex.json")
 
 # A pod with no data newer than this many days is "dead" (its k8s box is gone).
 TRAIL_TTL_DAYS = 7

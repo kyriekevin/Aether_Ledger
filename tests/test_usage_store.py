@@ -16,6 +16,11 @@ import compact_trails  # noqa: E402
 import sync_usage  # noqa: E402
 
 
+class SharedStoreCoverageTests(unittest.TestCase):
+    def test_trail_compaction_covers_traex(self) -> None:
+        self.assertIn("traex.json", compact_trails.AGENT_FILES)
+
+
 class MergeWithCumulativeTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -44,6 +49,59 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
         self.assertEqual(
             self.read_store()["2026-08-04"], {"totalTokens": 100, "totalCost": 1.5}
+        )
+
+    def test_same_official_tokens_never_reprice_completed_history(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 4.0, "costSource": "official"
+            }
+        })
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 1.5,
+            "costSource": "official",
+        }], self.store)
+        self.assertEqual(self.read_store()["2026-08-04"]["totalCost"], 4.0)
+
+    def test_same_tokens_backfill_when_unpriced_becomes_official(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 0.0, "costSource": "unpriced"
+            }
+        })
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 5.0,
+            "costSource": "official",
+        }], self.store)
+        self.assertEqual(
+            self.read_store()["2026-08-04"],
+            {"totalTokens": 100, "totalCost": 5.0, "costSource": "official"},
+        )
+
+    def test_same_tokens_never_downgrade_official_to_unpriced(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 5.0, "costSource": "official"
+            }
+        })
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
+            "costSource": "unpriced",
+        }], self.store)
+        self.assertEqual(
+            self.read_store()["2026-08-04"],
+            {"totalTokens": 100, "totalCost": 5.0, "costSource": "official"},
+        )
+
+    def test_unpriced_zero_replaces_a_legacy_proxy_price(self) -> None:
+        self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 9.0}})
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
+            "costSource": "unpriced", "costTrusted": True,
+        }], self.store)
+        self.assertEqual(
+            self.read_store()["2026-08-04"],
+            {"totalTokens": 100, "totalCost": 0.0, "costSource": "unpriced"},
         )
 
     def test_token_regression_freezes_the_stored_pair(self) -> None:
@@ -433,40 +491,8 @@ class TrailIdentityTests(unittest.TestCase):
         self.assertFalse(self.id_file.exists())
 
 
-class UnpricedModelsTests(unittest.TestCase):
-    def test_reports_models_that_billed_tokens_for_free(self) -> None:
-        raw = [
-            {"period": "2026-08-03", "modelBreakdowns": [
-                {"modelName": "claude-opus-5", "inputTokens": 10, "cost": 0.0},
-                {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
-            ]},
-            {"period": "2026-08-04", "modelBreakdowns": [
-                {"modelName": "claude-opus-5", "cacheReadTokens": 90, "cost": 0.0},
-            ]},
-        ]
-        self.assertEqual(sync_usage.unpriced_models(raw), {"claude-opus-5": 2})
-
-    def test_ignores_models_upstream_never_priced(self) -> None:
-        raw = [{"period": "2026-08-04", "modelBreakdowns": [
-            {"modelName": "codex-auto-review", "inputTokens": 500, "cost": 0.0},
-        ]}]
-        self.assertEqual(sync_usage.unpriced_models(raw), {})
-
-    def test_ignores_a_model_that_simply_had_no_usage(self) -> None:
-        raw = [{"period": "2026-08-04", "modelBreakdowns": [
-            {"modelName": "claude-opus-5", "inputTokens": 0, "cost": 0.0},
-        ]}]
-        self.assertEqual(sync_usage.unpriced_models(raw), {})
-
-    def test_a_fully_priced_run_is_silent(self) -> None:
-        raw = [{"period": "2026-08-04", "modelBreakdowns": [
-            {"modelName": "gpt-5.5", "inputTokens": 10, "outputTokens": 5, "cost": 1.5},
-        ]}]
-        self.assertEqual(sync_usage.unpriced_models(raw), {})
-
-
-class CostTrustedMarkingTests(unittest.TestCase):
-    """fetch_daily_since decides, per day and per agent, whether pricing was complete."""
+class OfficialPricingFetchTests(unittest.TestCase):
+    """fetch_daily_since accepts only repository-owned official model prices."""
 
     def fetch(self, agent_breakdowns: dict[str, list[dict]]) -> dict[str, dict]:
         agents = [
@@ -501,7 +527,7 @@ class CostTrustedMarkingTests(unittest.TestCase):
             "opencode": op[0] if op else None,
         }
 
-    def test_one_unpriced_model_taints_only_its_own_agent(self) -> None:
+    def test_a_zero_ccusage_cost_falls_back_to_the_official_standard_rate(self) -> None:
         out = self.fetch({
             "claude": [
                 {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 0.0},
@@ -511,10 +537,8 @@ class CostTrustedMarkingTests(unittest.TestCase):
                 {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
             ],
         })
-        # The Claude sum is short by whatever opus-5 should have cost...
-        self.assertFalse(out["claude"]["costTrusted"])
-        self.assertEqual(out["claude"]["totalCost"], 1.03)
-        # ...while Codex priced everything it saw and stays usable.
+        self.assertTrue(out["claude"]["costTrusted"])
+        self.assertAlmostEqual(out["claude"]["totalCost"], 1.0305)
         self.assertTrue(out["codex"]["costTrusted"])
 
     def test_a_fully_priced_day_is_trusted(self) -> None:
@@ -535,6 +559,7 @@ class CostTrustedMarkingTests(unittest.TestCase):
             {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
         ]})
         self.assertTrue(out["codex"]["costTrusted"])
+        self.assertEqual(out["codex"]["costSource"], "unpriced")
 
     def test_a_model_with_no_usage_does_not_taint_its_day(self) -> None:
         out = self.fetch({"claude": [
@@ -553,8 +578,14 @@ class CostTrustedMarkingTests(unittest.TestCase):
         self.assertEqual(
             out["claude"]["models"],
             {
-                "claude-opus-5": {"totalTokens": 100},
-                "claude-sonnet-5": {"totalTokens": 50},
+                "claude-opus-5": {
+                    "totalTokens": 100, "inputTokens": 100, "outputTokens": 0,
+                    "cacheCreationTokens": 0, "cacheReadTokens": 0,
+                },
+                "claude-sonnet-5": {
+                    "totalTokens": 50, "inputTokens": 0, "outputTokens": 50,
+                    "cacheCreationTokens": 0, "cacheReadTokens": 0,
+                },
             },
         )
 
@@ -569,21 +600,16 @@ class CostTrustedMarkingTests(unittest.TestCase):
             ],
         })
         self.assertEqual(out["claude"]["totalTokens"], 120)
-        self.assertEqual(
-            out["claude"]["models"],
-            {
-                "agnes-2.0-flash": {"totalTokens": 100},
-                "gpt-5.5": {"totalTokens": 20},
-            },
-        )
+        self.assertEqual(out["claude"]["models"]["agnes-2.0-flash"]["totalTokens"], 100)
+        self.assertEqual(out["claude"]["models"]["gpt-5.5"]["totalTokens"], 20)
         self.assertEqual(out["codex"]["totalTokens"], 30)
-        self.assertEqual(
-            out["codex"]["models"], {"gpt-5.5": {"totalTokens": 30}}
-        )
+        self.assertEqual(out["codex"]["models"]["gpt-5.5"]["totalTokens"], 30)
 
     def test_requests_exact_agent_breakdowns(self) -> None:
         self.fetch({})
         self.assertIn("--by-agent", self.captured["cmd"])
+        self.assertIn("--offline", self.captured["cmd"])
+        self.assertIn("--config", self.captured["cmd"])
 
 
 class TraexFetchTests(unittest.TestCase):
@@ -620,50 +646,47 @@ class TraexFetchTests(unittest.TestCase):
 
     def test_a_priced_day_is_trusted(self) -> None:
         out = self.fetch([{
-            "date": "2026-08-07", "totalTokens": 1000, "costUSD": 2.5,
-            "models": {"GPT-5.5": {"totalTokens": 1000}},
+            "date": "2026-08-07", "totalTokens": 1000, "costUSD": 999.0,
+            "models": {"GPT-5.5": {"totalTokens": 1000, "inputTokens": 1000}},
         }])
         self.assertEqual(len(out), 1)
         self.assertEqual(out[0]["totalTokens"], 1000)
-        self.assertEqual(out[0]["totalCost"], 2.5)
+        self.assertEqual(out[0]["totalCost"], 0.005)
         self.assertTrue(out[0]["costTrusted"])
-        self.assertEqual(out[0]["models"], {"GPT-5.5": {"totalTokens": 1000}})
+        self.assertEqual(out[0]["models"]["GPT-5.5"]["inputTokens"], 1000)
 
-    def test_tokens_billed_free_mark_the_day_untrusted(self) -> None:
-        # traex's Claude aliases (openrouter-*) are absent from the price table
-        # and bill free: tokens are real, cost is not.
+    def test_alias_without_component_tokens_is_explicitly_zero(self) -> None:
+        # The alias resolves to Claude, but a total-only model bucket cannot be
+        # split into billable input/output components, so its official cost is 0.
         out = self.fetch([{
             "date": "2026-08-07", "totalTokens": 4000, "costUSD": 0,
             "models": {"openrouter-3o": {"totalTokens": 4000}},
         }])
         self.assertEqual(out[0]["totalTokens"], 4000)
-        self.assertFalse(out[0]["costTrusted"])
+        self.assertTrue(out[0]["costTrusted"])
+        self.assertEqual(out[0]["totalCost"], 0.0)
 
-    def test_a_mixed_priced_and_unpriced_day_is_trusted_low_side(self) -> None:
-        # `codex daily` gives per-model tokens but only a row-level costUSD, so a
-        # day mixing a priced GPT-5.x with a free alias cannot be split. We trust
-        # the positive costUSD anyway: it is a real, low-side figure (short by the
-        # alias's unpriced tokens), and keeping it beats dropping the whole day to
-        # zero. merge_with_cumulative still refuses to overwrite a stored cost with
-        # a bare zero, so a fully unpriced fetch never rewrites history downward.
+    def test_a_mixed_day_is_summed_from_official_per_model_costs(self) -> None:
+        # Ignore ccusage's unsplittable row cost and sum the detailed model buckets.
+        # The GPT input is priced; the total-only alias contributes explicit zero.
         out = self.fetch([{
             "date": "2026-08-07", "totalTokens": 5000, "costUSD": 2.5,
             "models": {
-                "gpt-5.5": {"totalTokens": 1000},
+                "gpt-5.5": {"totalTokens": 1000, "inputTokens": 1000},
                 "openrouter-3o": {"totalTokens": 4000},
             },
         }])
         self.assertEqual(out[0]["totalTokens"], 5000)
-        self.assertEqual(out[0]["totalCost"], 2.5)
+        self.assertEqual(out[0]["totalCost"], 0.005)
         self.assertTrue(out[0]["costTrusted"])
+        self.assertEqual(out[0]["costSource"], "unpriced")
 
     def test_an_empty_home_yields_no_entries(self) -> None:
         self.assertEqual(self.fetch([]), [])
 
     def test_unmapped_opaque_slugs_are_logged(self) -> None:
-        # Seed/Doubao/Qwen have no ccusage price key and we have not mapped them,
-        # so they bill free. The day still keeps its positive cost, but the slug is
-        # logged so a new unpriced family gets noticed instead of billing zero.
+        # Seed/Doubao/Qwen have no registered official price and bill zero. The
+        # slug is logged so a new family gets noticed instead of disappearing.
         with patch.object(sync_usage.sys, "stderr", io.StringIO()) as err:
             out = self.fetch([{
                 "date": "2026-08-07", "totalTokens": 3000, "costUSD": 1.0,
