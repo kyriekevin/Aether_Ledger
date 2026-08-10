@@ -52,23 +52,40 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # On a pull request the checkout is GitHub's synthetic merge commit,
+          # which is authored with the account's primary email and is thrown
+          # away after the run. Review the branch tip instead, so the range
+          # holds only commits that can actually reach main.
           case "${{ github.event_name }}" in
-            pull_request) base="${{ github.event.pull_request.base.sha }}" ;;
-            push) base="${{ github.event.before }}" ;;
-            *) base="" ;;
+            pull_request)
+              base="${{ github.event.pull_request.base.sha }}"
+              tip="${{ github.event.pull_request.head.sha }}"
+              ;;
+            push)
+              base="${{ github.event.before }}"
+              tip="${{ github.sha }}"
+              ;;
+            *)
+              base=""
+              tip="HEAD"
+              ;;
           esac
+          exists() { [ -n "$1" ] && git cat-file -e "$1^{commit}" 2>/dev/null; }
+          # A fork's head commit is not always fetched under the merge ref.
+          exists "$tip" || tip="$(git rev-parse --verify --quiet 'HEAD^2' || echo HEAD)"
           # A first push, a force-push over a deleted tip, or a manual dispatch
           # leaves no usable base. Fall back to the first parent, and skip only
           # when even that is absent (the root commit).
-          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
-            || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
-            base="$(git rev-parse --verify --quiet HEAD^ || true)"
-          fi
+          exists "$base" || base="$(git rev-parse --verify --quiet "$tip^" || true)"
           echo "base=$base" >>"$GITHUB_OUTPUT"
+          echo "tip=$tip" >>"$GITHUB_OUTPUT"
+          echo "reviewing $base..$tip"
 
       - name: Whitespace and conflict-marker check
         if: steps.range.outputs.base != ''
-        run: git diff --check "${{ steps.range.outputs.base }}...HEAD"
+        run: |
+          git diff --check \
+            "${{ steps.range.outputs.base }}...${{ steps.range.outputs.tip }}"
 
       - name: Commit identity audit
         if: steps.range.outputs.base != ''
@@ -76,4 +93,4 @@ jobs:
         # commits carrying a personal email address.
         run: |
           uv run --script scripts/audit_public.py \
-            --history "${{ steps.range.outputs.base }}..HEAD"
+            --history "${{ steps.range.outputs.base }}..${{ steps.range.outputs.tip }}"
