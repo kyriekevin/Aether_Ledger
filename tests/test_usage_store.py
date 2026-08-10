@@ -265,6 +265,39 @@ class MergeWithCumulativeTests(unittest.TestCase):
             day["totalTokens"],
         )
 
+    def test_model_keys_are_canonicalized_before_taking_high_waters(self) -> None:
+        models = {
+            "GPT-5.4": {"totalTokens": 45_400},
+            "GPT-5.5": {"totalTokens": 1_486_376},
+            "Gemini-3-Flash-Preview": {"totalTokens": 425_379},
+        }
+        self.write_store({
+            "2026-08-07": {
+                "totalTokens": 1_957_155,
+                "totalCost": 0.0,
+                "models": models,
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-07",
+                "totalTokens": 1_957_155,
+                "totalCost": 0.0,
+                "models": {name.lower(): value for name, value in models.items()},
+            }],
+            self.store,
+        )
+        day = self.read_store()["2026-08-07"]
+        self.assertEqual(day["totalTokens"], 1_957_155)
+        self.assertEqual(
+            day["models"],
+            {
+                "gpt-5.4": {"totalTokens": 45_400},
+                "gpt-5.5": {"totalTokens": 1_486_376},
+                "gemini-3-flash-preview": {"totalTokens": 425_379},
+            },
+        )
+
 
 class ReconcileTests(unittest.TestCase):
     """The high-water rule is right on the schedule and wrong after an upgrade."""
@@ -847,7 +880,10 @@ class ReconcileStubTests(unittest.TestCase):
               "models": {}}],
             self.store,
         )
-        self.assertEqual(self.read()["2026-07-25"]["models"], {"gpt-5.5": 722_000_000})
+        self.assertEqual(
+            self.read()["2026-07-25"]["models"],
+            {"gpt-5.5": {"totalTokens": 722_000_000}},
+        )
 
     def test_a_day_the_fetch_dropped_keeps_its_stored_value(self) -> None:
         sync_usage.merge_with_cumulative(
