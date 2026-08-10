@@ -58,6 +58,23 @@ def remove_legacy_agent(home: Path, uid: int) -> bool:
     return True
 
 
+def reload_agent(destination: Path, uid: int) -> subprocess.CompletedProcess[str]:
+    """Replace any loaded copy with the freshly rendered launchd agent."""
+    domain = f"gui/{uid}"
+    subprocess.run(
+        ["launchctl", "bootout", f"{domain}/{LABEL}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return subprocess.run(
+        ["launchctl", "bootstrap", domain, str(destination)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
 def migrate_legacy_node_name(home: Path) -> str | None:
     """Copy an approved legacy role label into the Aether Ledger config."""
     destination = home / ".config" / "token-activity" / "node_name"
@@ -84,7 +101,11 @@ def main() -> int:
     (home / "Library" / "Logs" / "aether-ledger").mkdir(parents=True, exist_ok=True)
     atomic_write(destination, render_template(home, REPO_ROOT))
     print(f"installed {destination}")
-    print(f'activate with: launchctl bootstrap "gui/$(id -u)" "{destination}"')
+    loaded = reload_agent(destination, os.getuid())
+    if loaded.returncode != 0:
+        print(f"launchctl bootstrap failed: {loaded.stderr.strip()}")
+        return loaded.returncode
+    print(f"reloaded launchd agent {LABEL}")
     return 0
 
 

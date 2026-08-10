@@ -10,8 +10,10 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from install_launchd import (  # noqa: E402
+    LABEL,
     LEGACY_LABEL,
     migrate_legacy_node_name,
+    reload_agent,
     remove_legacy_agent,
     render_template,
 )
@@ -31,6 +33,32 @@ class InstallLaunchdTests(unittest.TestCase):
             parsed["ProgramArguments"][-1],
             str(repo / "scripts" / "sync_usage.py"),
         )
+        self.assertNotIn("StartInterval", parsed)
+        self.assertEqual(
+            parsed["StartCalendarInterval"],
+            [{"Minute": 0}, {"Minute": 15}, {"Minute": 30}, {"Minute": 45}],
+        )
+
+    def test_reload_replaces_loaded_agent_with_rendered_plist(self) -> None:
+        destination = Path("/tmp/com.example.agent.plist")
+        with patch("install_launchd.subprocess.run") as run:
+            bootstrap = run.return_value
+            self.assertIs(reload_agent(destination, 501), bootstrap)
+
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(
+            run.call_args_list[0].args[0],
+            ["launchctl", "bootout", f"gui/501/{LABEL}"],
+        )
+        self.assertEqual(
+            run.call_args_list[1].args[0],
+            ["launchctl", "bootstrap", "gui/501", str(destination)],
+        )
+        for call in run.call_args_list:
+            self.assertEqual(
+                call.kwargs,
+                {"capture_output": True, "text": True, "check": False},
+            )
 
     def test_removes_and_unloads_legacy_agent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

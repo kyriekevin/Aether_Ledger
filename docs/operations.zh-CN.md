@@ -79,22 +79,23 @@ printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已�
 
 ## 定时同步
 
-仓库附带的 launchd agent 每 15 分钟运行一次。为当前 checkout 渲染模板：
+仓库附带的 launchd agent 会在每小时的 0、15、30、45 分运行。为当前 checkout 渲染模板
+并重新加载：
 
 ```sh
 uv run --script scripts/install_launchd.py
-launchctl bootstrap "gui/$(id -u)" \
-  ~/Library/LaunchAgents/com.kyriekevin.aether-ledger.plist
-launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 ```
 
 安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
-`com.kyriekevin.cc-cx-usage-data` agent，避免新旧定时任务同时运行。
+`com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更
+立即生效，同时避免新旧定时任务一起运行。
 
 日志位置：
 
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
+
+每次运行都会在标准输出日志中写入开始和结束心跳。
 
 ### Git 并发访问
 
