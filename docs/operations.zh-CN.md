@@ -99,12 +99,24 @@ printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已�
 
 ## 定时同步
 
-仓库附带的 launchd agent 会在每小时的 0、15、30、45 分运行。为当前 checkout 渲染模板
-并重新加载：
+仓库附带的 launchd agent 会在每小时的 0、15、30、45 分运行。先让日常开发 checkout
+离开当前 `usage/YYYY-MM-DD` 分支并更新 `main`，再安装：
 
 ```sh
+git switch main
+git pull --ff-only
 uv run --script scripts/install_launchd.py
 ```
+
+安装器会创建 linked、仅供 launchd 使用的 Git worktree：
+`~/.cache/aether-ledger/writer`，并把该路径写入 agent。当天 usage 分支已存在时，writer
+直接检出它；尚不存在时则从 `main` detached 启动，由原有 rollover guard 决定何时建分支。
+源 checkout 不能仍占用当天 usage 分支，因为同一个本地分支只能被一个 worktree 检出。
+可用 `--writer-worktree PATH` 改写默认位置。
+
+writer 固定使用每日分支创建时继承的代码。白天新合入 `main` 的修改到次日分支创建时生效，
+不会 merge 进当天 usage 分支。这样定时提交仍然只包含数据，开发目录里的切分支、rebase 或
+dirty tree 也不会暂停 launchd。重复运行安装器会复用已注册的 writer worktree 并重新加载 agent。
 
 安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
 `com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更
