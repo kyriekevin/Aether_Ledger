@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "currency": "USD",
+  "unit": "perMillionTokens",
+  "sources": {
+    "anthropic": {
+      "fetchUrl": "https://platform.claude.com/docs/en/about-claude/pricing.md",
+      "referenceUrl": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    "deepseek": {
+      "fetchUrl": "https://raw.githubusercontent.com/deepseek-ai/awesome-deepseek-agent/main/CONTRIBUTING.md",
+      "referenceUrl": "https://api-docs.deepseek.com/quick_start/pricing"
+    },
+    "openai": {
+      "fetchUrl": "https://developers.openai.com/api/docs/pricing.md",
+      "referenceUrl": "https://developers.openai.com/api/docs/pricing"
+    }
+  },
+  "models": {
+    "claude-fable-5": {
+      "provider": "anthropic",
+      "officialName": "Claude Fable 5",
+      "rates": [
+        {"effectiveFrom": "2026-07-06", "input": 10.0, "output": 50.0, "cacheWrite": 12.5, "cacheRead": 1.0}
+      ]
+    },
+    "claude-haiku-4-5-20251001": {
+      "provider": "anthropic",
+      "officialName": "Claude Haiku 4.5",
+      "rates": [
+        {"effectiveFrom": "2026-07-08", "input": 1.0, "output": 5.0, "cacheWrite": 1.25, "cacheRead": 0.1}
+      ]
+    },
+    "claude-opus-4-8": {
+      "provider": "anthropic",
+      "officialName": "Claude Opus 4.8",
+      "rates": [
+        {"effectiveFrom": "2026-07-09", "input": 5.0, "output": 25.0, "cacheWrite": 6.25, "cacheRead": 0.5, "fastMultiplier": 2.0}
+      ]
+    },
+    "claude-opus-4-6": {
+      "provider": "anthropic",
+      "officialName": "Claude Opus 4.6",
+      "rates": [
+        {"effectiveFrom": "2026-08-10", "input": 5.0, "output": 25.0, "cacheWrite": 6.25, "cacheRead": 0.5}
+      ]
+    },
+    "claude-opus-4-7": {
+      "provider": "anthropic",
+      "officialName": "Claude Opus 4.7",
+      "rates": [
+        {"effectiveFrom": "2026-08-10", "input": 5.0, "output": 25.0, "cacheWrite": 6.25, "cacheRead": 0.5}
+      ]
+    },
+    "claude-opus-5": {
+      "provider": "anthropic",
+      "officialName": "Claude Opus 5",
+      "rates": [
+        {"effectiveFrom": "2026-07-27", "input": 5.0, "output": 25.0, "cacheWrite": 6.25, "cacheRead": 0.5, "fastMultiplier": 2.0}
+      ]
+    },
+    "claude-sonnet-5": {
+      "provider": "anthropic",
+      "officialName": "Claude Sonnet 5",
+      "rates": [
+        {"effectiveFrom": "2026-07-06", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.2},
+        {"effectiveFrom": "2026-09-01", "input": 3.0, "output": 15.0, "cacheWrite": 3.75, "cacheRead": 0.3}
+      ]
+    },
+    "deepseek-v4-flash": {
+      "provider": "deepseek",
+      "officialName": "deepseek-v4-flash",
+      "rates": [
+        {"effectiveFrom": "2026-08-07", "input": 0.14, "output": 0.28, "cacheWrite": 0.14, "cacheRead": 0.0028}
+      ]
+    },
+    "deepseek-v4-pro": {
+      "provider": "deepseek",
+      "officialName": "deepseek-v4-pro",
+      "rates": [
+        {"effectiveFrom": "2026-06-10", "input": 0.435, "output": 0.87, "cacheWrite": 0.435, "cacheRead": 0.003625}
+      ]
+    },
+    "gpt-5.3-codex": {
+      "provider": "openai",
+      "officialName": "gpt-5.3-codex",
+      "rates": [
+        {"effectiveFrom": "2026-04-20", "input": 1.75, "output": 14.0, "cacheWrite": 1.75, "cacheRead": 0.175, "fastMultiplier": 2.0}
+      ]
+    },
+    "gpt-5.3-codex-spark": {
+      "provider": "openai",
+      "officialName": "gpt-5.3-codex-spark",
+      "rates": [],
+      "unpricedReason": "No public official API token price"
+    },
+    "gpt-5.4": {
+      "provider": "openai",
+      "officialName": "gpt-5.4",
+      "rates": [
+        {"effectiveFrom": "2026-06-29", "input": 2.5, "output": 15.0, "cacheWrite": 2.5, "cacheRead": 0.25, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 5.0, "longOutput": 22.5, "longCacheWrite": 5.0, "longCacheRead": 0.5}
+      ]
+    },
+    "gpt-5.4-mini": {
+      "provider": "openai",
+      "officialName": "gpt-5.4-mini",
+      "rates": [
+        {"effectiveFrom": "2026-06-19", "input": 0.75, "output": 4.5, "cacheWrite": 0.75, "cacheRead": 0.075, "fastMultiplier": 2.0}
+      ]
+    },
+    "gpt-5.5": {
+      "provider": "openai",
+      "officialName": "gpt-5.5",
+      "rates": [
+        {"effectiveFrom": "2026-05-13", "input": 5.0, "output": 30.0, "cacheWrite": 5.0, "cacheRead": 0.5, "fastMultiplier": 2.5, "longContextThreshold": 272000, "longInput": 10.0, "longOutput": 45.0, "longCacheWrite": 10.0, "longCacheRead": 1.0}
+      ]
+    },
+    "gpt-5.6-luna": {
+      "provider": "openai",
+      "officialName": "gpt-5.6-luna",
+      "rates": [
+        {"effectiveFrom": "2026-08-07", "input": 0.2, "output": 1.2, "cacheWrite": 0.25, "cacheRead": 0.02, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 0.4, "longOutput": 1.8, "longCacheWrite": 0.5, "longCacheRead": 0.04}
+      ]
+    },
+    "gpt-5.6-sol": {
+      "provider": "openai",
+      "officialName": "gpt-5.6-sol",
+      "rates": [
+        {"effectiveFrom": "2026-07-10", "input": 5.0, "output": 30.0, "cacheWrite": 6.25, "cacheRead": 0.5, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 10.0, "longOutput": 45.0, "longCacheWrite": 12.5, "longCacheRead": 1.0}
+      ]
+    }
+  }
+}

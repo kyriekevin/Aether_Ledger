@@ -14,21 +14,36 @@ TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支
 `rollout-*.jsonl` 会话格式写入
 `~/.trae/cli`（而非 `~/.codex`）。`ccusage` 没有 `trae` agent，但其 `codex` 读取器认
 `CODEX_HOME`，因此每台写入设备会额外跑一次只读的 `ccusage codex daily`，结果记入独立的
-`traex.json`，且完全不触碰真实的 `~/.codex` 树。`ccusage` 的价格查表大小写敏感、只认小写
-slug，而 TRAE CLI 记录的模型名带大写（`GPT-5.5`、`Gemini-3-Flash-Preview`），因此定价前会
+`traex.json`，且完全不触碰真实的 `~/.codex` 树。TRAE CLI 记录的模型名带大写
+（`GPT-5.5`、`Gemini-3-Flash-Preview`），因此采集前会
 先把 traex 会话镜像到一个临时 `CODEX_HOME`，仅对其中的 `"model"` 字段做归一化，真实的
-`~/.trae/cli` 树不会被写入。归一化做两件事：转小写，让 `ccusage` 能为真名模型（GPT-5.x、
-Gemini、DeepSeek……）定价；并把 TRAE CLI 的匿名 Claude 别名（`openrouter-1o`/`2o`/`3o`，含
+`~/.trae/cli` 树不会被写入。归一化做两件事：转小写以匹配共享价格表；并把 TRAE CLI
+的匿名 Claude 别名（`openrouter-1o`/`2o`/`3o`，含
 `__max` 变体）解析为其背后的真实 Anthropic Opus slug（`claude-opus-4-6`/`4-7`/`4-8`），使其也能
-定价。其余尚未映射的厂商内部 slug（Seed/Doubao/Qwen）仍不在价格表中、按免费计费，因此 traex
-某天记录的成本是真实但偏低的值，缺的是这些 slug 未定价 token 的部分；写入器会把每个这类 slug
-记入日志，以便新出现的未定价家族被及时发现，而不是悄悄按 0 计费。成本恰为 0（当天无任何模型
-定价成功）的日子标为不可信，因此不会把已存成本向下覆盖；出于同样原因，traex 不参与
-`--reconcile-since`。
+定价。
+
+Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时强制使用 `--offline`，并注入
+由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
+逐请求识别 Codex Fast/standard 与长上下文，仓库负责提供费率。未进入表的模型，以及
+`gpt-5.3-codex-spark` 这类没有公开官方 API token 价的模型，只计 token、金额按 0。这是 API
+等价估算，不是订阅账单。
+
+从厂商第一方来源刷新价格：
+
+```sh
+uv run --script scripts/update_pricing.py
+uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
+```
+
+第一条命令只读，同时会发现所有长期节点和 trail 数据中已有的模型名。应用前检查输出中的
+`CHANGE`、`UNPRICED` 与 `UNSUPPORTED`。官方页面抓取或解析失败时脚本直接失败，不会回退到代理商。
+`effectiveFrom` 表示该次抓取的价格从仓库哪一天开始适用，不代表模型公开发布日期。初始条目使用
+各模型在仓库中首次出现的日期。
 
 本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
-设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测，
-从而避免价格表刷新后继续保留过时的高水位价格。
+设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测；某天一旦
+有官方计价结果，同一 token 高水位下金额不再改变。需要有意修正历史时使用 `--reconcile-since`。
+没有模型明细的旧 Claude 日期无法可靠复算，因此保留原金额，不猜模型。
 
 新设备只能恢复其本地日志中仍然存在的日期。
 
@@ -36,7 +51,7 @@ Gemini、DeepSeek……）定价；并把 TRAE CLI 的匿名 Claude 别名（`op
 
 - 安装 Homebrew 的 macOS
 - `uv`
-- `ccusage` 20.0.15 或更高版本（需支持 `--by-agent`）
+- `ccusage` 20.0.19 或更高版本（需支持 `--by-agent`、价格 override 与已记录 Fast tier）
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
 - Claude Code、Codex 或 OpenCode 的本地用量日志
@@ -244,14 +259,21 @@ Claude 条目包含每日 token、原始 API 等价成本，以及按模型拆�
   "2026-04-07": {
     "totalTokens": 8946720,
     "totalCost": 0.44,
+    "costSource": "official",
     "models": {
-      "claude-opus-5": {"totalTokens": 8946720}
+      "claude-opus-5": {
+        "totalTokens": 8946720,
+        "inputTokens": 100,
+        "outputTokens": 20,
+        "cacheCreationTokens": 2000,
+        "cacheReadTokens": 8944600
+      }
     }
   }
 }
 ```
 
-`models` 字段自此向后写入；`ccusage` 已轮转掉会话的历史日期保留原有的「仅总量」结构。
+详细 `models` 字段自此向后写入；`ccusage` 已轮转掉会话的历史日期保留原有的「仅总量」结构和旧金额。
 
 Codex 条目还可以包含按模型拆分的 token 和图片计数：
 
@@ -271,10 +293,8 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
 
-traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。其 `totalCost`
-是真实但偏低的值：定价前模型名会被归一化（转小写，并把 `openrouter-*` Claude 别名解析为真实
-Opus slug），让 `ccusage` 能为它们定价，而尚未映射的厂商内部 slug（Seed/Doubao/Qwen）只贡献
-token、不计成本。
+traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。它目前不记录 Fast
+tier，因此表内模型按官方 standard 价计算；未知模型只贡献 token，金额按 0。
 
 ## Trail 压缩
 

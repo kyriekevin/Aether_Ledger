@@ -16,24 +16,40 @@ TRAE CLI (traex) remains a separate collection path. It is a Codex fork that wri
 `CODEX_HOME`, so each writer runs a second, read-only `ccusage codex daily` with
 `CODEX_HOME=~/.trae/cli` and records the result in a separate `traex.json` store. That invocation
 never touches the real `~/.codex` tree, so Codex usage and the Codex CLI itself are unaffected.
-`ccusage`'s price lookup is case-sensitive against lowercase slugs, but TRAE CLI logs capitalised
-model names (`GPT-5.5`, `Gemini-3-Flash-Preview`), so before pricing, the writer mirrors the traex
+TRAE CLI logs capitalised model names (`GPT-5.5`, `Gemini-3-Flash-Preview`), so before collection,
+the writer mirrors the traex
 sessions into a temporary `CODEX_HOME` with only the `"model"` field normalised; the real
 `~/.trae/cli` tree is never written. Normalisation does two things: it lowercases the name so
-`ccusage` can price traex's real-name models (GPT-5.x, Gemini, DeepSeek, …), and it resolves TRAE
+it matches the shared table, and it resolves TRAE
 CLI's opaque Claude aliases (`openrouter-1o`/`2o`/`3o`, including `__max` variants) to the real
-Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`) so those price too. Other
-vendor-internal slugs we have not mapped (Seed/Doubao/Qwen) remain absent from the price table and
-bill free, so a traex day's recorded cost is a real but low-side figure, short by their unpriced
-tokens; the writer logs each such slug so a new unpriced family gets noticed instead of billing zero
-unseen. A day whose cost is exactly zero (nothing priced) is held
-untrusted, so a stored cost is never overwritten downward; traex is excluded from
-`--reconcile-since` for the same reason.
+Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`).
+
+Token prices come only from `config/official-pricing.json`. The sync invokes ccusage with
+`--offline` and a generated override file, so neither LiteLLM's live table nor models.dev can alter
+stored amounts. ccusage still supplies its request-level Codex Fast/standard and long-context
+classification; the repository supplies the rates. Models absent from the checked-in table, and
+models such as `gpt-5.3-codex-spark` with no public official API token price, contribute tokens but
+zero cost. This is an API-equivalent estimate, not a subscription invoice.
+
+Refresh the table from first-party vendor sources with:
+
+```sh
+uv run --script scripts/update_pricing.py
+uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
+```
+
+The first command is read-only and also discovers model names already present in all durable and
+trail stores. Review its `CHANGE`, `UNPRICED`, and `UNSUPPORTED` lines before applying. The updater
+fails closed when an official page cannot be fetched or parsed; it never falls back to a reseller.
+`effectiveFrom` is the first repository date to which that captured rate applies, not a claim about
+the model's public release date. Initial entries use each model's first observed date.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
-Cost follows the winning token observation so a pricing-table refresh does not keep a stale
-high-water price.
+Cost follows the winning token observation. Once a date has an official-priced observation, the
+same token high-water mark is immutable; use `--reconcile-since` for an intentional historical
+correction. Legacy dates with no model breakdown keep their existing amount because they cannot be
+reconstructed without guessing a model.
 
 A new machine can only recover dates still present in its local logs.
 
@@ -41,7 +57,7 @@ A new machine can only recover dates still present in its local logs.
 
 - macOS with Homebrew
 - `uv`
-- `ccusage` 20.0.15 or newer (`--by-agent` support)
+- `ccusage` 20.0.19 or newer (`--by-agent`, pricing overrides, and recorded Fast tier support)
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
 - Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
@@ -262,15 +278,22 @@ breakdown:
   "2026-04-07": {
     "totalTokens": 8946720,
     "totalCost": 0.44,
+    "costSource": "official",
     "models": {
-      "claude-opus-5": {"totalTokens": 8946720}
+      "claude-opus-5": {
+        "totalTokens": 8946720,
+        "inputTokens": 100,
+        "outputTokens": 20,
+        "cacheCreationTokens": 2000,
+        "cacheReadTokens": 8944600
+      }
     }
   }
 }
 ```
 
-The `models` map is written going forward; days whose sessions `ccusage` has already rotated away
-keep their existing totals-only shape.
+The detailed `models` map is written going forward. Days whose sessions `ccusage` has already
+rotated away keep their existing totals-only shape and legacy cost.
 
 Codex entries may also contain model token breakdowns and an image counter:
 
@@ -290,10 +313,9 @@ Codex entries may also contain model token breakdowns and an image counter:
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
 
-traex (`traex.json`) uses the same date-keyed shape as Codex, with per-model token breakdowns. Its
-`totalCost` is a real but low-side figure: model names are normalised before pricing (lowercased,
-and `openrouter-*` Claude aliases resolved to real Opus slugs) so `ccusage` can price them, while
-unmapped vendor-internal slugs (Seed/Doubao/Qwen) contribute tokens with no cost.
+traex (`traex.json`) uses the same date-keyed shape as Codex. It currently records no Fast tier, so
+its registered models use the official standard rate; unknown models contribute tokens with zero
+cost.
 
 ## Trail compaction
 

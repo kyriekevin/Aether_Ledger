@@ -52,6 +52,30 @@ class PublicAuditTests(unittest.TestCase):
         for key in ("prompt", "sessionId", "hostname", "repository"):
             self.assertTrue(any(repr(key) in issue for issue in issues))
 
+    def test_store_schema_accepts_public_pricing_provenance_and_token_buckets(self) -> None:
+        issues: list[str] = []
+        _validate_store_schema(
+            {
+                "2026-08-01": {
+                    "totalTokens": 10,
+                    "totalCost": 0.1,
+                    "costSource": "official",
+                    "models": {
+                        "gpt-example": {
+                            "totalTokens": 10,
+                            "inputTokens": 4,
+                            "outputTokens": 1,
+                            "cacheCreationTokens": 2,
+                            "cacheReadTokens": 3,
+                        }
+                    },
+                }
+            },
+            Path("data/personal/codex.json"),
+            issues,
+        )
+        self.assertEqual(issues, [])
+
     def test_trail_machine_path_never_contains_raw_identity(self) -> None:
         raw = "worker-hostname-with-job-id"
         previous = os.environ.get(sync_usage.TRAIL_ENV)

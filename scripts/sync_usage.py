@@ -40,6 +40,14 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Iterator
 
+from pricing import (
+    ccusage_config_file,
+    load_pricing,
+    model_is_registered,
+    official_cost_from_ccusage,
+    standard_cost,
+    token_breakdown,
+)
 from render_dashboard import SHANGHAI
 
 # Data repo root: two levels up from this script (repo/scripts/sync_usage.py)
@@ -154,10 +162,6 @@ def resolve_machine() -> str:
 # 任意模型族。各 agent 仍写入独立 store，使 session rotation 下的高水位彼此隔离。
 CCUSAGE_CMD = ["ccusage", "daily", "--json", "--by-agent"]
 
-# Models upstream has no price entry for at all. They always come back free, so
-# they must not be read as the trace of a degraded fetch (see unpriced_models).
-UNPRICED_UPSTREAM_MODELS = frozenset({"codex-auto-review"})
-
 # ccusage walks every session JSONL, so it is the slowest step here — and it runs
 # while this process holds the checkout-wide Git lock. An unbounded hang would
 # strand that lock for as long as launchd keeps the job alive, starving every
@@ -207,8 +211,9 @@ CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 # READ-ONLY invocation kept fully apart from the Codex path so the two never mix:
 # traex lands in its own data/<machine>/traex.json store.
 #
-# Token counts come back accurate. Cost is only as good as ccusage's price table.
-# Two mismatches make traex's real names miss it, both fixed by normalising the
+# Token counts come back accurate. Cost uses the repository-owned official table;
+# unknown models deliberately contribute zero. Two naming mismatches are fixed by
+# normalising the
 # `"model"` field in a throwaway mirror before ccusage reads it (see
 # _lowercased_codex_home / _normalise_model):
 #   1. Case. The lookup is case-sensitive against lowercase slugs, but TRAE CLI
@@ -218,10 +223,9 @@ CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 #      slugs (openrouter-1o/2o/3o, incl. __max variants) that carry no vendor
 #      root, so ccusage's substring match never finds them. _ALIAS_PREFIXES maps
 #      each to the real Opus slug it stands for.
-# What stays unpriced: other vendor-internal slugs (Seed/Doubao/Qwen) whose real
-# model and rate we have not pinned down. They bill free and the day's cost is a
-# real but LOW-side figure, short by their tokens; _KNOWN_UNPRICED_PREFIXES logs
-# them so a new one surfaces instead of silently costing nothing.
+# What stays unpriced: any model absent from config/official-pricing.json, including
+# vendor-internal slugs whose real model and official rate are unknown. They bill
+# zero until scripts/update_pricing.py can resolve an official row.
 TRAEX_CODEX_HOME = Path.home() / ".trae" / "cli"
 # ccusage `codex daily` (unlike the unified `daily`) reports per-model tokens but
 # only a row-level costUSD, and dates under key `date`, not `period`.
@@ -241,10 +245,9 @@ _ALIAS_PREFIXES = (
     ("openrouter-1o", "claude-opus-4-6"),
 )
 
-# Vendor-internal slugs we knowingly leave unpriced: ccusage's table has no key
-# for them and we have not pinned a real model/rate. Listed so a new one shows up
-# in the log rather than billing zero unseen. A leftover `openrouter-` here means
-# our alias map missed a variant.
+# Vendor-internal slugs we knowingly leave unpriced because no official rate is
+# pinned. Listed so a new one shows up in the log rather than billing zero unseen.
+# A leftover `openrouter-` here means our alias map missed a variant.
 _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
 
 
@@ -297,31 +300,6 @@ def _breakdown_tokens(m: dict) -> int:
     )
 
 
-def unpriced_models(raw: list[dict]) -> dict[str, int]:
-    """Model → number of days it reported tokens but a cost of exactly 0.
-
-    ccusage fetches its price table at run time and, when that fails, falls back to
-    the snapshot bundled in its binary — silently, with a zero exit status, an empty
-    stderr and correct token counts. Models newer than that snapshot are absent from
-    it and come back free, which is the only externally visible trace of a degraded
-    fetch. Models upstream never priced are excluded so the signal stays rare enough
-    to mean something in the launchd log.
-
-    Reporting only: merge_with_cumulative already keeps the stored cost wherever one
-    exists, and a run whose prices are merely stale rather than missing leaves no
-    trace here at all.
-    """
-    unpriced: dict[str, int] = {}
-    for row in raw:
-        for m in row.get("modelBreakdowns", []):
-            name = m["modelName"]
-            if name in UNPRICED_UPSTREAM_MODELS or m.get("cost", 0.0):
-                continue
-            if _breakdown_tokens(m):
-                unpriced[name] = unpriced.get(name, 0) + 1
-    return unpriced
-
-
 def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
     """一次 ccusage daily --by-agent，拆出 (cc_daily, cx_daily, op_daily)。
 
@@ -339,21 +317,18 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
 
     其余 ccusage 支持的 agent 不属于本仓库的三个 store，保持忽略。
     """
-    out = subprocess.run(
-        CCUSAGE_CMD + ["--since", since.strftime("%Y%m%d")],
-        capture_output=True, text=True, check=True,
-        timeout=CCUSAGE_TIMEOUT_SECONDS,
-    )
-    raw = json.loads(out.stdout).get("daily", [])
-    unpriced = unpriced_models(raw)
-    if unpriced:
-        print(
-            "ccusage priced nothing for "
-            + ", ".join(f"{name} ({days}d)" for name, days in sorted(unpriced.items()))
-            + "; its price table came back incomplete, so days that already have a "
-            "cost keep it",
-            file=sys.stderr,
+    config_day = datetime.now(SHANGHAI).date()
+    pricing = load_pricing()
+    with ccusage_config_file(config_day) as config_path:
+        out = subprocess.run(
+            CCUSAGE_CMD + [
+                "--offline", "--config", str(config_path),
+                "--since", since.strftime("%Y%m%d"),
+            ],
+            capture_output=True, text=True, check=True,
+            timeout=CCUSAGE_TIMEOUT_SECONDS,
         )
+    raw = json.loads(out.stdout).get("daily", [])
     fs_image_counts = count_codex_image_files_per_day()
 
     cc_daily: list[dict] = []
@@ -371,27 +346,22 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
             tokens = 0
             cost = 0.0
             models: dict[str, dict] = {}
-            priced = True
-            # A model that billed tokens for free makes only its actual agent's
-            # daily cost untrusted. `codex-auto-review` is deliberately free and
-            # excluded, else every Codex day would be tainted.
             for m in agent_row.get("modelBreakdowns", []):
                 model_tokens = _breakdown_tokens(m)
-                model_cost = m.get("cost", 0.0)
+                breakdown = token_breakdown(m)
+                model_name = m["modelName"]
                 tokens += model_tokens
-                cost += model_cost
-                models[m["modelName"]] = {"totalTokens": model_tokens}
-                if (
-                    model_tokens
-                    and not model_cost
-                    and m["modelName"] not in UNPRICED_UPSTREAM_MODELS
-                ):
-                    priced = False
+                if model_is_registered(model_name, pricing):
+                    cost += official_cost_from_ccusage(
+                        model_name, date.fromisoformat(d), config_day, breakdown,
+                        m.get("cost", 0.0), pricing,
+                    )
+                models[model_name] = {"totalTokens": model_tokens, **breakdown}
             if not (tokens or cost or models):
                 continue
             entry = {
                 "date": d, "totalTokens": tokens, "totalCost": cost,
-                "models": models, "costTrusted": priced,
+                "models": models, "costTrusted": True, "costSource": "official",
             }
             if agent == "codex":
                 entry["imageCount"] = fs_image_counts.get(d, 0)
@@ -476,13 +446,11 @@ def fetch_codex_home_daily(
     cost), and every model here is already a Codex-family model, so no agent
     classification is needed — the whole row is one bucket.
 
-    A day whose costUSD is positive is trusted, even across several models. That
-    figure may still be LOW-side: vendor-internal slugs we have not mapped
-    (Seed/Doubao/Qwen) contribute tokens but no cost even normalised, so the sum
-    understates by their share. We accept the understatement rather than discard a
-    genuine cost, and log any such slug so a new one surfaces instead of billing
-    zero unseen. merge_with_cumulative still refuses to overwrite a stored cost
-    with a bare zero, so a fully unpriced fetch never rewrites history downward.
+    ccusage's row-level costUSD is ignored here because it cannot separate known
+    official models from unknown aliases on mixed days. The per-model token buckets
+    are priced directly from config/official-pricing.json; traex currently records
+    no Fast tier, so this path uses the official standard rate. Unknown models are
+    deliberately zero and logged when they match a known internal-slug family.
     """
     if lowercase_models:
         with _lowercased_codex_home(codex_home) as mirror:
@@ -490,34 +458,36 @@ def fetch_codex_home_daily(
 
     env = os.environ.copy()
     env["CODEX_HOME"] = str(codex_home)
-    out = subprocess.run(
-        CCUSAGE_CODEX_CMD + ["--since", since.strftime("%Y%m%d")],
-        capture_output=True, text=True, check=True,
-        timeout=CCUSAGE_TIMEOUT_SECONDS, env=env,
-    )
+    config_day = datetime.now(SHANGHAI).date()
+    pricing = load_pricing()
+    with ccusage_config_file(config_day) as config_path:
+        out = subprocess.run(
+            CCUSAGE_CODEX_CMD + [
+                "--offline", "--config", str(config_path),
+                "--since", since.strftime("%Y%m%d"),
+            ],
+            capture_output=True, text=True, check=True,
+            timeout=CCUSAGE_TIMEOUT_SECONDS, env=env,
+        )
     raw = json.loads(out.stdout).get("daily", [])
     daily: list[dict] = []
     for row in raw:
         d = row["date"]
         tokens = row.get("totalTokens", 0)
-        cost = row.get("costUSD", 0.0)
-        models = {
-            name: {"totalTokens": m.get("totalTokens", 0)}
-            for name, m in row.get("models", {}).items()
-        }
-        # `ccusage codex daily` gives per-model tokens but only a row-level costUSD,
-        # so a mixed day cannot be split into priced and unpriced shares. We trust
-        # any positive cost anyway: it is a real, low-side figure (short by the
-        # unpriced aliases' tokens), and keeping it is better than dropping every
-        # multi-model day to zero. A costUSD of exactly zero means nothing on the
-        # day priced — that stays untrusted so merge_with_cumulative keeps whatever
-        # complete cost was stored before rather than overwriting it downward.
-        # Tokens are accurate regardless and flow through unconditionally.
-        priced = bool(cost)
-        if tokens or cost or models:
+        cost = 0.0
+        models = {}
+        for name, raw_model in row.get("models", {}).items():
+            breakdown = token_breakdown(raw_model)
+            model_tokens = raw_model.get("totalTokens", sum(breakdown.values()))
+            models[name] = {"totalTokens": model_tokens, **breakdown}
+            canonical = _normalise_model(name)
+            cost += standard_cost(canonical, date.fromisoformat(d), breakdown, pricing)
+        # Tokens are accurate regardless of whether the official table knows the
+        # model. Unknown shares remain visible in models and contribute zero cost.
+        if tokens or models:
             daily.append({
                 "date": d, "totalTokens": tokens, "totalCost": cost,
-                "models": models, "costTrusted": priced,
+                "models": models, "costTrusted": True, "costSource": "official",
             })
     # Surface slugs we knowingly leave unpriced (Seed/Doubao/Qwen) so a new one
     # gets noticed rather than silently billing zero. A leftover openrouter-* here
@@ -531,7 +501,7 @@ def fetch_codex_home_daily(
                 unpriced_days[name] = unpriced_days.get(name, 0) + 1
     if unpriced_days:
         print(
-            "traex left unpriced (no ccusage price key, cost is low-side): "
+            "traex left unpriced (no official price entry, counted at zero): "
             + ", ".join(f"{name} ({days}d)" for name, days in sorted(unpriced_days.items())),
             file=sys.stderr,
         )
@@ -586,37 +556,36 @@ def merge_with_cumulative(
         # max() on TOKENS alone is what guards against ccusage's window shrinking
         # when the host CLIs rotate session JSONLs (cleanupPeriodDays) — deleted
         # usage must not vanish from the cumulative total. Cost must FOLLOW tokens,
-        # not be max()'d independently: when the same tokens are merely repriced by
-        # ccusage's price table (e.g. a vendor cut), we want the fresh recalculated
-        # cost, not a stale high-water price. `>=` lets a same-token reprice flow
-        # through; only a genuine token regression (rotation) freezes the old pair.
-        if reconciling or entry["totalTokens"] >= prev["totalTokens"]:
+        # not be max()'d independently. `>=` lets legacy, unmarked observations
+        # refresh; official-to-official same-token observations are frozen below.
+        # Only a genuine token regression (rotation) freezes the old pair here.
+        take_entry = reconciling or entry["totalTokens"] >= prev["totalTokens"]
+        if take_entry:
             merged = {"totalTokens": entry["totalTokens"], "totalCost": entry["totalCost"]}
+            cost_source = entry.get("costSource")
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
-        # ...except when the "reprice" is really a missing price. ccusage fetches
-        # its price table at run time and on a failed fetch silently falls back to
-        # the snapshot bundled in the binary: exit status 0, nothing on stderr,
-        # tokens still correct. Models released after that snapshot are absent from
-        # it and come back free, which the rule above cannot tell apart from a
-        # vendor cut.
-        #
-        # The fetch marks a day untrusted when any model in this bucket billed
-        # tokens for free, which is what a missing price looks like. Judging the
-        # value instead of the fetch is not enough: when only SOME of the day's
-        # models lose their price the sum stays truthy and merely understates —
-        # observed at $1.03 against a stored $69.47 on the same day. Both shapes
-        # collapse to the same rule here, so keep the last known cost and let the
-        # next complete fetch overwrite it.
-        #
-        # Back-fill is unaffected, and is why cost follows tokens at all: a model
-        # upstream has not priced yet leaves prev at 0, nothing is preserved, and
-        # the first table that carries it wins. The value test stays as a fallback
-        # for callers that pass no marking.
-        if not reconciling and prev["totalCost"] and (
+            cost_source = prev.get("costSource")
+        # Once both observations use this repository's official table, an
+        # unchanged token high-water mark is immutable. Updating the table later
+        # must not rewrite completed history; --reconcile-since remains the
+        # explicit operator path for intentional historical corrections.
+        if (
+            not reconciling
+            and entry["totalTokens"] == prev["totalTokens"]
+            and entry.get("costSource") == "official"
+            and prev.get("costSource") == "official"
+        ):
+            merged["totalCost"] = prev["totalCost"]
+        # Legacy callers may still provide the old trust marker. Preserve their
+        # last known positive cost when an incomplete price lookup returns zero or
+        # a known partial sum. Repository-owned pricing always marks `official`
+        # and intentionally allows a registered/unknown model to cost zero.
+        if not reconciling and prev["totalCost"] and entry.get("costSource") != "official" and (
             not entry.get("costTrusted", True) or not merged["totalCost"]
         ):
             merged["totalCost"] = prev["totalCost"]
+            cost_source = prev.get("costSource")
         # Carry per-model token breakdown when present (claude/codex/opencode all
         # supply it now). Each model needs the same high-water protection as the
         # row total: session rotation can shrink one model even while another
@@ -647,6 +616,8 @@ def merge_with_cumulative(
                 model["totalTokens"] for model in merged["models"].values()
             )
             merged["totalTokens"] = max(merged["totalTokens"], model_sum)
+        if cost_source:
+            merged["costSource"] = cost_source
         # imageCount: max() like other monotonic fields, so user/system cleanup
         # of ~/.codex/generated_images after imageCount was recorded doesn't lose data.
         new_img = entry.get("imageCount", 0)
@@ -1240,21 +1211,14 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     ) as e:
         print(f"traex ccusage fetch failed, keeping cached store: {e}", file=sys.stderr)
         tx_daily = []
-    # Reconciling rewrites history downward, so it must not run against a fetch
-    # that priced nothing: the fresh token count would land paired with a cost the
-    # price table never produced. Refuse and let the operator re-run.
+    # Reconciling rewrites history downward, so it must not run against an empty
+    # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:
         # Entries that never observed tokens do not count as a read: a fetch made
         # only of image stubs looks non-empty and knows nothing about usage.
-        if not [e for e in (*cc_daily, *cx_daily, *op_daily)
+        if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily)
                 if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
-                  file=sys.stderr)
-            return 1
-        if not all(e.get("costTrusted", True)
-                   for e in (*cc_daily, *cx_daily, *op_daily)):
-            print("this fetch priced some models at nothing; refusing to reconcile "
-                  "against it, re-run when the price table comes back complete",
                   file=sys.stderr)
             return 1
         print(f"reconciling {reconcile_since} onward: the fetch wins even where it "
@@ -1263,11 +1227,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(cc_daily, cc_path, reconcile_since=reconcile_since)
     merge_with_cumulative(cx_daily, codex_path, reconcile_since=reconcile_since)
     merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
-    # traex never reconciles: its recorded cost is a real but low-side figure
-    # (unpriced Claude aliases and Seed/Kimi/Qwen slugs contribute tokens but no
-    # cost), so it must never be rewritten downward by --reconcile-since. Tokens
-    # still ratchet up via the default max() path.
-    merge_with_cumulative(tx_daily, traex_path)
+    merge_with_cumulative(tx_daily, traex_path, reconcile_since=reconcile_since)
 
     if not no_push:
         git_push(machine)

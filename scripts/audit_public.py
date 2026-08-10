@@ -24,8 +24,13 @@ FORBIDDEN_TEXT = (
     re.compile(r"@bytedance\.com\b", re.IGNORECASE),
 )
 FORBIDDEN_JSON_KEYS = frozenset({"cwd", "source"})
-STORE_ENTRY_KEYS = frozenset({"totalTokens", "totalCost", "models", "imageCount"})
-MODEL_ENTRY_KEYS = frozenset({"totalTokens"})
+STORE_ENTRY_KEYS = frozenset({
+    "totalTokens", "totalCost", "costSource", "models", "imageCount",
+})
+MODEL_ENTRY_KEYS = frozenset({
+    "totalTokens", "inputTokens", "outputTokens",
+    "cacheCreationTokens", "cacheReadTokens",
+})
 
 
 def tracked_files(root: Path) -> tuple[Path, ...]:
@@ -78,6 +83,9 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
             not isinstance(cost, (int, float)) or isinstance(cost, bool) or cost < 0
         ):
             issues.append(f"{path}: {day} totalCost must be a non-negative number")
+        source = entry.get("costSource")
+        if source is not None and source != "official":
+            issues.append(f"{path}: {day} costSource must be 'official'")
         models = entry.get("models")
         if models is None:
             continue
@@ -94,15 +102,15 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
                     f"{path}: {day} model {model!r} field {key!r} "
                     "is not in the public schema"
                 )
-            tokens = payload.get("totalTokens")
-            if (
-                tokens is not None
-                and (not isinstance(tokens, int) or isinstance(tokens, bool) or tokens < 0)
-            ):
-                issues.append(
-                    f"{path}: {day} model {model!r} totalTokens must be "
-                    "a non-negative integer"
-                )
+            for key in MODEL_ENTRY_KEYS:
+                tokens = payload.get(key)
+                if tokens is not None and (
+                    not isinstance(tokens, int) or isinstance(tokens, bool) or tokens < 0
+                ):
+                    issues.append(
+                        f"{path}: {day} model {model!r} {key} must be "
+                        "a non-negative integer"
+                    )
 def audit_tree(root: Path) -> list[str]:
     issues: list[str] = []
     for path in tracked_files(root):
