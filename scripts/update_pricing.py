@@ -20,9 +20,15 @@ import re
 import tempfile
 import urllib.request
 from datetime import date
+from html.parser import HTMLParser
 from pathlib import Path
 
-from pricing import PRICING_PATH, active_rate, load_pricing
+from pricing import (
+    PRICING_PATH,
+    active_rate,
+    ccusage_long_context_supported,
+    load_pricing,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
@@ -91,14 +97,18 @@ def parse_openai(markdown: str, _as_of: date) -> dict[str, dict]:
             })
         candidates[model] = rate
 
-    specialized = markdown.split("## Specialized models", 1)[-1]
+    specialized = markdown.split("Specialized models", 1)[1]
+    for marker in ("\nFast mode\n", "### Fast pricing data"):
+        specialized = specialized.split(marker, 1)[0]
     for row in _rows(specialized):
         if len(row) == 5 and row[0] == "Codex" and row[1].startswith("gpt-"):
+            values = [_money(cell) for cell in row[2:]]
+            if any(value is None for value in values):
+                continue
             candidates[row[1]] = {
-                "input": _money(row[2]), "cacheRead": _money(row[3]),
-                "cacheWrite": _money(row[2]), "output": _money(row[4]),
+                "input": values[0], "cacheRead": values[1],
+                "cacheWrite": values[0], "output": values[2],
             }
-            break
 
     fast = markdown.split("### Fast pricing data", 1)[-1].split(
         "## Multimodal models", 1
@@ -117,20 +127,64 @@ def parse_openai(markdown: str, _as_of: date) -> dict[str, dict]:
     return candidates
 
 
-def parse_deepseek(markdown: str, _as_of: date) -> dict[str, dict]:
-    candidates: dict[str, dict] = {}
-    for row in _rows(markdown):
-        model = row[0].strip("`")
-        if len(row) != 4 or not model.startswith("deepseek-"):
-            continue
-        values = [_money(cell) for cell in row[1:]]
-        if any(value is None for value in values):
-            continue
-        candidates[model] = {
-            "input": values[0], "output": values[1],
-            "cacheWrite": values[0], "cacheRead": values[2],
+class _HtmlTableRows(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.rows: list[list[str]] = []
+        self._row: list[str] | None = None
+        self._cell: list[str] | None = None
+
+    def handle_starttag(self, tag: str, _attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "tr":
+            self._row = []
+        elif tag in {"td", "th"} and self._row is not None:
+            self._cell = []
+
+    def handle_data(self, data: str) -> None:
+        if self._cell is not None:
+            self._cell.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"td", "th"} and self._cell is not None and self._row is not None:
+            self._row.append(" ".join("".join(self._cell).split()))
+            self._cell = None
+        elif tag == "tr" and self._row is not None:
+            self.rows.append(self._row)
+            self._row = None
+
+
+def parse_deepseek(page: str, _as_of: date) -> dict[str, dict]:
+    parser = _HtmlTableRows()
+    parser.feed(page)
+    model_row = next(
+        (row for row in parser.rows if row and row[0] == "MODEL"), None
+    )
+    if model_row is None or len(model_row) < 2:
+        return {}
+    models = model_row[1:]
+
+    def prices(label: str) -> list[float] | None:
+        row = next(
+            (row for row in parser.rows if any(label in cell.upper() for cell in row)),
+            None,
+        )
+        if row is None or len(row) < len(models):
+            return None
+        values = [_money(cell) for cell in row[-len(models):]]
+        return None if any(value is None for value in values) else values
+
+    cache_read = prices("CACHE HIT")
+    input_prices = prices("CACHE MISS")
+    output_prices = prices("OUTPUT TOKENS")
+    if cache_read is None or input_prices is None or output_prices is None:
+        return {}
+    return {
+        model: {
+            "input": input_prices[index], "output": output_prices[index],
+            "cacheWrite": input_prices[index], "cacheRead": cache_read[index],
         }
-    return candidates
+        for index, model in enumerate(models)
+    }
 
 
 PARSERS = {
@@ -222,6 +276,14 @@ def main(argv: list[str] | None = None) -> int:
             else inferred_official_name(model, provider)
         )
         candidate = candidates[provider].get(official_name)
+        if candidate is not None and not ccusage_long_context_supported(
+            model, candidate, pricing
+        ):
+            print(
+                f"UNSUPPORTED {model}: long-context pricing is not verified "
+                "in the pinned ccusage version"
+            )
+            continue
         current = active_rate(model, args.as_of, pricing)
         comparable = None if current is None else {
             key: value for key, value in current.items() if key != "effectiveFrom"

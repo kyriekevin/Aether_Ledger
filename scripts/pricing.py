@@ -39,6 +39,16 @@ def model_is_registered(model: str, pricing: dict | None = None) -> bool:
     return model in pricing["models"]
 
 
+def ccusage_long_context_supported(
+    model: str, rate: dict, pricing: dict | None = None
+) -> bool:
+    """Whether the pinned ccusage version knows this model's tier boundary."""
+    if "longContextThreshold" not in rate:
+        return True
+    pricing = pricing or load_pricing()
+    return model in pricing.get("ccusage", {}).get("longContextModels", [])
+
+
 def token_breakdown(raw: dict) -> dict[str, int]:
     return {
         "inputTokens": int(raw.get("inputTokens", 0)),
@@ -122,14 +132,17 @@ def _override(rate: dict | None) -> dict:
 
 def ccusage_config(day: date, pricing: dict | None = None) -> dict:
     pricing = pricing or load_pricing()
+    overrides = {}
+    for model in sorted(pricing["models"]):
+        rate = active_rate(model, day, pricing)
+        if rate is not None and not ccusage_long_context_supported(model, rate, pricing):
+            raise ValueError(
+                f"{model} long-context pricing is not verified in the pinned ccusage version"
+            )
+        overrides[model] = _override(rate)
     return {
         "$schema": "https://ccusage.com/config-schema.json",
-        "defaults": {
-            "pricingOverrides": {
-                model: _override(active_rate(model, day, pricing))
-                for model in sorted(pricing["models"])
-            }
-        },
+        "defaults": {"pricingOverrides": overrides},
         "codex": {"defaults": {"speed": "auto"}},
     }
 

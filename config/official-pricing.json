@@ -2,13 +2,23 @@
   "schemaVersion": 1,
   "currency": "USD",
   "unit": "perMillionTokens",
+  "ccusage": {
+    "minimumVersion": "20.0.19",
+    "longContextModels": [
+      "gpt-5.4",
+      "gpt-5.5",
+      "gpt-5.6-luna",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra"
+    ]
+  },
   "sources": {
     "anthropic": {
       "fetchUrl": "https://platform.claude.com/docs/en/about-claude/pricing.md",
       "referenceUrl": "https://platform.claude.com/docs/en/about-claude/pricing"
     },
     "deepseek": {
-      "fetchUrl": "https://raw.githubusercontent.com/deepseek-ai/awesome-deepseek-agent/main/CONTRIBUTING.md",
+      "fetchUrl": "https://api-docs.deepseek.com/quick_start/pricing/",
       "referenceUrl": "https://api-docs.deepseek.com/quick_start/pricing"
     },
     "openai": {

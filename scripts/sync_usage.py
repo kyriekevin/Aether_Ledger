@@ -41,9 +41,9 @@ from pathlib import Path
 from typing import Iterator
 
 from pricing import (
+    active_rate,
     ccusage_config_file,
     load_pricing,
-    model_is_registered,
     official_cost_from_ccusage,
     standard_cost,
     token_breakdown,
@@ -346,22 +346,26 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
             tokens = 0
             cost = 0.0
             models: dict[str, dict] = {}
+            fully_priced = True
+            usage_day = date.fromisoformat(d)
             for m in agent_row.get("modelBreakdowns", []):
                 model_tokens = _breakdown_tokens(m)
                 breakdown = token_breakdown(m)
                 model_name = m["modelName"]
                 tokens += model_tokens
-                if model_is_registered(model_name, pricing):
-                    cost += official_cost_from_ccusage(
-                        model_name, date.fromisoformat(d), config_day, breakdown,
-                        m.get("cost", 0.0), pricing,
-                    )
+                if model_tokens and active_rate(model_name, usage_day, pricing) is None:
+                    fully_priced = False
+                cost += official_cost_from_ccusage(
+                    model_name, usage_day, config_day, breakdown,
+                    m.get("cost", 0.0), pricing,
+                )
                 models[model_name] = {"totalTokens": model_tokens, **breakdown}
             if not (tokens or cost or models):
                 continue
             entry = {
                 "date": d, "totalTokens": tokens, "totalCost": cost,
-                "models": models, "costTrusted": True, "costSource": "official",
+                "models": models, "costTrusted": True,
+                "costSource": "official" if fully_priced else "unpriced",
             }
             if agent == "codex":
                 entry["imageCount"] = fs_image_counts.get(d, 0)
@@ -476,18 +480,26 @@ def fetch_codex_home_daily(
         tokens = row.get("totalTokens", 0)
         cost = 0.0
         models = {}
+        fully_priced = True
+        usage_day = date.fromisoformat(d)
         for name, raw_model in row.get("models", {}).items():
             breakdown = token_breakdown(raw_model)
             model_tokens = raw_model.get("totalTokens", sum(breakdown.values()))
             models[name] = {"totalTokens": model_tokens, **breakdown}
             canonical = _normalise_model(name)
-            cost += standard_cost(canonical, date.fromisoformat(d), breakdown, pricing)
+            if model_tokens and (
+                active_rate(canonical, usage_day, pricing) is None
+                or sum(breakdown.values()) != model_tokens
+            ):
+                fully_priced = False
+            cost += standard_cost(canonical, usage_day, breakdown, pricing)
         # Tokens are accurate regardless of whether the official table knows the
         # model. Unknown shares remain visible in models and contribute zero cost.
         if tokens or models:
             daily.append({
                 "date": d, "totalTokens": tokens, "totalCost": cost,
-                "models": models, "costTrusted": True, "costSource": "official",
+                "models": models, "costTrusted": True,
+                "costSource": "official" if fully_priced else "unpriced",
             })
     # Surface slugs we knowingly leave unpriced (Seed/Doubao/Qwen) so a new one
     # gets noticed rather than silently billing zero. A leftover openrouter-* here
@@ -566,22 +578,22 @@ def merge_with_cumulative(
         else:
             merged = {"totalTokens": prev["totalTokens"], "totalCost": prev["totalCost"]}
             cost_source = prev.get("costSource")
-        # Once both observations use this repository's official table, an
-        # unchanged token high-water mark is immutable. Updating the table later
-        # must not rewrite completed history; --reconcile-since remains the
-        # explicit operator path for intentional historical corrections.
+        # Once the stored observation uses this repository's official table, an
+        # unchanged token high-water mark is immutable. A later incomplete price
+        # lookup must not downgrade it to `unpriced`; --reconcile-since remains
+        # the explicit operator path for intentional historical corrections.
         if (
             not reconciling
             and entry["totalTokens"] == prev["totalTokens"]
-            and entry.get("costSource") == "official"
             and prev.get("costSource") == "official"
         ):
             merged["totalCost"] = prev["totalCost"]
+            cost_source = "official"
         # Legacy callers may still provide the old trust marker. Preserve their
         # last known positive cost when an incomplete price lookup returns zero or
-        # a known partial sum. Repository-owned pricing always marks `official`
-        # and intentionally allows a registered/unknown model to cost zero.
-        if not reconciling and prev["totalCost"] and entry.get("costSource") != "official" and (
+        # a known partial sum. Repository-owned pricing marks known rates
+        # `official` and intentionally records missing rates as `unpriced` zero.
+        if not reconciling and prev["totalCost"] and entry.get("costSource") is None and (
             not entry.get("costTrusted", True) or not merged["totalCost"]
         ):
             merged["totalCost"] = prev["totalCost"]

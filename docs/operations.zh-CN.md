@@ -26,7 +26,8 @@ Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时�
 由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
 逐请求识别 Codex Fast/standard 与长上下文，仓库负责提供费率。未进入表的模型，以及
 `gpt-5.3-codex-spark` 这类没有公开官方 API token 价的模型，只计 token、金额按 0。这是 API
-等价估算，不是订阅账单。
+等价估算，不是订阅账单；此时写入 `costSource: "unpriced"`。如果后续价格表加入对该日期生效的
+官方价格，下一轮同步即使 token 未增长，也可以替换这笔暂记金额。
 
 从厂商第一方来源刷新价格：
 
@@ -39,11 +40,15 @@ uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 `CHANGE`、`UNPRICED` 与 `UNSUPPORTED`。官方页面抓取或解析失败时脚本直接失败，不会回退到代理商。
 `effectiveFrom` 表示该次抓取的价格从仓库哪一天开始适用，不代表模型公开发布日期。初始条目使用
 各模型在仓库中首次出现的日期。
+DeepSeek 直接读取 canonical API 定价页。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
+当前固定 ccusage 版本认识该模型的请求级切档阈值时才允许加入；否则输出 `UNSUPPORTED`，不会静默
+套用 ccusage 的通用 200K fallback。
 
 本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
 设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测；某天一旦
 有官方计价结果，同一 token 高水位下金额不再改变。需要有意修正历史时使用 `--reconcile-since`。
-没有模型明细的旧 Claude 日期无法可靠复算，因此保留原金额，不猜模型。
+`unpriced` 暂记是例外，拿到官方价格后允许补价。没有模型明细的旧 Claude 日期无法可靠复算，
+因此保留原金额，不猜模型。
 
 新设备只能恢复其本地日志中仍然存在的日期。
 

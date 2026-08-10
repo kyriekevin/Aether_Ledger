@@ -63,15 +63,45 @@ class MergeWithCumulativeTests(unittest.TestCase):
         }], self.store)
         self.assertEqual(self.read_store()["2026-08-04"]["totalCost"], 4.0)
 
-    def test_official_zero_replaces_a_legacy_proxy_price(self) -> None:
-        self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 9.0}})
+    def test_same_tokens_backfill_when_unpriced_becomes_official(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 0.0, "costSource": "unpriced"
+            }
+        })
         sync_usage.merge_with_cumulative([{
-            "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
-            "costSource": "official", "costTrusted": True,
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 5.0,
+            "costSource": "official",
         }], self.store)
         self.assertEqual(
             self.read_store()["2026-08-04"],
-            {"totalTokens": 100, "totalCost": 0.0, "costSource": "official"},
+            {"totalTokens": 100, "totalCost": 5.0, "costSource": "official"},
+        )
+
+    def test_same_tokens_never_downgrade_official_to_unpriced(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 5.0, "costSource": "official"
+            }
+        })
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
+            "costSource": "unpriced",
+        }], self.store)
+        self.assertEqual(
+            self.read_store()["2026-08-04"],
+            {"totalTokens": 100, "totalCost": 5.0, "costSource": "official"},
+        )
+
+    def test_unpriced_zero_replaces_a_legacy_proxy_price(self) -> None:
+        self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 9.0}})
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
+            "costSource": "unpriced", "costTrusted": True,
+        }], self.store)
+        self.assertEqual(
+            self.read_store()["2026-08-04"],
+            {"totalTokens": 100, "totalCost": 0.0, "costSource": "unpriced"},
         )
 
     def test_token_regression_freezes_the_stored_pair(self) -> None:
@@ -529,6 +559,7 @@ class OfficialPricingFetchTests(unittest.TestCase):
             {"modelName": "gpt-5.5", "inputTokens": 10, "cost": 2.0},
         ]})
         self.assertTrue(out["codex"]["costTrusted"])
+        self.assertEqual(out["codex"]["costSource"], "unpriced")
 
     def test_a_model_with_no_usage_does_not_taint_its_day(self) -> None:
         out = self.fetch({"claude": [
@@ -648,6 +679,7 @@ class TraexFetchTests(unittest.TestCase):
         self.assertEqual(out[0]["totalTokens"], 5000)
         self.assertEqual(out[0]["totalCost"], 0.005)
         self.assertTrue(out[0]["costTrusted"])
+        self.assertEqual(out[0]["costSource"], "unpriced")
 
     def test_an_empty_home_yields_no_entries(self) -> None:
         self.assertEqual(self.fetch([]), [])

@@ -29,7 +29,9 @@ Token prices come only from `config/official-pricing.json`. The sync invokes ccu
 stored amounts. ccusage still supplies its request-level Codex Fast/standard and long-context
 classification; the repository supplies the rates. Models absent from the checked-in table, and
 models such as `gpt-5.3-codex-spark` with no public official API token price, contribute tokens but
-zero cost. This is an API-equivalent estimate, not a subscription invoice.
+zero cost and record `costSource: "unpriced"`. If a later table update supplies a rate effective
+for that date, the next sync may replace that provisional amount even when the token count is
+unchanged. This is an API-equivalent estimate, not a subscription invoice.
 
 Refresh the table from first-party vendor sources with:
 
@@ -43,13 +45,18 @@ trail stores. Review its `CHANGE`, `UNPRICED`, and `UNSUPPORTED` lines before ap
 fails closed when an official page cannot be fetched or parsed; it never falls back to a reseller.
 `effectiveFrom` is the first repository date to which that captured rate applies, not a claim about
 the model's public release date. Initial entries use each model's first observed date.
+DeepSeek is read directly from its canonical API pricing page. OpenAI models with a separate
+long-context tier are accepted only when the pinned ccusage version is listed as knowing that
+model's request-tier boundary; otherwise the updater reports `UNSUPPORTED` instead of silently
+using ccusage's generic 200K fallback.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
 Cost follows the winning token observation. Once a date has an official-priced observation, the
 same token high-water mark is immutable; use `--reconcile-since` for an intentional historical
-correction. Legacy dates with no model breakdown keep their existing amount because they cannot be
-reconstructed without guessing a model.
+correction. A provisional `unpriced` observation is the exception and can be back-filled once.
+Legacy dates with no model breakdown keep their existing amount because they cannot be reconstructed
+without guessing a model.
 
 A new machine can only recover dates still present in its local logs.
 

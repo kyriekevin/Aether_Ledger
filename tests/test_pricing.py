@@ -36,6 +36,26 @@ class PricingTableTests(unittest.TestCase):
         self.assertEqual(overrides["gpt-5.3-codex-spark"]["inputCostPerToken"], 0.0)
         self.assertEqual(config["codex"]["defaults"]["speed"], "auto")
 
+    def test_ccusage_config_rejects_an_unverified_long_context_model(self) -> None:
+        table = {
+            "schemaVersion": 1,
+            "unit": "perMillionTokens",
+            "ccusage": {"longContextModels": []},
+            "models": {
+                "gpt-new": {
+                    "rates": [{
+                        "effectiveFrom": "2026-08-10",
+                        "input": 1.0, "output": 2.0,
+                        "cacheWrite": 1.0, "cacheRead": 0.1,
+                        "longContextThreshold": 272000,
+                        "longInput": 2.0, "longOutput": 3.0,
+                    }]
+                }
+            },
+        }
+        with self.assertRaisesRegex(ValueError, "long-context pricing is not verified"):
+            pricing.ccusage_config(date(2026, 8, 10), table)
+
     def test_ccusage_fast_premium_is_kept_but_zero_falls_back_to_standard(self) -> None:
         tokens = {"inputTokens": 1_000_000}
         day = date(2026, 8, 10)
@@ -90,17 +110,44 @@ class OfficialPageParserTests(unittest.TestCase):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | gpt-5.6-sol | $10.00 | $1.00 | $12.50 | $60.00 | $20.00 | $2.00 | $25.00 | $90.00 |
 ## Multimodal models
+Specialized models
+Fast mode
 """
         rate = update_pricing.parse_openai(source, date(2026, 8, 10))["gpt-5.6-sol"]
         self.assertEqual(rate["longContextThreshold"], 272000)
         self.assertEqual(rate["longOutput"], 45.0)
         self.assertEqual(rate["fastMultiplier"], 2.0)
 
-    def test_deepseek_parser_reads_first_party_snapshot(self) -> None:
+    def test_openai_parser_reads_every_specialized_codex_row(self) -> None:
         source = """
-| Model | Input / M tokens | Output / M tokens | Cache Hit / M tokens |
-| --- | --- | --- | --- |
-| deepseek-v4-pro | $0.435 | $0.87 | $0.003625 |
+### Standard pricing data
+### Batch pricing data
+Specialized models
+Standard
+| Category | Model | Input | Cached input | Output |
+| --- | --- | --- | --- | --- |
+| Codex | gpt-first-codex | $1.00 | $0.10 | $2.00 |
+| Codex | gpt-second-codex | $3.00 | $0.30 | $4.00 |
+Fast mode
+| Category | Model | Input | Cached input | Output |
+| --- | --- | --- | --- | --- |
+| Codex | gpt-first-codex | $2.00 | $0.20 | $4.00 |
+## Multimodal models
+"""
+        rates = update_pricing.parse_openai(source, date(2026, 8, 10))
+        self.assertEqual(
+            sorted(rates), ["gpt-first-codex", "gpt-second-codex"]
+        )
+        self.assertEqual(rates["gpt-first-codex"]["input"], 1.0)
+
+    def test_deepseek_parser_reads_canonical_html_table(self) -> None:
+        source = """
+<table><tbody>
+<tr><td>MODEL</td><td>deepseek-v4-flash</td><td>deepseek-v4-pro</td></tr>
+<tr><td rowspan="3">PRICING</td><td>1M INPUT TOKENS (CACHE HIT)</td><td>$0.0028</td><td>$0.003625</td></tr>
+<tr><td>1M INPUT TOKENS (CACHE MISS)</td><td>$0.14</td><td>$0.435</td></tr>
+<tr><td>1M OUTPUT TOKENS</td><td>$0.28</td><td>$0.87</td></tr>
+</tbody></table>
 """
         rate = update_pricing.parse_deepseek(source, date(2026, 8, 10))[
             "deepseek-v4-pro"
@@ -109,7 +156,12 @@ class OfficialPageParserTests(unittest.TestCase):
         self.assertEqual(rate["cacheRead"], 0.003625)
 
     def test_checked_in_pricing_is_valid_json(self) -> None:
-        self.assertEqual(json.loads(pricing.PRICING_PATH.read_text())["schemaVersion"], 1)
+        table = json.loads(pricing.PRICING_PATH.read_text())
+        self.assertEqual(table["schemaVersion"], 1)
+        self.assertEqual(
+            table["sources"]["deepseek"]["fetchUrl"],
+            "https://api-docs.deepseek.com/quick_start/pricing/",
+        )
 
 
 if __name__ == "__main__":

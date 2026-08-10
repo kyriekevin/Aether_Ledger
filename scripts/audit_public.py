@@ -84,8 +84,8 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
         ):
             issues.append(f"{path}: {day} totalCost must be a non-negative number")
         source = entry.get("costSource")
-        if source is not None and source != "official":
-            issues.append(f"{path}: {day} costSource must be 'official'")
+        if source is not None and source not in {"official", "unpriced"}:
+            issues.append(f"{path}: {day} costSource must be 'official' or 'unpriced'")
         models = entry.get("models")
         if models is None:
             continue

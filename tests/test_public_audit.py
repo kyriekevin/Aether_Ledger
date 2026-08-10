@@ -76,6 +76,21 @@ class PublicAuditTests(unittest.TestCase):
         )
         self.assertEqual(issues, [])
 
+    def test_store_schema_accepts_an_explicit_unpriced_cost(self) -> None:
+        issues: list[str] = []
+        _validate_store_schema(
+            {
+                "2026-08-01": {
+                    "totalTokens": 10,
+                    "totalCost": 0.0,
+                    "costSource": "unpriced",
+                }
+            },
+            Path("data/personal/codex.json"),
+            issues,
+        )
+        self.assertEqual(issues, [])
+
     def test_trail_machine_path_never_contains_raw_identity(self) -> None:
         raw = "worker-hostname-with-job-id"
         previous = os.environ.get(sync_usage.TRAIL_ENV)
