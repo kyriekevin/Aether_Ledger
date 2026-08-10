@@ -35,6 +35,7 @@ jobs:
         run: |
           uv run python -m unittest discover -s tests -v
           uv run --script scripts/audit_public.py
+          python3 -m py_compile scripts/*.py
 
       - name: Squash completed day branches into main
         shell: bash
@@ -67,6 +68,21 @@ jobs:
           done
 
           if ((${#merged[@]})); then
+            # Validate before publishing. `push: main` CI can only report on a
+            # bad rollover after it has already landed, and the day branches are
+            # deleted right after the push, so the last point at which a bad
+            # merge is still recoverable is here. Failing leaves main untouched
+            # and the day branches intact for the next scheduled pass.
+            #
+            # The dashboard check deliberately omits --as-of so it matches what
+            # CI runs: the per-day renders above pin the day being finalized,
+            # while CI derives it from the data. Any drift between the two would
+            # otherwise land as a permanently red main.
+            uv run --script scripts/audit_public.py
+            uv run --script scripts/render_dashboard.py --check
+            uv run --script scripts/audit_public.py --history "origin/main..HEAD"
+            git diff --check "origin/main...HEAD"
+
             git push origin HEAD:main
             for branch in "${merged[@]}"; do
               git push origin --delete "$branch"

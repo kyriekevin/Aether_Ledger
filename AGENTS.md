@@ -16,6 +16,9 @@
 - Use Conventional Commit subjects. Prefer `feat`, `fix`, `docs`, `test`, `refactor`, or `chore`
   with a focused scope such as `data`, `readme`, `dashboard`, or `automation`. Automated daily
   snapshots use `chore(data): finalize YYYY-MM-DD snapshot`.
+- Land human changes through a pull request. Never commit or push directly to `main`; the daily
+  rollover workflow is the only writer that pushes there.
+- Commit with a no-reply email. This repository is public, so commit metadata is published too.
 - Before handing off changes, run:
 
   ```sh
@@ -25,3 +28,7 @@
   python3 -m py_compile scripts/*.py
   git diff --check
   ```
+
+  `.github/workflows/ci.yml` enforces the same set on every pull request, and additionally audits
+  the incoming commits for personal email addresses. Run the checks locally anyway: a red CI run
+  costs a round trip.

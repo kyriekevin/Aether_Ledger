@@ -186,8 +186,16 @@ idempotent retry 30 minutes later:
 1. Find every `usage/YYYY-MM-DD` branch older than today.
 2. Squash each completed day into `main` in date order.
 3. Regenerate the dashboard and create one snapshot commit per day.
-4. Push `main` and delete only the successfully published day branches.
-5. Create today's branch from the updated `main`.
+4. Re-run the public-data audit, the dashboard freshness check, the commit-identity audit, and the
+   whitespace check over everything about to land.
+5. Push `main` and delete only the successfully published day branches.
+6. Create today's branch from the updated `main`.
+
+Step 4 is the last point at which a bad merge is still recoverable: CI on `push: main` can only
+report a problem after it has landed, and step 5 deletes the day branches immediately. A failure
+there leaves `main` untouched and the day branches intact, so the next scheduled pass retries.
+The freshness check deliberately omits `--as-of`, matching what CI runs, so that a drift between
+the pinned per-day render and the data-derived one cannot land as a permanently red `main`.
 
 If a feature PR accidentally carried an earlier generated-store snapshot from the active usage
 branch, the squash can report a conflict even though the usage branch already contains that exact
@@ -227,6 +235,29 @@ still exists, they use the locally authenticated `gh` session to dispatch the ro
 The workflow concurrency lock makes simultaneous recovery requests safe. `devbox` and ephemeral
 `trail` writers do not act as watchdogs because they are manually or workload triggered. A failed
 recovery request produces an explicit sync-log error and is retried on the next scheduled tick.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs the hand-off checklist on every pull request, on every push to
+`main`, and on manual dispatch. It holds `contents: read` only, and supersedes stale pull-request
+runs while letting `main` runs finish, because those are the record of what actually landed.
+
+| Check | Catches |
+| --- | --- |
+| `unittest discover -s tests` | producer, renderer, and rollover regressions |
+| `audit_public.py` | identity and filesystem-path leaks, out-of-schema store fields |
+| `render_dashboard.py --check` | committed SVGs that no longer match the committed data |
+| `py_compile scripts/*.py` | syntax errors in scripts no test imports |
+| `git diff --check` | trailing whitespace and stray conflict markers |
+| `audit_public.py --history` | new commits carrying a personal email address |
+
+The last two run over the incoming commit range rather than the working tree, which is empty on a
+fresh checkout. On a pull request the range is the base commit to `HEAD`; on a push it is the
+previous tip. The commit-identity audit is scoped this way on purpose: it must block new leaks
+without failing on commits that predate the check.
+
+Usage commits never open a pull request and land on `usage/YYYY-MM-DD`, so limiting the push
+trigger to `main` keeps the 15-minute sync out of CI without needing a path filter.
 
 ## Commit convention
 
@@ -289,7 +320,23 @@ Before publishing or changing a data producer, run:
 uv run --script scripts/audit_public.py
 ```
 
-The daily workflow runs the same audit before merging usage branches.
+The daily workflow runs the same audit before merging usage branches, and CI runs it on every
+pull request.
+
+Commit metadata is public too. Keep the checkout's identity on a no-reply address:
+
+```sh
+git config user.email "<id>+<username>@users.noreply.github.com"
+```
+
+A local setting is not sufficient on its own. GitHub rewrites the author of a squash merge made
+from the web UI to the account's primary email address, so **Settings → Emails → Keep my email
+address private** must also be enabled, otherwise every merged pull request republishes it. Audit
+a range with:
+
+```sh
+uv run --script scripts/audit_public.py --history origin/main..HEAD
+```
 
 ## Store schemas
 

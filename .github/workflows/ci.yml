@@ -1,0 +1,79 @@
+name: CI
+
+# Guards the checks AGENTS.md requires before hand-off. Usage commits live on
+# `usage/YYYY-MM-DD` branches and never open a pull request, so restricting the
+# push trigger to `main` already keeps the 15-minute sync out of CI.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Superseded pull-request runs are noise; main runs are the audit trail of
+  # what actually landed, so let them finish.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - name: Check out with full history
+        uses: actions/checkout@v7
+        with:
+          # The whitespace and commit-identity gates diff against the base ref.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.32"
+
+      - name: Unit tests
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Public-data audit
+        run: uv run --script scripts/audit_public.py
+
+      - name: Dashboard freshness
+        run: uv run --script scripts/render_dashboard.py --check
+
+      - name: Byte-compile scripts
+        run: python3 -m py_compile scripts/*.py
+
+      - name: Resolve reviewed commit range
+        id: range
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ github.event_name }}" in
+            pull_request) base="${{ github.event.pull_request.base.sha }}" ;;
+            push) base="${{ github.event.before }}" ;;
+            *) base="" ;;
+          esac
+          # A first push, a force-push over a deleted tip, or a manual dispatch
+          # leaves no usable base. Fall back to the first parent, and skip only
+          # when even that is absent (the root commit).
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] \
+            || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            base="$(git rev-parse --verify --quiet HEAD^ || true)"
+          fi
+          echo "base=$base" >>"$GITHUB_OUTPUT"
+
+      - name: Whitespace and conflict-marker check
+        if: steps.range.outputs.base != ''
+        run: git diff --check "${{ steps.range.outputs.base }}...HEAD"
+
+      - name: Commit identity audit
+        if: steps.range.outputs.base != ''
+        # Scoped to the incoming commits: a public repository must not gain new
+        # commits carrying a personal email address.
+        run: |
+          uv run --script scripts/audit_public.py \
+            --history "${{ steps.range.outputs.base }}..HEAD"
