@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import plistlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -96,6 +97,24 @@ class InstallLaunchdTests(unittest.TestCase):
 
             with self.assertRaisesRegex(RuntimeError, "different Git repository"):
                 ensure_writer_worktree(unrelated, repo, date(2026, 8, 10))
+
+    def test_recovers_a_registered_writer_after_its_cache_directory_was_removed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self.make_repo(root)
+            git(repo, "branch", "usage/2026-08-10")
+            writer = root / "writer"
+            ensure_writer_worktree(writer, repo, date(2026, 8, 10))
+            shutil.rmtree(writer)
+
+            self.assertEqual(
+                ensure_writer_worktree(writer, repo, date(2026, 8, 10)),
+                writer.resolve(),
+            )
+            self.assertEqual(
+                git(writer, "branch", "--show-current").stdout.strip(),
+                "usage/2026-08-10",
+            )
 
     def test_rendered_plist_uses_current_paths_without_placeholders(self) -> None:
         home = Path("/tmp/example & home")

@@ -88,6 +88,10 @@ def ensure_writer_worktree(writer: Path, repo_root: Path, today: date) -> Path:
             f"switch the source checkout off {branch} before creating its writer worktree"
         )
 
+    # A cache cleanup can remove the directory while Git still records the exact
+    # linked worktree. Remove only that stale registration before recreating it;
+    # an unregistered path simply makes this best-effort command return nonzero.
+    _git(repo_root, "worktree", "remove", "--force", str(writer))
     writer.parent.mkdir(parents=True, exist_ok=True)
     local = _git(repo_root, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")
     remote = _git(

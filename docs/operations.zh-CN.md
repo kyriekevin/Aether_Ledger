@@ -114,9 +114,11 @@ uv run --script scripts/install_launchd.py
 源 checkout 不能仍占用当天 usage 分支，因为同一个本地分支只能被一个 worktree 检出。
 可用 `--writer-worktree PATH` 改写默认位置。
 
-writer 固定使用每日分支创建时继承的代码。白天新合入 `main` 的修改到次日分支创建时生效，
-不会 merge 进当天 usage 分支。这样定时提交仍然只包含数据，开发目录里的切分支、rebase 或
-dirty tree 也不会暂停 launchd。重复运行安装器会复用已注册的 writer worktree 并重新加载 agent。
+writer 固定使用每日分支创建时继承的代码，白天新合入 `main` 的修改不会 merge 进当天 usage
+分支。writer 切到次日分支后会在读取用量前结束本轮，下一次调用再从新代码快照启动。这样定时
+提交仍然只包含数据，开发目录的切分支和 dirty files 也不会影响 launchd。linked worktree 仍
+共享 Git 元数据；其他 worktree 并发执行 fetch、pull 或 rebase 时，某一轮仍可能 defer，下一轮
+定时任务会自动重试。重复运行安装器会复用已注册的 writer worktree 并重新加载 agent。
 
 安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
 `com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更

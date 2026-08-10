@@ -1170,11 +1170,19 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     recover_missed_rollover = (
         Path(machine).name in ROLLOVER_WATCHDOG_NODES and recovery_grace_elapsed
     )
-    if not no_push and not prepare_daily_branch(
-        today,
-        recover_missed_rollover=recover_missed_rollover,
-    ):
-        return 0
+    if not no_push:
+        starting_branch = _current_branch()
+        if not prepare_daily_branch(
+            today,
+            recover_missed_rollover=recover_missed_rollover,
+        ):
+            return 0
+        if _current_branch() != starting_branch:
+            print(
+                "daily branch changed; deferring usage fetch until the next run",
+                file=sys.stderr,
+            )
+            return 0
 
     machine_dir = DATA_REPO_DIR / machine
     cc_path = machine_dir / "claude.json"

@@ -23,6 +23,22 @@ def result(returncode: int = 0, stdout: str = "", stderr: str = "") -> subproces
 
 
 class DailyBranchTests(unittest.TestCase):
+    def test_defers_usage_fetch_after_switching_to_a_new_code_snapshot(self) -> None:
+        with (
+            patch.object(sync_usage, "prepare_daily_branch", return_value=True),
+            patch.object(
+                sync_usage,
+                "_current_branch",
+                side_effect=["usage/2026-08-09", "usage/2026-08-10"],
+            ),
+            patch.object(
+                sync_usage,
+                "fetch_daily_since",
+                side_effect=AssertionError("old process must not fetch on the new branch"),
+            ),
+        ):
+            self.assertEqual(sync_usage._sync("data/work", no_push=False), 0)
+
     @patch.object(sync_usage.subprocess, "run", return_value=result())
     def test_automated_commit_overrides_host_git_identity(self, run) -> None:
         with patch.dict(
