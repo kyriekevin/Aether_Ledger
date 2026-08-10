@@ -35,6 +35,7 @@ jobs:
         run: |
           uv run python -m unittest discover -s tests -v
           uv run --script scripts/audit_public.py
+          python3 -m py_compile scripts/*.py
 
       - name: Squash completed day branches into main
         shell: bash
@@ -56,7 +57,14 @@ jobs:
             branch="usage/$day"
             uv run --script scripts/squash_usage_branch.py "origin/$branch"
             uv run --script scripts/audit_public.py
-            uv run --script scripts/render_dashboard.py --as-of "$day"
+            # No --as-of: the renderer derives the day from the data, the same
+            # way the freshness check below and CI do. Pinning it here would
+            # render a day with no activity as the newest column while the
+            # check expects the last active one, and that disagreement would
+            # fail every retry, stranding the day branch and stopping today's
+            # branch from ever being created. An idle day now simply produces
+            # no snapshot commit.
+            uv run --script scripts/render_dashboard.py
             git add assets/token-activity.svg assets/token-topology.svg
             if git diff --cached --quiet; then
               git reset --merge
@@ -67,6 +75,18 @@ jobs:
           done
 
           if ((${#merged[@]})); then
+            # Validate before publishing. This push is authenticated with
+            # GITHUB_TOKEN, which by design does not start another workflow run,
+            # so ci.yml never sees these commits and this block is their only
+            # gate. It is also the last point at which a bad merge is still
+            # recoverable: the day branches are deleted immediately after.
+            # Failing leaves main untouched and the day branches intact for the
+            # next scheduled pass.
+            uv run --script scripts/audit_public.py
+            uv run --script scripts/render_dashboard.py --check
+            uv run --script scripts/audit_public.py --history "origin/main..HEAD"
+            git diff --check "origin/main...HEAD"
+
             git push origin HEAD:main
             for branch in "${merged[@]}"; do
               git push origin --delete "$branch"

@@ -173,8 +173,18 @@ writer 固定使用每日分支创建时继承的代码，白天新合入 `main`
 1. 找出所有早于今天的 `usage/YYYY-MM-DD` 分支。
 2. 按日期顺序将每个完整日期 squash 到 `main`。
 3. 重新生成活动面板，并为每个日期创建一个快照提交。
-4. 推送 `main`，仅删除已经成功发布的日期分支。
-5. 从更新后的 `main` 创建当天分支。
+4. 对即将落地的全部内容重新执行公开数据审计、活动面板时效检查、提交身份审计与空白字符检查。
+5. 推送 `main`，仅删除已经成功发布的日期分支。
+6. 从更新后的 `main` 创建当天分支。
+
+第 4 步是这些提交唯一的关卡。该推送使用 `GITHUB_TOKEN` 认证，而用该 token 推送不会再触发新的
+workflow run，因此 `ci.yml` 根本看不到它们。这里同时也是坏合并仍可挽回的最后时机，因为第 5 步会
+立刻删除日期分支。该步失败时 `main` 保持不变、日期分支完整保留，下一次定时任务会重试。
+
+第 3 步特意不带 `--as-of`：渲染器从数据推导日期，第 4 步也以同样方式校验，两者不可能不一致。若在
+此固定日历日，则无活动的一天会被渲染成最新一列，而检查期望的是最后一个有活动的日期；这个偏差会
+让每次重试都失败，日期分支被永久滞留，当天分支也永远建不出来——由于写入设备在旧日期分支尚存时
+拒绝创建当天分支，整条同步链路会因此停摆。现在空闲的一天只是不产生快照提交。
 
 如果功能 PR 意外带入了活跃 usage 分支中较早的生成数据快照，squash 可能会在两边实际
 属于同一条累计历史时仍报告冲突。只有当每个冲突路径都是规范生成数据文件，并且能够证明
@@ -210,6 +220,35 @@ watchdog。00:50 宽限期后，它们会在正常的 15 分钟同步中检查�
 保证两台设备同时发起恢复也是安全的。手动或 workload 触发的 `devbox` 与临时 `trail`
 写入设备不承担 watchdog。恢复请求失败时会在同步日志中产生明确错误，并在下一次定时
 同步时重试。
+
+## 持续集成
+
+`.github/workflows/ci.yml` 在每个 PR、每次推送 `main` 以及手动触发时执行交付前检查清单，权限仅为
+`contents: read`。PR 上的过期任务会被新提交取消；其余任务按 commit 分组，因此彼此既不取消也不排队。
+
+它看不到每日 rollover：那次推送用 `GITHUB_TOKEN` 认证，不会再触发新的 workflow run，这正是
+rollover 必须在推送前自行校验的原因。实际上 CI 覆盖的是 PR 本身，以及每个 PR 在 `main` 上产生的
+合并提交。
+
+| 检查 | 拦截 |
+| --- | --- |
+| `unittest discover -s tests` | 生产脚本、渲染器与 rollover 回归 |
+| `audit_public.py` | 身份与路径泄露、超出 schema 的字段 |
+| `render_dashboard.py --check` | 与已提交数据不匹配的 SVG |
+| `py_compile scripts/*.py` | 无测试覆盖脚本中的语法错误 |
+| `git diff --check` | 行尾空白与残留冲突标记 |
+| `audit_public.py --history` | 携带个人邮箱的新提交 |
+
+后两项针对本次提交区间执行，而不是工作区——全新 checkout 的工作区是干净的。PR 上的区间是 base
+提交到分支 tip，而不是到 `HEAD`：`HEAD` 是 GitHub 合成的 merge commit，其作者是账号主邮箱且用完
+即弃，审计它会导致每个 PR 都报泄露。push 上的区间从上一个 tip 开始。当不存在可用 base 时——分支
+首次推送、force-push 覆盖了原 tip、手动触发——两项区间检查会跳过并明确说明，而不是退化成只看一个
+提交、给出并不存在的覆盖假象。
+
+提交身份审计特意限定区间：它要拦住新的泄露，同时不因早于该检查的历史提交而失败。
+
+usage 提交不会开 PR，只落在 `usage/YYYY-MM-DD` 上，因此把 push 触发限制在 `main` 就足以让
+15 分钟一次的同步不进入 CI，无需额外路径过滤。
 
 ## 提交约定
 
@@ -267,7 +306,21 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 uv run --script scripts/audit_public.py
 ```
 
-每日 workflow 在合并 usage 分支前也会执行同一审计。
+每日 workflow 在合并 usage 分支前也会执行同一审计，CI 也会在每个 PR 上执行。
+
+提交元数据同样是公开的。请将本地身份固定为 no-reply 邮箱：
+
+```sh
+git config user.email "<id>+<username>@users.noreply.github.com"
+```
+
+仅设置本地配置并不够。从网页端 squash 合并时，GitHub 会把作者改写为账号的主邮箱，因此还必须启用
+**Settings → Emails → Keep my email address private**，否则每次合并 PR 都会重新公开该邮箱。
+审计某个区间：
+
+```sh
+uv run --script scripts/audit_public.py --history origin/main..HEAD
+```
 
 ## 数据结构
 

@@ -1,0 +1,107 @@
+name: CI
+
+# Guards the checks AGENTS.md requires before hand-off. Usage commits live on
+# `usage/YYYY-MM-DD` branches and never open a pull request, so restricting the
+# push trigger to `main` already keeps the 15-minute sync out of CI.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Pull requests group by number so a new commit supersedes the previous run.
+  # Everything else groups by commit, which is unique, so those runs neither
+  # cancel nor queue behind each other: only one run per group may sit pending,
+  # and a newer one would evict it.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    # Usage branches carry only generated data and are squashed into main by
+    # daily-rollover.yml, never by a pull request. Skipping them keeps an
+    # accidental usage pull request from running CI on every 15-minute commit.
+    if: ${{ !startsWith(github.head_ref, 'usage/') }}
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - name: Check out with full history
+        uses: actions/checkout@v7
+        with:
+          # The whitespace and commit-identity gates diff against the base ref.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.32"
+
+      - name: Unit tests
+        run: uv run python -m unittest discover -s tests -v
+
+      - name: Public-data audit
+        run: uv run --script scripts/audit_public.py
+
+      - name: Dashboard freshness
+        run: uv run --script scripts/render_dashboard.py --check
+
+      - name: Byte-compile scripts
+        run: python3 -m py_compile scripts/*.py
+
+      - name: Resolve reviewed commit range
+        id: range
+        shell: bash
+        run: |
+          set -euo pipefail
+          # On a pull request the checkout is GitHub's synthetic merge commit,
+          # which is authored with the account's primary email and is thrown
+          # away after the run. Review the branch tip instead, so the range
+          # holds only commits that can actually reach main.
+          case "${{ github.event_name }}" in
+            pull_request)
+              base="${{ github.event.pull_request.base.sha }}"
+              tip="${{ github.event.pull_request.head.sha }}"
+              ;;
+            push)
+              base="${{ github.event.before }}"
+              tip="${{ github.sha }}"
+              ;;
+            *)
+              base=""
+              tip="HEAD"
+              ;;
+          esac
+          exists() { [ -n "$1" ] && git cat-file -e "$1^{commit}" 2>/dev/null; }
+          # A fork's head commit is not always fetched under the merge ref.
+          exists "$tip" || tip="$(git rev-parse --verify --quiet 'HEAD^2' || echo HEAD)"
+          # A branch's first push, a force-push over a discarded tip, or a
+          # manual dispatch leaves no base to diff against. Report that and let
+          # the range steps skip: falling back to the first parent would review
+          # only the newest commit and silently pass over everything behind it,
+          # which reads as coverage that is not there.
+          if ! exists "$base"; then
+            echo "no reviewable base for ${{ github.event_name }}; skipping range checks"
+            base=""
+          fi
+          echo "base=$base" >>"$GITHUB_OUTPUT"
+          echo "tip=$tip" >>"$GITHUB_OUTPUT"
+          echo "reviewing ${base:-<none>}..$tip"
+
+      - name: Whitespace and conflict-marker check
+        if: steps.range.outputs.base != ''
+        run: |
+          git diff --check \
+            "${{ steps.range.outputs.base }}...${{ steps.range.outputs.tip }}"
+
+      - name: Commit identity audit
+        if: steps.range.outputs.base != ''
+        # Scoped to the incoming commits: a public repository must not gain new
+        # commits carrying a personal email address.
+        run: |
+          uv run --script scripts/audit_public.py \
+            --history "${{ steps.range.outputs.base }}..${{ steps.range.outputs.tip }}"
