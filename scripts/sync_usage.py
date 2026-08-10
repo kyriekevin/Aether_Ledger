@@ -628,6 +628,15 @@ def merge_with_cumulative(
                 if current_tokens >= previous_tokens:
                     merged_models[model] = current
             merged["models"] = merged_models
+            # Historical stores may lack some model detail, so the breakdown may
+            # remain smaller than the row total. It must never exceed that total:
+            # the component high waters are a stronger lower bound when different
+            # models rotate out and grow between observations.
+            model_sum = sum(
+                model.get("totalTokens", 0) if isinstance(model, dict) else model
+                for model in merged_models.values()
+            )
+            merged["totalTokens"] = max(merged["totalTokens"], model_sum)
         elif "models" in prev:
             merged["models"] = prev["models"]
         # imageCount: max() like other monotonic fields, so user/system cleanup

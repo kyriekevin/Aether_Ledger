@@ -238,6 +238,33 @@ class MergeWithCumulativeTests(unittest.TestCase):
             },
         )
 
+    def test_daily_total_covers_the_merged_model_high_waters(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "models": {"model-a": {"totalTokens": 100}},
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 110,
+                "totalCost": 1.1,
+                "models": {
+                    "model-a": {"totalTokens": 90},
+                    "model-b": {"totalTokens": 20},
+                },
+            }],
+            self.store,
+        )
+        day = self.read_store()["2026-08-04"]
+        self.assertEqual(day["totalTokens"], 120)
+        self.assertEqual(
+            sum(model["totalTokens"] for model in day["models"].values()),
+            day["totalTokens"],
+        )
+
 
 class ReconcileTests(unittest.TestCase):
     """The high-water rule is right on the schedule and wrong after an upgrade."""
