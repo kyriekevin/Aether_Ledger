@@ -605,14 +605,29 @@ def merge_with_cumulative(
         ):
             merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (claude/codex/opencode all
-        # supply it now). Fresh fetch wins over stale stored copy.
+        # supply it now). Each model needs the same high-water protection as the
+        # row total: session rotation can shrink one model even while another
+        # grows enough for the fresh row total to win.
         # While reconciling the fetch is authoritative even when it breaks the day
         # down into nothing, so an emptied map must not leave the old one behind
         # describing totals that no longer exist.
         if reconciling and "models" in entry:
             merged["models"] = entry["models"]
         elif entry.get("models"):
-            merged["models"] = entry["models"]
+            merged_models = dict(prev.get("models", {}))
+            for model, current in entry["models"].items():
+                previous = merged_models.get(model)
+                current_tokens = (
+                    current.get("totalTokens", 0) if isinstance(current, dict) else current
+                )
+                previous_tokens = (
+                    previous.get("totalTokens", 0)
+                    if isinstance(previous, dict)
+                    else previous or 0
+                )
+                if current_tokens >= previous_tokens:
+                    merged_models[model] = current
+            merged["models"] = merged_models
         elif "models" in prev:
             merged["models"] = prev["models"]
         # imageCount: max() like other monotonic fields, so user/system cleanup

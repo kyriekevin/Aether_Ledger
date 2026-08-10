@@ -172,6 +172,72 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
         self.assertNotIn("costTrusted", self.read_store()["2026-08-04"])
 
+    def test_each_model_keeps_its_high_water_when_the_fresh_total_wins(self) -> None:
+        self.write_store({
+            "2026-07-09": {
+                "totalTokens": 95_406_538,
+                "totalCost": 159.02,
+                "models": {
+                    "claude-fable-5": {"totalTokens": 91_163_717},
+                    "claude-opus-4-8": {"totalTokens": 3_362_925},
+                    "claude-sonnet-5": {"totalTokens": 879_896},
+                },
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-07-09",
+                "totalTokens": 95_406_538,
+                "totalCost": 159.02,
+                "models": {
+                    "claude-fable-5": {"totalTokens": 57_210_072},
+                    "claude-opus-4-8": {"totalTokens": 2_734_337},
+                    "claude-sonnet-5": {"totalTokens": 592_667},
+                },
+            }],
+            self.store,
+        )
+        self.assertEqual(
+            self.read_store()["2026-07-09"]["models"],
+            {
+                "claude-fable-5": {"totalTokens": 91_163_717},
+                "claude-opus-4-8": {"totalTokens": 3_362_925},
+                "claude-sonnet-5": {"totalTokens": 879_896},
+            },
+        )
+
+    def test_model_high_waters_keep_missing_models_and_accept_growth(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "models": {
+                    "old-model": {"totalTokens": 80},
+                    "growing-model": {"totalTokens": 20},
+                },
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 120,
+                "totalCost": 1.2,
+                "models": {
+                    "growing-model": {"totalTokens": 30},
+                    "new-model": {"totalTokens": 10},
+                },
+            }],
+            self.store,
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"]["models"],
+            {
+                "old-model": {"totalTokens": 80},
+                "growing-model": {"totalTokens": 30},
+                "new-model": {"totalTokens": 10},
+            },
+        )
+
 
 class ReconcileTests(unittest.TestCase):
     """The high-water rule is right on the schedule and wrong after an upgrade."""
