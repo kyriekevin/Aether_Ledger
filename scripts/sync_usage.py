@@ -542,6 +542,19 @@ def fetch_codex_home_daily(
 # Persistence helpers
 # ---------------------------------------------------------------------------
 
+def _canonical_model_totals(models: dict) -> dict[str, dict]:
+    """Canonicalize one observation before comparing it with another."""
+    canonical: dict[str, dict] = {}
+    for name, payload in models.items():
+        model = _normalise_model(name)
+        tokens = (
+            payload.get("totalTokens", 0) if isinstance(payload, dict) else payload
+        )
+        bucket = canonical.setdefault(model, {"totalTokens": 0})
+        bucket["totalTokens"] += tokens
+    return canonical
+
+
 def merge_with_cumulative(
     daily: list[dict], store_path: Path, *, reconcile_since: date | None = None
 ) -> list[dict]:
@@ -605,16 +618,35 @@ def merge_with_cumulative(
         ):
             merged["totalCost"] = prev["totalCost"]
         # Carry per-model token breakdown when present (claude/codex/opencode all
-        # supply it now). Fresh fetch wins over stale stored copy.
+        # supply it now). Each model needs the same high-water protection as the
+        # row total: session rotation can shrink one model even while another
+        # grows enough for the fresh row total to win.
         # While reconciling the fetch is authoritative even when it breaks the day
         # down into nothing, so an emptied map must not leave the old one behind
         # describing totals that no longer exist.
         if reconciling and "models" in entry:
-            merged["models"] = entry["models"]
+            merged["models"] = _canonical_model_totals(entry["models"])
         elif entry.get("models"):
-            merged["models"] = entry["models"]
+            merged_models = _canonical_model_totals(prev.get("models", {}))
+            current_models = _canonical_model_totals(entry["models"])
+            for model, current in current_models.items():
+                previous = merged_models.get(model)
+                current_tokens = current["totalTokens"]
+                previous_tokens = previous["totalTokens"] if previous else 0
+                if current_tokens >= previous_tokens:
+                    merged_models[model] = current
+            merged["models"] = merged_models
         elif "models" in prev:
-            merged["models"] = prev["models"]
+            merged["models"] = _canonical_model_totals(prev["models"])
+        if not reconciling and merged.get("models"):
+            # Historical stores may lack some model detail, so the breakdown can
+            # remain smaller than the row total. It must never exceed that total:
+            # component high waters are a stronger lower bound when different
+            # models rotate out and grow between observations.
+            model_sum = sum(
+                model["totalTokens"] for model in merged["models"].values()
+            )
+            merged["totalTokens"] = max(merged["totalTokens"], model_sum)
         # imageCount: max() like other monotonic fields, so user/system cleanup
         # of ~/.codex/generated_images after imageCount was recorded doesn't lose data.
         new_img = entry.get("imageCount", 0)
