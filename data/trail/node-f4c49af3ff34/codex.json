@@ -214,5 +214,17 @@
     },
     "totalCost": 306.79483500000003,
     "totalTokens": 453951622
+  },
+  "2026-08-10": {
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 520134
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 11405758
+      }
+    },
+    "totalCost": 10.947563,
+    "totalTokens": 11925892
   }
 }

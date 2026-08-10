@@ -1,17 +1,32 @@
 {
   "2026-08-07": {
     "models": {
-      "GPT-5.4": {
+      "gemini-3-flash-preview": {
+        "totalTokens": 425379
+      },
+      "gpt-5.4": {
         "totalTokens": 45400
       },
-      "GPT-5.5": {
+      "gpt-5.5": {
         "totalTokens": 1486376
-      },
-      "Gemini-3-Flash-Preview": {
-        "totalTokens": 425379
       }
     },
-    "totalCost": 0,
+    "totalCost": 1.4414869000000001,
     "totalTokens": 1957155
+  },
+  "2026-08-10": {
+    "models": {
+      "gemini-3-flash-preview": {
+        "totalTokens": 699495
+      },
+      "gemini-3.1-pro-preview": {
+        "totalTokens": 6186014
+      },
+      "gpt-5.5": {
+        "totalTokens": 1313005
+      }
+    },
+    "totalCost": 4.87687905,
+    "totalTokens": 8198514
   }
 }
