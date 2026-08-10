@@ -84,22 +84,23 @@ but does not parse stops the run rather than reminting over an identity in use.
 
 ## Scheduled sync
 
-The bundled launchd agent runs every 15 minutes. Render its template for the current checkout:
+The bundled launchd agent runs at minutes 0, 15, 30, and 45 of every hour. Render its template
+for the current checkout and reload it:
 
 ```sh
 uv run --script scripts/install_launchd.py
-launchctl bootstrap "gui/$(id -u)" \
-  ~/Library/LaunchAgents/com.kyriekevin.aether-ledger.plist
-launchctl kickstart -k "gui/$(id -u)/com.kyriekevin.aether-ledger"
 ```
 
 The installer migrates an existing approved `machine_name`, then unloads and removes the legacy
-`com.kyriekevin.cc-cx-usage-data` agent. This prevents old and new schedules from running together.
+`com.kyriekevin.cc-cx-usage-data` agent. It atomically installs and reloads the current agent so
+schedule changes take effect immediately. This prevents old and new schedules from running together.
 
 Logs:
 
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
+
+Each invocation writes start and finish heartbeat lines to the standard-output log.
 
 ### Concurrent Git access
 

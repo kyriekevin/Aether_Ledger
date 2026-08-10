@@ -1159,6 +1159,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    print("sync run started", flush=True)
     machine = resolve_machine()
 
     # Held across the whole run — ccusage included — because the data files this
@@ -1171,9 +1172,12 @@ def main() -> int:
                 f"{GIT_LOCK_WAIT_SECONDS}s; skipping this run",
                 file=sys.stderr,
             )
+            print("sync run finished status=lock-busy", flush=True)
             return 0
-        return _sync(machine, no_push=args.no_push,
-                     reconcile_since=args.reconcile_since)
+        status = _sync(machine, no_push=args.no_push,
+                       reconcile_since=args.reconcile_since)
+        print(f"sync run finished exit={status}", flush=True)
+        return status
 
 
 def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -> int:
