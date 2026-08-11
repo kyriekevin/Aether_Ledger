@@ -1,6 +1,6 @@
 # Operations
 
-[English](operations.md) | [简体中文](operations.zh-CN.md)
+[English](operations.md) | [简体中文](operations_zh-CN.md)
 
 ## Sources and retention
 
@@ -214,7 +214,7 @@ idempotent retry 30 minutes later:
 6. Create today's branch from the updated `main`.
 
 Step 4 is the only gate these commits get. The push is authenticated with `GITHUB_TOKEN`, and a
-push made with that token does not start another workflow run, so `ci.yml` never sees them. It is
+push made with that token does not start another workflow run, so `verify.yml` never sees them. It is
 also the last point at which a bad merge is still recoverable, because step 5 deletes the day
 branches immediately. A failure there leaves `main` untouched and the day branches intact, so the
 next scheduled pass retries.
@@ -267,7 +267,7 @@ recovery request produces an explicit sync-log error and is retried on the next 
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs the hand-off checklist on every pull request, on every push to
+`.github/workflows/verify.yml` runs the hand-off checklist on every pull request, on every push to
 `main`, and on manual dispatch. It holds `contents: read` only, and supersedes stale pull-request
 runs while grouping every other run by commit, so those never cancel or queue behind each other.
 

@@ -1,6 +1,6 @@
 # 运维说明
 
-[English](operations.md) | [简体中文](operations.zh-CN.md)
+[English](operations.md) | [简体中文](operations_zh-CN.md)
 
 ## 数据来源与留存
 
@@ -194,7 +194,7 @@ writer 固定使用每日分支创建时继承的代码，白天新合入 `main`
 6. 从更新后的 `main` 创建当天分支。
 
 第 4 步是这些提交唯一的关卡。该推送使用 `GITHUB_TOKEN` 认证，而用该 token 推送不会再触发新的
-workflow run，因此 `ci.yml` 根本看不到它们。这里同时也是坏合并仍可挽回的最后时机，因为第 5 步会
+workflow run，因此 `verify.yml` 根本看不到它们。这里同时也是坏合并仍可挽回的最后时机，因为第 5 步会
 立刻删除日期分支。该步失败时 `main` 保持不变、日期分支完整保留，下一次定时任务会重试。
 
 第 3 步特意不带 `--as-of`：渲染器从数据推导日期，第 4 步也以同样方式校验，两者不可能不一致。若在
@@ -239,7 +239,7 @@ watchdog。00:50 宽限期后，它们会在正常的 15 分钟同步中检查�
 
 ## 持续集成
 
-`.github/workflows/ci.yml` 在每个 PR、每次推送 `main` 以及手动触发时执行交付前检查清单，权限仅为
+`.github/workflows/verify.yml` 在每个 PR、每次推送 `main` 以及手动触发时执行交付前检查清单，权限仅为
 `contents: read`。PR 上的过期任务会被新提交取消；其余任务按 commit 分组，因此彼此既不取消也不排队。
 
 它看不到每日 rollover：那次推送用 `GITHUB_TOKEN` 认证，不会再触发新的 workflow run，这正是
