@@ -21,8 +21,8 @@
 
 Aether Ledger records how I use Claude Code, Codex, and TRAE CLI—and makes that activity visible.
 Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
-Tokens are not skill points; they are the compute resources I spend while turning ideas into
-useful work.
+Tokens are not experience points — a bigger burn does not mean I leveled up. They are what it
+costs to turn ideas into finished results, whether those ideas belong to study, life, or work.
 
 ## Activity
 

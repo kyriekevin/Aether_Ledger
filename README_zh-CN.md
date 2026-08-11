@@ -2,7 +2,7 @@
 
 <p align="center">
   <strong>Nightglass Protocol</strong> 的 AI 算力账本 ——
-  持续更新、完全匿名化的 coding agent token 消耗记录。
+  每天自动更新的 coding agent token 消耗记录，只存匿名聚合数据。
 </p>
 
 <p align="center">
@@ -16,31 +16,32 @@
 </p>
 
 > [!IMPORTANT]
-> 本仓库以公开为前提设计。账本只保存匿名化聚合数据——绝不记录提示词、会话、仓库名称、
-> 主机名、用户名或工作目录。
+> 这个仓库从第一天起就按公开来设计。账本里只有匿名的聚合数字——提示词、会话、仓库名、
+> 主机名、用户名、工作目录，一概不记。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex 与 TRAE CLI，并让这些活动清晰可见。
-历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
-Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
+Aether Ledger 记录我用 Claude Code、Codex、TRAE CLI 花了多少 token，并把用量画成图。
+早期通过 OpenCode 跑的用量也在账本里，统一记在 Legacy harness 一栏。花掉的 token
+不是经验值，烧得多不代表我变强了；它是把想法做成结果要付的成本，学习、生活、工作
+都算在内。
 
-## 活动
+## 用量总览
 
-![Aether Ledger 活动面板](assets/token-activity.svg)
+![Aether Ledger 用量面板](assets/token-activity.svg)
 
-金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
-token 总量大于零的自然日累计。
+金额按记录到的模型用量折算成 API 等价成本，不是真实的订阅账单。Active days 统计的是
+token 总量不为零的自然日。
 
-## 拓扑
+## 算力拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
-拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker。
+拓扑图画的是最近 30 天里，哪些 agent 在为哪个环境干活。`Development` 一栏把常驻
+开发机和按需拉起的 GPU trail worker 合在一起算。
 
 ## 账本
 
-适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、
-`devbox`）和匿名的临时 `trail` 节点组织。
+能公开的聚合数据都在 [`data/`](data/) 下，按长期角色分组（`personal`、`work`、
+`devbox`），临时的 `trail` 节点匿名单列。
 
 ## 工作原理
 
@@ -56,15 +57,15 @@ main ── squash merge 当天数据 + 重新渲染面板
         └─→ 删除已完成分支，创建当天新分支
 ```
 
-当天用量只写入日期分支；`main` 只接收 rollover workflow 合入的完整天。人工改动一律走
-PR，并以 `make verify` 作为交付门槛。
+当天的用量只写进日期分支；`main` 只收 rollover workflow 合进来的完整一天。人工改动
+一律走 PR，合并前过 `make verify`。
 
 ## 文档导航
 
 | 指南 | 内容 |
 |---|---|
 | [运维文档](docs/operations_zh-CN.md) | 安装、机器身份、分支生命周期、数据结构、面板与恢复 |
-| [仓库约定](AGENTS.md) | 贡献与交付约定 |
+| [仓库约定](AGENTS.md) | 提交与交付的约定 |
 
 ## License
 
