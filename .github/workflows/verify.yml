@@ -1,4 +1,4 @@
-name: CI
+name: Verify
 
 # Guards the checks AGENTS.md requires before hand-off. Usage commits live on
 # `usage/YYYY-MM-DD` branches and never open a pull request, so restricting the
@@ -17,7 +17,7 @@ concurrency:
   # Everything else groups by commit, which is unique, so those runs neither
   # cancel nor queue behind each other: only one run per group may sit pending,
   # and a newer one would evict it.
-  group: ci-${{ github.event.pull_request.number || github.sha }}
+  group: verify-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
