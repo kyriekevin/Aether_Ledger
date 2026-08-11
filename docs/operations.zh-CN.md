@@ -20,7 +20,8 @@ TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支
 `~/.trae/cli` 树不会被写入。归一化做两件事：转小写以匹配共享价格表；并把 TRAE CLI
 的匿名 Claude 别名（`openrouter-1o`/`2o`/`3o`，含
 `__max` 变体）解析为其背后的真实 Anthropic Opus slug（`claude-opus-4-6`/`4-7`/`4-8`），使其也能
-定价。
+定价。此外还会把 TRAE 的 Gemini 短配置名（`gemini-3.1-pro`、`gemini-3-flash`）合并到其模型
+元数据记录的官方 preview slug，使新旧会话进入同一个累计模型桶。
 
 Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时强制使用 `--offline`，并注入
 由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
@@ -40,9 +41,24 @@ uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 `CHANGE`、`UNPRICED` 与 `UNSUPPORTED`。官方页面抓取或解析失败时脚本直接失败，不会回退到代理商。
 `effectiveFrom` 表示该次抓取的价格从仓库哪一天开始适用，不代表模型公开发布日期。初始条目使用
 各模型在仓库中首次出现的日期。
-DeepSeek 直接读取 canonical API 定价页。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
+DeepSeek、Google Gemini、Kimi 和 MiniMax 均直接读取各自 canonical API 定价页。已登记的 Gemini
+模型在 TRAE 标示的 200K 上下文上限内使用标准文本/图片价格；采集到的 token 桶不包含音频和
+Google 缓存存储时长费用。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
 当前固定 ccusage 版本认识该模型的请求级切档阈值时才允许加入；否则输出 `UNSUPPORTED`，不会静默
 套用 ccusage 的通用 200K fallback。
+
+每日 rollover 只有在 main 已推送、完成的 usage 分支已删除、当天分支已创建后，才运行
+`update_pricing.py --require-observed-prices`。如果已观测到的公开 provider 模型没有生效中的已审核
+费率，本次 rollover workflow 会明确标红，但不会阻塞或丢弃 usage 快照；内部及明确不支持的模型族
+只做提示。新增费率仍必须走人工审核 PR，因为生效日期决定历史补价范围；定时审计本身绝不写价格表。
+Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此未来 Kimi K3 或 Gemini 新变体在首次
+产生记录后会自动暴露，不再依赖人工维护硬编码模型名单。
+
+`main` 要求 GitHub Actions 中名为 `checks` 的检查通过；检查失败或缺失都会阻止 PR 合并和人工
+直推。daily rollover 是唯一的直写者：它先审计完成日快照，把同一个候选 SHA 发布到临时分支，再
+用 `checks: write` 为该 SHA 写入成功的 `checks`，之后才推进 `main`。随后仍保持原有的故障安全
+顺序：推进 `main`、删除已完成 usage 分支、删除临时候选分支、创建当天 usage 分支。这样人工改动
+与自动收口共用同一门禁，同时不会把自动 writer 锁死。
 
 本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
 设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测；某天一旦

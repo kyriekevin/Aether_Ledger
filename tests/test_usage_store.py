@@ -681,6 +681,22 @@ class TraexFetchTests(unittest.TestCase):
         self.assertTrue(out[0]["costTrusted"])
         self.assertEqual(out[0]["costSource"], "unpriced")
 
+    def test_public_traex_models_use_their_official_component_rates(self) -> None:
+        out = self.fetch([{
+            "date": "2026-08-11", "totalTokens": 3_000_000, "costUSD": 999.0,
+            "models": {
+                "kimi-k2.5": {"totalTokens": 1_000_000, "inputTokens": 1_000_000},
+                "minimax-m2.7": {
+                    "totalTokens": 1_000_000, "outputTokens": 1_000_000,
+                },
+                "gemini-3-flash": {
+                    "totalTokens": 1_000_000, "cacheReadTokens": 1_000_000,
+                },
+            },
+        }])
+        self.assertAlmostEqual(out[0]["totalCost"], 1.85)
+        self.assertEqual(out[0]["costSource"], "official")
+
     def test_an_empty_home_yields_no_entries(self) -> None:
         self.assertEqual(self.fetch([]), [])
 
@@ -747,6 +763,16 @@ class LowercasedCodexHomeTests(unittest.TestCase):
         )
         # An unmapped opaque slug is only lowercased, staying unpriced.
         self.assertEqual(sync_usage._normalise_model("Seed-1.6"), "seed-1.6")
+
+    def test_normalise_model_collapses_traex_gemini_display_aliases(self) -> None:
+        self.assertEqual(
+            sync_usage._normalise_model("gemini-3.1-pro"),
+            "gemini-3.1-pro-preview",
+        )
+        self.assertEqual(
+            sync_usage._normalise_model("Gemini-3-Flash"),
+            "gemini-3-flash-preview",
+        )
 
     def test_opaque_claude_aliases_resolve_to_real_opus_slugs(self) -> None:
         # openrouter-1o/2o/3o front Anthropic Opus 4.6/4.7/4.8; suffixed variants

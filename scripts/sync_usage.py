@@ -245,6 +245,14 @@ _ALIAS_PREFIXES = (
     ("openrouter-1o", "claude-opus-4-6"),
 )
 
+# TRAE's selectable config names for Gemini omit the ``-preview`` suffix that
+# its own ``real_name`` metadata and Google's API use. Collapse both spellings
+# before ccusage and the cumulative high-water merge see them.
+_MODEL_ALIASES = {
+    "gemini-3.1-pro": "gemini-3.1-pro-preview",
+    "gemini-3-flash": "gemini-3-flash-preview",
+}
+
 # Vendor-internal slugs we knowingly leave unpriced because no official rate is
 # pinned. Listed so a new one shows up in the log rather than billing zero unseen.
 # A leftover `openrouter-` here means our alias map missed a variant.
@@ -263,7 +271,7 @@ def _normalise_model(name: str) -> str:
     for prefix, real in _ALIAS_PREFIXES:
         if lowered.startswith(prefix):
             return real
-    return lowered
+    return _MODEL_ALIASES.get(lowered, lowered)
 
 
 # ---------------------------------------------------------------------------

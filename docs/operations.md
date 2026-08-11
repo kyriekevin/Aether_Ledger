@@ -22,7 +22,9 @@ sessions into a temporary `CODEX_HOME` with only the `"model"` field normalised;
 `~/.trae/cli` tree is never written. Normalisation does two things: it lowercases the name so
 it matches the shared table, and it resolves TRAE
 CLI's opaque Claude aliases (`openrouter-1o`/`2o`/`3o`, including `__max` variants) to the real
-Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`).
+Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`). It also collapses TRAE's
+short Gemini config names (`gemini-3.1-pro`, `gemini-3-flash`) onto the official preview slugs
+recorded in its own model metadata, so old and new sessions share one cumulative model bucket.
 
 Token prices come only from `config/official-pricing.json`. The sync invokes ccusage with
 `--offline` and a generated override file, so neither LiteLLM's live table nor models.dev can alter
@@ -45,10 +47,30 @@ trail stores. Review its `CHANGE`, `UNPRICED`, and `UNSUPPORTED` lines before ap
 fails closed when an official page cannot be fetched or parsed; it never falls back to a reseller.
 `effectiveFrom` is the first repository date to which that captured rate applies, not a claim about
 the model's public release date. Initial entries use each model's first observed date.
-DeepSeek is read directly from its canonical API pricing page. OpenAI models with a separate
+DeepSeek, Google Gemini, Kimi, and MiniMax are read directly from their canonical API pricing
+pages. The registered Gemini models use the standard text/image rate within TRAE's advertised
+200K context cap; audio and Google cache-storage charges are not present in the captured token
+buckets. OpenAI models with a separate
 long-context tier are accepted only when the pinned ccusage version is listed as knowing that
 model's request-tier boundary; otherwise the updater reports `UNSUPPORTED` instead of silently
 using ccusage's generic 200K fallback.
+
+The daily rollover runs `update_pricing.py --require-observed-prices` only after main was pushed,
+completed usage branches were deleted, and today's branch was created. An observed model from a
+supported public provider without an active reviewed rate makes the rollover workflow visibly
+fail, but cannot strand or discard the usage snapshot. Internal and deliberately unsupported
+families are advisory only. Adding a rate remains a reviewed pull request because its effective
+date controls historical backfill; the scheduled audit never edits the table itself. Kimi and
+Gemini parsers discover model IDs from their official family pages, so a future Kimi K3 or Gemini
+variant is surfaced after its first recorded use rather than requiring a hard-coded model list.
+
+`main` is protected by the required GitHub Actions check named `checks`; a red or missing check
+blocks a pull-request merge and a direct human push. Daily rollover is the sole direct writer. It
+validates the completed snapshots, publishes the exact candidate SHA on a temporary branch, and
+uses its `checks: write` permission to attach a successful `checks` run to that SHA before pushing
+it to `main`. It then preserves the existing failure-safe order: advance `main`, delete completed
+usage branches, remove the temporary candidate branch, and create today's usage branch. Thus the
+same gate covers human changes without disabling the automated close.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
