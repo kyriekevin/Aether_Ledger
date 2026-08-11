@@ -16,13 +16,14 @@
 </p>
 
 > [!IMPORTANT]
-> Public by design. The ledger keeps anonymized aggregates only — no prompts, sessions,
-> repository names, hostnames, usernames, or working directories are ever recorded.
+> Usage is pushed to this public repository automatically, so only aggregate numbers are ever
+> collected — which day, which tool, how many tokens. Prompts, sessions, repository names,
+> hostnames, usernames, working directories: nothing that could reconstruct what I was actually
+> working on.
 
-Aether Ledger records how I use Claude Code, Codex, and TRAE CLI—and makes that activity visible.
-Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
-Tokens are not experience points — a bigger burn does not mean I leveled up. They are what it
-costs to turn ideas into finished results, whether those ideas belong to study, life, or work.
+Aether Ledger records how many tokens my coding agents — Claude Code, Codex, and TRAE CLI —
+burn each day, rendered into two charts: one for totals and trend, one for which tool carries
+each context. Historical OpenCode-launched usage remains in the ledger as a legacy bucket.
 
 ## Activity
 
@@ -31,12 +32,13 @@ costs to turn ideas into finished results, whether those ideas belong to study, 
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
-## Topology
+## By context
 
-![Aether Ledger recent compute topology](assets/token-topology.svg)
+![Aether Ledger 30-day usage by context](assets/token-topology.svg)
 
-Topology shows which active agents serve each public environment over the latest 30 days.
-`Development` combines persistent devboxes with on-demand GPU trail workers.
+This chart splits the last 30 days by context: rows are contexts — Work, Personal, and
+Development (persistent devboxes plus on-demand GPU workers) — columns are tools, and each
+cell is that tool's share of the row.
 
 ## Ledger
 

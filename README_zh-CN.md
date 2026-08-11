@@ -16,13 +16,13 @@
 </p>
 
 > [!IMPORTANT]
-> 这个仓库从第一天起就按公开来设计。账本里只有匿名的聚合数字——提示词、会话、仓库名、
-> 主机名、用户名、工作目录，一概不记。
+> 用量是脚本自动推到这个公开仓库的，所以采集的只有聚合数字——哪天、哪个工具、多少
+> token，仅此而已。提示词、会话内容、仓库名、主机名、用户名、工作目录，这些能还原出
+> 我具体在干什么的信息一概不采。
 
-Aether Ledger 记录我用 Claude Code、Codex、TRAE CLI 花了多少 token，并把用量画成图。
-早期通过 OpenCode 跑的用量也在账本里，统一记在 Legacy harness 一栏。花掉的 token
-不是经验值，烧得多不代表我变强了；它是把想法做成结果要付的成本，学习、生活、工作
-都算在内。
+Aether Ledger 记录我的 coding agent——Claude Code、Codex、TRAE CLI——每天烧掉多少
+token，并画成两张图：一张看总量和趋势，一张看每个场景各靠哪个工具。早期通过 OpenCode
+跑的用量也在账本里，统一记在 Legacy 一栏。
 
 ## 用量总览
 
@@ -31,12 +31,12 @@ Aether Ledger 记录我用 Claude Code、Codex、TRAE CLI 花了多少 token，�
 金额按记录到的模型用量折算成 API 等价成本，不是真实的订阅账单。Active days 统计的是
 token 总量不为零的自然日。
 
-## 算力拓扑
+## 分场景
 
-![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
+![Aether Ledger 近 30 天分场景用量](assets/token-topology.svg)
 
-拓扑图画的是最近 30 天里，哪些 agent 在为哪个环境干活。`Development` 一栏把常驻
-开发机和按需拉起的 GPU trail worker 合在一起算。
+这张图按场景拆最近 30 天的用量：行是场景——Work、Personal、Development（常驻开发机
+加按需拉起的 GPU 节点）——列是工具，格子里是该工具在这个场景里占的份额。
 
 ## 账本
 
