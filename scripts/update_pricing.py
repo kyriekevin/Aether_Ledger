@@ -8,6 +8,8 @@
 The default mode is read-only. Use ``--apply --effective-from YYYY-MM-DD`` to
 record a new model or a changed price after reviewing the printed candidates.
 Unknown models stay explicitly unpriced (zero) until an official row exists.
+``--require-observed-prices`` is the daily close audit: it exits nonzero when an
+observed model from a supported public provider has no active reviewed rate.
 """
 
 from __future__ import annotations
@@ -187,10 +189,90 @@ def parse_deepseek(page: str, _as_of: date) -> dict[str, dict]:
     }
 
 
+def parse_kimi(page: str, _as_of: date) -> dict[str, dict]:
+    """Read Kimi ``DocTable`` rows serialized into the official HTML pages."""
+    candidates: dict[str, dict] = {}
+    rows = re.compile(
+        r"rows:\[\[\`(kimi-[^`]+)\`,\`1M tokens\`,(.*?)\]\]\}\)",
+        re.DOTALL,
+    )
+    prices = re.compile(
+        r"children:\[\`\$\`,\`([0-9]+(?:\.[0-9]+)?)\`\]"
+    )
+    for model, row in rows.findall(page):
+        values = prices.findall(row)
+        if len(values) < 3:
+            continue
+        cache_hit, cache_miss, output = values[:3]
+        cache_read = float(cache_hit)
+        input_price = float(cache_miss)
+        output_price = float(output)
+        candidates[model] = {
+            "input": input_price, "output": output_price,
+            "cacheWrite": input_price, "cacheRead": cache_read,
+        }
+    return candidates
+
+
+def parse_minimax(page: str, _as_of: date) -> dict[str, dict]:
+    parser = _HtmlTableRows()
+    parser.feed(page)
+    candidates: dict[str, dict] = {}
+    for row in parser.rows:
+        if len(row) != 5 or not row[0].startswith("MiniMax-M"):
+            continue
+        values = [_money(cell) for cell in row[1:]]
+        if any(value is None for value in values):
+            continue
+        candidates[row[0].lower()] = {
+            "input": values[0], "output": values[1],
+            "cacheRead": values[2], "cacheWrite": values[3],
+        }
+    return candidates
+
+
+def parse_google(page: str, _as_of: date) -> dict[str, dict]:
+    """Read the Standard table for the Gemini models exposed by TRAE.
+
+    TRAE caps these models at 200K context, so Gemini 3.1 Pro never enters the
+    official >200K tier. Audio-specific prices are likewise outside TRAE CLI's
+    text/image session accounting; the first dollar value is the applicable one.
+    """
+    candidates: dict[str, dict] = {}
+    markers = list(re.finditer(r'<h2 id="(gemini-[^"]+)"', page))
+    for index, marker in enumerate(markers):
+        model = marker.group(1)
+        end = markers[index + 1].start() if index + 1 < len(markers) else len(page)
+        section = page[marker.end():end]
+        parser = _HtmlTableRows()
+        parser.feed(section)
+
+        def value(label: str) -> float | None:
+            row = next(
+                (item for item in parser.rows if item and item[0].startswith(label)),
+                None,
+            )
+            return None if row is None else _money(row[-1])
+
+        input_price = value("Input price")
+        output_price = value("Output price")
+        cache_read = value("Context caching price")
+        if None in (input_price, output_price, cache_read):
+            continue
+        candidates[model] = {
+            "input": input_price, "output": output_price,
+            "cacheWrite": input_price, "cacheRead": cache_read,
+        }
+    return candidates
+
+
 PARSERS = {
     "anthropic": parse_anthropic,
     "openai": parse_openai,
     "deepseek": parse_deepseek,
+    "google": parse_google,
+    "kimi": parse_kimi,
+    "minimax": parse_minimax,
 }
 
 
@@ -198,6 +280,20 @@ def fetch_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "Aether-Ledger/1"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return html.unescape(response.read().decode("utf-8"))
+
+
+def fetch_provider_text(provider: str, source: dict[str, str]) -> str:
+    """Fetch one provider source, expanding Kimi's model-price index."""
+    page = fetch_text(source["fetchUrl"])
+    if provider != "kimi":
+        return page
+    links = sorted(set(re.findall(
+        r"\((https://platform\.kimi\.ai/docs/pricing/chat-k[^)]+?\.md)\)",
+        page,
+    )))
+    if not links:
+        return page
+    return "\n".join(fetch_text(link.removesuffix(".md")) for link in links)
 
 
 def observed_models() -> set[str]:
@@ -222,6 +318,12 @@ def infer_provider(model: str) -> str | None:
         return "openai"
     if model.startswith("deepseek-"):
         return "deepseek"
+    if model.startswith("gemini-"):
+        return "google"
+    if model.startswith("kimi-"):
+        return "kimi"
+    if model.startswith("minimax-"):
+        return "minimax"
     return None
 
 
@@ -253,19 +355,29 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--apply", action="store_true", help="write reviewed changes")
     parser.add_argument("--effective-from", type=date.fromisoformat)
     parser.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    parser.add_argument(
+        "--require-observed-prices", action="store_true",
+        help="exit nonzero if an observed supported-provider model has no active rate",
+    )
     args = parser.parse_args(argv)
     if args.apply and args.effective_from is None:
         parser.error("--apply requires --effective-from YYYY-MM-DD")
+    if args.apply and args.require_observed_prices:
+        parser.error("--apply and --require-observed-prices are mutually exclusive")
 
     pricing = load_pricing()
     candidates = {}
     for provider, source in pricing["sources"].items():
-        parsed = PARSERS[provider](fetch_text(source["fetchUrl"]), args.as_of)
+        parsed = PARSERS[provider](
+            fetch_provider_text(provider, source), args.as_of
+        )
         if not parsed:
             raise RuntimeError(f"no prices parsed from {provider}'s official source")
         candidates[provider] = parsed
     changed = False
-    for model in sorted(observed_models() | set(pricing["models"])):
+    missing_observed_price = False
+    observed = observed_models()
+    for model in sorted(observed | set(pricing["models"])):
         entry = pricing["models"].get(model)
         provider = entry.get("provider") if entry else infer_provider(model)
         if provider is None:
@@ -285,6 +397,13 @@ def main(argv: list[str] | None = None) -> int:
             )
             continue
         current = active_rate(model, args.as_of, pricing)
+        if (
+            args.require_observed_prices
+            and model in observed
+            and current is None
+            and not (entry and entry.get("unpricedReason"))
+        ):
+            missing_observed_price = True
         comparable = None if current is None else {
             key: value for key, value in current.items() if key != "effectiveFrom"
         }
@@ -320,7 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     if changed:
         _atomic_write(PRICING_PATH, pricing)
         print(f"updated {PRICING_PATH.relative_to(REPO_ROOT)}")
-    return 0
+    return 1 if missing_observed_price else 0
 
 
 if __name__ == "__main__":

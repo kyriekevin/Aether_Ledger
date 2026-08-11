@@ -106,6 +106,25 @@ class DailyBranchTests(unittest.TestCase):
         self.assertLess(merge, audit)
         self.assertLess(audit, commit)
 
+    def test_rollover_publishes_required_check_before_advancing_main(self) -> None:
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "daily-rollover.yml"
+        ).read_text()
+        candidate = workflow.index('git push origin HEAD:"refs/heads/$candidate_branch"')
+        check = workflow.index('"repos/$GITHUB_REPOSITORY/check-runs"')
+        main = workflow.index("git push origin HEAD:main")
+        completed = workflow.index('git push origin --delete "$branch"')
+        today = workflow.index('git push origin HEAD:"refs/heads/$today_branch"')
+        pricing = workflow.index("scripts/update_pricing.py --require-observed-prices")
+        self.assertIn("checks: write", workflow)
+        self.assertLess(candidate, check)
+        self.assertLess(check, main)
+        self.assertLess(main, completed)
+        self.assertLess(completed, today)
+        self.assertLess(today, pricing)
 
     @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
     @patch.object(sync_usage, "_current_branch", return_value="main")

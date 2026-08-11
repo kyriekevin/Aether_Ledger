@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  checks: write
   contents: write
 
 concurrency:
@@ -87,13 +88,35 @@ jobs:
             uv run --script scripts/audit_public.py --history "origin/main..HEAD"
             git diff --check "origin/main...HEAD"
 
+            # Required checks protect human merges, but this workflow is also the
+            # only legitimate direct writer to main. Publish the already-audited
+            # candidate SHA on a temporary branch, attach this GitHub Actions
+            # check to that exact commit, then advance main. A failure before the
+            # main push leaves completed usage branches intact for the retry.
+            candidate_sha="$(git rev-parse HEAD)"
+            candidate_branch="rollover-candidate/$candidate_sha"
+            git push origin HEAD:"refs/heads/$candidate_branch"
+            gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs" \
+              -f name=checks \
+              -f head_sha="$candidate_sha" \
+              -f status=completed \
+              -f conclusion=success \
+              -f details_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
             git push origin HEAD:main
             for branch in "${merged[@]}"; do
               git push origin --delete "$branch"
             done
+            git push origin --delete "$candidate_branch"
           fi
 
           today_branch="usage/$today"
           if ! git ls-remote --exit-code --heads origin "$today_branch" >/dev/null 2>&1; then
             git push origin HEAD:"refs/heads/$today_branch"
           fi
+
+      - name: Reconcile observed models with official pricing
+        # This is deliberately after main publication, completed-branch cleanup,
+        # and today's branch creation. A new model makes the close visibly red
+        # without stranding usage data or violating rollover's recovery order.
+        run: uv run --script scripts/update_pricing.py --require-observed-prices

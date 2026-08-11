@@ -5,6 +5,7 @@ import sys
 import unittest
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
@@ -35,6 +36,24 @@ class PricingTableTests(unittest.TestCase):
         self.assertEqual(overrides["claude-opus-5"]["inputCostPerToken"], 0.000005)
         self.assertEqual(overrides["gpt-5.3-codex-spark"]["inputCostPerToken"], 0.0)
         self.assertEqual(config["codex"]["defaults"]["speed"], "auto")
+
+    def test_public_traex_models_have_official_rates(self) -> None:
+        day = date(2026, 8, 11)
+        expected = {
+            "gpt-5.2": (1.75, 14.0, 0.175),
+            "gemini-3-flash-preview": (0.5, 3.0, 0.05),
+            "gemini-3.1-pro-preview": (2.0, 12.0, 0.2),
+            "kimi-k2.5": (0.6, 3.0, 0.1),
+            "kimi-k2.6": (0.95, 4.0, 0.16),
+            "minimax-m2.7": (0.3, 1.2, 0.06),
+        }
+        for model, rates in expected.items():
+            with self.subTest(model=model):
+                rate = pricing.active_rate(model, day)
+                self.assertIsNotNone(rate)
+                self.assertEqual(
+                    (rate["input"], rate["output"], rate["cacheRead"]), rates
+                )
 
     def test_ccusage_config_rejects_an_unverified_long_context_model(self) -> None:
         table = {
@@ -154,6 +173,109 @@ Fast mode
         ]
         self.assertEqual(rate["input"], 0.435)
         self.assertEqual(rate["cacheRead"], 0.003625)
+
+    def test_kimi_parser_discovers_models_from_the_official_index(self) -> None:
+        source = r'''
+rows:[[`kimi-k2.5`,`1M tokens`,_jsxs(_Fragment,{children:[`$`,`0.10`]}),_jsxs(_Fragment,{children:[`$`,`0.60`]}),_jsxs(_Fragment,{children:[`$`,`3.00`]}),`262,144 tokens`]]})
+rows:[[`kimi-k3`,`1M tokens`,_jsxs(_Fragment,{children:[`$`,`0.30`]}),_jsxs(_Fragment,{children:[`$`,`3.00`]}),_jsxs(_Fragment,{children:[`$`,`15.00`]}),`1,048,576 tokens`]]})
+'''
+        rates = update_pricing.parse_kimi(source, date(2026, 8, 11))
+        rate = rates["kimi-k2.5"]
+        self.assertEqual(
+            rate,
+            {"input": 0.6, "output": 3.0, "cacheWrite": 0.6, "cacheRead": 0.1},
+        )
+        self.assertEqual(rates["kimi-k3"]["output"], 15.0)
+
+    def test_kimi_fetch_discovers_current_and_future_pricing_pages(self) -> None:
+        index = """
+- [Kimi K3](https://platform.kimi.ai/docs/pricing/chat-k3.md)
+- [Kimi K2.5](https://platform.kimi.ai/docs/pricing/chat-k25.md)
+"""
+        with patch.object(
+            update_pricing,
+            "fetch_text",
+            side_effect=[index, "K2.5 HTML", "K3 HTML"],
+        ) as fetch:
+            page = update_pricing.fetch_provider_text(
+                "kimi", {"fetchUrl": "https://platform.kimi.ai/docs/llms.txt"}
+            )
+        self.assertEqual(page, "K2.5 HTML\nK3 HTML")
+        self.assertEqual(
+            [call.args[0] for call in fetch.call_args_list],
+            [
+                "https://platform.kimi.ai/docs/llms.txt",
+                "https://platform.kimi.ai/docs/pricing/chat-k25",
+                "https://platform.kimi.ai/docs/pricing/chat-k3",
+            ],
+        )
+
+    def test_minimax_parser_reads_pay_as_you_go_table(self) -> None:
+        source = """
+<table><tbody><tr><td>MiniMax-M2.7</td><td>$0.3 / M tokens</td>
+<td>$1.2 / M tokens</td><td>$0.06 / M tokens</td>
+<td>$0.375 / M tokens</td></tr></tbody></table>
+"""
+        rate = update_pricing.parse_minimax(source, date(2026, 8, 11))[
+            "minimax-m2.7"
+        ]
+        self.assertEqual(
+            rate,
+            {"input": 0.3, "output": 1.2, "cacheWrite": 0.375, "cacheRead": 0.06},
+        )
+
+    def test_google_parser_reads_traex_models_standard_tiers(self) -> None:
+        source = """
+<h2 id="gemini-3.1-pro-preview">Gemini 3.1 Pro Preview</h2>
+<h3>Standard</h3><table><tbody>
+<tr><td>Input price</td><td>Not available</td><td>$2.00, prompts &lt;= 200k tokens<br>$4.00, prompts &gt; 200k tokens</td></tr>
+<tr><td>Output price</td><td>Not available</td><td>$12.00, prompts &lt;= 200k tokens<br>$18.00, prompts &gt; 200k</td></tr>
+<tr><td>Context caching price</td><td>Not available</td><td>$0.20, prompts &lt;= 200k tokens<br>$0.40, prompts &gt; 200k</td></tr>
+</tbody></table>
+<h2 id="gemini-3-flash-preview">Gemini 3 Flash Preview</h2>
+<h3>Standard</h3><table><tbody>
+<tr><td>Input price</td><td>Free</td><td>$0.50 (text / image / video)<br>$1.00 (audio)</td></tr>
+<tr><td>Output price</td><td>Free</td><td>$3.00</td></tr>
+<tr><td>Context caching price</td><td>Free</td><td>$0.05</td></tr>
+</tbody></table>
+<h2 id="gemini-future-flash">Gemini Future Flash</h2>
+<h3>Standard</h3><table><tbody>
+<tr><td>Input price</td><td>Free</td><td>$0.75</td></tr>
+<tr><td>Output price</td><td>Free</td><td>$4.00</td></tr>
+<tr><td>Context caching price</td><td>Free</td><td>$0.075</td></tr>
+</tbody></table>
+"""
+        rates = update_pricing.parse_google(source, date(2026, 8, 11))
+        self.assertEqual(rates["gemini-3.1-pro-preview"]["input"], 2.0)
+        self.assertEqual(rates["gemini-3.1-pro-preview"]["output"], 12.0)
+        self.assertEqual(rates["gemini-3-flash-preview"]["cacheRead"], 0.05)
+        self.assertEqual(rates["gemini-future-flash"]["input"], 0.75)
+
+    def test_daily_audit_fails_for_an_observed_public_model_without_a_rate(self) -> None:
+        table = {
+            "schemaVersion": 1,
+            "unit": "perMillionTokens",
+            "sources": {"kimi": {"fetchUrl": "https://example.invalid"}},
+            "models": {},
+        }
+        with (
+            patch.object(update_pricing, "load_pricing", return_value=table),
+            patch.object(update_pricing, "fetch_text", return_value="pricing"),
+            patch.object(update_pricing, "observed_models", return_value={"kimi-next"}),
+            patch.dict(
+                update_pricing.PARSERS,
+                {"kimi": lambda _source, _day: {
+                    "kimi-next": {
+                        "input": 1.0, "output": 2.0,
+                        "cacheWrite": 1.0, "cacheRead": 0.1,
+                    }
+                }},
+            ),
+        ):
+            status = update_pricing.main([
+                "--require-observed-prices", "--as-of", "2026-08-11",
+            ])
+        self.assertEqual(status, 1)
 
     def test_checked_in_pricing_is_valid_json(self) -> None:
         table = json.loads(pricing.PRICING_PATH.read_text())
