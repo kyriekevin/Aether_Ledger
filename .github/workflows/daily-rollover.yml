@@ -78,7 +78,7 @@ jobs:
           if ((${#merged[@]})); then
             # Validate before publishing. This push is authenticated with
             # GITHUB_TOKEN, which by design does not start another workflow run,
-            # so ci.yml never sees these commits and this block is their only
+            # so verify.yml never sees these commits and this block is their only
             # gate. It is also the last point at which a bad merge is still
             # recoverable: the day branches are deleted immediately after.
             # Failing leaves main untouched and the day branches intact for the

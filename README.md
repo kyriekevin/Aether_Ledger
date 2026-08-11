@@ -1,8 +1,23 @@
-# Aether Ledger
+<h1 align="center">Aether Ledger</h1>
 
-[English](README.md) | [简体中文](README_zh-CN.md)
+<p align="center">
+  The AI compute ledger of the <strong>Nightglass Protocol</strong> —
+  an anonymized, continuously updated record of how my coding agents spend tokens.
+</p>
 
-> The AI compute ledger of the **Nightglass Protocol**.
+<p align="center">
+  English · <a href="README_zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/kyriekevin/Aether_Ledger/actions/workflows/verify.yml"><img alt="Verify" src="https://github.com/kyriekevin/Aether_Ledger/actions/workflows/verify.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/kyriekevin/Aether_Ledger?style=flat-square"></a>
+  <img alt="Managed by uv" src="https://img.shields.io/badge/managed%20by-uv-261230?style=flat-square">
+</p>
+
+> [!IMPORTANT]
+> Public by design. The ledger keeps anonymized aggregates only — no prompts, sessions,
+> repository names, hostnames, usernames, or working directories are ever recorded.
 
 Aether Ledger records how I use Claude Code, Codex, and TRAE CLI—and makes that activity visible.
 Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
@@ -26,11 +41,32 @@ Topology shows which active agents serve each public environment over the latest
 ## Ledger
 
 The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,
-`work`, and `devbox`) plus anonymized ephemeral `trail` workers. No prompts, sessions, repository
-names, hostnames, usernames, or working directories are recorded.
+`work`, and `devbox`) plus anonymized ephemeral `trail` workers.
 
-## Automation
+## How it works
 
-Updates land throughout the day on `usage/YYYY-MM-DD`. After midnight in Asia/Shanghai, the
-rollover workflow squash-merges the completed day into `main`, refreshes the dashboard, and opens
-the new day's branch. See [Operations](docs/operations.md) for setup, schemas, and recovery.
+```text
+Claude Code · Codex · TRAE CLI
+        │  scheduled sync
+        ▼
+usage/YYYY-MM-DD ── intraday aggregate commits
+        │  daily rollover, after Asia/Shanghai midnight
+        ▼
+main ── squash-merged day + regenerated dashboards
+        │
+        └─→ completed branch deleted, today's branch created
+```
+
+Usage lands throughout the day on the dated branch; `main` only receives completed days from the
+rollover workflow. Human changes go through pull requests gated by `make verify`.
+
+## Documentation
+
+| Guide | Covers |
+|---|---|
+| [Operations](docs/operations.md) | Setup, machine identity, branch lifecycle, schemas, dashboards, and recovery |
+| [Repository guidance](AGENTS.md) | The contribution and hand-off contract |
+
+## License
+
+MIT — see [LICENSE](LICENSE).

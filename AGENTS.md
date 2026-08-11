@@ -13,22 +13,16 @@
   failure-safe ordering: merge and push `main`, delete completed branches, then create today.
 - Keep the README dashboard-first and minimal. Put setup, schemas, recovery, and implementation
   details in `docs/operations.md`.
+- Keep English and Chinese user-facing documentation semantically aligned in the same change.
 - Use Conventional Commit subjects. Prefer `feat`, `fix`, `docs`, `test`, `refactor`, or `chore`
   with a focused scope such as `data`, `readme`, `dashboard`, or `automation`. Automated daily
   snapshots use `chore(data): finalize YYYY-MM-DD snapshot`.
 - Land human changes through a pull request. Never commit or push directly to `main`; the daily
   rollover workflow is the only writer that pushes there.
 - Commit with a no-reply email. This repository is public, so commit metadata is published too.
-- Before handing off changes, run:
-
-  ```sh
-  uv run python -m unittest discover -s tests -v
-  uv run --script scripts/audit_public.py
-  uv run --script scripts/render_dashboard.py --check
-  python3 -m py_compile scripts/*.py
-  git diff --check
-  ```
-
-  `.github/workflows/ci.yml` enforces the same set on every pull request, and additionally audits
-  the incoming commits for personal email addresses. Run the checks locally anyway: a red CI run
-  costs a round trip.
+- Before handing off changes, run `make verify`. It bundles the unit tests, the public-data
+  audit, the dashboard freshness check, script byte-compilation, and `git diff --check`.
+  `.github/workflows/verify.yml` runs the same checks on every pull request, but covers strictly
+  more: its `git diff --check` spans the whole incoming range rather than the working tree, and
+  it additionally audits those commits for personal email addresses. A green `make verify` is
+  therefore necessary but not sufficient — run it anyway, because a red CI run costs a round trip.
