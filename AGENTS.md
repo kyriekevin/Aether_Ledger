@@ -22,6 +22,7 @@
 - Commit with a no-reply email. This repository is public, so commit metadata is published too.
 - Before handing off changes, run `make verify`. It bundles the unit tests, the public-data
   audit, the dashboard freshness check, script byte-compilation, and `git diff --check`.
-  `.github/workflows/verify.yml` enforces the same set on every pull request, and additionally
-  audits the incoming commits for personal email addresses. Run the checks locally anyway: a red
-  CI run costs a round trip.
+  `.github/workflows/verify.yml` runs the same checks on every pull request, but covers strictly
+  more: its `git diff --check` spans the whole incoming range rather than the working tree, and
+  it additionally audits those commits for personal email addresses. A green `make verify` is
+  therefore necessary but not sufficient — run it anyway, because a red CI run costs a round trip.

@@ -46,9 +46,14 @@ token 总量大于零的自然日累计。
 
 ```text
 Claude Code · Codex · TRAE CLI
-├── 定时同步 ─────→ 当日聚合提交持续写入 usage/YYYY-MM-DD
-├── 每日 rollover ─→ Asia/Shanghai 跨日后 squash merge 到 main
-└── 面板渲染 ─────→ 活动与拓扑 SVG
+        │  定时同步
+        ▼
+usage/YYYY-MM-DD ── 当天聚合提交持续写入
+        │  Asia/Shanghai 跨日后触发 rollover
+        ▼
+main ── squash merge 当天数据 + 重新渲染面板
+        │
+        └─→ 删除已完成分支，创建当天新分支
 ```
 
 当天用量只写入日期分支；`main` 只接收 rollover workflow 合入的完整天。人工改动一律走
@@ -59,7 +64,7 @@ PR，并以 `make verify` 作为交付门槛。
 | 指南 | 内容 |
 |---|---|
 | [运维文档](docs/operations_zh-CN.md) | 安装、机器身份、分支生命周期、数据结构、面板与恢复 |
-| [Repository guidance](AGENTS.md) | 贡献与交付约定 |
+| [仓库约定](AGENTS.md) | 贡献与交付约定 |
 
 ## License
 

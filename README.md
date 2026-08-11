@@ -47,9 +47,14 @@ The public-safe aggregates live under [`data/`](data/), grouped by durable role 
 
 ```text
 Claude Code · Codex · TRAE CLI
-├── scheduled sync ────→ intraday aggregate commits on usage/YYYY-MM-DD
-├── daily rollover ────→ squash-merge into main after Asia/Shanghai midnight
-└── render dashboard ──→ activity and topology SVGs
+        │  scheduled sync
+        ▼
+usage/YYYY-MM-DD ── intraday aggregate commits
+        │  daily rollover, after Asia/Shanghai midnight
+        ▼
+main ── squash-merged day + regenerated dashboards
+        │
+        └─→ completed branch deleted, today's branch created
 ```
 
 Usage lands throughout the day on the dated branch; `main` only receives completed days from the
