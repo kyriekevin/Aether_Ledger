@@ -126,6 +126,20 @@ class DailyBranchTests(unittest.TestCase):
         self.assertLess(completed, today)
         self.assertLess(today, pricing)
 
+    def test_rollover_authenticates_gh_and_cleans_up_failed_candidates(self) -> None:
+        workflow = (
+            Path(__file__).resolve().parents[1]
+            / ".github"
+            / "workflows"
+            / "daily-rollover.yml"
+        ).read_text()
+        candidate = workflow.index('git push origin HEAD:"refs/heads/$candidate_branch"')
+        check = workflow.index('gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs"')
+        self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+        self.assertIn("trap cleanup_candidate EXIT", workflow)
+        self.assertIn('git push origin --delete "$candidate_branch" || true', workflow)
+        self.assertLess(candidate, check)
+
     @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
     @patch.object(sync_usage, "_current_branch", return_value="main")
     def test_waits_while_any_older_branch_still_exists(self, _current, _ahead) -> None:
