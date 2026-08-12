@@ -40,8 +40,18 @@ jobs:
 
       - name: Squash completed day branches into main
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          candidate_branch=""
+          cleanup_candidate() {
+            if [[ -n "$candidate_branch" ]]; then
+              git push origin --delete "$candidate_branch" || true
+            fi
+          }
+          trap cleanup_candidate EXIT
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch --prune origin '+refs/heads/usage/*:refs/remotes/origin/usage/*'
@@ -108,6 +118,7 @@ jobs:
               git push origin --delete "$branch"
             done
             git push origin --delete "$candidate_branch"
+            candidate_branch=""
           fi
 
           today_branch="usage/$today"
