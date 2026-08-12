@@ -1,5 +1,6 @@
 {
   "2026-08-07": {
+    "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
         "totalTokens": 12311427
@@ -20,10 +21,11 @@
         "totalTokens": 108181
       }
     },
-    "totalCost": 14.643646274399998,
+    "totalCost": 14.360728074399999,
     "totalTokens": 21756777
   },
   "2026-08-09": {
+    "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
         "totalTokens": 26080288
@@ -38,10 +40,11 @@
         "totalTokens": 13365597
       }
     },
-    "totalCost": 35.59215452,
+    "totalCost": 34.28657622,
     "totalTokens": 50120538
   },
   "2026-08-10": {
+    "costSource": "unpriced",
     "models": {
       "deepseek-v4-pro": {
         "totalTokens": 972438
@@ -53,7 +56,17 @@
         "totalTokens": 8630186
       }
     },
-    "totalCost": 6.8753102870000005,
+    "totalCost": 6.677133037,
     "totalTokens": 10228451
+  },
+  "2026-08-11": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 672251
+      }
+    },
+    "totalCost": 0.07141131099999999,
+    "totalTokens": 672251
   }
 }

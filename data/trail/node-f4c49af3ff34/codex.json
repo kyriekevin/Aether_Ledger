@@ -1,5 +1,6 @@
 {
   "2026-07-18": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 27081480
@@ -24,6 +25,7 @@
     "totalTokens": 223770482
   },
   "2026-07-20": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 16104330
@@ -36,6 +38,7 @@
     "totalTokens": 127538111
   },
   "2026-07-21": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 18208752
@@ -60,6 +63,7 @@
     "totalTokens": 181959765
   },
   "2026-07-23": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 88240188
@@ -72,6 +76,7 @@
     "totalTokens": 464419124
   },
   "2026-07-24": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 24163448
@@ -84,6 +89,7 @@
     "totalTokens": 135492988
   },
   "2026-07-25": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 38455033
@@ -96,6 +102,7 @@
     "totalTokens": 223738797
   },
   "2026-07-26": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 17452661
@@ -108,6 +115,7 @@
     "totalTokens": 99991779
   },
   "2026-07-27": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 11835936
@@ -116,10 +124,11 @@
         "totalTokens": 94305184
       }
     },
-    "totalCost": 80.97925,
+    "totalCost": 80.97925000000001,
     "totalTokens": 106141120
   },
   "2026-07-28": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 26389311
@@ -156,6 +165,7 @@
     "totalTokens": 247529915
   },
   "2026-07-31": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 14710733
@@ -168,6 +178,7 @@
     "totalTokens": 157855335
   },
   "2026-08-03": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 935080
@@ -192,6 +203,7 @@
     "totalTokens": 234901587
   },
   "2026-08-05": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 47025294
@@ -204,6 +216,7 @@
     "totalTokens": 457064622
   },
   "2026-08-06": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 144175617
@@ -216,6 +229,7 @@
     "totalTokens": 453951622
   },
   "2026-08-10": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 520134

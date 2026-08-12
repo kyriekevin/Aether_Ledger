@@ -1,5 +1,6 @@
 {
   "2026-08-07": {
+    "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
         "totalTokens": 425379
@@ -11,22 +12,45 @@
         "totalTokens": 1486376
       }
     },
-    "totalCost": 1.4414869000000001,
+    "totalCost": 1.3865365,
     "totalTokens": 1957155
   },
   "2026-08-10": {
+    "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
         "totalTokens": 699495
       },
       "gemini-3.1-pro-preview": {
-        "totalTokens": 6186014
+        "totalTokens": 6718171
       },
       "gpt-5.5": {
         "totalTokens": 1313005
       }
     },
-    "totalCost": 4.87687905,
-    "totalTokens": 8198514
+    "totalCost": 1.86269,
+    "totalTokens": 8730671
+  },
+  "2026-08-11": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "totalTokens": 52226447
+      },
+      "gemini-3-flash-preview": {
+        "totalTokens": 24077010
+      },
+      "gpt-5.5": {
+        "totalTokens": 4388766
+      },
+      "kimi-k2.5": {
+        "totalTokens": 25047
+      },
+      "minimax-m2.7": {
+        "totalTokens": 25588
+      }
+    },
+    "totalCost": 38.233689500000004,
+    "totalTokens": 80742858
   }
 }
