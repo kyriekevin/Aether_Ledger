@@ -593,7 +593,7 @@
     "costSource": "official",
     "models": {
       "claude-fable-5": {
-        "totalTokens": 29373739
+        "totalTokens": 31261898
       },
       "claude-haiku-4-5-20251001": {
         "totalTokens": 82361
@@ -602,10 +602,26 @@
         "totalTokens": 38683849
       },
       "claude-sonnet-5": {
-        "totalTokens": 16015521
+        "totalTokens": 17901777
       }
     },
-    "totalCost": 137.05221749999998,
-    "totalTokens": 84155470
+    "totalCost": 141.19185419999997,
+    "totalTokens": 87929885
+  },
+  "2026-08-12": {
+    "costSource": "official",
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 42149472
+      },
+      "claude-opus-5": {
+        "totalTokens": 23544964
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 17171686
+      }
+    },
+    "totalCost": 152.05992050000006,
+    "totalTokens": 82866122
   }
 }

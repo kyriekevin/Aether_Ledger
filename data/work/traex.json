@@ -21,7 +21,7 @@
         "totalTokens": 108181
       }
     },
-    "totalCost": 14.360728074399999,
+    "totalCost": 14.643646274399998,
     "totalTokens": 21756777
   },
   "2026-08-09": {
@@ -40,7 +40,7 @@
         "totalTokens": 13365597
       }
     },
-    "totalCost": 34.28657622,
+    "totalCost": 35.592154519999994,
     "totalTokens": 50120538
   },
   "2026-08-10": {
@@ -56,7 +56,7 @@
         "totalTokens": 8630186
       }
     },
-    "totalCost": 6.677133037,
+    "totalCost": 6.8753102870000005,
     "totalTokens": 10228451
   },
   "2026-08-11": {
@@ -68,5 +68,18 @@
     },
     "totalCost": 0.07141131099999999,
     "totalTokens": 672251
+  },
+  "2026-08-12": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 1025328
+      },
+      "gemini-3-flash-preview": {
+        "totalTokens": 22123
+      }
+    },
+    "totalCost": 0.06374759,
+    "totalTokens": 1047451
   }
 }
