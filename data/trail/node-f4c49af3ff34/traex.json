@@ -57,16 +57,29 @@
     "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
-        "totalTokens": 293472173
+        "totalTokens": 401965963
       },
       "gemini-3-flash-preview": {
-        "totalTokens": 62679311
+        "totalTokens": 83888288
       },
       "gpt-5.5": {
-        "totalTokens": 895720
+        "totalTokens": 6715485
       }
     },
-    "totalCost": 188.44085030000002,
-    "totalTokens": 357047204
+    "totalCost": 278.3365124,
+    "totalTokens": 492569736
+  },
+  "2026-08-13": {
+    "costSource": "unpriced",
+    "models": {
+      "gemini-3-flash-preview": {
+        "totalTokens": 17512307
+      },
+      "gpt-5.5": {
+        "totalTokens": 32186051
+      }
+    },
+    "totalCost": 53.38107785,
+    "totalTokens": 49698358
   }
 }

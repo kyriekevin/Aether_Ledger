@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="350" viewBox="0 0 1180 350" role="img" aria-labelledby="title desc">
-  <title id="title">Recent AI compute topology through 2026-08-12</title>
-  <desc id="desc">Environment by active agent shares for 6.3B tokens in the trailing 30 days.</desc>
+  <title id="title">Recent AI compute topology through 2026-08-13</title>
+  <desc id="desc">Environment by active agent shares for 6.5B tokens in the trailing 30 days.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
     .dashboard-panel { fill: #e6e9ef; }
@@ -41,53 +41,53 @@
   </style>
   <rect class="dashboard-background" width="1180" height="350" rx="22"/>
   <text class="dashboard-primary" x="16" y="46" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Recent compute topology</text>
-  <text class="dashboard-muted" x="16" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-14–2026-08-12 · active agents only · hue is environment · intensity is agent share within each row</text>
+  <text class="dashboard-muted" x="16" y="72" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-15–2026-08-13 · active agents only · hue is environment · intensity is agent share within each row</text>
   <text class="dashboard-secondary" x="407.3" y="112" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
   <text class="dashboard-secondary" x="712.0" y="112" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
   <text class="dashboard-secondary" x="1016.7" y="112" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
   <circle class="topology-work" cx="36" cy="148" r="5"/>
   <text class="dashboard-primary" x="50" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Work</text>
-  <text class="dashboard-muted" x="50" y="173" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">1.4B tokens</text>
-  <rect class="topology-work topology-level-2" x="260.0" y="130" width="294.7" height="52" rx="10" data-role="work" data-agent="claude" data-tokens="703867493" data-level="2">
-    <title>Work × Claude: 704M tokens (49.2% of environment)</title>
+  <text class="dashboard-muted" x="50" y="173" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">1.5B tokens</text>
+  <rect class="topology-work topology-level-2" x="260.0" y="130" width="294.7" height="52" rx="10" data-role="work" data-agent="claude" data-tokens="727228237" data-level="2">
+    <title>Work × Claude: 727M tokens (49.4% of environment)</title>
   </rect>
-  <text class="topology-label-2 topology-label-work-2" x="407.3" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">49.2% · 704M</text>
-  <rect class="topology-work topology-level-2" x="564.7" y="130" width="294.7" height="52" rx="10" data-role="work" data-agent="codex" data-tokens="644271209" data-level="2">
-    <title>Work × Codex: 644M tokens (45.0% of environment)</title>
+  <text class="topology-label-2 topology-label-work-2" x="407.3" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">49.4% · 727M</text>
+  <rect class="topology-work topology-level-2" x="564.7" y="130" width="294.7" height="52" rx="10" data-role="work" data-agent="codex" data-tokens="659936380" data-level="2">
+    <title>Work × Codex: 66M tokens (44.9% of environment)</title>
   </rect>
-  <text class="topology-label-2 topology-label-work-2" x="712.0" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">45.0% · 644M</text>
+  <text class="topology-label-2 topology-label-work-2" x="712.0" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">44.9% · 66M</text>
   <rect class="topology-work topology-level-1" x="869.3" y="130" width="294.7" height="52" rx="10" data-role="work" data-agent="traex" data-tokens="83825468" data-level="1">
-    <title>Work × TRAE: 83.8M tokens (5.9% of environment)</title>
+    <title>Work × TRAE: 83.8M tokens (5.7% of environment)</title>
   </rect>
-  <text class="topology-label-1 topology-label-work-1" x="1016.7" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">5.9% · 83.8M</text>
+  <text class="topology-label-1 topology-label-work-1" x="1016.7" y="162" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">5.7% · 83.8M</text>
   <circle class="topology-personal" cx="36" cy="214" r="5"/>
   <text class="dashboard-primary" x="50" y="219" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Personal</text>
-  <text class="dashboard-muted" x="50" y="239" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">479M tokens</text>
+  <text class="dashboard-muted" x="50" y="239" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">467M tokens</text>
   <rect class="topology-personal topology-level-1" x="260.0" y="196" width="294.7" height="52" rx="10" data-role="personal" data-agent="claude" data-tokens="2353175" data-level="1">
     <title>Personal × Claude: 2.4M tokens (0.5% of environment)</title>
   </rect>
   <text class="topology-label-1 topology-label-personal-1" x="407.3" y="228" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">0.5% · 2.4M</text>
-  <rect class="topology-personal topology-level-4" x="564.7" y="196" width="294.7" height="52" rx="10" data-role="personal" data-agent="codex" data-tokens="476881959" data-level="4">
-    <title>Personal × Codex: 477M tokens (99.5% of environment)</title>
+  <rect class="topology-personal topology-level-4" x="564.7" y="196" width="294.7" height="52" rx="10" data-role="personal" data-agent="codex" data-tokens="464259326" data-level="4">
+    <title>Personal × Codex: 464M tokens (99.5% of environment)</title>
   </rect>
-  <text class="topology-label-4 topology-label-personal-4" x="712.0" y="228" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">99.5% · 477M</text>
+  <text class="topology-label-4 topology-label-personal-4" x="712.0" y="228" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">99.5% · 464M</text>
   <rect class="heatmap-level-0" x="869.3" y="196" width="294.7" height="52" rx="10" data-role="personal" data-agent="traex" data-tokens="0" data-level="0">
     <title>Personal × TRAE: 0 tokens (0.0% of environment)</title>
   </rect>
   <text class="topology-label-0 topology-label-personal-0" x="1016.7" y="228" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
   <circle class="topology-development" cx="36" cy="280" r="5"/>
   <text class="dashboard-primary" x="50" y="285" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Development</text>
-  <text class="dashboard-muted" x="50" y="305" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">4.4B tokens</text>
+  <text class="dashboard-muted" x="50" y="305" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">4.6B tokens</text>
   <rect class="heatmap-level-0" x="260.0" y="262" width="294.7" height="52" rx="10" data-role="development" data-agent="claude" data-tokens="0" data-level="0">
     <title>Development × Claude: 0 tokens (0.0% of environment)</title>
   </rect>
   <text class="topology-label-0 topology-label-development-0" x="407.3" y="294" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">—</text>
-  <rect class="topology-development topology-level-4" x="564.7" y="262" width="294.7" height="52" rx="10" data-role="development" data-agent="codex" data-tokens="3910792284" data-level="4">
-    <title>Development × Codex: 3.9B tokens (89.5% of environment)</title>
+  <rect class="topology-development topology-level-4" x="564.7" y="262" width="294.7" height="52" rx="10" data-role="development" data-agent="codex" data-tokens="3910568570" data-level="4">
+    <title>Development × Codex: 3.9B tokens (85.8% of environment)</title>
   </rect>
-  <text class="topology-label-4 topology-label-development-4" x="712.0" y="294" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">89.5% · 3.9B</text>
-  <rect class="topology-development topology-level-1" x="869.3" y="262" width="294.7" height="52" rx="10" data-role="development" data-agent="traex" data-tokens="459364332" data-level="1">
-    <title>Development × TRAE: 459M tokens (10.5% of environment)</title>
+  <text class="topology-label-4 topology-label-development-4" x="712.0" y="294" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">85.8% · 3.9B</text>
+  <rect class="topology-development topology-level-1" x="869.3" y="262" width="294.7" height="52" rx="10" data-role="development" data-agent="traex" data-tokens="644585222" data-level="1">
+    <title>Development × TRAE: 645M tokens (14.2% of environment)</title>
   </rect>
-  <text class="topology-label-1 topology-label-development-1" x="1016.7" y="294" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">10.5% · 459M</text>
+  <text class="topology-label-1 topology-label-development-1" x="1016.7" y="294" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">14.2% · 645M</text>
 </svg>
