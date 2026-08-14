@@ -636,5 +636,21 @@
     },
     "totalCost": 73.34718450000003,
     "totalTokens": 23360744
+  },
+  "2026-08-14": {
+    "costSource": "official",
+    "models": {
+      "claude-fable-5": {
+        "totalTokens": 15667077
+      },
+      "claude-opus-5": {
+        "totalTokens": 16895613
+      },
+      "claude-sonnet-5": {
+        "totalTokens": 252699
+      }
+    },
+    "totalCost": 66.81283095000002,
+    "totalTokens": 32815389
   }
 }

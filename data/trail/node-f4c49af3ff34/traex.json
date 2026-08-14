@@ -73,13 +73,26 @@
     "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
-        "totalTokens": 17512307
+        "totalTokens": 45595333
       },
       "gpt-5.5": {
-        "totalTokens": 32186051
+        "totalTokens": 169032324
       }
     },
-    "totalCost": 53.38107785,
-    "totalTokens": 49698358
+    "totalCost": 265.71548005,
+    "totalTokens": 214627657
+  },
+  "2026-08-14": {
+    "costSource": "unpriced",
+    "models": {
+      "gemini-3-flash-preview": {
+        "totalTokens": 3930348
+      },
+      "gpt-5.5": {
+        "totalTokens": 78111271
+      }
+    },
+    "totalCost": 70.96509680000001,
+    "totalTokens": 82041619
   }
 }

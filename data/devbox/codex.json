@@ -18,6 +18,7 @@
     "totalTokens": 22261164
   },
   "2026-06-17": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 12527376
@@ -27,15 +28,17 @@
     "totalTokens": 12527376
   },
   "2026-06-18": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 401579
       }
     },
-    "totalCost": 1.7509774999999999,
+    "totalCost": 1.7509775,
     "totalTokens": 401579
   },
   "2026-06-19": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 445206
@@ -45,6 +48,7 @@
     "totalTokens": 445206
   },
   "2026-06-22": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 7820584
@@ -84,6 +88,7 @@
     "totalTokens": 63589961
   },
   "2026-07-09": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 781019
@@ -93,6 +98,7 @@
     "totalTokens": 781019
   },
   "2026-07-13": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 1525791
@@ -105,6 +111,7 @@
     "totalTokens": 71940983
   },
   "2026-07-14": {
+    "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
         "totalTokens": 223714
@@ -150,6 +157,7 @@
     "totalTokens": 1401529
   },
   "2026-07-21": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 221298
@@ -162,6 +170,7 @@
     "totalTokens": 5267762
   },
   "2026-07-28": {
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "totalTokens": 348679
@@ -172,5 +181,18 @@
     },
     "totalCost": 4.5444770000000005,
     "totalTokens": 2120002
+  },
+  "2026-08-14": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 4556038
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 24339845
+      }
+    },
+    "totalCost": 46.795472,
+    "totalTokens": 28895883
   }
 }

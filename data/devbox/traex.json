@@ -1,0 +1,15 @@
+{
+  "2026-07-09": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 7740377
+      },
+      "gemini-3-flash-preview": {
+        "totalTokens": 971439
+      }
+    },
+    "totalCost": 0.6942315220000002,
+    "totalTokens": 8711816
+  }
+}

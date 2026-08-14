@@ -1,1 +1,38 @@
-{}
+{
+  "2026-05-28": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-flash": {
+        "totalTokens": 73110
+      },
+      "deepseek-v4-pro": {
+        "totalTokens": 3254484
+      },
+      "seed-dogfooding-2.0": {
+        "totalTokens": 432723
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 3760317
+  },
+  "2026-07-08": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 2609890
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 2609890
+  },
+  "2026-07-09": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "totalTokens": 1696715
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 1696715
+  }
+}
