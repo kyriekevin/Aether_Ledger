@@ -76,7 +76,7 @@ jobs:
             # branch from ever being created. An idle day now simply produces
             # no snapshot commit.
             uv run --script scripts/render_dashboard.py
-            git add assets/token-activity.svg assets/compute-trend.svg assets/token-topology.svg assets/compute-allocation.svg assets/compute-efficiency.svg
+            git add assets/token-activity.svg assets/token-topology.svg assets/compute-allocation.svg assets/compute-efficiency.svg
             if git diff --cached --quiet; then
               git reset --merge
             else

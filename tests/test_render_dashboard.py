@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -13,20 +13,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from render_dashboard import (  # noqa: E402
     AllocationTotals,
     DailyTotals,
-    TrendTotals,
     aggregate_allocation,
-    aggregate_trend,
     aggregate_topology,
     aggregate_daily,
     generate,
     generate_allocation,
     generate_efficiency,
-    generate_trend,
     generate_topology,
     render_allocation_svg,
     render_efficiency_svg,
     render_svg,
-    render_trend_svg,
     render_topology_svg,
 )
 
@@ -112,29 +108,7 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
             self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
             self.assertEqual(totals.recent_topology[("development", "codex")], 460)
-
-
-class AggregateTrendTests(unittest.TestCase):
-    def test_uses_equal_weekly_windows_and_adjacent_thirty_day_comparison(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            store = root / "data" / "work" / "claude.json"
-            store.parent.mkdir(parents=True)
-            store.write_text(json.dumps({
-                "2026-07-10": {"totalTokens": 100},
-            }), encoding="utf-8")
-            (store.parent / "codex.json").write_text(json.dumps({
-                "2026-08-10": {"totalTokens": 200},
-            }), encoding="utf-8")
-
-            totals = aggregate_trend(root, date(2026, 8, 14))
-
-            self.assertEqual(len(totals.window_starts), 12)
-            self.assertEqual(totals.window_starts[0], date(2026, 5, 23))
-            self.assertEqual(totals.weekly_tokens[6]["claude"], 100)
-            self.assertEqual(totals.weekly_tokens[11]["codex"], 200)
-            self.assertEqual(totals.recent_30_tokens, 200)
-            self.assertEqual(totals.prior_30_tokens, 100)
+            self.assertEqual(totals.prior_topology[("work", "claude")], 100)
 
 
 class AggregateAllocationTests(unittest.TestCase):
@@ -144,7 +118,24 @@ class AggregateAllocationTests(unittest.TestCase):
             store = root / "data" / "personal" / "codex.json"
             store.parent.mkdir(parents=True)
             store.write_text(json.dumps({
-                "2026-07-01": {"totalTokens": 999},
+                "2026-07-01": {
+                    "totalTokens": 999,
+                    "models": {"prior-example": {
+                        "totalTokens": 999,
+                        "inputTokens": 99,
+                        "outputTokens": 100,
+                        "cacheCreationTokens": 100,
+                        "cacheReadTokens": 700,
+                    }},
+                    "routing": {
+                        "efforts": {"medium": {
+                            "turns": 3, "totalTokens": 999,
+                            "reasoningOutputTokens": 30,
+                        }},
+                        "speeds": {"standard": {"turns": 3, "totalTokens": 999}},
+                    },
+                    "quota": {"windows": {"300": 40.0}, "limitReached": False},
+                },
                 "2026-08-01": {
                     "totalTokens": 100,
                     "models": {
@@ -209,7 +200,13 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
             self.assertEqual(totals.prior_agent_tokens["codex"], 999)
-            self.assertEqual(totals.prior_model_tokens, {})
+            self.assertEqual(
+                totals.prior_model_tokens[("codex", "prior-example")], 999
+            )
+            self.assertEqual(totals.prior_components["codex"]["cacheReadTokens"], 700)
+            self.assertEqual(totals.prior_efforts["codex"]["medium"]["turns"], 3)
+            self.assertEqual(totals.prior_speeds["codex"]["standard"]["turns"], 3)
+            self.assertEqual(totals.prior_quota_windows["codex"], {300: 40.0})
             self.assertEqual(totals.efforts["codex"]["low"]["turns"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
             self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
@@ -262,51 +259,6 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate(root, output, check=True))
 
-    def test_trend_svg_compares_equal_windows_and_exposes_harness_stacks(self) -> None:
-        starts = tuple(
-            date(2026, 5, 23) + timedelta(days=index * 7)
-            for index in range(12)
-        )
-        windows = tuple(
-            {
-                "claude": 10 * (index + 1),
-                "codex": 20 * (index + 1),
-                "traex": 5 * index,
-                "legacy": 0,
-            }
-            for index in range(12)
-        )
-        svg = render_trend_svg(TrendTotals(
-            as_of=date(2026, 8, 14),
-            window_starts=starts,
-            weekly_tokens=windows,
-            recent_30_tokens=200,
-            prior_30_tokens=100,
-        ))
-
-        ET.fromstring(svg)
-        self.assertIn("Compute trend", svg)
-        self.assertIn("12 adjacent 7-day windows", svg)
-        self.assertIn("Latest 30d 200 · prior 30d 100 · +100.0%", svg)
-        self.assertIn('data-window="2026-05-23"', svg)
-        self.assertIn('data-agent="traex"', svg)
-        self.assertIn('@media (prefers-color-scheme: dark)', svg)
-
-    def test_generate_trend_defaults_to_latest_activity(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            store = root / "data" / "work" / "codex.json"
-            store.parent.mkdir(parents=True)
-            store.write_text(
-                json.dumps({"2026-07-31": {"totalTokens": 100}}),
-                encoding="utf-8",
-            )
-            output = root / "assets" / "trend.svg"
-
-            self.assertTrue(generate_trend(root, output))
-            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
-            self.assertFalse(generate_trend(root, output, check=True))
-
     def test_topology_svg_exposes_cross_dimension_shares_without_node_ids(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -333,7 +285,8 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('class="dashboard-background"', svg)
             self.assertIn('data-role="development"', svg)
             self.assertIn('data-agent="codex"', svg)
-            self.assertIn("hue is environment", svg)
+            self.assertIn("percentage-point change vs prior 30d", svg)
+            self.assertIn("new vs prior 30d", svg)
             for role in ("work", "personal", "development"):
                 self.assertIn(f'class="topology-{role}"', svg)
                 self.assertIn(f".topology-{role}", svg)
@@ -406,7 +359,23 @@ class DashboardTests(unittest.TestCase):
                 }
                 for agent in ("claude", "codex", "traex", "legacy")
             },
+            prior_efforts={
+                agent: {
+                    effort: {
+                        "turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
+                    }
+                    for effort in ("none", "low", "medium", "high", "xhigh", "max")
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
+            },
             speeds={
+                agent: {
+                    speed: {"turns": 0, "totalTokens": 0}
+                    for speed in ("standard", "fast")
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
+            },
+            prior_speeds={
                 agent: {
                     speed: {"turns": 0, "totalTokens": 0}
                     for speed in ("standard", "fast")
@@ -422,10 +391,25 @@ class DashboardTests(unittest.TestCase):
                 }
                 for agent in ("claude", "codex", "traex", "legacy")
             },
+            prior_components={
+                agent: {
+                    "inputTokens": 0,
+                    "outputTokens": 0,
+                    "cacheCreationTokens": 0,
+                    "cacheReadTokens": 0,
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
+            },
             quota_windows={
                 agent: {} for agent in ("claude", "codex", "traex", "legacy")
             },
+            prior_quota_windows={
+                agent: {} for agent in ("claude", "codex", "traex", "legacy")
+            },
             quota_limit_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
+            prior_quota_limit_days={
                 agent: 0 for agent in ("claude", "codex", "traex", "legacy")
             },
         )
@@ -435,16 +419,33 @@ class DashboardTests(unittest.TestCase):
         allocation.efforts["codex"]["medium"].update(
             turns=1, totalTokens=80, reasoningOutputTokens=20
         )
+        allocation.prior_efforts["codex"]["low"].update(
+            turns=3, totalTokens=80, reasoningOutputTokens=5
+        )
+        allocation.prior_efforts["codex"]["medium"].update(
+            turns=1, totalTokens=20, reasoningOutputTokens=5
+        )
         allocation.speeds["claude"]["standard"].update(turns=2, totalTokens=100)
         allocation.speeds["codex"]["standard"].update(turns=1, totalTokens=100)
         allocation.speeds["codex"]["fast"].update(turns=1, totalTokens=100)
+        allocation.prior_speeds["codex"]["standard"].update(
+            turns=3, totalTokens=75
+        )
+        allocation.prior_speeds["codex"]["fast"].update(turns=1, totalTokens=25)
         allocation.components["claude"].update(
             inputTokens=5, outputTokens=5, cacheCreationTokens=10, cacheReadTokens=80
         )
         allocation.components["codex"].update(
             inputTokens=20, outputTokens=10, cacheCreationTokens=20, cacheReadTokens=150
         )
+        allocation.prior_components["claude"].update(
+            inputTokens=10, outputTokens=10, cacheCreationTokens=10, cacheReadTokens=70
+        )
+        allocation.prior_components["codex"].update(
+            inputTokens=10, outputTokens=10, cacheCreationTokens=10, cacheReadTokens=70
+        )
         allocation.quota_windows["codex"][300] = 68.0
+        allocation.prior_quota_windows["codex"][300] = 50.0
 
         allocation_svg = render_allocation_svg(allocation)
         efficiency_svg = render_efficiency_svg(allocation)
@@ -461,11 +462,15 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Token efficiency", efficiency_svg)
         self.assertIn("Observed routing signals", efficiency_svg)
         self.assertIn("low 60.0%", efficiency_svg)
+        self.assertIn("Δlow -20.0pp", efficiency_svg)
         self.assertIn("50.0% fast", efficiency_svg)
+        self.assertIn("+25.0pp", efficiency_svg)
         self.assertIn("cache read 80.0%", efficiency_svg)
+        self.assertIn("+10.0pp", efficiency_svg)
         self.assertIn("100.0% coverage", efficiency_svg)
         self.assertIn("not exposed by Claude logs", efficiency_svg)
         self.assertIn("68% peak", efficiency_svg)
+        self.assertIn("+18pp", efficiency_svg)
         for svg in (allocation_svg, efficiency_svg):
             self.assertNotIn("private-repo", svg)
             self.assertNotIn("session-id", svg)

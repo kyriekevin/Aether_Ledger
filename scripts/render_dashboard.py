@@ -21,7 +21,6 @@ from zoneinfo import ZoneInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
-DEFAULT_TREND_OUTPUT = REPO_ROOT / "assets" / "compute-trend.svg"
 DEFAULT_TOPOLOGY_OUTPUT = REPO_ROOT / "assets" / "token-topology.svg"
 DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_EFFICIENCY_OUTPUT = REPO_ROOT / "assets" / "compute-efficiency.svg"
@@ -44,6 +43,14 @@ AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy":
 AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
 ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
 EFFORT_ORDER = ("none", "low", "medium", "high", "xhigh", "max")
+EFFORT_SHORT_LABELS = {
+    "none": "none",
+    "low": "low",
+    "medium": "med",
+    "high": "high",
+    "xhigh": "xhigh",
+    "max": "max",
+}
 SPEED_ORDER = ("standard", "fast")
 COMPONENT_ORDER = (
     "inputTokens",
@@ -190,15 +197,9 @@ class TopologyTotals:
     recent_roles: dict[str, int]
     recent_agents: dict[str, int]
     recent_topology: dict[tuple[str, str], int]
-
-
-@dataclass(frozen=True)
-class TrendTotals:
-    as_of: date
-    window_starts: tuple[date, ...]
-    weekly_tokens: tuple[dict[str, int], ...]
-    recent_30_tokens: int
-    prior_30_tokens: int
+    prior_roles: dict[str, int]
+    prior_agents: dict[str, int]
+    prior_topology: dict[tuple[str, str], int]
 
 
 @dataclass(frozen=True)
@@ -210,10 +211,15 @@ class AllocationTotals:
     prior_agent_tokens: dict[str, int]
     prior_model_tokens: dict[tuple[str, str], int]
     efforts: dict[str, dict[str, dict[str, int]]]
+    prior_efforts: dict[str, dict[str, dict[str, int]]]
     speeds: dict[str, dict[str, dict[str, int]]]
+    prior_speeds: dict[str, dict[str, dict[str, int]]]
     components: dict[str, dict[str, int]]
+    prior_components: dict[str, dict[str, int]]
     quota_windows: dict[str, dict[int, float]]
+    prior_quota_windows: dict[str, dict[int, float]]
     quota_limit_days: dict[str, int]
+    prior_quota_limit_days: dict[str, int]
 
 
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
@@ -286,6 +292,8 @@ def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
 def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
     """Aggregate recent token usage by public environment and agent."""
     recent_start = as_of - timedelta(days=29)
+    prior_start = as_of - timedelta(days=59)
+    prior_end = as_of - timedelta(days=30)
     recent_roles = {role: 0 for role in TOPOLOGY_ROLE_ORDER}
     recent_agents = {agent: 0 for agent in TOPOLOGY_AGENT_ORDER}
     recent_topology = {
@@ -293,15 +301,25 @@ def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
         for role in TOPOLOGY_ROLE_ORDER
         for agent in TOPOLOGY_AGENT_ORDER
     }
+    prior_roles = {role: 0 for role in TOPOLOGY_ROLE_ORDER}
+    prior_agents = {agent: 0 for agent in TOPOLOGY_AGENT_ORDER}
+    prior_topology = {
+        (role, agent): 0
+        for role in TOPOLOGY_ROLE_ORDER
+        for agent in TOPOLOGY_AGENT_ORDER
+    }
 
     for record in load_usage_records(root):
-        if not recent_start <= record.day <= as_of:
-            continue
         role_bucket = ROLE_BUCKETS[record.role]
         agent_bucket = AGENT_BUCKETS[record.agent]
-        recent_roles[role_bucket] += record.tokens
-        recent_agents[agent_bucket] += record.tokens
-        recent_topology[(role_bucket, agent_bucket)] += record.tokens
+        if recent_start <= record.day <= as_of:
+            recent_roles[role_bucket] += record.tokens
+            recent_agents[agent_bucket] += record.tokens
+            recent_topology[(role_bucket, agent_bucket)] += record.tokens
+        elif prior_start <= record.day <= prior_end:
+            prior_roles[role_bucket] += record.tokens
+            prior_agents[agent_bucket] += record.tokens
+            prior_topology[(role_bucket, agent_bucket)] += record.tokens
 
     return TopologyTotals(
         as_of=as_of,
@@ -309,38 +327,9 @@ def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
         recent_roles=recent_roles,
         recent_agents=recent_agents,
         recent_topology=recent_topology,
-    )
-
-
-def aggregate_trend(root: Path, as_of: date) -> TrendTotals:
-    """Aggregate twelve adjacent seven-day windows plus a fair 30-day comparison."""
-    trend_start = as_of - timedelta(days=83)
-    window_starts = tuple(
-        trend_start + timedelta(days=index * 7) for index in range(12)
-    )
-    weekly_tokens = tuple(
-        {agent: 0 for agent in ALLOCATION_AGENT_ORDER} for _ in window_starts
-    )
-    recent_start = as_of - timedelta(days=29)
-    prior_start = as_of - timedelta(days=59)
-    prior_end = as_of - timedelta(days=30)
-    recent_30_tokens = 0
-    prior_30_tokens = 0
-    for record in load_usage_records(root):
-        agent = AGENT_BUCKETS[record.agent]
-        if trend_start <= record.day <= as_of:
-            index = (record.day - trend_start).days // 7
-            weekly_tokens[index][agent] += record.tokens
-        if recent_start <= record.day <= as_of:
-            recent_30_tokens += record.tokens
-        elif prior_start <= record.day <= prior_end:
-            prior_30_tokens += record.tokens
-    return TrendTotals(
-        as_of=as_of,
-        window_starts=window_starts,
-        weekly_tokens=weekly_tokens,
-        recent_30_tokens=recent_30_tokens,
-        prior_30_tokens=prior_30_tokens,
+        prior_roles=prior_roles,
+        prior_agents=prior_agents,
+        prior_topology=prior_topology,
     )
 
 
@@ -360,7 +349,21 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
         }
         for agent in ALLOCATION_AGENT_ORDER
     }
+    prior_efforts = {
+        agent: {
+            effort: {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0}
+            for effort in EFFORT_ORDER
+        }
+        for agent in ALLOCATION_AGENT_ORDER
+    }
     speeds = {
+        agent: {
+            speed: {"turns": 0, "totalTokens": 0}
+            for speed in SPEED_ORDER
+        }
+        for agent in ALLOCATION_AGENT_ORDER
+    }
+    prior_speeds = {
         agent: {
             speed: {"turns": 0, "totalTokens": 0}
             for speed in SPEED_ORDER
@@ -371,10 +374,20 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
         agent: {key: 0 for key in COMPONENT_ORDER}
         for agent in ALLOCATION_AGENT_ORDER
     }
+    prior_components = {
+        agent: {key: 0 for key in COMPONENT_ORDER}
+        for agent in ALLOCATION_AGENT_ORDER
+    }
     quota_windows: dict[str, dict[int, float]] = {
         agent: {} for agent in ALLOCATION_AGENT_ORDER
     }
+    prior_quota_windows: dict[str, dict[int, float]] = {
+        agent: {} for agent in ALLOCATION_AGENT_ORDER
+    }
     quota_limit_days: dict[str, set[date]] = {
+        agent: set() for agent in ALLOCATION_AGENT_ORDER
+    }
+    prior_quota_limit_days: dict[str, set[date]] = {
         agent: set() for agent in ALLOCATION_AGENT_ORDER
     }
     for path in discover_agent_files(root):
@@ -405,6 +418,40 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                         prior_model_tokens[(agent, model)] += max(
                             0, int(payload.get("totalTokens", 0))
                         )
+                        for key in COMPONENT_ORDER:
+                            value = payload.get(key)
+                            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                                prior_components[agent][key] += max(0, int(value))
+                routing = entry.get("routing", {})
+                if isinstance(routing, dict):
+                    for label, payload in routing.get("efforts", {}).items():
+                        if label not in prior_efforts[agent] or not isinstance(payload, dict):
+                            continue
+                        for key in prior_efforts[agent][label]:
+                            value = payload.get(key)
+                            if isinstance(value, int) and not isinstance(value, bool):
+                                prior_efforts[agent][label][key] += max(0, value)
+                    for label, payload in routing.get("speeds", {}).items():
+                        if label not in prior_speeds[agent] or not isinstance(payload, dict):
+                            continue
+                        for key in prior_speeds[agent][label]:
+                            value = payload.get(key)
+                            if isinstance(value, int) and not isinstance(value, bool):
+                                prior_speeds[agent][label][key] += max(0, value)
+                quota = entry.get("quota", {})
+                if isinstance(quota, dict):
+                    for raw_minutes, percent in quota.get("windows", {}).items():
+                        try:
+                            minutes = int(raw_minutes)
+                        except (TypeError, ValueError):
+                            continue
+                        if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                            prior_quota_windows[agent][minutes] = max(
+                                float(percent),
+                                prior_quota_windows[agent].get(minutes, 0.0),
+                            )
+                    if quota.get("limitReached") is True:
+                        prior_quota_limit_days[agent].add(day)
                 continue
             if not recent_start <= day <= as_of:
                 continue
@@ -459,11 +506,18 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
         prior_agent_tokens=prior_agent_tokens,
         prior_model_tokens=dict(prior_model_tokens),
         efforts=efforts,
+        prior_efforts=prior_efforts,
         speeds=speeds,
+        prior_speeds=prior_speeds,
         components=components,
+        prior_components=prior_components,
         quota_windows=quota_windows,
+        prior_quota_windows=prior_quota_windows,
         quota_limit_days={
             agent: len(days) for agent, days in quota_limit_days.items()
+        },
+        prior_quota_limit_days={
+            agent: len(days) for agent, days in prior_quota_limit_days.items()
         },
     )
 
@@ -683,102 +737,11 @@ def _percent(value: int, total: int) -> str:
     return f"{share:.1f}%"
 
 
-def _trend_change(current: int, prior: int) -> str:
-    if prior <= 0:
-        return "new activity" if current > 0 else "no change"
-    change = (current - prior) / prior * 100
-    return f"{change:+.1f}%"
-
-
 def _share_change(current: int, current_total: int, prior: int, prior_total: int) -> str:
     if prior_total <= 0:
         return "new" if current > 0 else "—"
     points = (_share(current, current_total) - _share(prior, prior_total)) * 100
     return f"{points:+.1f}pp"
-
-
-def render_trend_svg(trend: TrendTotals) -> str:
-    """Render twelve comparable seven-day harness stacks and a 30-day delta."""
-    totals = [sum(window.values()) for window in trend.weekly_tokens]
-    maximum = max(totals, default=0)
-    title = f"AI compute trend through {trend.as_of.isoformat()}"
-    height = 390
-    lines = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
-        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
-        f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Twelve adjacent seven-day token windows stacked by '
-        'harness, plus the latest 30 days compared with the preceding 30 days.</desc>',
-        *_theme_style_lines(allocation=True),
-        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
-        '  <text class="dashboard-primary" x="16" y="42" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="24" font-weight="600">Compute trend</text>',
-        f'  <text class="dashboard-muted" x="16" y="66" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
-        f'{trend.window_starts[0].isoformat()}–{trend.as_of.isoformat()} · '
-        '12 adjacent 7-day windows · linear token scale</text>',
-    ]
-
-    legend_x = 720
-    for agent in ALLOCATION_AGENT_ORDER:
-        if not any(window[agent] for window in trend.weekly_tokens):
-            continue
-        lines.extend((
-            f'  <circle class="agent-{agent}" cx="{legend_x + 5}" cy="62" r="5"/>',
-            f'  <text class="dashboard-secondary" x="{legend_x + 16}" y="67" '
-            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="12">{escape(AGENT_LABELS[agent])}</text>',
-        ))
-        legend_x += 110
-
-    plot_x, plot_y, plot_width, plot_height = 90, 96, 1074, 220
-    for fraction in (0.0, 0.5, 1.0):
-        y = plot_y + plot_height * (1 - fraction)
-        value = int(maximum * fraction)
-        lines.extend((
-            f'  <line class="dashboard-border" x1="{plot_x}" y1="{y:.1f}" '
-            f'x2="{plot_x + plot_width}" y2="{y:.1f}" stroke-width="1"/>',
-            f'  <text class="dashboard-muted" x="{plot_x - 12}" y="{y + 4:.1f}" '
-            'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="11">{_compact_number(value)}</text>',
-        ))
-
-    gap = 12
-    bar_width = (plot_width - gap * 11) / 12
-    for index, (start, window, total) in enumerate(
-        zip(trend.window_starts, trend.weekly_tokens, totals, strict=True)
-    ):
-        x = plot_x + index * (bar_width + gap)
-        cursor_y = plot_y + plot_height
-        for agent in ALLOCATION_AGENT_ORDER:
-            value = window[agent]
-            segment_height = plot_height * _share(value, maximum)
-            cursor_y -= segment_height
-            if value:
-                lines.extend((
-                    f'  <rect class="agent-{agent}" x="{x:.1f}" y="{cursor_y:.1f}" '
-                    f'width="{bar_width:.1f}" height="{segment_height:.1f}" '
-                    f'data-window="{start.isoformat()}" data-agent="{agent}" data-tokens="{value}">',
-                    f'    <title>{start.isoformat()}–{(start + timedelta(days=6)).isoformat()} · '
-                    f'{escape(AGENT_LABELS[agent])}: {_compact_number(value)} tokens</title>',
-                    '  </rect>',
-                ))
-        lines.append(
-            f'  <text class="dashboard-muted" x="{x + bar_width / 2:.1f}" y="338" '
-            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="10">{start.strftime("%b %-d")}</text>'
-        )
-
-    change = _trend_change(trend.recent_30_tokens, trend.prior_30_tokens)
-    lines.append(
-        '  <text class="dashboard-primary" x="16" y="372" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        f'font-size="13" font-weight="600">Latest 30d {_compact_number(trend.recent_30_tokens)} '
-        f'· prior 30d {_compact_number(trend.prior_30_tokens)} · {escape(change)}</text>'
-    )
-    lines.append("</svg>")
-    return "\n".join(lines) + "\n"
 
 
 
@@ -810,7 +773,7 @@ def render_topology_svg(topology: TopologyTotals) -> str:
         f'  <text class="dashboard-muted" x="16" y="72" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{topology.recent_start.isoformat()}–{topology.as_of.isoformat()} · active agents only · '
-        'hue is environment · intensity is agent share within each row</text>',
+        'current environment share and percentage-point change vs prior 30d</text>',
     ]
     if not active_agents:
         lines.extend(
@@ -847,6 +810,9 @@ def render_topology_svg(topology: TopologyTotals) -> str:
     for row, role in enumerate(TOPOLOGY_ROLE_ORDER):
         y = matrix_y + row * row_step
         role_total = sum(topology.recent_topology[(role, agent)] for agent in active_agents)
+        prior_role_total = sum(
+            topology.prior_topology[(role, agent)] for agent in TOPOLOGY_AGENT_ORDER
+        )
         lines.extend(
             (
                 f'  <circle class="topology-{role}" cx="36" cy="{y + 18}" r="5"/>',
@@ -860,6 +826,7 @@ def render_topology_svg(topology: TopologyTotals) -> str:
         )
         for column, agent in enumerate(active_agents):
             value = topology.recent_topology[(role, agent)]
+            prior_value = topology.prior_topology[(role, agent)]
             share = _share(value, role_total)
             level = _topology_level(share)
             cell_class = (
@@ -870,6 +837,9 @@ def render_topology_svg(topology: TopologyTotals) -> str:
             x = matrix_x + column * (cell_width + cell_gap)
             value_text = (
                 f"{_percent(value, role_total)} · {_compact_number(value)}" if value else "—"
+            )
+            change_text = _share_change(
+                value, role_total, prior_value, prior_role_total
             )
             lines.extend(
                 (
@@ -882,9 +852,13 @@ def render_topology_svg(topology: TopologyTotals) -> str:
                     "  </rect>",
                     f'  <text class="topology-label-{level} topology-label-{role}-{level}" '
                     f'x="{x + cell_width / 2:.1f}" '
-                    f'y="{y + 32}" text-anchor="middle" '
+                    f'y="{y + 23}" text-anchor="middle" '
                     'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                    f'font-size="14" font-weight="600">{escape(value_text)}</text>',
+                    f'font-size="13" font-weight="600">{escape(value_text)}</text>',
+                    f'  <text class="topology-label-{level} topology-label-{role}-{level}" '
+                    f'x="{x + cell_width / 2:.1f}" y="{y + 42}" text-anchor="middle" '
+                    'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                    f'font-size="10">{escape(change_text)} vs prior 30d</text>',
                 )
             )
     lines.append("</svg>")
@@ -906,20 +880,50 @@ def _routing_signal_lines(
 ) -> tuple[tuple[str, str], ...]:
     effort_buckets = allocation.efforts[agent]
     effort_tokens = sum(item["totalTokens"] for item in effort_buckets.values())
+    prior_effort_buckets = allocation.prior_efforts[agent]
+    prior_effort_tokens = sum(
+        item["totalTokens"] for item in prior_effort_buckets.values()
+    )
     if agent == "claude":
         effort_text = "not exposed by Claude logs"
         reasoning_text = "not exposed separately"
     elif effort_tokens:
         effort_text = " · ".join(
-            f"{name} {_percent(effort_buckets[name]['totalTokens'], effort_tokens)}"
+            f"{EFFORT_SHORT_LABELS[name]} "
+            f"{_percent(effort_buckets[name]['totalTokens'], effort_tokens)}"
             for name in EFFORT_ORDER
             if effort_buckets[name]["totalTokens"]
         )
+        dominant_effort = max(
+            EFFORT_ORDER, key=lambda name: effort_buckets[name]["totalTokens"]
+        )
+        effort_delta = (
+            "n/a"
+            if prior_effort_tokens <= 0
+            else _share_change(
+                effort_buckets[dominant_effort]["totalTokens"],
+                effort_tokens,
+                prior_effort_buckets[dominant_effort]["totalTokens"],
+                prior_effort_tokens,
+            )
+        )
+        effort_text += f" · Δ{EFFORT_SHORT_LABELS[dominant_effort]} {effort_delta}"
         reasoning = sum(
             item["reasoningOutputTokens"] for item in effort_buckets.values()
         )
+        prior_reasoning = sum(
+            item["reasoningOutputTokens"] for item in prior_effort_buckets.values()
+        )
+        reasoning_delta = (
+            "n/a"
+            if prior_effort_tokens <= 0
+            else _share_change(
+                reasoning, effort_tokens, prior_reasoning, prior_effort_tokens
+            )
+        )
         reasoning_text = (
-            f"{_compact_number(reasoning)} · {_percent(reasoning, effort_tokens)} of routed"
+            f"{_compact_number(reasoning)} · {_percent(reasoning, effort_tokens)} routed "
+            f"· {reasoning_delta}"
         )
     else:
         effort_text = "awaiting compatible session telemetry"
@@ -927,10 +931,24 @@ def _routing_signal_lines(
 
     speed_buckets = allocation.speeds[agent]
     speed_tokens = sum(item["totalTokens"] for item in speed_buckets.values())
+    prior_speed_buckets = allocation.prior_speeds[agent]
+    prior_speed_tokens = sum(item["totalTokens"] for item in prior_speed_buckets.values())
     speed_turns = sum(item["turns"] for item in speed_buckets.values())
     if speed_tokens:
         fast = speed_buckets["fast"]["totalTokens"]
-        speed_text = f"{_percent(fast, speed_tokens)} fast · {speed_turns} turns"
+        speed_delta = (
+            "n/a"
+            if prior_speed_tokens <= 0
+            else _share_change(
+                fast,
+                speed_tokens,
+                prior_speed_buckets["fast"]["totalTokens"],
+                prior_speed_tokens,
+            )
+        )
+        speed_text = (
+            f"{_percent(fast, speed_tokens)} fast · {speed_delta} · {speed_turns} turns"
+        )
     else:
         speed_text = "awaiting session telemetry"
 
@@ -943,7 +961,13 @@ def _routing_signal_lines(
         )
         hits = allocation.quota_limit_days[agent]
         hit_text = f" · {hits} hit day(s)" if hits else ""
-        quota_text = f"{percent:.0f}% peak · {_window_label(minutes)}{hit_text}"
+        prior_percent = allocation.prior_quota_windows[agent].get(minutes)
+        quota_delta = (
+            "n/a" if prior_percent is None else f"{percent - prior_percent:+.0f}pp"
+        )
+        quota_text = (
+            f"{percent:.0f}% peak · {quota_delta} · {_window_label(minutes)}{hit_text}"
+        )
     else:
         quota_text = "awaiting compatible session telemetry"
 
@@ -1098,7 +1122,7 @@ def render_efficiency_svg(allocation: AllocationTotals) -> str:
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
-        'input/output/cache flow and observable routing signals by harness</text>',
+        'current token-flow shares and routing signals vs preceding 30 days</text>',
     ]
 
     panel_w, panel_gap = 372, 16
@@ -1108,6 +1132,8 @@ def render_efficiency_svg(allocation: AllocationTotals) -> str:
         agent_total = allocation.agent_tokens[agent]
         component_values = allocation.components[agent]
         component_total = sum(component_values.values())
+        prior_component_values = allocation.prior_components[agent]
+        prior_component_total = sum(prior_component_values.values())
         lines.extend((
             f'  <rect class="dashboard-panel" x="{x}" y="{flow_y}" '
             f'width="{panel_w}" height="142" rx="16"/>',
@@ -1148,13 +1174,24 @@ def render_efficiency_svg(allocation: AllocationTotals) -> str:
                 legend_x = x + 18 + (index % 2) * 168
                 legend_y = flow_y + 91 + (index // 2) * 24
                 css_name = _component_css_name(key)
+                component_delta = (
+                    "n/a"
+                    if prior_component_total <= 0
+                    else _share_change(
+                        component_values[key],
+                        component_total,
+                        prior_component_values[key],
+                        prior_component_total,
+                    )
+                )
                 lines.extend((
                     f'  <circle class="component-{css_name}" cx="{legend_x + 5}" '
                     f'cy="{legend_y - 4}" r="4"/>',
                     f'  <text class="dashboard-secondary" x="{legend_x + 15}" y="{legend_y}" '
                     'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                     f'font-size="11">{escape(COMPONENT_LABELS[key])} '
-                    f'{escape(_percent(component_values[key], component_total))}</text>',
+                    f'{escape(_percent(component_values[key], component_total))} · '
+                    f'{escape(component_delta)}</text>',
                 ))
         else:
             lines.extend((
@@ -1243,19 +1280,6 @@ def generate(
     return _update_output(output, expected, check=check)
 
 
-def generate_trend(
-    root: Path,
-    output: Path,
-    as_of: date | None = None,
-    *,
-    check: bool = False,
-) -> bool:
-    if as_of is None:
-        as_of = _latest_activity_day(aggregate_daily(root))
-    expected = render_trend_svg(aggregate_trend(root, as_of))
-    return _update_output(output, expected, check=check)
-
-
 def generate_topology(
     root: Path,
     output: Path,
@@ -1300,11 +1324,6 @@ def main() -> int:
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument(
-        "--trend-output",
-        type=Path,
-        default=DEFAULT_TREND_OUTPUT,
-    )
-    parser.add_argument(
         "--topology-output",
         type=Path,
         default=DEFAULT_TOPOLOGY_OUTPUT,
@@ -1324,15 +1343,6 @@ def main() -> int:
     args = parser.parse_args()
     outputs = (
         (args.output, generate(args.root, args.output, args.as_of, check=args.check)),
-        (
-            args.trend_output,
-            generate_trend(
-                args.root,
-                args.trend_output,
-                args.as_of,
-                check=args.check,
-            ),
-        ),
         (
             args.topology_output,
             generate_topology(

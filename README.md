@@ -31,13 +31,6 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
-## Trend
-
-![Aether Ledger compute trend dashboard](assets/compute-trend.svg)
-
-Twelve equal seven-day windows show token volume and harness mix over time; the footer compares
-the latest 30 days with the preceding 30 days.
-
 ## Topology
 
 ![Aether Ledger recent compute topology](assets/token-topology.svg)
