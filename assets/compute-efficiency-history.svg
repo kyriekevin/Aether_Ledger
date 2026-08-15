@@ -1,0 +1,575 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430" role="img" aria-labelledby="title desc">
+  <title id="title">AI token efficiency history through 2026-08-14</title>
+  <desc id="desc">Twelve weekly token-component compositions and observed effort, reasoning, Fast, and quota signals within each harness.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="430" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Efficiency history</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-05-23–2026-08-14 · weekly token-flow composition + routing intensity · darker = higher · gray = unavailable</text>
+  <rect class="component-input" x="600" y="80" width="9" height="9" rx="2"/>
+  <text class="dashboard-secondary" x="614" y="89" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">input</text>
+  <rect class="component-output" x="738" y="80" width="9" height="9" rx="2"/>
+  <text class="dashboard-secondary" x="752" y="89" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">output</text>
+  <rect class="component-cache-write" x="876" y="80" width="9" height="9" rx="2"/>
+  <text class="dashboard-secondary" x="890" y="89" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">cache write</text>
+  <rect class="component-cache-read" x="1014" y="80" width="9" height="9" rx="2"/>
+  <text class="dashboard-secondary" x="1028" y="89" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">cache read</text>
+  <rect class="dashboard-panel" x="16" y="106" width="372" height="300" rx="16"/>
+  <circle class="agent-claude" cx="38" cy="131" r="5"/>
+  <text class="dashboard-primary" x="51" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="34" y="194" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Token flow</text>
+  <rect class="heatmap-level-0" x="106" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-05-23" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="128" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-05-30" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="150" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-06-06" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="172" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-06-13" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="194" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-06-20" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="216" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-06-27" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="238" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-07-04" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="260" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-07-11" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="282" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-07-18" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="304" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-07-25" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="326" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-08-01" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="348" y="156" width="18" height="68" rx="3" data-agent="claude" data-week="2026-08-08" data-signal="components"><title>component detail unavailable</title></rect>
+  <text class="dashboard-muted" x="106" y="240" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">May 23</text>
+  <text class="dashboard-muted" x="366" y="240" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 8</text>
+  <text class="dashboard-muted" x="34" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Effort</text>
+  <rect class="heatmap-level-0" x="106" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="128" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="150" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="172" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="194" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="216" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="238" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="260" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="282" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="304" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="326" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="348" y="258" width="18" height="18" rx="3" data-agent="claude" data-signal="effort" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="34" y="300" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Reasoning</text>
+  <rect class="heatmap-level-0" x="106" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="128" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="150" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="172" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="194" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="216" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="238" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="260" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="282" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="304" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="326" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="348" y="286" width="18" height="18" rx="3" data-agent="claude" data-signal="reasoning" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="34" y="328" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Fast</text>
+  <rect class="heatmap-level-0" x="106" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="128" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="150" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="172" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="194" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="216" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="238" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="260" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="282" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="304" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="326" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="348" y="314" width="18" height="18" rx="3" data-agent="claude" data-signal="fast" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="34" y="356" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Quota</text>
+  <rect class="heatmap-level-0" x="106" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="128" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="150" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="172" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="194" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="216" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="238" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="260" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="282" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="304" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="326" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="348" y="342" width="18" height="18" rx="3" data-agent="claude" data-signal="quota" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <rect class="dashboard-panel" x="404" y="106" width="372" height="300" rx="16"/>
+  <circle class="agent-codex" cx="426" cy="131" r="5"/>
+  <text class="dashboard-primary" x="439" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="422" y="194" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Token flow</text>
+  <rect class="heatmap-level-0" x="494" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-05-23" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="516" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-05-30" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="538" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-06-06" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="560" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-06-13" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="582" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-06-20" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="604" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-06-27" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="626" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-07-04" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="648" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-07-11" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="670" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-07-18" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="692" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-07-25" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="714" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-08-01" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="736" y="156" width="18" height="68" rx="3" data-agent="codex" data-week="2026-08-08" data-signal="components"><title>component detail unavailable</title></rect>
+  <text class="dashboard-muted" x="494" y="240" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">May 23</text>
+  <text class="dashboard-muted" x="754" y="240" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 8</text>
+  <text class="dashboard-muted" x="422" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Effort</text>
+  <rect class="heatmap-level-0" x="494" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="516" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="538" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="560" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="582" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="604" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="626" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="648" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="670" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="692" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="714" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="736" y="258" width="18" height="18" rx="3" data-agent="codex" data-signal="effort" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="422" y="300" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Reasoning</text>
+  <rect class="heatmap-level-0" x="494" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="516" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="538" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="560" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="582" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="604" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="626" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="648" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="670" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="692" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="714" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="736" y="286" width="18" height="18" rx="3" data-agent="codex" data-signal="reasoning" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="422" y="328" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Fast</text>
+  <rect class="heatmap-level-0" x="494" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="516" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="538" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="560" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="582" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="604" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="626" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="648" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="670" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="692" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="714" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="736" y="314" width="18" height="18" rx="3" data-agent="codex" data-signal="fast" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="422" y="356" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Quota</text>
+  <rect class="heatmap-level-0" x="494" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="516" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="538" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="560" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="582" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="604" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="626" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="648" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="670" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="692" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="714" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="736" y="342" width="18" height="18" rx="3" data-agent="codex" data-signal="quota" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <rect class="dashboard-panel" x="792" y="106" width="372" height="300" rx="16"/>
+  <circle class="agent-traex" cx="814" cy="131" r="5"/>
+  <text class="dashboard-primary" x="827" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="810" y="194" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Token flow</text>
+  <rect class="heatmap-level-0" x="882" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-05-23" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="904" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-05-30" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="926" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-06-06" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="948" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-06-13" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="970" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-06-20" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="992" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-06-27" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1014" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-07-04" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1036" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-07-11" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1058" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-07-18" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1080" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-07-25" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1102" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-08-01" data-signal="components"><title>component detail unavailable</title></rect>
+  <rect class="heatmap-level-0" x="1124" y="156" width="18" height="68" rx="3" data-agent="traex" data-week="2026-08-08" data-signal="components"><title>component detail unavailable</title></rect>
+  <text class="dashboard-muted" x="882" y="240" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">May 23</text>
+  <text class="dashboard-muted" x="1142" y="240" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 8</text>
+  <text class="dashboard-muted" x="810" y="272" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Effort</text>
+  <rect class="heatmap-level-0" x="882" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="904" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="926" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="948" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="970" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="992" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1014" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1036" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1058" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1080" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1102" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1124" y="258" width="18" height="18" rx="3" data-agent="traex" data-signal="effort" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="810" y="300" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Reasoning</text>
+  <rect class="heatmap-level-0" x="882" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="904" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="926" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="948" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="970" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="992" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1014" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1036" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1058" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1080" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1102" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1124" y="286" width="18" height="18" rx="3" data-agent="traex" data-signal="reasoning" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="810" y="328" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Fast</text>
+  <rect class="heatmap-level-0" x="882" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="904" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="926" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="948" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="970" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="992" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1014" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1036" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1058" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1080" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1102" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1124" y="314" width="18" height="18" rx="3" data-agent="traex" data-signal="fast" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+  <text class="dashboard-muted" x="810" y="356" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Quota</text>
+  <rect class="heatmap-level-0" x="882" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-05-23">
+    <title>2026-05-23 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="904" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-05-30">
+    <title>2026-05-30 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="926" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-06-06">
+    <title>2026-06-06 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="948" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-06-13">
+    <title>2026-06-13 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="970" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-06-20">
+    <title>2026-06-20 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="992" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-06-27">
+    <title>2026-06-27 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1014" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-07-04">
+    <title>2026-07-04 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1036" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-07-11">
+    <title>2026-07-11 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1058" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-07-18">
+    <title>2026-07-18 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1080" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-07-25">
+    <title>2026-07-25 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1102" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-08-01">
+    <title>2026-08-01 · unavailable</title>
+  </rect>
+  <rect class="heatmap-level-0" x="1124" y="342" width="18" height="18" rx="3" data-agent="traex" data-signal="quota" data-week="2026-08-08">
+    <title>2026-08-08 · unavailable</title>
+  </rect>
+</svg>

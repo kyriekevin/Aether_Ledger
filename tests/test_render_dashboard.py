@@ -13,25 +13,32 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from render_dashboard import (  # noqa: E402
     AllocationTotals,
     DailyTotals,
-    TrendTotals,
+    _compact_number,
     aggregate_allocation,
     aggregate_daily,
     aggregate_topology,
-    aggregate_trend,
     generate,
     generate_allocation,
+    generate_allocation_history,
     generate_efficiency,
+    generate_efficiency_history,
     generate_topology,
-    generate_trend,
+    generate_topology_history,
     render_allocation_svg,
+    render_allocation_history_svg,
     render_efficiency_svg,
+    render_efficiency_history_svg,
     render_svg,
     render_topology_svg,
-    render_trend_svg,
+    render_topology_history_svg,
 )
 
 
 class AggregateDailyTests(unittest.TestCase):
+    def test_compact_number_keeps_significant_trailing_zeroes(self) -> None:
+        self.assertEqual(_compact_number(130_000_000), "130M")
+        self.assertEqual(_compact_number(1_200_000_000), "1.2B")
+
     def test_sums_only_canonical_agent_stores(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -112,6 +119,11 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
             self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
             self.assertEqual(totals.recent_topology[("development", "codex")], 460)
+            self.assertEqual(totals.window_starts[0], date(2026, 5, 10))
+            self.assertEqual(totals.weekly_topology[7][("work", "claude")], 100)
+            self.assertEqual(
+                totals.weekly_topology[11][("development", "codex")], 460
+            )
 
 
 class AggregateAllocationTests(unittest.TestCase):
@@ -221,42 +233,18 @@ class AggregateAllocationTests(unittest.TestCase):
             )
             self.assertIn("codex", totals.weekly_model_observed[7])
             self.assertIn("traex", totals.weekly_model_observed[11])
-
-
-class AggregateTrendTests(unittest.TestCase):
-    def test_builds_independent_twelve_week_harness_trajectories(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            work = root / "data" / "work"
-            personal = root / "data" / "personal"
-            work.mkdir(parents=True)
-            personal.mkdir()
-            (work / "claude.json").write_text(
-                json.dumps({
-                    "2026-05-10": {"totalTokens": 100},
-                    "2026-07-01": {"totalTokens": 200},
-                }),
-                encoding="utf-8",
+            self.assertEqual(
+                totals.weekly_components[7][("codex", "cacheReadTokens")], 700
             )
-            (personal / "codex.json").write_text(
-                json.dumps({"2026-07-03": {"totalTokens": 300}}),
-                encoding="utf-8",
+            self.assertIn("codex", totals.weekly_component_observed[7])
+            self.assertEqual(
+                totals.weekly_efforts[7][("codex", "medium")], 999
             )
-            (personal / "traex.json").write_text(
-                json.dumps({"2026-08-01": {"totalTokens": 400}}),
-                encoding="utf-8",
+            self.assertEqual(totals.weekly_reasoning[7]["codex"], 30)
+            self.assertEqual(
+                totals.weekly_speeds[11][("codex", "fast")], 100
             )
-
-            totals = aggregate_trend(root, date(2026, 8, 1))
-
-            self.assertEqual(len(totals.window_starts), 12)
-            self.assertEqual(totals.window_starts[0], date(2026, 5, 10))
-            self.assertEqual(totals.weekly_tokens[0]["claude"], 100)
-            self.assertEqual(totals.weekly_tokens[7]["claude"], 200)
-            self.assertEqual(totals.weekly_tokens[7]["codex"], 300)
-            self.assertEqual(totals.weekly_tokens[11]["traex"], 400)
-            self.assertEqual(totals.recent_30_tokens, 700)
-            self.assertEqual(totals.prior_30_tokens, 200)
+            self.assertEqual(totals.weekly_quota[11]["codex"], 65.0)
 
 
 class DashboardTests(unittest.TestCase):
@@ -315,8 +303,10 @@ class DashboardTests(unittest.TestCase):
             )
             totals = aggregate_topology(root, date(2026, 8, 1))
             svg = render_topology_svg(totals)
+            history_svg = render_topology_history_svg(totals)
 
             ET.fromstring(svg)
+            ET.fromstring(history_svg)
             self.assertIn("Recent compute topology", svg)
             self.assertIn("Development", svg)
             self.assertIn("100.0% · 2M", svg)
@@ -326,7 +316,7 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('class="dashboard-background"', svg)
             self.assertIn('data-role="development"', svg)
             self.assertIn('data-agent="codex"', svg)
-            self.assertIn("hue is environment", svg)
+            self.assertIn("hue is harness", svg)
             self.assertNotIn("prior 30d", svg)
             self.assertNotRegex(svg, r"[+-]?\d+(?:\.\d+)?pp\b")
             for role in ("work", "personal", "development"):
@@ -339,7 +329,13 @@ class DashboardTests(unittest.TestCase):
             self.assertIn(".heatmap-level-0", svg)
             self.assertIn(".topology-label-0 { fill: #6c6f85; }", svg)
             self.assertIn(".topology-label-0 { fill: #a6adc8; }", svg)
+            self.assertIn(".topology-label-agent-claude-4", svg)
             self.assertNotIn(".heatmap-label-0", svg)
+            self.assertIn("Topology history", history_svg)
+            self.assertIn("12 weekly absolute stacks", history_svg)
+            self.assertIn('data-role="development"', history_svg)
+            self.assertIn('data-agent="codex"', history_svg)
+            self.assertIn('data-week="2026-07-26"', history_svg)
 
     def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -372,6 +368,16 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate_topology(root, output, check=True))
 
+            history_output = root / "assets" / "topology-history.svg"
+            self.assertTrue(generate_topology_history(root, history_output))
+            self.assertIn(
+                "through 2026-07-31",
+                history_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(
+                generate_topology_history(root, history_output, check=True)
+            )
+
     def test_allocation_and_efficiency_split_models_from_routing(self) -> None:
         allocation = AllocationTotals(
             as_of=date(2026, 8, 1),
@@ -398,6 +404,58 @@ class DashboardTests(unittest.TestCase):
             ),
             weekly_model_observed=tuple(
                 {"claude", "codex", "traex"} for _ in range(12)
+            ),
+            weekly_components=tuple(
+                {
+                    (agent, component): (index + 1) * (component_index + 1)
+                    for agent in ("claude", "codex", "traex")
+                    for component_index, component in enumerate(
+                        (
+                            "inputTokens",
+                            "outputTokens",
+                            "cacheCreationTokens",
+                            "cacheReadTokens",
+                        )
+                    )
+                }
+                for index in range(12)
+            ),
+            weekly_component_observed=tuple(
+                set() if index == 0 else {"claude", "codex", "traex"}
+                for index in range(12)
+            ),
+            weekly_efforts=tuple(
+                {
+                    ("codex", "low"): (index + 1) * 10,
+                    ("codex", "medium"): (index + 1) * 5,
+                    ("traex", "medium"): (index + 1) * 6,
+                }
+                for index in range(12)
+            ),
+            weekly_reasoning=tuple(
+                {"codex": index + 1, "traex": index + 1}
+                for index in range(12)
+            ),
+            weekly_effort_observed=tuple(
+                {"codex", "traex"} for _ in range(12)
+            ),
+            weekly_speeds=tuple(
+                {
+                    ("claude", "standard"): (index + 1) * 10,
+                    ("codex", "standard"): (index + 1) * 5,
+                    ("codex", "fast"): (index + 1) * 5,
+                }
+                for index in range(12)
+            ),
+            weekly_speed_observed=tuple(
+                {"claude", "codex"} for _ in range(12)
+            ),
+            weekly_quota=tuple(
+                {"codex": 20.0 + index, "traex": 10.0 + index}
+                for index in range(12)
+            ),
+            weekly_quota_observed=tuple(
+                {"codex", "traex"} for _ in range(12)
             ),
             efforts={
                 agent: {
@@ -449,20 +507,29 @@ class DashboardTests(unittest.TestCase):
         allocation.quota_windows["codex"][300] = 68.0
 
         allocation_svg = render_allocation_svg(allocation)
+        allocation_history_svg = render_allocation_history_svg(allocation)
         efficiency_svg = render_efficiency_svg(allocation)
+        efficiency_history_svg = render_efficiency_history_svg(allocation)
 
         ET.fromstring(allocation_svg)
+        ET.fromstring(allocation_history_svg)
         ET.fromstring(efficiency_svg)
+        ET.fromstring(efficiency_history_svg)
         self.assertIn("Model allocation", allocation_svg)
-        self.assertIn("12-WEEK MODEL TRAJECTORY", allocation_svg)
-        self.assertIn("CURRENT 30D SHARE", allocation_svg)
+        self.assertIn("current 30-day model mix", allocation_svg)
+        self.assertIn("30D SHARE", allocation_svg)
         self.assertIn("claude-opus-example", allocation_svg)
         self.assertIn("cheap-example", allocation_svg)
         self.assertIn('data-model="gpt-example"', allocation_svg)
+        self.assertNotIn("12-WEEK", allocation_svg)
         self.assertNotIn("prior 30d", allocation_svg)
         self.assertNotRegex(allocation_svg, r"[+-]?\d+(?:\.\d+)?pp\b")
         self.assertNotIn("Observed routing signals", allocation_svg)
         self.assertNotIn("cache read", allocation_svg)
+        self.assertIn("Model allocation history", allocation_history_svg)
+        self.assertIn("Top 3 models + Other", allocation_history_svg)
+        self.assertIn('data-model="gpt-example"', allocation_history_svg)
+        self.assertIn('data-week="2026-07-26"', allocation_history_svg)
         self.assertIn("Token efficiency", efficiency_svg)
         self.assertIn("Observed routing signals", efficiency_svg)
         self.assertIn("low 60.0%", efficiency_svg)
@@ -473,7 +540,17 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("68% peak", efficiency_svg)
         self.assertNotIn("prior 30d", efficiency_svg)
         self.assertNotRegex(efficiency_svg, r"[+-]?\d+(?:\.\d+)?pp\b")
-        for svg in (allocation_svg, efficiency_svg):
+        self.assertIn("Efficiency history", efficiency_history_svg)
+        self.assertIn("Token flow", efficiency_history_svg)
+        for signal in ("effort", "reasoning", "fast", "quota"):
+            self.assertIn(f'data-signal="{signal}"', efficiency_history_svg)
+        self.assertIn("component detail unavailable", efficiency_history_svg)
+        for svg in (
+            allocation_svg,
+            allocation_history_svg,
+            efficiency_svg,
+            efficiency_history_svg,
+        ):
             self.assertNotIn("private-repo", svg)
             self.assertNotIn("session-id", svg)
             self.assertIn('@media (prefers-color-scheme: dark)', svg)
@@ -494,6 +571,20 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate_allocation(root, output, check=True))
 
+            allocation_history_output = root / "assets" / "allocation-history.svg"
+            self.assertTrue(
+                generate_allocation_history(root, allocation_history_output)
+            )
+            self.assertIn(
+                "through 2026-07-31",
+                allocation_history_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(
+                generate_allocation_history(
+                    root, allocation_history_output, check=True
+                )
+            )
+
             efficiency_output = root / "assets" / "efficiency.svg"
             self.assertTrue(generate_efficiency(root, efficiency_output))
             self.assertIn(
@@ -502,51 +593,19 @@ class DashboardTests(unittest.TestCase):
             )
             self.assertFalse(generate_efficiency(root, efficiency_output, check=True))
 
-    def test_trend_svg_shows_complete_independent_series(self) -> None:
-        starts = tuple(
-            date(2026, 5, 10) + timedelta(days=index * 7) for index in range(12)
-        )
-        trend = TrendTotals(
-            as_of=date(2026, 8, 1),
-            window_starts=starts,
-            weekly_tokens=tuple(
-                {
-                    "claude": (index + 1) * 10,
-                    "codex": (12 - index) * 20,
-                    "traex": (index % 3) * 5,
-                    "legacy": 0,
-                }
-                for index in range(12)
-            ),
-            recent_30_tokens=300,
-            prior_30_tokens=150,
-        )
-
-        svg = render_trend_svg(trend)
-
-        ET.fromstring(svg)
-        self.assertIn("Compute trend", svg)
-        self.assertIn("each panel uses its own zero baseline", svg)
-        for series in ("total", "claude", "codex", "trae"):
-            self.assertIn(f'data-series="{series}"', svg)
-        self.assertIn("Latest 30d 300 · prior 30d 150 · +100.0%", svg)
-        self.assertNotRegex(svg, r"[+-]?\d+(?:\.\d+)?pp\b")
-        self.assertIn('@media (prefers-color-scheme: dark)', svg)
-
-    def test_generate_trend_defaults_to_latest_activity(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            store = root / "data" / "work" / "claude.json"
-            store.parent.mkdir(parents=True)
-            store.write_text(
-                json.dumps({"2026-07-31": {"totalTokens": 100}}),
-                encoding="utf-8",
+            efficiency_history_output = root / "assets" / "efficiency-history.svg"
+            self.assertTrue(
+                generate_efficiency_history(root, efficiency_history_output)
             )
-            output = root / "assets" / "trend.svg"
-
-            self.assertTrue(generate_trend(root, output))
-            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
-            self.assertFalse(generate_trend(root, output, check=True))
+            self.assertIn(
+                "through 2026-07-31",
+                efficiency_history_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(
+                generate_efficiency_history(
+                    root, efficiency_history_output, check=True
+                )
+            )
 
 if __name__ == "__main__":
     unittest.main()

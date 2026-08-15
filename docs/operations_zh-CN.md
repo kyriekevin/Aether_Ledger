@@ -293,21 +293,23 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
-趋势 SVG 使用 Total、Claude、Codex、TRAE 四个相互独立、从零开始的小图。每条线覆盖十二个
-相邻的 7 日窗口，让每一项都有共同基线和完整轨迹；底部比较最近 30 日与紧邻的此前 30 日。
-
-拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent，每个环境使用独立但克制的色相，
-行内颜色强度表达 agent 在该环境中的占比；
+拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent；每个 harness 沿用历史图中的同一
+色相，行内颜色强度表达它在该环境中的占比；
 历史上经 OpenCode 启动的用量归入 `Legacy`。
 最近 30 天窗口与活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与
 按需 GPU `trail`
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-README 按活动、趋势、拓扑、分配、效率排列五张图：先看算力何时发生、各主要 harness 如何
-变化，再看各环境由哪些 harness 服务、使用了什么模型，最后分析 token 如何流动。分配 SVG
-为每个展示模型配对当前 30 日占比与 12 周 sparkline；没有模型明细覆盖的周不会被画成零。
-效率 SVG 则在各 harness 确实能观测到时，单独展示当前 input/output/cache flow 与路由信号。
+每个分析维度都将最近 30 日截面与独立的 12 周历史图配对。拓扑历史在 Work、Personal、
+Development 内使用绝对周度堆叠，柱高保留环境总量，颜色展示 harness 替换；分配历史在每个
+harness 内使用绝对量的 Top 3 模型 + Other 堆叠；效率历史把每周 input/output/cache 构成与
+Effort、Reasoning、Fast、Quota 强度格对齐。每张历史图都延续当前截面的同一语义维度；缺少
+模型或遥测覆盖的周保持为空白或灰色，不会被画成零。
+
+因此 README 的阅读顺序是活动，然后依次查看拓扑、分配、效率的当前/历史配对：先看算力何时
+发生，再看它在哪里运行及如何变化、选择了哪些模型及组合如何迁移，最后看 token flow 与路由
+行为如何演变。
 
 Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
 Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
@@ -315,7 +317,7 @@ Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂�
 日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
 不会从 token 总量或金额反推。
 
-五张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而

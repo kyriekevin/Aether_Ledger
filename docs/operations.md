@@ -326,25 +326,25 @@ The activity SVG contains:
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
-The trend SVG uses four independent, zero-based small multiples for total compute, Claude, Codex,
-and TRAE. Each line spans twelve adjacent seven-day windows, so every item keeps a common baseline
-and a visible full trajectory. The footer compares the latest 30 days with the immediately
-preceding 30 days.
-
 The topology SVG crosses public environment roles with agents active in the trailing 30 days.
-Each environment has its own restrained hue, while intensity within that row shows an agent's
-share of the environment. OpenCode-launched history is retained as `Legacy`. The recent window
+Each harness keeps the same hue used by the history view, while intensity within a row shows its
+share of that environment. OpenCode-launched history is retained as `Legacy`. The recent window
 ends on the same completed
 snapshot as the activity SVG. Trail workers and persistent `devbox` stores are combined as
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-The README orders the views as activity, trend, topology, allocation, then efficiency: when
-compute happened, how each primary harness changed, where each harness served, which models it
-used, and finally how its tokens flowed. The allocation SVG pairs each displayed model's current
-30-day share with a gap-aware twelve-week sparkline; weeks without model breakdown coverage are
-not plotted as zero. The efficiency SVG separately shows current input/output/cache flow and
-routing signals where each harness exposes them.
+Each analytical dimension pairs that trailing-30-day snapshot with a separate twelve-week history
+asset. Topology history uses absolute weekly stacks within Work, Personal, and Development, so bar
+height preserves each environment's total while color shows harness substitution. Allocation
+history uses absolute Top 3 model + Other stacks within each harness. Efficiency history aligns
+weekly input/output/cache composition with effort, reasoning, Fast, and quota intensity cells.
+Every panel keeps the same semantic dimension as its current snapshot; missing model or telemetry
+coverage stays blank or gray rather than being plotted as zero.
+
+The README therefore reads as activity, then current/history pairs for topology, allocation, and
+efficiency: when compute happened, where it ran and how that changed, which models were selected
+and how the mix migrated, then how tokens flowed and routing behavior evolved.
 
 Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
 Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
@@ -353,7 +353,7 @@ rollout format, the collector also accepts their effort, speed, reasoning, and q
 present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
 total tokens or cost.
 
-All five dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their

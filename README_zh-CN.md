@@ -30,29 +30,34 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
-## 趋势
-
-![Aether Ledger 算力趋势面板](assets/compute-trend.svg)
-
-Total、Claude、Codex、TRAE 分别展示从零开始的 12 周完整轨迹；底部比较最近 30 日与此前 30 日。
-
 ## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
+![Aether Ledger 算力拓扑历史](assets/token-topology-history.svg)
+
 拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker。
+开发机与按需申请的 GPU trail worker；历史图展示每个环境在 12 周内的总量与 harness
+组合如何变化。
 
 ## 分配
 
 ![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
 
+![Aether Ledger 模型分配历史](assets/compute-allocation-history.svg)
+
+当前图保留最近 30 日模型组合；历史图用绝对量的 Top 3 + Other 周度堆叠展示各 harness
+内部的模型迁移。
+
 ## 效率
 
 ![Aether Ledger token 效率面板](assets/compute-efficiency.svg)
 
-效率图把 input/output/cache token flow 与模型选择分开，并补充可观测路由信号。Effort、
-速度和额度只在对应日期确实观测到匿名聚合数据后显示。
+![Aether Ledger token 效率历史](assets/compute-efficiency-history.svg)
+
+效率图把 input/output/cache token flow 与模型选择分开，并补充可观测路由信号；历史图在
+同一周度时间轴上对齐 token flow 与 Effort、Reasoning、Fast、Quota 强度。缺失遥测保持为
+不可用，不会被画成零。
 
 ## 账本
 

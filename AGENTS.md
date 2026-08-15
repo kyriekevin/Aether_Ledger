@@ -4,9 +4,8 @@
   paths, repository names, session identifiers, prompts, or raw session exports.
 - Treat `data/{work,personal,devbox}/{claude,codex,opencode,traex}.json` and `data/trail/**` as generated cumulative stores.
   Do not hand-edit them.
-- Treat `assets/token-activity.svg`, `assets/compute-trend.svg`,
-  `assets/token-topology.svg`, `assets/compute-allocation.svg`, and
-  `assets/compute-efficiency.svg` as generated. Change
+- Treat `assets/token-activity.svg`, both `assets/token-topology*.svg`, both
+  `assets/compute-allocation*.svg`, and both `assets/compute-efficiency*.svg` as generated. Change
   `scripts/render_dashboard.py`, then regenerate the assets.
 - Use `uv` to run Python scripts and tests.
 - High-frequency data commits belong on `usage/YYYY-MM-DD`, using the Asia/Shanghai calendar day.

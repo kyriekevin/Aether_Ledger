@@ -13,11 +13,15 @@
     .agent-codex { fill: #1e66f5; }
     .agent-traex { fill: #8839ef; }
     .agent-legacy { fill: #6c6f85; }
-    .agent-line-claude { fill: none; stroke: #fe640b; }
-    .agent-line-codex { fill: none; stroke: #1e66f5; }
-    .agent-line-traex { fill: none; stroke: #8839ef; }
-    .agent-line-legacy { fill: none; stroke: #6c6f85; }
-    .trend-total { fill: none; stroke: #179299; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
     .component-input { fill: #40a02b; }
     .component-output { fill: #df8e1d; }
     .component-cache-write { fill: #179299; }
@@ -39,11 +43,15 @@
       .agent-codex { fill: #89b4fa; }
       .agent-traex { fill: #cba6f7; }
       .agent-legacy { fill: #a6adc8; }
-      .agent-line-claude { fill: none; stroke: #fab387; }
-      .agent-line-codex { fill: none; stroke: #89b4fa; }
-      .agent-line-traex { fill: none; stroke: #cba6f7; }
-      .agent-line-legacy { fill: none; stroke: #a6adc8; }
-      .trend-total { fill: none; stroke: #94e2d5; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
       .component-input { fill: #a6e3a1; }
       .component-output { fill: #f9e2af; }
       .component-cache-write { fill: #94e2d5; }

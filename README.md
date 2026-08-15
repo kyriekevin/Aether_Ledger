@@ -31,31 +31,34 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
-## Trend
-
-![Aether Ledger compute trend dashboard](assets/compute-trend.svg)
-
-Total, Claude, Codex, and TRAE each get a separate zero-based 12-week trajectory; the footer
-compares the latest 30 days with the preceding 30 days.
-
 ## Topology
 
 ![Aether Ledger recent compute topology](assets/token-topology.svg)
 
+![Aether Ledger compute topology history](assets/token-topology-history.svg)
+
 Topology shows which active agents serve each public environment over the latest 30 days.
+The history view shows how each environment's total and harness mix changed over 12 weeks.
 `Development` combines persistent devboxes with on-demand GPU trail workers.
 
 ## Allocation
 
 ![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
 
+![Aether Ledger model allocation history](assets/compute-allocation-history.svg)
+
+The current view keeps the trailing 30-day model mix; the history view shows each harness's
+weekly model migration as absolute Top 3 + Other stacks.
+
 ## Efficiency
 
 ![Aether Ledger token efficiency dashboard](assets/compute-efficiency.svg)
 
+![Aether Ledger token efficiency history](assets/compute-efficiency-history.svg)
+
 Efficiency separates input/output/cache token flow from model choice and adds observable routing
-signals. Effort, speed, and quota appear only for dates where their anonymous aggregates were
-actually observed.
+signals. Its history view aligns weekly token flow with effort, reasoning, Fast, and quota
+intensity. Missing telemetry stays unavailable rather than becoming zero.
 
 ## Ledger
 
