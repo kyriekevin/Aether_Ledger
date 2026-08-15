@@ -141,16 +141,53 @@ class AggregateAllocationTests(unittest.TestCase):
                     },
                 },
             }), encoding="utf-8")
+            (store.parent / "claude.json").write_text(json.dumps({
+                "2026-08-01": {
+                    "totalTokens": 40,
+                    "models": {"claude-example": {
+                        "totalTokens": 40,
+                        "inputTokens": 4,
+                        "outputTokens": 6,
+                        "cacheCreationTokens": 10,
+                        "cacheReadTokens": 20,
+                    }},
+                    "routing": {
+                        "speeds": {"standard": {"turns": 1, "totalTokens": 40}}
+                    },
+                }
+            }), encoding="utf-8")
+            (store.parent / "traex.json").write_text(json.dumps({
+                "2026-08-01": {
+                    "totalTokens": 60,
+                    "models": {"internal-model": {
+                        "totalTokens": 60,
+                        "inputTokens": 5,
+                        "outputTokens": 5,
+                        "cacheCreationTokens": 0,
+                        "cacheReadTokens": 50,
+                    }},
+                    "routing": {
+                        "efforts": {"medium": {
+                            "turns": 1, "totalTokens": 60,
+                            "reasoningOutputTokens": 3,
+                        }}
+                    },
+                }
+            }), encoding="utf-8")
 
             totals = aggregate_allocation(root, date(2026, 8, 1))
 
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
-            self.assertEqual(totals.efforts["low"]["turns"], 2)
-            self.assertEqual(totals.speeds["fast"]["totalTokens"], 100)
-            self.assertEqual(totals.components["cacheReadTokens"], 70)
-            self.assertEqual(totals.quota_windows, {300: 65.0})
-            self.assertEqual(totals.quota_limit_days, 1)
+            self.assertEqual(totals.efforts["codex"]["low"]["turns"], 2)
+            self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
+            self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
+            self.assertEqual(totals.quota_windows["codex"], {300: 65.0})
+            self.assertEqual(totals.quota_limit_days["codex"], 1)
+            self.assertEqual(totals.components["claude"]["inputTokens"], 4)
+            self.assertEqual(totals.speeds["claude"]["standard"]["turns"], 1)
+            self.assertEqual(totals.components["traex"]["cacheReadTokens"], 50)
+            self.assertEqual(totals.efforts["traex"]["medium"]["turns"], 1)
 
 
 class DashboardTests(unittest.TestCase):
@@ -277,26 +314,53 @@ class DashboardTests(unittest.TestCase):
                 ("traex", "cheap-example"): 50,
             },
             efforts={
-                "none": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
-                "low": {"turns": 3, "totalTokens": 120, "reasoningOutputTokens": 10},
-                "medium": {"turns": 1, "totalTokens": 80, "reasoningOutputTokens": 20},
-                "high": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
-                "xhigh": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
-                "max": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
+                agent: {
+                    effort: {
+                        "turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
+                    }
+                    for effort in ("none", "low", "medium", "high", "xhigh", "max")
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
             },
             speeds={
-                "standard": {"turns": 3, "totalTokens": 250},
-                "fast": {"turns": 1, "totalTokens": 100},
+                agent: {
+                    speed: {"turns": 0, "totalTokens": 0}
+                    for speed in ("standard", "fast")
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
             },
             components={
-                "inputTokens": 20,
-                "outputTokens": 10,
-                "cacheCreationTokens": 20,
-                "cacheReadTokens": 300,
+                agent: {
+                    "inputTokens": 0,
+                    "outputTokens": 0,
+                    "cacheCreationTokens": 0,
+                    "cacheReadTokens": 0,
+                }
+                for agent in ("claude", "codex", "traex", "legacy")
             },
-            quota_windows={300: 68.0},
-            quota_limit_days=0,
+            quota_windows={
+                agent: {} for agent in ("claude", "codex", "traex", "legacy")
+            },
+            quota_limit_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
         )
+        allocation.efforts["codex"]["low"].update(
+            turns=3, totalTokens=120, reasoningOutputTokens=10
+        )
+        allocation.efforts["codex"]["medium"].update(
+            turns=1, totalTokens=80, reasoningOutputTokens=20
+        )
+        allocation.speeds["claude"]["standard"].update(turns=2, totalTokens=100)
+        allocation.speeds["codex"]["standard"].update(turns=1, totalTokens=100)
+        allocation.speeds["codex"]["fast"].update(turns=1, totalTokens=100)
+        allocation.components["claude"].update(
+            inputTokens=5, outputTokens=5, cacheCreationTokens=10, cacheReadTokens=80
+        )
+        allocation.components["codex"].update(
+            inputTokens=20, outputTokens=10, cacheCreationTokens=20, cacheReadTokens=150
+        )
+        allocation.quota_windows["codex"][300] = 68.0
 
         svg = render_allocation_svg(allocation)
 
@@ -304,10 +368,13 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Compute allocation", svg)
         self.assertIn("claude-opus-example", svg)
         self.assertIn("cheap-example", svg)
-        self.assertIn("Codex effort", svg)
+        self.assertIn("Observed routing signals", svg)
+        self.assertNotIn("routing telemetry is aggregate-only", svg)
         self.assertIn("low 60.0%", svg)
-        self.assertIn("28.6% fast", svg)
-        self.assertIn("85.7%", svg)
+        self.assertIn("50.0% fast", svg)
+        self.assertIn("cache read 80.0%", svg)
+        self.assertIn("100.0% coverage", svg)
+        self.assertIn("not exposed by Claude logs", svg)
         self.assertIn("68% peak", svg)
         self.assertNotIn("private-repo", svg)
         self.assertNotIn("session-id", svg)

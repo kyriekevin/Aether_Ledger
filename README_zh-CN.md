@@ -30,19 +30,19 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
-## 分配
-
-![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
-
-分配图展示最近 30 天的 harness 与模型组合。Effort、速度、缓存和额度信号只在对应日期
-确实观测到匿名聚合数据后显示。
-
 ## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
 拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
 开发机与按需申请的 GPU trail worker。
+
+## 分配
+
+![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
+
+分配图继续下钻每个 harness 内的模型组合、input/output/cache token flow 与可观测路由信号。
+Effort、速度和额度只在对应日期确实观测到匿名聚合数据后显示。
 
 ## 账本
 

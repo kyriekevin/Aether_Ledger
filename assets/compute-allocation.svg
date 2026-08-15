@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="560" viewBox="0 0 1180 560" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="720" viewBox="0 0 1180 720" role="img" aria-labelledby="title desc">
   <title id="title">Recent AI compute allocation through 2026-08-14</title>
-  <desc id="desc">Harness and model allocation for 6.7B tokens in the trailing 30 days, with privacy-safe effort, speed, cache, and quota telemetry where observed.</desc>
+  <desc id="desc">Harness and model allocation for 6.7B tokens in the trailing 30 days, showing model mix and token components within each harness plus privacy-safe routing telemetry where observed.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
     .dashboard-panel { fill: #e6e9ef; }
@@ -13,6 +13,10 @@
     .agent-codex { fill: #1e66f5; }
     .agent-traex { fill: #8839ef; }
     .agent-legacy { fill: #6c6f85; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
     .heatmap-level-0 { fill: #ccd0da; }
     .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
     .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
@@ -30,6 +34,10 @@
       .agent-codex { fill: #89b4fa; }
       .agent-traex { fill: #cba6f7; }
       .agent-legacy { fill: #a6adc8; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
       .heatmap-level-0 { fill: #313244; }
       .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
       .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
@@ -37,119 +45,133 @@
       .heatmap-level-4 { fill: #94e2d5; }
     }
   </style>
-  <rect class="dashboard-background" width="1180" height="560" rx="22"/>
+  <rect class="dashboard-background" width="1180" height="720" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute allocation</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-16–2026-08-14 · routing telemetry is aggregate-only; no projects or sessions</text>
-  <rect class="dashboard-panel" x="16" y="88" width="1148" height="34" rx="10"/>
-  <rect class="agent-claude" x="16.0" y="88" width="122.0" height="34" rx="10" data-agent="claude" data-tokens="714479429">
-    <title>Claude: 714M tokens (10.6%)</title>
-  </rect>
-  <rect class="agent-codex" x="138.0" y="88" width="859.4" height="34" rx="10" data-agent="codex" data-tokens="5032229307">
-    <title>Codex: 5B tokens (74.9%)</title>
-  </rect>
-  <rect class="agent-traex" x="997.4" y="88" width="166.6" height="34" rx="10" data-agent="traex" data-tokens="975381608">
-    <title>TRAE: 975M tokens (14.5%)</title>
-  </rect>
-  <circle class="agent-claude" cx="23" cy="148" r="5"/>
-  <text class="dashboard-secondary" x="34" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Claude 10.6% · 714M</text>
-  <circle class="agent-codex" cx="273" cy="148" r="5"/>
-  <text class="dashboard-secondary" x="284" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Codex 74.9% · 5B</text>
-  <circle class="agent-traex" cx="523" cy="148" r="5"/>
-  <text class="dashboard-secondary" x="534" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">TRAE 14.5% · 975M</text>
-  <rect class="dashboard-panel" x="16" y="178" width="372" height="220" rx="16"/>
-  <circle class="agent-claude" cx="38" cy="205" r="6"/>
-  <text class="dashboard-primary" x="52" y="211" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Claude</text>
-  <text class="dashboard-muted" x="370" y="211" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">714M tokens</text>
-  <text class="dashboard-secondary" x="34" y="244" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-5</text>
-  <rect class="dashboard-border" x="230" y="233" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-claude" x="230" y="233" width="56.9" height="9" rx="4" data-agent="claude" data-model="claude-opus-5" data-tokens="362770690">
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-16–2026-08-14 · model mix and token flow within each harness · aggregate-only telemetry</text>
+  <rect class="dashboard-panel" x="16" y="92" width="372" height="388" rx="16"/>
+  <circle class="agent-claude" cx="38" cy="119" r="6"/>
+  <text class="dashboard-primary" x="52" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="370" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">714M tokens · 10.6%</text>
+  <text class="dashboard-muted" x="34" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL MIX WITHIN HARNESS</text>
+  <text class="dashboard-secondary" x="34" y="180" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-5</text>
+  <rect class="dashboard-border" x="230" y="169" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="230" y="169" width="56.9" height="9" rx="4" data-agent="claude" data-model="claude-opus-5" data-tokens="362770690">
     <title>claude-opus-5: 363M tokens (50.8% of observed Claude model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="370" y="244" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">50.8%</text>
-  <text class="dashboard-secondary" x="34" y="281" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-fable-5</text>
-  <rect class="dashboard-border" x="230" y="270" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-claude" x="230" y="270" width="46.4" height="9" rx="4" data-agent="claude" data-model="claude-fable-5" data-tokens="296040148">
+  <text class="dashboard-muted" x="370" y="180" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">50.8%</text>
+  <text class="dashboard-secondary" x="34" y="215" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-fable-5</text>
+  <rect class="dashboard-border" x="230" y="204" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="230" y="204" width="46.4" height="9" rx="4" data-agent="claude" data-model="claude-fable-5" data-tokens="296040148">
     <title>claude-fable-5: 296M tokens (41.4% of observed Claude model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="370" y="281" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">41.4%</text>
-  <text class="dashboard-secondary" x="34" y="318" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-sonnet-5</text>
-  <rect class="dashboard-border" x="230" y="307" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-claude" x="230" y="307" width="8.2" height="9" rx="4" data-agent="claude" data-model="claude-sonnet-5" data-tokens="52601105">
+  <text class="dashboard-muted" x="370" y="215" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">41.4%</text>
+  <text class="dashboard-secondary" x="34" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-sonnet-5</text>
+  <rect class="dashboard-border" x="230" y="239" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="230" y="239" width="8.2" height="9" rx="4" data-agent="claude" data-model="claude-sonnet-5" data-tokens="52601105">
     <title>claude-sonnet-5: 52.6M tokens (7.4% of observed Claude model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="370" y="318" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">7.4%</text>
-  <text class="dashboard-secondary" x="34" y="355" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">agnes-2.0-flash</text>
-  <rect class="dashboard-border" x="230" y="344" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-claude" x="230" y="344" width="0.3" height="9" rx="4" data-agent="claude" data-model="agnes-2.0-flash" data-tokens="1883260">
+  <text class="dashboard-muted" x="370" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">7.4%</text>
+  <text class="dashboard-secondary" x="34" y="285" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">agnes-2.0-flash</text>
+  <rect class="dashboard-border" x="230" y="274" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="230" y="274" width="0.3" height="9" rx="4" data-agent="claude" data-model="agnes-2.0-flash" data-tokens="1883260">
     <title>agnes-2.0-flash: 1.9M tokens (0.3% of observed Claude model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="370" y="355" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.3%</text>
-  <text class="dashboard-muted" x="34" y="384" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+3 more observed models</text>
-  <rect class="dashboard-panel" x="404" y="178" width="372" height="220" rx="16"/>
-  <circle class="agent-codex" cx="426" cy="205" r="6"/>
-  <text class="dashboard-primary" x="440" y="211" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Codex</text>
-  <text class="dashboard-muted" x="758" y="211" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">5B tokens</text>
-  <text class="dashboard-secondary" x="422" y="244" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
-  <rect class="dashboard-border" x="618" y="233" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-codex" x="618" y="233" width="94.4" height="9" rx="4" data-agent="codex" data-model="gpt-5.6-sol" data-tokens="3976441910">
+  <text class="dashboard-muted" x="370" y="285" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.3%</text>
+  <text class="dashboard-muted" x="34" y="328" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+3 more observed models</text>
+  <text class="dashboard-muted" x="34" y="350" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">TOKEN FLOW WITHIN HARNESS</text>
+  <text class="dashboard-primary" x="34" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Awaiting component detail</text>
+  <text class="dashboard-muted" x="34" y="412" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input · output · cache write · cache read</text>
+  <rect class="dashboard-panel" x="404" y="92" width="372" height="388" rx="16"/>
+  <circle class="agent-codex" cx="426" cy="119" r="6"/>
+  <text class="dashboard-primary" x="440" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="758" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">5B tokens · 74.9%</text>
+  <text class="dashboard-muted" x="422" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL MIX WITHIN HARNESS</text>
+  <text class="dashboard-secondary" x="422" y="180" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
+  <rect class="dashboard-border" x="618" y="169" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="618" y="169" width="94.4" height="9" rx="4" data-agent="codex" data-model="gpt-5.6-sol" data-tokens="3976441910">
     <title>gpt-5.6-sol: 4B tokens (84.2% of observed Codex model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="758" y="244" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">84.2%</text>
-  <text class="dashboard-secondary" x="422" y="281" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
-  <rect class="dashboard-border" x="618" y="270" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-codex" x="618" y="270" width="17.6" height="9" rx="4" data-agent="codex" data-model="gpt-5.5" data-tokens="742587086">
+  <text class="dashboard-muted" x="758" y="180" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">84.2%</text>
+  <text class="dashboard-secondary" x="422" y="215" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
+  <rect class="dashboard-border" x="618" y="204" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="618" y="204" width="17.6" height="9" rx="4" data-agent="codex" data-model="gpt-5.5" data-tokens="742587086">
     <title>gpt-5.5: 743M tokens (15.7% of observed Codex model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="758" y="281" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">15.7%</text>
-  <text class="dashboard-secondary" x="422" y="318" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-luna</text>
-  <rect class="dashboard-border" x="618" y="307" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-codex" x="618" y="307" width="0.0" height="9" rx="4" data-agent="codex" data-model="gpt-5.6-luna" data-tokens="837889">
+  <text class="dashboard-muted" x="758" y="215" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">15.7%</text>
+  <text class="dashboard-secondary" x="422" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-luna</text>
+  <rect class="dashboard-border" x="618" y="239" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="618" y="239" width="0.0" height="9" rx="4" data-agent="codex" data-model="gpt-5.6-luna" data-tokens="837889">
     <title>gpt-5.6-luna: 838K tokens (&lt;0.1% of observed Codex model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="758" y="318" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">&lt;0.1%</text>
-  <rect class="dashboard-panel" x="792" y="178" width="372" height="220" rx="16"/>
-  <circle class="agent-traex" cx="814" cy="205" r="6"/>
-  <text class="dashboard-primary" x="828" y="211" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">TRAE</text>
-  <text class="dashboard-muted" x="1146" y="211" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">975M tokens</text>
-  <text class="dashboard-secondary" x="810" y="244" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-4-8</text>
-  <rect class="dashboard-border" x="1006" y="233" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-traex" x="1006" y="233" width="57.5" height="9" rx="4" data-agent="traex" data-model="claude-opus-4-8" data-tokens="500334081">
+  <text class="dashboard-muted" x="758" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">&lt;0.1%</text>
+  <text class="dashboard-muted" x="422" y="350" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">TOKEN FLOW WITHIN HARNESS</text>
+  <text class="dashboard-primary" x="422" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Awaiting component detail</text>
+  <text class="dashboard-muted" x="422" y="412" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input · output · cache write · cache read</text>
+  <rect class="dashboard-panel" x="792" y="92" width="372" height="388" rx="16"/>
+  <circle class="agent-traex" cx="814" cy="119" r="6"/>
+  <text class="dashboard-primary" x="828" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="1146" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">975M tokens · 14.5%</text>
+  <text class="dashboard-muted" x="810" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL MIX WITHIN HARNESS</text>
+  <text class="dashboard-secondary" x="810" y="180" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-4-8</text>
+  <rect class="dashboard-border" x="1006" y="169" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="1006" y="169" width="57.5" height="9" rx="4" data-agent="traex" data-model="claude-opus-4-8" data-tokens="500334081">
     <title>claude-opus-4-8: 5M tokens (51.3% of observed TRAE model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="1146" y="244" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">51.3%</text>
-  <text class="dashboard-secondary" x="810" y="281" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
-  <rect class="dashboard-border" x="1006" y="270" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-traex" x="1006" y="270" width="30.4" height="9" rx="4" data-agent="traex" data-model="gpt-5.5" data-tokens="265101938">
+  <text class="dashboard-muted" x="1146" y="180" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">51.3%</text>
+  <text class="dashboard-secondary" x="810" y="215" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
+  <rect class="dashboard-border" x="1006" y="204" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="1006" y="204" width="30.4" height="9" rx="4" data-agent="traex" data-model="gpt-5.5" data-tokens="265101938">
     <title>gpt-5.5: 265M tokens (27.2% of observed TRAE model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="1146" y="281" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">27.2%</text>
-  <text class="dashboard-secondary" x="810" y="318" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gemini-3-flash-preview</text>
-  <rect class="dashboard-border" x="1006" y="307" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-traex" x="1006" y="307" width="20.0" height="9" rx="4" data-agent="traex" data-model="gemini-3-flash-preview" data-tokens="173979177">
+  <text class="dashboard-muted" x="1146" y="215" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">27.2%</text>
+  <text class="dashboard-secondary" x="810" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gemini-3-flash-preview</text>
+  <rect class="dashboard-border" x="1006" y="239" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="1006" y="239" width="20.0" height="9" rx="4" data-agent="traex" data-model="gemini-3-flash-preview" data-tokens="173979177">
     <title>gemini-3-flash-preview: 174M tokens (17.8% of observed TRAE model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="1146" y="318" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">17.8%</text>
-  <text class="dashboard-secondary" x="810" y="355" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
-  <rect class="dashboard-border" x="1006" y="344" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
-  <rect class="agent-traex" x="1006" y="344" width="2.5" height="9" rx="4" data-agent="traex" data-model="gpt-5.6-sol" data-tokens="22103964">
+  <text class="dashboard-muted" x="1146" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">17.8%</text>
+  <text class="dashboard-secondary" x="810" y="285" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
+  <rect class="dashboard-border" x="1006" y="274" width="112" height="9" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="1006" y="274" width="2.5" height="9" rx="4" data-agent="traex" data-model="gpt-5.6-sol" data-tokens="22103964">
     <title>gpt-5.6-sol: 22.1M tokens (2.3% of observed TRAE model tokens)</title>
   </rect>
-  <text class="dashboard-muted" x="1146" y="355" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">2.3%</text>
-  <text class="dashboard-muted" x="810" y="384" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+7 more observed models</text>
-  <rect class="dashboard-panel" x="16.0" y="420" width="278.0" height="116" rx="14"/>
-  <text class="dashboard-muted" x="32.0" y="447" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Codex effort</text>
-  <text class="dashboard-primary" x="32.0" y="481" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Awaiting telemetry</text>
-  <text class="dashboard-muted" x="32.0" y="508" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">low · medium · high</text>
-  <rect class="dashboard-panel" x="306.0" y="420" width="278.0" height="116" rx="14"/>
-  <text class="dashboard-muted" x="322.0" y="447" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Speed tier</text>
-  <text class="dashboard-primary" x="322.0" y="481" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Awaiting telemetry</text>
-  <text class="dashboard-muted" x="322.0" y="508" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">standard · fast</text>
-  <rect class="dashboard-panel" x="596.0" y="420" width="278.0" height="116" rx="14"/>
-  <text class="dashboard-muted" x="612.0" y="447" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Cache reuse</text>
-  <text class="dashboard-primary" x="612.0" y="481" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Awaiting telemetry</text>
-  <text class="dashboard-muted" x="612.0" y="508" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">read share of component tokens</text>
-  <rect class="dashboard-panel" x="886.0" y="420" width="278.0" height="116" rx="14"/>
-  <text class="dashboard-muted" x="902.0" y="447" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Codex quota</text>
-  <text class="dashboard-primary" x="902.0" y="481" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="600">Awaiting telemetry</text>
-  <text class="dashboard-muted" x="902.0" y="508" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">peak observed window pressure</text>
+  <text class="dashboard-muted" x="1146" y="285" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">2.3%</text>
+  <text class="dashboard-muted" x="810" y="328" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+7 more observed models</text>
+  <text class="dashboard-muted" x="810" y="350" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">TOKEN FLOW WITHIN HARNESS</text>
+  <text class="dashboard-primary" x="810" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">Awaiting component detail</text>
+  <text class="dashboard-muted" x="810" y="412" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input · output · cache write · cache read</text>
+  <text class="dashboard-primary" x="16" y="506" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="600">Observed routing signals</text>
+  <rect class="dashboard-panel" x="16" y="520" width="372" height="170" rx="16"/>
+  <circle class="agent-claude" cx="38" cy="545" r="5"/>
+  <text class="dashboard-primary" x="51" y="550" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="34" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
+  <text class="dashboard-secondary" x="108" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">not exposed by Claude logs</text>
+  <text class="dashboard-muted" x="34" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
+  <text class="dashboard-secondary" x="108" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">not exposed separately</text>
+  <text class="dashboard-muted" x="34" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
+  <text class="dashboard-secondary" x="108" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting session telemetry</text>
+  <text class="dashboard-muted" x="34" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
+  <text class="dashboard-secondary" x="108" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">not exposed by Claude logs</text>
+  <rect class="dashboard-panel" x="404" y="520" width="372" height="170" rx="16"/>
+  <circle class="agent-codex" cx="426" cy="545" r="5"/>
+  <text class="dashboard-primary" x="439" y="550" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="422" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
+  <text class="dashboard-secondary" x="496" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
+  <text class="dashboard-muted" x="422" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
+  <text class="dashboard-secondary" x="496" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
+  <text class="dashboard-muted" x="422" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
+  <text class="dashboard-secondary" x="496" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting session telemetry</text>
+  <text class="dashboard-muted" x="422" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
+  <text class="dashboard-secondary" x="496" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
+  <rect class="dashboard-panel" x="792" y="520" width="372" height="170" rx="16"/>
+  <circle class="agent-traex" cx="814" cy="545" r="5"/>
+  <text class="dashboard-primary" x="827" y="550" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="810" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
+  <text class="dashboard-secondary" x="884" y="579" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
+  <text class="dashboard-muted" x="810" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
+  <text class="dashboard-secondary" x="884" y="606" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
+  <text class="dashboard-muted" x="810" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
+  <text class="dashboard-secondary" x="884" y="633" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting session telemetry</text>
+  <text class="dashboard-muted" x="810" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
+  <text class="dashboard-secondary" x="884" y="660" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting compatible session telemetry</text>
 </svg>

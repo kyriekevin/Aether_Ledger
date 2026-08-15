@@ -334,10 +334,18 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-The allocation SVG shows the trailing 30-day harness and per-harness model mix. It also shows
-Codex effort, standard/Fast speed, cache reuse, and Codex quota pressure only across dates where
-those privacy-safe aggregates were observed. Missing historical telemetry stays explicitly
-unavailable instead of being inferred from total tokens or cost.
+The README orders the views as activity, topology, then allocation: when compute happened, where
+each harness served, and finally how each harness spent its tokens. The allocation SVG therefore
+does not repeat the topology's overall harness-share bar. It drills into the trailing 30-day model
+mix and input/output/cache flow separately for Claude, Codex, and TRAE, followed by comparable
+routing signals where each harness exposes them.
+
+Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
+Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
+cheap substitute; its model mix is shown literally. Because compatible TRAE builds use the Codex
+rollout format, the collector also accepts their effort, speed, reasoning, and quota events when
+present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
+total tokens or cost.
 
 All three dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
@@ -424,8 +432,10 @@ Codex entries may also contain model token breakdowns and an image counter:
 }
 ```
 
-New observations preserve the four token components under each model. Codex session events also
-contribute aggregate routing and quota telemetry; Claude events contribute aggregate speed data:
+New observations preserve the four token components under each model for every harness that
+ccusage can break down. Codex session events also contribute aggregate routing and quota telemetry;
+Claude events contribute aggregate speed data; compatible TRAE session events contribute the same
+routing fields as Codex when present:
 
 ```json
 {
@@ -451,9 +461,11 @@ component or routing detail after their source logs rotate.
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
 
-traex (`traex.json`) uses the same date-keyed shape as Codex. It currently records no Fast tier, so
-its registered models use the official standard rate; unknown models contribute tokens with zero
-cost.
+traex (`traex.json`) uses the same date-keyed shape as Codex. It represents the internal TRAE CLI,
+while its recorded model names describe the actual capacity supplied behind that harness. Fast
+pricing is not assumed, so registered models use the official standard rate; unknown models
+contribute tokens with zero cost. Codex-compatible routing fields are collected when a TRAE build
+emits them and otherwise remain unavailable.
 
 ## Trail compaction
 

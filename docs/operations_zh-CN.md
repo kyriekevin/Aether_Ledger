@@ -300,9 +300,16 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-分配 SVG 展示最近 30 天的 harness 及各 harness 模型组合。Codex effort、standard/Fast
-速度、缓存复用和 Codex 额度压力只统计确实观测到这些匿名聚合数据的日期；缺失的历史遥测
-会明确显示为不可用，不会从 token 总量或金额反推。
+README 按活动、拓扑、分配排列三张图：先看算力何时发生，再看各环境由哪些 harness 服务，
+最后下钻每个 harness 如何消耗 token。因此分配 SVG 不再重复拓扑图里的 harness 总占比，
+而是分别展示 Claude、Codex、TRAE 最近 30 天的模型组合与 input/output/cache flow，再列出
+各 harness 确实能观测到的路由信号。
+
+Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
+Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
+只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此采集器也会在
+日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
+不会从 token 总量或金额反推。
 
 三张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
@@ -382,8 +389,9 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
-新观测会保留每个模型的四类 token。Codex session 事件还会贡献匿名的路由与额度遥测；
-Claude 事件贡献匿名速度数据：
+只要 ccusage 能拆分，新观测就会为每个 harness 的每个模型保留四类 token。Codex session
+事件还会贡献匿名的路由与额度遥测；Claude 事件贡献匿名速度数据；兼容的 TRAE session
+事件在确实提供时贡献与 Codex 相同的路由字段：
 
 ```json
 {
@@ -408,8 +416,10 @@ Claude 事件贡献匿名速度数据：
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
 
-traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。它目前不记录 Fast
-tier，因此表内模型按官方 standard 价计算；未知模型只贡献 token，金额按 0。
+traex（`traex.json`）使用与 Codex 相同的按日期结构，代表司内的 TRAE CLI；其中记录的模型名
+才描述该 harness 背后实际提供的能力。价格不会假设 Fast tier，已登记模型按官方 standard
+价格计算，未知模型只贡献 token、金额按 0。若某个 TRAE 版本输出 Codex-compatible 路由字段，
+采集器会保存其匿名聚合，否则保持不可用。
 
 ## Trail 压缩
 

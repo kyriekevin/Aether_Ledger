@@ -1519,6 +1519,13 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     ) as e:
         print(f"traex ccusage fetch failed, keeping cached store: {e}", file=sys.stderr)
         tx_daily = []
+    # TRAE CLI uses the Codex rollout format. Builds that emit effort, service-tier,
+    # or quota events can therefore contribute the same anonymous routing buckets;
+    # builds that omit them simply leave those dimensions unavailable.
+    _attach_telemetry(
+        tx_daily,
+        collect_codex_routing_since(EPOCH, TRAEX_CODEX_HOME / "sessions"),
+    )
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:
