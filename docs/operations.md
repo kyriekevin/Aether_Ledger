@@ -327,14 +327,35 @@ The activity SVG contains:
 - a trailing 53-week daily heatmap.
 
 The topology SVG crosses public environment roles with agents active in the trailing 30 days.
-Each environment has its own restrained hue, while intensity within that row shows an agent's
-share of the environment. OpenCode-launched history is retained as `Legacy`. The recent window
+Each harness keeps the same hue used by the history view, while intensity within a row shows its
+share of that environment. OpenCode-launched history is retained as `Legacy`. The recent window
 ends on the same completed
 snapshot as the activity SVG. Trail workers and persistent `devbox` stores are combined as
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Both dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+Each analytical dimension pairs that trailing-30-day snapshot with a separate eight-week history
+asset. Every history uses the same adjacent weekly buckets and explicitly splits them into the
+previous four weeks and the latest four weeks. Topology history uses absolute weekly stacks within
+Work, Personal, and Development, so bar height preserves each environment's total while color
+shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
+each harness. Efficiency history aligns weekly input/output/cache composition with effort,
+reasoning, Fast, and quota intensity cells.
+Every panel keeps the same semantic dimension as its current snapshot; missing model or telemetry
+coverage stays blank or gray rather than being plotted as zero.
+
+The README therefore reads as activity, then current/history pairs for topology, allocation, and
+efficiency: when compute happened, where it ran and how that changed, which models were selected
+and how the mix migrated, then how tokens flowed and routing behavior evolved.
+
+Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
+Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
+cheap substitute; its model mix is shown literally. Because compatible TRAE builds use the Codex
+rollout format, the collector also accepts their effort, speed, reasoning, and quota events when
+present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
+total tokens or cost.
+
+All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
@@ -342,14 +363,14 @@ own data directory, avoiding generated-asset conflicts when machines push concur
 
 Intensity levels use distribution quartiles rather than a linear scale, so ordinary days remain
 visible when trail workloads create very large peaks. The published SVGs contain aggregate token
-counts and, in the activity view, API-equivalent cost; they do not include model, machine, path,
-prompt, or repository-level data.
+counts, model names in the allocation view, and API-equivalent cost in the activity view. They do
+not include machine identity, paths, prompts, sessions, or repository-level data.
 
 ## Public-data boundary
 
 Committed data is limited to date-keyed aggregate usage under `data/`, using the public durable
 roles `work`, `personal`, and `devbox`, or opaque IDs for ephemeral workers. The producer does not
-collect working directories, repository names, prompts, session identifiers, usernames, or hostnames.
+persist working directories, repository names, prompts, session identifiers, usernames, or hostnames.
 Repository-level exports such as `codex_by_repo.json` are ignored and forbidden by the public-data
 audit.
 
@@ -419,18 +440,47 @@ Codex entries may also contain model token breakdowns and an image counter:
 }
 ```
 
+New observations preserve the four token components under each model for every harness that
+ccusage can break down. Codex session events also contribute aggregate routing and quota telemetry;
+Claude events contribute aggregate speed data; compatible TRAE session events contribute the same
+routing fields as Codex when present:
+
+```json
+{
+  "routing": {
+    "efforts": {
+      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+    },
+    "speeds": {
+      "fast": {"turns": 3, "totalTokens": 210000}
+    }
+  },
+  "quota": {
+    "windows": {"300": 64.0, "10080": 37.0},
+    "limitReached": false
+  }
+}
+```
+
+Window keys are anonymous durations in minutes. Message and session identifiers are used only for
+in-memory deduplication and are never written. Historical totals remain valid but do not gain
+component or routing detail after their source logs rotate.
+
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
 
-traex (`traex.json`) uses the same date-keyed shape as Codex. It currently records no Fast tier, so
-its registered models use the official standard rate; unknown models contribute tokens with zero
-cost.
+traex (`traex.json`) uses the same date-keyed shape as Codex. It represents the internal TRAE CLI,
+while its recorded model names describe the actual capacity supplied behind that harness. Fast
+pricing is not assumed, so registered models use the official standard rate; unknown models
+contribute tokens with zero cost. Codex-compatible routing fields are collected when a TRAE build
+emits them and otherwise remain unavailable.
 
 ## Trail compaction
 
 Run `scripts/compact_trails.py` on one writer only. Pods whose newest data is older than seven days
-are added into `data/trail/rollup` and removed in the same commit. The fold is additive because every
-ephemeral pod directory represents a distinct worker.
+are added into `data/trail/rollup` and removed in the same commit. Every ephemeral pod directory
+represents a distinct worker, so token, model-component, and routing counters fold additively;
+quota windows retain their maximum observed pressure.
 
 Always preview first:
 

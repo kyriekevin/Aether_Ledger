@@ -203,6 +203,11 @@ DAILY_BRANCH_PREFIX = "usage/"
 # the session log records them as tool invocations, not LLM token_count events.
 # We count PNGs by mtime as a proxy for billable image generations.
 CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
+CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
+CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
+
+EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
+SPEED_LEVELS = frozenset({"standard", "fast"})
 
 # TRAE CLI (traex) is a Codex fork: it writes the same rollout-*.jsonl session
 # format, only under ~/.trae/cli instead of ~/.codex. ccusage has no `trae` agent,
@@ -296,6 +301,217 @@ def count_codex_image_files_per_day() -> dict[str, int]:
         d = datetime.fromtimestamp(mtime).date().isoformat()
         counts[d] = counts.get(d, 0) + 1
     return counts
+
+
+def _event_day(raw: object) -> date | None:
+    """Convert one session timestamp to the repository's calendar day."""
+    if not isinstance(raw, str):
+        return None
+    try:
+        timestamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if timestamp.tzinfo is not None:
+        timestamp = timestamp.astimezone(SHANGHAI)
+    return timestamp.date()
+
+
+def _token_value(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    return max(0, int(value))
+
+
+def _normalise_speed(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    return {
+        "default": "standard",
+        "priority": "fast",
+        "standard": "standard",
+        "fast": "fast",
+    }.get(value.lower())
+
+
+def _add_routing_bucket(
+    daily: dict[str, dict],
+    day: date,
+    dimension: str,
+    label: str,
+    tokens: int,
+    *,
+    reasoning_tokens: int = 0,
+) -> None:
+    routing = daily.setdefault(day.isoformat(), {}).setdefault("routing", {})
+    bucket = routing.setdefault(dimension, {}).setdefault(
+        label, {"turns": 0, "totalTokens": 0}
+    )
+    bucket["turns"] += 1
+    bucket["totalTokens"] += tokens
+    if reasoning_tokens:
+        bucket["reasoningOutputTokens"] = (
+            bucket.get("reasoningOutputTokens", 0) + reasoning_tokens
+        )
+
+
+def collect_codex_routing_since(
+    since: date, sessions_dir: Path = CODEX_SESSION_DIR
+) -> dict[str, dict]:
+    """Aggregate privacy-safe Codex routing and quota telemetry.
+
+    Session files expose model effort, service tier, per-turn token deltas, and
+    rate-limit snapshots. Only enum buckets, counters, and window percentages
+    leave this function; paths, prompts, turn IDs, and session IDs never do.
+    """
+    daily: dict[str, dict] = {}
+    if not sessions_dir.is_dir():
+        return daily
+    for path in sessions_dir.rglob("*.jsonl"):
+        effort: str | None = None
+        speed: str | None = None
+        try:
+            stream = path.open(encoding="utf-8")
+        except OSError:
+            continue
+        with stream:
+            for line in stream:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    # A live JSONL may end with a line that is still being written.
+                    continue
+                if not isinstance(event, dict):
+                    continue
+                payload = event.get("payload")
+                if not isinstance(payload, dict):
+                    continue
+                payload_type = payload.get("type")
+                if event.get("type") == "turn_context":
+                    raw_effort = payload.get("effort")
+                    effort = raw_effort if raw_effort in EFFORT_LEVELS else None
+                elif payload_type == "thread_settings_applied":
+                    settings = payload.get("thread_settings")
+                    if isinstance(settings, dict):
+                        raw_effort = settings.get("reasoning_effort")
+                        effort = raw_effort if raw_effort in EFFORT_LEVELS else effort
+                        speed = _normalise_speed(settings.get("service_tier")) or speed
+                if payload_type != "token_count":
+                    continue
+                day = _event_day(event.get("timestamp"))
+                if day is None or day < since:
+                    continue
+                info = payload.get("info")
+                if not isinstance(info, dict):
+                    continue
+                usage = info.get("last_token_usage")
+                if not isinstance(usage, dict):
+                    continue
+                tokens = _token_value(usage.get("total_tokens"))
+                if tokens <= 0:
+                    continue
+                reasoning = _token_value(usage.get("reasoning_output_tokens"))
+                if effort is not None:
+                    _add_routing_bucket(
+                        daily, day, "efforts", effort, tokens,
+                        reasoning_tokens=reasoning,
+                    )
+                if speed is not None:
+                    _add_routing_bucket(daily, day, "speeds", speed, tokens)
+
+                rate_limits = payload.get("rate_limits")
+                if not isinstance(rate_limits, dict):
+                    continue
+                quota = daily.setdefault(day.isoformat(), {}).setdefault(
+                    "quota", {"windows": {}, "limitReached": False}
+                )
+                for name in ("primary", "secondary"):
+                    window = rate_limits.get(name)
+                    if not isinstance(window, dict):
+                        continue
+                    minutes = _token_value(window.get("window_minutes"))
+                    percent = window.get("used_percent")
+                    if not minutes or isinstance(percent, bool) or not isinstance(
+                        percent, (int, float)
+                    ):
+                        continue
+                    key = str(minutes)
+                    observed_percent = min(100.0, max(0.0, float(percent)))
+                    quota["windows"][key] = max(
+                        observed_percent, quota["windows"].get(key, 0.0)
+                    )
+                quota["limitReached"] = bool(
+                    quota["limitReached"]
+                    or rate_limits.get("rate_limit_reached_type")
+                    or rate_limits.get("spend_control_reached")
+                )
+    return daily
+
+
+def collect_claude_speed_since(
+    since: date, projects_dir: Path = CLAUDE_PROJECTS_DIR
+) -> dict[str, dict]:
+    """Aggregate Claude speed buckets while discarding project/session identity."""
+    if not projects_dir.is_dir():
+        return {}
+    # Claude may append the same assistant message several times while streaming.
+    # Keep only its largest observed usage. IDs are dedupe keys in memory only.
+    messages: dict[str, tuple[date, str, int]] = {}
+    for path in projects_dir.rglob("*.jsonl"):
+        try:
+            stream = path.open(encoding="utf-8")
+        except OSError:
+            continue
+        with stream:
+            for line_number, line in enumerate(stream):
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(event, dict) or event.get("type") != "assistant":
+                    continue
+                message = event.get("message")
+                if not isinstance(message, dict):
+                    continue
+                usage = message.get("usage")
+                if not isinstance(usage, dict):
+                    continue
+                speed = _normalise_speed(usage.get("speed"))
+                day = _event_day(event.get("timestamp"))
+                if speed is None or day is None or day < since:
+                    continue
+                tokens = sum(
+                    _token_value(usage.get(key))
+                    for key in (
+                        "input_tokens", "output_tokens",
+                        "cache_creation_input_tokens", "cache_read_input_tokens",
+                    )
+                )
+                if tokens <= 0:
+                    continue
+                raw_id = message.get("id") or event.get("uuid")
+                dedupe = str(raw_id) if raw_id else f"{path}:{line_number}"
+                previous = messages.get(dedupe)
+                if previous is None or tokens >= previous[2]:
+                    messages[dedupe] = (day, speed, tokens)
+    daily: dict[str, dict] = {}
+    for day, speed, tokens in messages.values():
+        _add_routing_bucket(daily, day, "speeds", speed, tokens)
+    return daily
+
+
+def _attach_telemetry(entries: list[dict], telemetry: dict[str, dict]) -> None:
+    """Attach aggregate telemetry, adding non-authoritative stubs when needed."""
+    by_day = {entry["date"]: entry for entry in entries}
+    for day, payload in telemetry.items():
+        entry = by_day.get(day)
+        if entry is None:
+            entry = {
+                "date": day, "totalTokens": 0, "totalCost": 0.0,
+                "models": {}, "tokensObserved": False,
+            }
+            entries.append(entry)
+            by_day[day] = entry
+        entry.update(payload)
 
 
 def _breakdown_tokens(m: dict) -> int:
@@ -533,16 +749,64 @@ def fetch_codex_home_daily(
 # ---------------------------------------------------------------------------
 
 def _canonical_model_totals(models: dict) -> dict[str, dict]:
-    """Canonicalize one observation before comparing it with another."""
+    """Canonicalize one observation without discarding its token components."""
+    token_keys = (
+        "totalTokens", "inputTokens", "outputTokens",
+        "cacheCreationTokens", "cacheReadTokens",
+    )
     canonical: dict[str, dict] = {}
     for name, payload in models.items():
         model = _normalise_model(name)
-        tokens = (
-            payload.get("totalTokens", 0) if isinstance(payload, dict) else payload
-        )
+        if isinstance(payload, dict):
+            values = {key: _token_value(payload.get(key)) for key in token_keys}
+        else:
+            values = {"totalTokens": _token_value(payload)}
         bucket = canonical.setdefault(model, {"totalTokens": 0})
-        bucket["totalTokens"] += tokens
+        for key, value in values.items():
+            include = value or (
+                isinstance(payload, dict) and key in payload
+            ) or key == "totalTokens"
+            if include:
+                bucket[key] = bucket.get(key, 0) + value
     return canonical
+
+
+def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
+    if replace:
+        return current
+    merged = {
+        dimension: {label: dict(values) for label, values in buckets.items()}
+        for dimension, buckets in prev.items()
+        if isinstance(buckets, dict)
+    }
+    for dimension, buckets in current.items():
+        if not isinstance(buckets, dict):
+            continue
+        destination = merged.setdefault(dimension, {})
+        for label, values in buckets.items():
+            if not isinstance(values, dict):
+                continue
+            previous = destination.setdefault(label, {})
+            for key in ("turns", "totalTokens", "reasoningOutputTokens"):
+                value = values.get(key)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    previous[key] = max(0, value, _token_value(previous.get(key)))
+    return merged
+
+
+def _merge_quota(prev: dict, current: dict, *, replace: bool) -> dict:
+    if replace:
+        return current
+    windows = dict(prev.get("windows", {}))
+    for minutes, percent in current.get("windows", {}).items():
+        if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+            windows[minutes] = max(float(percent), float(windows.get(minutes, 0.0)))
+    return {
+        "windows": windows,
+        "limitReached": bool(
+            prev.get("limitReached", False) or current.get("limitReached", False)
+        ),
+    }
 
 
 def merge_with_cumulative(
@@ -623,10 +887,30 @@ def merge_with_cumulative(
                 current_tokens = current["totalTokens"]
                 previous_tokens = previous["totalTokens"] if previous else 0
                 if current_tokens >= previous_tokens:
-                    merged_models[model] = current
+                    merged_model = dict(current)
+                    if previous:
+                        for key in (
+                            "inputTokens",
+                            "outputTokens",
+                            "cacheCreationTokens",
+                            "cacheReadTokens",
+                        ):
+                            if key not in merged_model and key in previous:
+                                merged_model[key] = previous[key]
+                    merged_models[model] = merged_model
             merged["models"] = merged_models
         elif "models" in prev:
             merged["models"] = _canonical_model_totals(prev["models"])
+        if entry.get("routing") or prev.get("routing"):
+            merged["routing"] = _merge_routing(
+                prev.get("routing", {}), entry.get("routing", {}),
+                replace=reconciling,
+            )
+        if entry.get("quota") or prev.get("quota"):
+            merged["quota"] = _merge_quota(
+                prev.get("quota", {}), entry.get("quota", {}),
+                replace=reconciling,
+            )
         if not reconciling and merged.get("models"):
             # Historical stores may lack some model detail, so the breakdown can
             # remain smaller than the row total. It must never exceed that total:
@@ -1223,6 +1507,12 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
+    _attach_telemetry(
+        cc_daily, collect_claude_speed_since(EPOCH, CLAUDE_PROJECTS_DIR)
+    )
+    _attach_telemetry(
+        cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
+    )
     # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
     # its failure is isolated: an empty fetch merges [] and keeps the cached store
     # via max(), exactly like the Codex path above. A machine that never ran traex
@@ -1239,6 +1529,13 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     ) as e:
         print(f"traex ccusage fetch failed, keeping cached store: {e}", file=sys.stderr)
         tx_daily = []
+    # TRAE CLI uses the Codex rollout format. Builds that emit effort, service-tier,
+    # or quota events can therefore contribute the same anonymous routing buckets;
+    # builds that omit them simply leave those dimensions unavailable.
+    _attach_telemetry(
+        tx_daily,
+        collect_codex_routing_since(EPOCH, TRAEX_CODEX_HOME / "sessions"),
+    )
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:

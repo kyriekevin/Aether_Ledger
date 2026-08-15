@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="350" viewBox="0 0 1180 350" role="img" aria-labelledby="title desc">
+  <title id="title">Recent AI compute allocation through 2026-08-14</title>
+  <desc id="desc">Harness and model allocation for 6.7B tokens in the trailing 30 days.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="350" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Model allocation</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-16–2026-08-14 · current 30-day model mix by harness</text>
+  <rect class="dashboard-panel" x="16" y="92" width="372" height="230" rx="16"/>
+  <circle class="agent-claude" cx="38" cy="119" r="6"/>
+  <text class="dashboard-primary" x="52" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="370" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">714M · 10.6%</text>
+  <text class="dashboard-muted" x="34" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL</text>
+  <text class="dashboard-muted" x="370" y="153" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">30D SHARE</text>
+  <text class="dashboard-secondary" x="34" y="178" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-5</text>
+  <text class="dashboard-muted" x="370" y="178" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">50.8%</text>
+  <rect class="dashboard-border" x="34" y="186" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="34" y="186" width="170.6" height="8" rx="4" fill-opacity="0.82" data-agent="claude" data-model="claude-opus-5" data-tokens="362770690">
+    <title>claude-opus-5: 363M · 50.8%</title>
+  </rect>
+  <text class="dashboard-secondary" x="34" y="214" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-fable-5</text>
+  <text class="dashboard-muted" x="370" y="214" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">41.4%</text>
+  <rect class="dashboard-border" x="34" y="222" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="34" y="222" width="139.2" height="8" rx="4" fill-opacity="0.82" data-agent="claude" data-model="claude-fable-5" data-tokens="296040148">
+    <title>claude-fable-5: 296M · 41.4%</title>
+  </rect>
+  <text class="dashboard-secondary" x="34" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-sonnet-5</text>
+  <text class="dashboard-muted" x="370" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">7.4%</text>
+  <rect class="dashboard-border" x="34" y="258" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="34" y="258" width="24.7" height="8" rx="4" fill-opacity="0.82" data-agent="claude" data-model="claude-sonnet-5" data-tokens="52601105">
+    <title>claude-sonnet-5: 52.6M · 7.4%</title>
+  </rect>
+  <text class="dashboard-secondary" x="34" y="286" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">agnes-2.0-flash</text>
+  <text class="dashboard-muted" x="370" y="286" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.3%</text>
+  <rect class="dashboard-border" x="34" y="294" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-claude" x="34" y="294" width="0.9" height="8" rx="4" fill-opacity="0.82" data-agent="claude" data-model="agnes-2.0-flash" data-tokens="1883260">
+    <title>agnes-2.0-flash: 1.9M · 0.3%</title>
+  </rect>
+  <text class="dashboard-muted" x="34" y="310" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+3 more observed models</text>
+  <rect class="dashboard-panel" x="404" y="92" width="372" height="230" rx="16"/>
+  <circle class="agent-codex" cx="426" cy="119" r="6"/>
+  <text class="dashboard-primary" x="440" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="758" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">5B · 74.9%</text>
+  <text class="dashboard-muted" x="422" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL</text>
+  <text class="dashboard-muted" x="758" y="153" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">30D SHARE</text>
+  <text class="dashboard-secondary" x="422" y="178" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
+  <text class="dashboard-muted" x="758" y="178" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">84.2%</text>
+  <rect class="dashboard-border" x="422" y="186" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="422" y="186" width="283.1" height="8" rx="4" fill-opacity="0.82" data-agent="codex" data-model="gpt-5.6-sol" data-tokens="3976441910">
+    <title>gpt-5.6-sol: 4B · 84.2%</title>
+  </rect>
+  <text class="dashboard-secondary" x="422" y="214" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
+  <text class="dashboard-muted" x="758" y="214" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">15.7%</text>
+  <rect class="dashboard-border" x="422" y="222" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="422" y="222" width="52.9" height="8" rx="4" fill-opacity="0.82" data-agent="codex" data-model="gpt-5.5" data-tokens="742587086">
+    <title>gpt-5.5: 743M · 15.7%</title>
+  </rect>
+  <text class="dashboard-secondary" x="422" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-luna</text>
+  <text class="dashboard-muted" x="758" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">&lt;0.1%</text>
+  <rect class="dashboard-border" x="422" y="258" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-codex" x="422" y="258" width="0.1" height="8" rx="4" fill-opacity="0.82" data-agent="codex" data-model="gpt-5.6-luna" data-tokens="837889">
+    <title>gpt-5.6-luna: 838K · &lt;0.1%</title>
+  </rect>
+  <rect class="dashboard-panel" x="792" y="92" width="372" height="230" rx="16"/>
+  <circle class="agent-traex" cx="814" cy="119" r="6"/>
+  <text class="dashboard-primary" x="828" y="125" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="1146" y="125" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">975M · 14.5%</text>
+  <text class="dashboard-muted" x="810" y="153" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">MODEL</text>
+  <text class="dashboard-muted" x="1146" y="153" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">30D SHARE</text>
+  <text class="dashboard-secondary" x="810" y="178" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">claude-opus-4-8</text>
+  <text class="dashboard-muted" x="1146" y="178" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">51.3%</text>
+  <rect class="dashboard-border" x="810" y="186" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="810" y="186" width="172.4" height="8" rx="4" fill-opacity="0.82" data-agent="traex" data-model="claude-opus-4-8" data-tokens="500334081">
+    <title>claude-opus-4-8: 500M · 51.3%</title>
+  </rect>
+  <text class="dashboard-secondary" x="810" y="214" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.5</text>
+  <text class="dashboard-muted" x="1146" y="214" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">27.2%</text>
+  <rect class="dashboard-border" x="810" y="222" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="810" y="222" width="91.3" height="8" rx="4" fill-opacity="0.82" data-agent="traex" data-model="gpt-5.5" data-tokens="265101938">
+    <title>gpt-5.5: 265M · 27.2%</title>
+  </rect>
+  <text class="dashboard-secondary" x="810" y="250" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gemini-3-flash-preview</text>
+  <text class="dashboard-muted" x="1146" y="250" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">17.8%</text>
+  <rect class="dashboard-border" x="810" y="258" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="810" y="258" width="59.9" height="8" rx="4" fill-opacity="0.82" data-agent="traex" data-model="gemini-3-flash-preview" data-tokens="173979177">
+    <title>gemini-3-flash-preview: 174M · 17.8%</title>
+  </rect>
+  <text class="dashboard-secondary" x="810" y="286" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">gpt-5.6-sol</text>
+  <text class="dashboard-muted" x="1146" y="286" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">2.3%</text>
+  <rect class="dashboard-border" x="810" y="294" width="336" height="8" rx="4" fill="none" stroke-width="1"/>
+  <rect class="agent-traex" x="810" y="294" width="7.6" height="8" rx="4" fill-opacity="0.82" data-agent="traex" data-model="gpt-5.6-sol" data-tokens="22103964">
+    <title>gpt-5.6-sol: 22.1M · 2.3%</title>
+  </rect>
+  <text class="dashboard-muted" x="810" y="310" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">+7 more observed models</text>
+</svg>

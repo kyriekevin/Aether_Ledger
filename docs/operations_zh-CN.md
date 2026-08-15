@@ -293,27 +293,45 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
-拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent，每个环境使用独立但克制的色相，
-行内颜色强度表达 agent 在该环境中的占比；历史上经 OpenCode 启动的用量归入 `Legacy`。
+拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent；每个 harness 沿用历史图中的同一
+色相，行内颜色强度表达它在该环境中的占比；
+历史上经 OpenCode 启动的用量归入 `Legacy`。
 最近 30 天窗口与活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与
 按需 GPU `trail`
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-两张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+每个分析维度都将最近 30 日截面与独立的 8 周历史图配对。所有历史图使用相同的连续周桶，并
+明确分成前 4 周与近 4 周。拓扑历史在 Work、Personal、Development 内使用绝对周度堆叠，
+柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
++ Other 堆叠；效率历史把每周 input/output/cache 构成与 Effort、Reasoning、Fast、Quota
+强度格对齐。每张历史图都延续当前截面的同一语义维度；缺少模型或遥测覆盖的周保持为空白或
+灰色，不会被画成零。
+
+因此 README 的阅读顺序是活动，然后依次查看拓扑、分配、效率的当前/历史配对：先看算力何时
+发生，再看它在哪里运行及如何变化、选择了哪些模型及组合如何迁移，最后看 token flow 与路由
+行为如何演变。
+
+Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
+Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
+只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此采集器也会在
+日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
+不会从 token 总量或金额反推。
+
+七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。
 
 颜色强度按分布四分位数计算，而不是线性缩放，因此 trail workload 产生巨大峰值时，
-普通日期仍然可见。发布的 SVG 只包含聚合 token，并且仅在活动视图中包含 API 等价成本；
-它们不包含模型、设备、路径、提示词或仓库级数据。
+普通日期仍然可见。发布的 SVG 包含聚合 token、分配视图中的模型名称，以及活动视图中的
+API 等价成本；它们不包含设备身份、路径、提示词、会话或仓库级数据。
 
 ## 公开数据边界
 
 提交数据仅限 `data/` 下按日期聚合的用量，使用公开长期角色 `work`、`personal`、
-`devbox`，或临时 worker 的不透明 ID。生产脚本不会收集工作目录、仓库名称、提示词、
+`devbox`，或临时 worker 的不透明 ID。生产脚本不会持久化工作目录、仓库名称、提示词、
 会话标识、用户名或主机名。公开数据审计会忽略并禁止 `codex_by_repo.json` 等仓库级导出。
 
 发布或修改数据生产脚本前运行：
@@ -378,17 +396,43 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
+只要 ccusage 能拆分，新观测就会为每个 harness 的每个模型保留四类 token。Codex session
+事件还会贡献匿名的路由与额度遥测；Claude 事件贡献匿名速度数据；兼容的 TRAE session
+事件在确实提供时贡献与 Codex 相同的路由字段：
+
+```json
+{
+  "routing": {
+    "efforts": {
+      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+    },
+    "speeds": {
+      "fast": {"turns": 3, "totalTokens": 210000}
+    }
+  },
+  "quota": {
+    "windows": {"300": 64.0, "10080": 37.0},
+    "limitReached": false
+  }
+}
+```
+
+额度窗口 key 是匿名的分钟数。Message 与 session 标识只在内存中用于去重，绝不写入仓库。
+历史总量仍然有效，但源日志轮转后不会补出 component 或 routing 明细。
+
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
 
-traex（`traex.json`）使用与 Codex 相同的按日期结构，含按模型拆分的 token。它目前不记录 Fast
-tier，因此表内模型按官方 standard 价计算；未知模型只贡献 token，金额按 0。
+traex（`traex.json`）使用与 Codex 相同的按日期结构，代表司内的 TRAE CLI；其中记录的模型名
+才描述该 harness 背后实际提供的能力。价格不会假设 Fast tier，已登记模型按官方 standard
+价格计算，未知模型只贡献 token、金额按 0。若某个 TRAE 版本输出 Codex-compatible 路由字段，
+采集器会保存其匿名聚合，否则保持不可用。
 
 ## Trail 压缩
 
 只在一台写入设备上运行 `scripts/compact_trails.py`。最新数据早于七天前的 pod 会被累加
 到 `data/trail/rollup`，并在同一个提交中删除。每个临时 pod 目录代表独立 worker，
-因此 fold 使用加法聚合。
+因此 token、模型 component 和 routing 计数使用加法聚合；额度窗口保留观测到的最高压力。
 
 始终先预览：
 

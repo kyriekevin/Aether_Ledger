@@ -2,9 +2,10 @@
 
 - This repository is designed to be public. Never commit usernames, hostnames, absolute user
   paths, repository names, session identifiers, prompts, or raw session exports.
-- Treat `data/{work,personal,devbox}/{claude,codex,opencode}.json` and `data/trail/**` as generated cumulative stores.
+- Treat `data/{work,personal,devbox}/{claude,codex,opencode,traex}.json` and `data/trail/**` as generated cumulative stores.
   Do not hand-edit them.
-- Treat `assets/token-activity.svg` and `assets/token-topology.svg` as generated. Change
+- Treat `assets/token-activity.svg`, both `assets/token-topology*.svg`, both
+  `assets/compute-allocation*.svg`, and both `assets/compute-efficiency*.svg` as generated. Change
   `scripts/render_dashboard.py`, then regenerate the assets.
 - Use `uv` to run Python scripts and tests.
 - High-frequency data commits belong on `usage/YYYY-MM-DD`, using the Asia/Shanghai calendar day.

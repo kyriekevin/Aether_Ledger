@@ -218,13 +218,7 @@ def _identical_sources(pods: list[Path]) -> list[tuple[str, str, str, str, int]]
 
 
 def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
-    """Add a dead pod's per-day {totalTokens, totalCost, imageCount} additively.
-
-    Per-model `models` breakdowns are intentionally dropped — they are debug-only
-    and don't aggregate meaningfully across pods. The pusher only consumes
-    totalTokens / totalCost / imageCount (imageCount stays raw; the pusher applies
-    image_gen pricing at display time, same as for live pods).
-    """
+    """Add one independent dead pod's public daily aggregates into the rollup."""
     for fname in AGENT_FILES:
         store = _read_store(pod_dir / fname)
         roll = rollups[fname]
@@ -235,6 +229,47 @@ def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
             img = entry.get("imageCount", 0)
             if img or "imageCount" in agg:
                 agg["imageCount"] = agg.get("imageCount", 0) + img
+            for model, payload in entry.get("models", {}).items():
+                if not isinstance(payload, dict):
+                    continue
+                destination = agg.setdefault("models", {}).setdefault(
+                    model, {"totalTokens": 0}
+                )
+                for key in (
+                    "totalTokens", "inputTokens", "outputTokens",
+                    "cacheCreationTokens", "cacheReadTokens",
+                ):
+                    value = payload.get(key)
+                    if isinstance(value, int) and not isinstance(value, bool):
+                        destination[key] = destination.get(key, 0) + max(0, value)
+            for dimension, buckets in entry.get("routing", {}).items():
+                if not isinstance(buckets, dict):
+                    continue
+                destination_buckets = agg.setdefault("routing", {}).setdefault(
+                    dimension, {}
+                )
+                for label, payload in buckets.items():
+                    if not isinstance(payload, dict):
+                        continue
+                    destination = destination_buckets.setdefault(label, {})
+                    for key in ("turns", "totalTokens", "reasoningOutputTokens"):
+                        value = payload.get(key)
+                        if isinstance(value, int) and not isinstance(value, bool):
+                            destination[key] = destination.get(key, 0) + max(0, value)
+            quota = entry.get("quota")
+            if isinstance(quota, dict):
+                destination = agg.setdefault(
+                    "quota", {"windows": {}, "limitReached": False}
+                )
+                for minutes, percent in quota.get("windows", {}).items():
+                    if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                        destination["windows"][minutes] = max(
+                            float(percent),
+                            float(destination["windows"].get(minutes, 0.0)),
+                        )
+                destination["limitReached"] = bool(
+                    destination["limitReached"] or quota.get("limitReached", False)
+                )
 
 
 # ---------------------------------------------------------------------------

@@ -26,11 +26,18 @@ FORBIDDEN_TEXT = (
 FORBIDDEN_JSON_KEYS = frozenset({"cwd", "source"})
 STORE_ENTRY_KEYS = frozenset({
     "totalTokens", "totalCost", "costSource", "models", "imageCount",
+    "routing", "quota",
 })
 MODEL_ENTRY_KEYS = frozenset({
     "totalTokens", "inputTokens", "outputTokens",
     "cacheCreationTokens", "cacheReadTokens",
 })
+ROUTING_DIMENSIONS = {
+    "efforts": frozenset({"none", "low", "medium", "high", "xhigh", "max"}),
+    "speeds": frozenset({"standard", "fast"}),
+}
+ROUTING_BUCKET_KEYS = frozenset({"turns", "totalTokens", "reasoningOutputTokens"})
+QUOTA_KEYS = frozenset({"windows", "limitReached"})
 
 
 def tracked_files(root: Path) -> tuple[Path, ...]:
@@ -86,12 +93,10 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
         source = entry.get("costSource")
         if source is not None and source not in {"official", "unpriced"}:
             issues.append(f"{path}: {day} costSource must be 'official' or 'unpriced'")
-        models = entry.get("models")
-        if models is None:
-            continue
+        models = entry.get("models", {})
         if not isinstance(models, dict):
             issues.append(f"{path}: {day} models must be an object")
-            continue
+            models = {}
         for model, payload in models.items():
             if not isinstance(model, str) or not isinstance(payload, dict):
                 issues.append(f"{path}: {day} has an invalid model entry")
@@ -111,6 +116,75 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
                         f"{path}: {day} model {model!r} {key} must be "
                         "a non-negative integer"
                     )
+        routing = entry.get("routing")
+        if routing is not None:
+            if not isinstance(routing, dict):
+                issues.append(f"{path}: {day} routing must be an object")
+            else:
+                for dimension, buckets in routing.items():
+                    allowed = ROUTING_DIMENSIONS.get(dimension)
+                    if allowed is None:
+                        issues.append(
+                            f"{path}: {day} routing dimension {dimension!r} is not public"
+                        )
+                        continue
+                    if not isinstance(buckets, dict):
+                        issues.append(
+                            f"{path}: {day} routing {dimension} must be an object"
+                        )
+                        continue
+                    for label, bucket in buckets.items():
+                        if label not in allowed or not isinstance(bucket, dict):
+                            issues.append(
+                                f"{path}: {day} has invalid routing bucket "
+                                f"{dimension}.{label}"
+                            )
+                            continue
+                        for key in sorted(set(bucket).difference(ROUTING_BUCKET_KEYS)):
+                            issues.append(
+                                f"{path}: {day} routing {dimension}.{label} field "
+                                f"{key!r} is not public"
+                            )
+                        for key in ROUTING_BUCKET_KEYS:
+                            metric = bucket.get(key)
+                            if metric is not None and (
+                                not isinstance(metric, int)
+                                or isinstance(metric, bool)
+                                or metric < 0
+                            ):
+                                issues.append(
+                                    f"{path}: {day} routing {dimension}.{label} "
+                                    f"{key} must be a non-negative integer"
+                                )
+        quota = entry.get("quota")
+        if quota is not None:
+            if not isinstance(quota, dict):
+                issues.append(f"{path}: {day} quota must be an object")
+            else:
+                for key in sorted(set(quota).difference(QUOTA_KEYS)):
+                    issues.append(f"{path}: {day} quota field {key!r} is not public")
+                windows = quota.get("windows", {})
+                if not isinstance(windows, dict):
+                    issues.append(f"{path}: {day} quota windows must be an object")
+                else:
+                    for minutes, percent in windows.items():
+                        if not isinstance(minutes, str) or not minutes.isdigit():
+                            issues.append(
+                                f"{path}: {day} quota window {minutes!r} is invalid"
+                            )
+                        if (
+                            not isinstance(percent, (int, float))
+                            or isinstance(percent, bool)
+                            or not 0 <= percent <= 100
+                        ):
+                            issues.append(
+                                f"{path}: {day} quota window {minutes!r} must be 0..100"
+                            )
+                reached = quota.get("limitReached")
+                if reached is not None and not isinstance(reached, bool):
+                    issues.append(f"{path}: {day} quota limitReached must be boolean")
+
+
 def audit_tree(root: Path) -> list[str]:
     issues: list[str] = []
     for path in tracked_files(root):

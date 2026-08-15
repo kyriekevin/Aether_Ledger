@@ -34,8 +34,30 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
 
+![Aether Ledger 算力拓扑历史](assets/token-topology-history.svg)
+
 拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker。
+开发机与按需申请的 GPU trail worker；历史图用前 4 周与近 4 周对照，展示每个环境的
+周度总量与 harness 组合如何变化。
+
+## 分配
+
+![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
+
+![Aether Ledger 模型分配历史](assets/compute-allocation-history.svg)
+
+当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
+堆叠，展示各 harness 内部的模型迁移。
+
+## 效率
+
+![Aether Ledger token 效率面板](assets/compute-efficiency.svg)
+
+![Aether Ledger token 效率历史](assets/compute-efficiency-history.svg)
+
+效率图把 input/output/cache token flow 与模型选择分开，并补充可观测路由信号；历史图沿用
+同一套前 4 周/近 4 周时间轴，对齐 token flow 与 Effort、Reasoning、Fast、Quota 强度。
+缺失遥测保持为不可用，不会被画成零。
 
 ## 账本
 
