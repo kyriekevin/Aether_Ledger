@@ -301,11 +301,12 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-每个分析维度都将最近 30 日截面与独立的 12 周历史图配对。拓扑历史在 Work、Personal、
-Development 内使用绝对周度堆叠，柱高保留环境总量，颜色展示 harness 替换；分配历史在每个
-harness 内使用绝对量的 Top 3 模型 + Other 堆叠；效率历史把每周 input/output/cache 构成与
-Effort、Reasoning、Fast、Quota 强度格对齐。每张历史图都延续当前截面的同一语义维度；缺少
-模型或遥测覆盖的周保持为空白或灰色，不会被画成零。
+每个分析维度都将最近 30 日截面与独立的 8 周历史图配对。所有历史图使用相同的连续周桶，并
+明确分成前 4 周与近 4 周。拓扑历史在 Work、Personal、Development 内使用绝对周度堆叠，
+柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
++ Other 堆叠；效率历史把每周 input/output/cache 构成与 Effort、Reasoning、Fast、Quota
+强度格对齐。每张历史图都延续当前截面的同一语义维度；缺少模型或遥测覆盖的周保持为空白或
+灰色，不会被画成零。
 
 因此 README 的阅读顺序是活动，然后依次查看拓扑、分配、效率的当前/历史配对：先看算力何时
 发生，再看它在哪里运行及如何变化、选择了哪些模型及组合如何迁移，最后看 token flow 与路由

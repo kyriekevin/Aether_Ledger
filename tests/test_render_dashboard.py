@@ -119,10 +119,10 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
             self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
             self.assertEqual(totals.recent_topology[("development", "codex")], 460)
-            self.assertEqual(totals.window_starts[0], date(2026, 5, 10))
-            self.assertEqual(totals.weekly_topology[7][("work", "claude")], 100)
+            self.assertEqual(totals.window_starts[0], date(2026, 6, 7))
+            self.assertEqual(totals.weekly_topology[3][("work", "claude")], 100)
             self.assertEqual(
-                totals.weekly_topology[11][("development", "codex")], 460
+                totals.weekly_topology[7][("development", "codex")], 460
             )
 
 
@@ -223,28 +223,28 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(totals.speeds["claude"]["standard"]["turns"], 1)
             self.assertEqual(totals.components["traex"]["cacheReadTokens"], 50)
             self.assertEqual(totals.efforts["traex"]["medium"]["turns"], 1)
-            self.assertEqual(len(totals.trend_starts), 12)
-            self.assertEqual(totals.trend_starts[0], date(2026, 5, 10))
+            self.assertEqual(len(totals.trend_starts), 8)
+            self.assertEqual(totals.trend_starts[0], date(2026, 6, 7))
             self.assertEqual(
-                totals.weekly_model_tokens[7][("codex", "prior-example")], 999
+                totals.weekly_model_tokens[3][("codex", "prior-example")], 999
             )
             self.assertEqual(
-                totals.weekly_model_tokens[11][("codex", "gpt-example")], 100
+                totals.weekly_model_tokens[7][("codex", "gpt-example")], 100
             )
-            self.assertIn("codex", totals.weekly_model_observed[7])
-            self.assertIn("traex", totals.weekly_model_observed[11])
+            self.assertIn("codex", totals.weekly_model_observed[3])
+            self.assertIn("traex", totals.weekly_model_observed[7])
             self.assertEqual(
-                totals.weekly_components[7][("codex", "cacheReadTokens")], 700
+                totals.weekly_components[3][("codex", "cacheReadTokens")], 700
             )
-            self.assertIn("codex", totals.weekly_component_observed[7])
+            self.assertIn("codex", totals.weekly_component_observed[3])
             self.assertEqual(
-                totals.weekly_efforts[7][("codex", "medium")], 999
+                totals.weekly_efforts[3][("codex", "medium")], 999
             )
-            self.assertEqual(totals.weekly_reasoning[7]["codex"], 30)
+            self.assertEqual(totals.weekly_reasoning[3]["codex"], 30)
             self.assertEqual(
-                totals.weekly_speeds[11][("codex", "fast")], 100
+                totals.weekly_speeds[7][("codex", "fast")], 100
             )
-            self.assertEqual(totals.weekly_quota[11]["codex"], 65.0)
+            self.assertEqual(totals.weekly_quota[7]["codex"], 65.0)
 
 
 class DashboardTests(unittest.TestCase):
@@ -332,7 +332,9 @@ class DashboardTests(unittest.TestCase):
             self.assertIn(".topology-label-agent-claude-4", svg)
             self.assertNotIn(".heatmap-label-0", svg)
             self.assertIn("Topology history", history_svg)
-            self.assertIn("12 weekly absolute stacks", history_svg)
+            self.assertIn("previous 4 weeks vs latest 4 weeks", history_svg)
+            self.assertIn("PREVIOUS 4 WEEKS", history_svg)
+            self.assertIn("LATEST 4 WEEKS", history_svg)
             self.assertIn('data-role="development"', history_svg)
             self.assertIn('data-agent="codex"', history_svg)
             self.assertIn('data-week="2026-07-26"', history_svg)
@@ -391,8 +393,8 @@ class DashboardTests(unittest.TestCase):
                 ("traex", "cheap-example"): 50,
             },
             trend_starts=tuple(
-                date(2026, 5, 10) + timedelta(days=index * 7)
-                for index in range(12)
+                date(2026, 6, 7) + timedelta(days=index * 7)
+                for index in range(8)
             ),
             weekly_model_tokens=tuple(
                 {
@@ -400,10 +402,10 @@ class DashboardTests(unittest.TestCase):
                     ("codex", "gpt-example"): (index + 1) * 20,
                     ("traex", "cheap-example"): (index + 1) * 5,
                 }
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_model_observed=tuple(
-                {"claude", "codex", "traex"} for _ in range(12)
+                {"claude", "codex", "traex"} for _ in range(8)
             ),
             weekly_components=tuple(
                 {
@@ -418,11 +420,11 @@ class DashboardTests(unittest.TestCase):
                         )
                     )
                 }
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_component_observed=tuple(
                 set() if index == 0 else {"claude", "codex", "traex"}
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_efforts=tuple(
                 {
@@ -430,14 +432,14 @@ class DashboardTests(unittest.TestCase):
                     ("codex", "medium"): (index + 1) * 5,
                     ("traex", "medium"): (index + 1) * 6,
                 }
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_reasoning=tuple(
                 {"codex": index + 1, "traex": index + 1}
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_effort_observed=tuple(
-                {"codex", "traex"} for _ in range(12)
+                {"codex", "traex"} for _ in range(8)
             ),
             weekly_speeds=tuple(
                 {
@@ -445,17 +447,17 @@ class DashboardTests(unittest.TestCase):
                     ("codex", "standard"): (index + 1) * 5,
                     ("codex", "fast"): (index + 1) * 5,
                 }
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_speed_observed=tuple(
-                {"claude", "codex"} for _ in range(12)
+                {"claude", "codex"} for _ in range(8)
             ),
             weekly_quota=tuple(
                 {"codex": 20.0 + index, "traex": 10.0 + index}
-                for index in range(12)
+                for index in range(8)
             ),
             weekly_quota_observed=tuple(
-                {"codex", "traex"} for _ in range(12)
+                {"codex", "traex"} for _ in range(8)
             ),
             efforts={
                 agent: {
@@ -528,6 +530,9 @@ class DashboardTests(unittest.TestCase):
         self.assertNotIn("cache read", allocation_svg)
         self.assertIn("Model allocation history", allocation_history_svg)
         self.assertIn("Top 3 models + Other", allocation_history_svg)
+        self.assertIn("previous 4 weeks vs latest 4 weeks", allocation_history_svg)
+        self.assertIn("PREVIOUS 4 WEEKS", allocation_history_svg)
+        self.assertIn("LATEST 4 WEEKS", allocation_history_svg)
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
         self.assertIn("Token efficiency", efficiency_svg)
@@ -542,6 +547,9 @@ class DashboardTests(unittest.TestCase):
         self.assertNotRegex(efficiency_svg, r"[+-]?\d+(?:\.\d+)?pp\b")
         self.assertIn("Efficiency history", efficiency_history_svg)
         self.assertIn("Token flow", efficiency_history_svg)
+        self.assertIn("previous 4 vs latest 4", efficiency_history_svg)
+        self.assertIn("PREVIOUS 4W", efficiency_history_svg)
+        self.assertIn("LATEST 4W", efficiency_history_svg)
         for signal in ("effort", "reasoning", "fast", "quota"):
             self.assertIn(f'data-signal="{signal}"', efficiency_history_svg)
         self.assertIn("component detail unavailable", efficiency_history_svg)

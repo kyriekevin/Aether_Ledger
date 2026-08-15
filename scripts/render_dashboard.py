@@ -198,6 +198,8 @@ CELL_SIZE = 16
 CELL_GAP = 4
 CELL_STEP = CELL_SIZE + CELL_GAP
 WEEKS = 53
+HISTORY_WEEKS = 8
+HISTORY_PERIOD_WEEKS = 4
 
 
 @dataclass(frozen=True)
@@ -321,9 +323,9 @@ def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
 def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
     """Aggregate recent token usage by public environment and agent."""
     recent_start = as_of - timedelta(days=29)
-    trend_start = as_of - timedelta(days=83)
+    trend_start = as_of - timedelta(days=HISTORY_WEEKS * 7 - 1)
     window_starts = tuple(
-        trend_start + timedelta(days=index * 7) for index in range(12)
+        trend_start + timedelta(days=index * 7) for index in range(HISTORY_WEEKS)
     )
     recent_roles = {role: 0 for role in TOPOLOGY_ROLE_ORDER}
     recent_agents = {agent: 0 for agent in TOPOLOGY_AGENT_ORDER}
@@ -359,9 +361,9 @@ def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
 def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
     """Aggregate the trailing 30-day harness, model, and routing dimensions."""
     recent_start = as_of - timedelta(days=29)
-    trend_start = as_of - timedelta(days=83)
+    trend_start = as_of - timedelta(days=HISTORY_WEEKS * 7 - 1)
     trend_starts = tuple(
-        trend_start + timedelta(days=index * 7) for index in range(12)
+        trend_start + timedelta(days=index * 7) for index in range(HISTORY_WEEKS)
     )
     agent_tokens = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
     model_tokens: defaultdict[tuple[str, str], int] = defaultdict(int)
@@ -897,13 +899,13 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
         )
     )
     title = f"AI compute topology history through {topology.as_of.isoformat()}"
-    height = 340
+    height = 356
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Twelve weekly absolute token stacks by harness within '
-        'Work, Personal, and Development.</desc>',
+        '  <desc id="desc">Eight weekly absolute token stacks by harness within '
+        'Work, Personal, and Development, split into previous and latest four-week periods.</desc>',
         *_theme_style_lines(allocation=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
@@ -912,7 +914,7 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{topology.window_starts[0].isoformat()}–{topology.as_of.isoformat()} · '
-        '12 weekly absolute stacks · each environment uses its own scale</text>',
+        '8 weekly stacks · previous 4 weeks vs latest 4 weeks · per-environment scale</text>',
     ]
     legend_x = 650
     for index, agent in enumerate(agents):
@@ -924,13 +926,14 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
             f'font-size="11">{escape(AGENT_LABELS[agent])}</text>',
         ))
 
-    panel_y, panel_w, panel_h, panel_gap = 106, 372, 210, 16
-    plot_h, bar_w, bar_gap = 118, 20, 8
+    panel_y, panel_w, panel_h, panel_gap = 106, 372, 226, 16
+    plot_h, bar_w, bar_gap = 112, 30, 11
     for column, role in enumerate(TOPOLOGY_ROLE_ORDER):
         x = 16 + column * (panel_w + panel_gap)
         plot_x = x + 18
-        plot_top = panel_y + 50
+        plot_top = panel_y + 72
         baseline = plot_top + plot_h
+        divider_x = plot_x + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap) - bar_gap / 2
         weekly_totals = [
             sum(window.get((role, agent), 0) for agent in agents)
             for window in topology.weekly_topology
@@ -948,6 +951,14 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
             f'peak {_compact_number(maximum)}</text>',
             f'  <line class="dashboard-border" x1="{plot_x}" y1="{baseline}" '
             f'x2="{plot_x + 328}" y2="{baseline}" stroke-width="1"/>',
+            f'  <text class="dashboard-muted" x="{plot_x + 76}" y="{panel_y + 61}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">PREVIOUS 4 WEEKS</text>',
+            f'  <text class="dashboard-muted" x="{plot_x + 246}" y="{panel_y + 61}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">LATEST 4 WEEKS</text>',
+            f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{plot_top - 5}" '
+            f'x2="{divider_x:.1f}" y2="{baseline + 4}" stroke-width="1" stroke-dasharray="2 3"/>',
         ))
         for week_index, window in enumerate(topology.weekly_topology):
             bx = plot_x + week_index * (bar_w + bar_gap)
@@ -970,10 +981,10 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
                     '  </rect>',
                 ))
         lines.extend((
-            f'  <text class="dashboard-muted" x="{plot_x}" y="{panel_y + 193}" '
+            f'  <text class="dashboard-muted" x="{plot_x}" y="{panel_y + 212}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{topology.window_starts[0].strftime("%b %-d")}</text>',
-            f'  <text class="dashboard-muted" x="{plot_x + 328}" y="{panel_y + 193}" '
+            f'  <text class="dashboard-muted" x="{plot_x + 328}" y="{panel_y + 212}" '
             'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{topology.window_starts[-1].strftime("%b %-d")}</text>',
         ))
@@ -1147,8 +1158,9 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Twelve weekly absolute model-token stacks within Claude, '
-        'Codex, and TRAE, with missing model coverage left blank.</desc>',
+        '  <desc id="desc">Eight weekly absolute model-token stacks within Claude, '
+        'Codex, and TRAE, split into previous and latest four-week periods, with missing '
+        'model coverage left blank.</desc>',
         *_theme_style_lines(allocation=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
@@ -1157,11 +1169,11 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.trend_starts[0].isoformat()}–{allocation.as_of.isoformat()} · '
-        '12 weekly absolute stacks · Top 3 models + Other · blank = unavailable · per-harness scale</text>',
+        '8 weekly stacks · previous 4 weeks vs latest 4 weeks · Top 3 models + Other · blank = unavailable</text>',
     ]
 
     panel_y, panel_w, panel_h, panel_gap = 92, 372, 250, 16
-    plot_h, bar_w, bar_gap = 112, 20, 8
+    plot_h, bar_w, bar_gap = 112, 30, 11
     for column, agent in enumerate(("claude", "codex", "traex")):
         x = 16 + column * (panel_w + panel_gap)
         totals_by_model: defaultdict[str, int] = defaultdict(int)
@@ -1201,7 +1213,7 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
             f'font-size="15" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
             f'  <text class="dashboard-muted" x="{x + panel_w - 18}" y="{panel_y + 30}" '
             'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="11">{coverage}/12 weeks observed</text>',
+            f'font-size="11">{coverage}/{HISTORY_WEEKS} weeks observed</text>',
         ))
         for series_index, model in enumerate(series):
             legend_x = x + 18 + (series_index % 2) * 174
@@ -1220,10 +1232,19 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
         plot_x = x + 18
         plot_top = panel_y + 102
         baseline = plot_top + plot_h
-        lines.append(
+        divider_x = plot_x + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap) - bar_gap / 2
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{plot_x + 76}" y="{plot_top - 8}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">PREVIOUS 4 WEEKS</text>',
+            f'  <text class="dashboard-muted" x="{plot_x + 241}" y="{plot_top - 8}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">LATEST 4 WEEKS</text>',
             f'  <line class="dashboard-border" x1="{plot_x}" y1="{baseline}" '
-            f'x2="{plot_x + 328}" y2="{baseline}" stroke-width="1"/>'
-        )
+            f'x2="{plot_x + 328}" y2="{baseline}" stroke-width="1"/>',
+            f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{plot_top - 5}" '
+            f'x2="{divider_x:.1f}" y2="{baseline + 4}" stroke-width="1" stroke-dasharray="2 3"/>',
+        ))
         for week_index, window in enumerate(allocation.weekly_model_tokens):
             if agent not in allocation.weekly_model_observed[week_index]:
                 continue
@@ -1410,8 +1431,9 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Twelve weekly token-component compositions and observed '
-        'effort, reasoning, Fast, and quota signals within each harness.</desc>',
+        '  <desc id="desc">Eight weekly token-component compositions and observed '
+        'effort, reasoning, Fast, and quota signals within each harness, split into '
+        'previous and latest four-week periods.</desc>',
         *_theme_style_lines(allocation=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
@@ -1420,7 +1442,7 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.trend_starts[0].isoformat()}–{allocation.as_of.isoformat()} · '
-        'weekly token-flow composition + routing intensity · darker = higher · gray = unavailable</text>',
+        '8 weeks · previous 4 vs latest 4 · token flow + routing intensity · gray = unavailable</text>',
     ]
 
     legend_x = 600
@@ -1436,7 +1458,7 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
         ))
 
     panel_y, panel_w, panel_h, panel_gap = 106, 372, 300, 16
-    grid_offset, cell_w, cell_gap = 90, 18, 4
+    grid_offset, cell_w, cell_gap = 90, 30, 3
     effort_weights = {name: index for index, name in enumerate(EFFORT_ORDER)}
     for column, agent in enumerate(("claude", "codex", "traex")):
         x = 16 + column * (panel_w + panel_gap)
@@ -1450,12 +1472,26 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
             f'font-size="15" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
         ))
 
-        flow_top, flow_h = panel_y + 50, 68
-        lines.append(
+        flow_top, flow_h = panel_y + 54, 68
+        divider_x = (
+            grid_x
+            + HISTORY_PERIOD_WEEKS * (cell_w + cell_gap)
+            - cell_gap / 2
+        )
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{grid_x + 61}" y="{flow_top - 7}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">PREVIOUS 4W</text>',
+            f'  <text class="dashboard-muted" x="{grid_x + 194}" y="{flow_top - 7}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">LATEST 4W</text>',
             f'  <text class="dashboard-muted" x="{x + 18}" y="{flow_top + 38}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="11">Token flow</text>'
-        )
+            'font-size="11">Token flow</text>',
+            f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{flow_top - 5}" '
+            f'x2="{divider_x:.1f}" y2="{panel_y + 278}" stroke-width="1" '
+            'stroke-dasharray="2 3"/>',
+        ))
         for week_index, window in enumerate(allocation.weekly_components):
             bx = grid_x + week_index * (cell_w + cell_gap)
             if agent not in allocation.weekly_component_observed[week_index]:
@@ -1489,7 +1525,7 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
             f'  <text class="dashboard-muted" x="{grid_x}" y="{flow_top + 84}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-            f'  <text class="dashboard-muted" x="{grid_x + 260}" y="{flow_top + 84}" '
+            f'  <text class="dashboard-muted" x="{grid_x + 261}" y="{flow_top + 84}" '
             'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
         ))
@@ -1503,7 +1539,7 @@ def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="10">{label}</text>'
             )
-            for week_index in range(12):
+            for week_index in range(HISTORY_WEEKS):
                 if label == "Effort":
                     observed = agent in allocation.weekly_effort_observed[week_index]
                     buckets = allocation.weekly_efforts[week_index]

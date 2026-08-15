@@ -334,11 +334,13 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Each analytical dimension pairs that trailing-30-day snapshot with a separate twelve-week history
-asset. Topology history uses absolute weekly stacks within Work, Personal, and Development, so bar
-height preserves each environment's total while color shows harness substitution. Allocation
-history uses absolute Top 3 model + Other stacks within each harness. Efficiency history aligns
-weekly input/output/cache composition with effort, reasoning, Fast, and quota intensity cells.
+Each analytical dimension pairs that trailing-30-day snapshot with a separate eight-week history
+asset. Every history uses the same adjacent weekly buckets and explicitly splits them into the
+previous four weeks and the latest four weeks. Topology history uses absolute weekly stacks within
+Work, Personal, and Development, so bar height preserves each environment's total while color
+shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
+each harness. Efficiency history aligns weekly input/output/cache composition with effort,
+reasoning, Fast, and quota intensity cells.
 Every panel keeps the same semantic dimension as its current snapshot; missing model or telemetry
 coverage stays blank or gray rather than being plotted as zero.
 

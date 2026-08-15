@@ -38,7 +38,8 @@ bill. Active days count every calendar day with a positive token total.
 ![Aether Ledger compute topology history](assets/token-topology-history.svg)
 
 Topology shows which active agents serve each public environment over the latest 30 days.
-The history view shows how each environment's total and harness mix changed over 12 weeks.
+The history view compares the previous four weeks with the latest four weeks, showing how each
+environment's weekly total and harness mix changed.
 `Development` combines persistent devboxes with on-demand GPU trail workers.
 
 ## Allocation
@@ -47,8 +48,8 @@ The history view shows how each environment's total and harness mix changed over
 
 ![Aether Ledger model allocation history](assets/compute-allocation-history.svg)
 
-The current view keeps the trailing 30-day model mix; the history view shows each harness's
-weekly model migration as absolute Top 3 + Other stacks.
+The current view keeps the trailing 30-day model mix; the history view compares four weekly model
+stacks with the preceding four, using absolute Top 3 + Other values within each harness.
 
 ## Efficiency
 
@@ -57,8 +58,9 @@ weekly model migration as absolute Top 3 + Other stacks.
 ![Aether Ledger token efficiency history](assets/compute-efficiency-history.svg)
 
 Efficiency separates input/output/cache token flow from model choice and adds observable routing
-signals. Its history view aligns weekly token flow with effort, reasoning, Fast, and quota
-intensity. Missing telemetry stays unavailable rather than becoming zero.
+signals. Its history view uses the same previous-four/latest-four weekly axis for token flow,
+effort, reasoning, Fast, and quota intensity. Missing telemetry stays unavailable rather than
+becoming zero.
 
 ## Ledger
 
