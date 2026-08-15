@@ -326,6 +326,11 @@ The activity SVG contains:
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
+The trend SVG uses twelve adjacent seven-day windows ending on the latest completed snapshot.
+Stack height is absolute token volume on a linear scale and color is the invoking harness. Its
+footer compares the latest 30 days with the immediately preceding 30 days, avoiding a misleading
+partial-calendar-month comparison.
+
 The topology SVG crosses public environment roles with agents active in the trailing 30 days.
 Each environment has its own restrained hue, while intensity within that row shows an agent's
 share of the environment. OpenCode-launched history is retained as `Legacy`. The recent window
@@ -334,11 +339,12 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-The README orders the views as activity, topology, allocation, then efficiency: when compute
-happened, where each harness served, which models it used, and finally how its tokens flowed. The
-allocation SVG therefore does not repeat the topology's overall harness-share bar and is limited to
-the trailing 30-day model mix. The efficiency SVG separately compares input/output/cache flow for
-Claude, Codex, and TRAE, followed by routing signals where each harness exposes them.
+The README orders the views as activity, trend, topology, allocation, then efficiency: when
+compute happened, how volume and harness mix changed, where each harness served, which models it
+used, and finally how its tokens flowed. The allocation SVG shows the trailing 30-day model mix
+with percentage-point changes against the preceding 30 days. The efficiency SVG separately
+compares input/output/cache flow for Claude, Codex, and TRAE, followed by routing signals where
+each harness exposes them.
 
 Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
 Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
@@ -347,7 +353,7 @@ rollout format, the collector also accepts their effort, speed, reasoning, and q
 present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
 total tokens or cost.
 
-All four dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All five dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their

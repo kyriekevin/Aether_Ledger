@@ -5,7 +5,7 @@ import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -13,16 +13,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from render_dashboard import (  # noqa: E402
     AllocationTotals,
     DailyTotals,
+    TrendTotals,
     aggregate_allocation,
+    aggregate_trend,
     aggregate_topology,
     aggregate_daily,
     generate,
     generate_allocation,
     generate_efficiency,
+    generate_trend,
     generate_topology,
     render_allocation_svg,
     render_efficiency_svg,
     render_svg,
+    render_trend_svg,
     render_topology_svg,
 )
 
@@ -110,6 +114,29 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(totals.recent_topology[("development", "codex")], 460)
 
 
+class AggregateTrendTests(unittest.TestCase):
+    def test_uses_equal_weekly_windows_and_adjacent_thirty_day_comparison(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-07-10": {"totalTokens": 100},
+            }), encoding="utf-8")
+            (store.parent / "codex.json").write_text(json.dumps({
+                "2026-08-10": {"totalTokens": 200},
+            }), encoding="utf-8")
+
+            totals = aggregate_trend(root, date(2026, 8, 14))
+
+            self.assertEqual(len(totals.window_starts), 12)
+            self.assertEqual(totals.window_starts[0], date(2026, 5, 23))
+            self.assertEqual(totals.weekly_tokens[6]["claude"], 100)
+            self.assertEqual(totals.weekly_tokens[11]["codex"], 200)
+            self.assertEqual(totals.recent_30_tokens, 200)
+            self.assertEqual(totals.prior_30_tokens, 100)
+
+
 class AggregateAllocationTests(unittest.TestCase):
     def test_keeps_only_privacy_safe_recent_routing_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -181,6 +208,8 @@ class AggregateAllocationTests(unittest.TestCase):
 
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
+            self.assertEqual(totals.prior_agent_tokens["codex"], 999)
+            self.assertEqual(totals.prior_model_tokens, {})
             self.assertEqual(totals.efforts["codex"]["low"]["turns"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
             self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
@@ -232,6 +261,51 @@ class DashboardTests(unittest.TestCase):
             self.assertTrue(generate(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate(root, output, check=True))
+
+    def test_trend_svg_compares_equal_windows_and_exposes_harness_stacks(self) -> None:
+        starts = tuple(
+            date(2026, 5, 23) + timedelta(days=index * 7)
+            for index in range(12)
+        )
+        windows = tuple(
+            {
+                "claude": 10 * (index + 1),
+                "codex": 20 * (index + 1),
+                "traex": 5 * index,
+                "legacy": 0,
+            }
+            for index in range(12)
+        )
+        svg = render_trend_svg(TrendTotals(
+            as_of=date(2026, 8, 14),
+            window_starts=starts,
+            weekly_tokens=windows,
+            recent_30_tokens=200,
+            prior_30_tokens=100,
+        ))
+
+        ET.fromstring(svg)
+        self.assertIn("Compute trend", svg)
+        self.assertIn("12 adjacent 7-day windows", svg)
+        self.assertIn("Latest 30d 200 · prior 30d 100 · +100.0%", svg)
+        self.assertIn('data-window="2026-05-23"', svg)
+        self.assertIn('data-agent="traex"', svg)
+        self.assertIn('@media (prefers-color-scheme: dark)', svg)
+
+    def test_generate_trend_defaults_to_latest_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-07-31": {"totalTokens": 100}}),
+                encoding="utf-8",
+            )
+            output = root / "assets" / "trend.svg"
+
+            self.assertTrue(generate_trend(root, output))
+            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_trend(root, output, check=True))
 
     def test_topology_svg_exposes_cross_dimension_shares_without_node_ids(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -315,6 +389,14 @@ class DashboardTests(unittest.TestCase):
                 ("codex", "gpt-example"): 200,
                 ("traex", "cheap-example"): 50,
             },
+            prior_agent_tokens={
+                "claude": 80, "codex": 100, "traex": 20, "legacy": 0,
+            },
+            prior_model_tokens={
+                ("claude", "claude-opus-example"): 80,
+                ("codex", "gpt-example"): 100,
+                ("traex", "cheap-example"): 20,
+            },
             efforts={
                 agent: {
                     effort: {
@@ -370,6 +452,8 @@ class DashboardTests(unittest.TestCase):
         ET.fromstring(allocation_svg)
         ET.fromstring(efficiency_svg)
         self.assertIn("Model allocation", allocation_svg)
+        self.assertIn("SHARE · VS PRIOR 30D", allocation_svg)
+        self.assertIn("+0.0pp", allocation_svg)
         self.assertIn("claude-opus-example", allocation_svg)
         self.assertIn("cheap-example", allocation_svg)
         self.assertNotIn("Observed routing signals", allocation_svg)

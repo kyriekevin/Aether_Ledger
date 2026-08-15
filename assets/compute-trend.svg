@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="390" viewBox="0 0 1180 390" role="img" aria-labelledby="title desc">
+  <title id="title">AI compute trend through 2026-08-14</title>
+  <desc id="desc">Twelve adjacent seven-day token windows stacked by harness, plus the latest 30 days compared with the preceding 30 days.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="390" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute trend</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-05-23–2026-08-14 · 12 adjacent 7-day windows · linear token scale</text>
+  <circle class="agent-claude" cx="725" cy="62" r="5"/>
+  <text class="dashboard-secondary" x="736" y="67" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Claude</text>
+  <circle class="agent-codex" cx="835" cy="62" r="5"/>
+  <text class="dashboard-secondary" x="846" y="67" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Codex</text>
+  <circle class="agent-traex" cx="945" cy="62" r="5"/>
+  <text class="dashboard-secondary" x="956" y="67" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">TRAE</text>
+  <circle class="agent-legacy" cx="1055" cy="62" r="5"/>
+  <text class="dashboard-secondary" x="1066" y="67" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Legacy</text>
+  <line class="dashboard-border" x1="90" y1="316.0" x2="1164" y2="316.0" stroke-width="1"/>
+  <text class="dashboard-muted" x="78" y="320.0" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0</text>
+  <line class="dashboard-border" x1="90" y1="206.0" x2="1164" y2="206.0" stroke-width="1"/>
+  <text class="dashboard-muted" x="78" y="210.0" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">948M</text>
+  <line class="dashboard-border" x1="90" y1="96.0" x2="1164" y2="96.0" stroke-width="1"/>
+  <text class="dashboard-muted" x="78" y="100.0" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">1.9B</text>
+  <rect class="agent-claude" x="90.0" y="197.1" width="78.5" height="118.9" data-window="2026-05-23" data-agent="claude" data-tokens="1024833784">
+    <title>2026-05-23–2026-05-29 · Claude: 1B tokens</title>
+  </rect>
+  <rect class="agent-codex" x="90.0" y="149.8" width="78.5" height="47.3" data-window="2026-05-23" data-agent="codex" data-tokens="407715336">
+    <title>2026-05-23–2026-05-29 · Codex: 408M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="129.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 23</text>
+  <rect class="agent-claude" x="180.5" y="209.2" width="78.5" height="106.8" data-window="2026-05-30" data-agent="claude" data-tokens="920896165">
+    <title>2026-05-30–2026-06-05 · Claude: 921M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="180.5" y="169.4" width="78.5" height="39.7" data-window="2026-05-30" data-agent="codex" data-tokens="342621867">
+    <title>2026-05-30–2026-06-05 · Codex: 343M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="219.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 30</text>
+  <rect class="agent-claude" x="271.0" y="245.4" width="78.5" height="70.6" data-window="2026-06-06" data-agent="claude" data-tokens="608311000">
+    <title>2026-06-06–2026-06-12 · Claude: 608M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="271.0" y="219.0" width="78.5" height="26.5" data-window="2026-06-06" data-agent="codex" data-tokens="228089981">
+    <title>2026-06-06–2026-06-12 · Codex: 228M tokens</title>
+  </rect>
+  <rect class="agent-legacy" x="271.0" y="219.0" width="78.5" height="0.0" data-window="2026-06-06" data-agent="legacy" data-tokens="147042">
+    <title>2026-06-06–2026-06-12 · Legacy: 147K tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="310.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jun 6</text>
+  <rect class="agent-claude" x="361.5" y="276.3" width="78.5" height="39.7" data-window="2026-06-13" data-agent="claude" data-tokens="342454191">
+    <title>2026-06-13–2026-06-19 · Claude: 342M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="361.5" y="252.8" width="78.5" height="23.5" data-window="2026-06-13" data-agent="codex" data-tokens="202195358">
+    <title>2026-06-13–2026-06-19 · Codex: 202M tokens</title>
+  </rect>
+  <rect class="agent-legacy" x="361.5" y="252.7" width="78.5" height="0.1" data-window="2026-06-13" data-agent="legacy" data-tokens="663304">
+    <title>2026-06-13–2026-06-19 · Legacy: 663K tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="400.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jun 13</text>
+  <rect class="agent-claude" x="452.0" y="232.2" width="78.5" height="83.8" data-window="2026-06-20" data-agent="claude" data-tokens="722266534">
+    <title>2026-06-20–2026-06-26 · Claude: 722M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="452.0" y="184.3" width="78.5" height="47.9" data-window="2026-06-20" data-agent="codex" data-tokens="413221662">
+    <title>2026-06-20–2026-06-26 · Codex: 413M tokens</title>
+  </rect>
+  <rect class="agent-legacy" x="452.0" y="182.1" width="78.5" height="2.2" data-window="2026-06-20" data-agent="legacy" data-tokens="18757098">
+    <title>2026-06-20–2026-06-26 · Legacy: 18.8M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="491.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jun 20</text>
+  <rect class="agent-claude" x="542.5" y="298.2" width="78.5" height="17.8" data-window="2026-06-27" data-agent="claude" data-tokens="153251267">
+    <title>2026-06-27–2026-07-03 · Claude: 153M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="542.5" y="280.3" width="78.5" height="17.9" data-window="2026-06-27" data-agent="codex" data-tokens="154573770">
+    <title>2026-06-27–2026-07-03 · Codex: 155M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="581.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jun 27</text>
+  <rect class="agent-claude" x="633.0" y="279.6" width="78.5" height="36.4" data-window="2026-07-04" data-agent="claude" data-tokens="313369425">
+    <title>2026-07-04–2026-07-10 · Claude: 313M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="633.0" y="228.8" width="78.5" height="50.8" data-window="2026-07-04" data-agent="codex" data-tokens="438017122">
+    <title>2026-07-04–2026-07-10 · Codex: 438M tokens</title>
+  </rect>
+  <rect class="agent-traex" x="633.0" y="227.8" width="78.5" height="1.0" data-window="2026-07-04" data-agent="traex" data-tokens="8711816">
+    <title>2026-07-04–2026-07-10 · TRAE: 8.7M tokens</title>
+  </rect>
+  <rect class="agent-legacy" x="633.0" y="226.5" width="78.5" height="1.3" data-window="2026-07-04" data-agent="legacy" data-tokens="10988541">
+    <title>2026-07-04–2026-07-10 · Legacy: 11M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="672.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 4</text>
+  <rect class="agent-claude" x="723.5" y="305.1" width="78.5" height="10.9" data-window="2026-07-11" data-agent="claude" data-tokens="93865846">
+    <title>2026-07-11–2026-07-17 · Claude: 93.9M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="723.5" y="265.7" width="78.5" height="39.4" data-window="2026-07-11" data-agent="codex" data-tokens="339838741">
+    <title>2026-07-11–2026-07-17 · Codex: 34M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="762.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 11</text>
+  <rect class="agent-claude" x="814.0" y="311.2" width="78.5" height="4.8" data-window="2026-07-18" data-agent="claude" data-tokens="41434802">
+    <title>2026-07-18–2026-07-24 · Claude: 41.4M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="814.0" y="129.9" width="78.5" height="181.3" data-window="2026-07-18" data-agent="codex" data-tokens="1562778026">
+    <title>2026-07-18–2026-07-24 · Codex: 1.6B tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="853.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 18</text>
+  <rect class="agent-claude" x="904.5" y="299.2" width="78.5" height="16.8" data-window="2026-07-25" data-agent="claude" data-tokens="145201464">
+    <title>2026-07-25–2026-07-31 · Claude: 145M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="904.5" y="160.5" width="78.5" height="138.7" data-window="2026-07-25" data-agent="codex" data-tokens="1195437840">
+    <title>2026-07-25–2026-07-31 · Codex: 1.2B tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="943.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 25</text>
+  <rect class="agent-claude" x="995.0" y="289.9" width="78.5" height="26.1" data-window="2026-08-01" data-agent="claude" data-tokens="225091769">
+    <title>2026-08-01–2026-08-07 · Claude: 225M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="995.0" y="110.2" width="78.5" height="179.7" data-window="2026-08-01" data-agent="codex" data-tokens="1549029629">
+    <title>2026-08-01–2026-08-07 · Codex: 1.5B tokens</title>
+  </rect>
+  <rect class="agent-traex" x="995.0" y="107.4" width="78.5" height="2.8" data-window="2026-08-01" data-agent="traex" data-tokens="23713932">
+    <title>2026-08-01–2026-08-07 · TRAE: 23.7M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="1034.2" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 1</text>
+  <rect class="agent-claude" x="1085.5" y="280.9" width="78.5" height="35.1" data-window="2026-08-08" data-agent="claude" data-tokens="302751394">
+    <title>2026-08-08–2026-08-14 · Claude: 303M tokens</title>
+  </rect>
+  <rect class="agent-codex" x="1085.5" y="206.4" width="78.5" height="74.5" data-window="2026-08-08" data-agent="codex" data-tokens="641949142">
+    <title>2026-08-08–2026-08-14 · Codex: 642M tokens</title>
+  </rect>
+  <rect class="agent-traex" x="1085.5" y="96.0" width="78.5" height="110.4" data-window="2026-08-08" data-agent="traex" data-tokens="951667676">
+    <title>2026-08-08–2026-08-14 · TRAE: 952M tokens</title>
+  </rect>
+  <text class="dashboard-muted" x="1124.8" y="338" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 8</text>
+  <text class="dashboard-primary" x="16" y="372" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="600">Latest 30d 6.7B · prior 30d 3B · +127.2%</text>
+</svg>

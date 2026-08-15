@@ -30,6 +30,12 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
+## 趋势
+
+![Aether Ledger 算力趋势面板](assets/compute-trend.svg)
+
+十二个等长的 7 日窗口展示 token 总量与 harness 构成变化；底部比较最近 30 日与此前 30 日。
+
 ## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
@@ -40,8 +46,6 @@ token 总量大于零的自然日累计。
 ## 分配
 
 ![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
-
-分配图继续下钻每个 harness 内的模型组合，不再重复拓扑视图。
 
 ## 效率
 
