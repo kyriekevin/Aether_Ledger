@@ -20,6 +20,45 @@ class SharedStoreCoverageTests(unittest.TestCase):
     def test_trail_compaction_covers_traex(self) -> None:
         self.assertIn("traex.json", compact_trails.AGENT_FILES)
 
+    def test_trail_compaction_preserves_allocation_telemetry(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rollups = {"codex.json": {}}
+            for index, (tokens, quota) in enumerate(((100, 40.0), (200, 75.0))):
+                pod = root / f"pod-{index}"
+                pod.mkdir()
+                (pod / "codex.json").write_text(json.dumps({
+                    "2026-08-01": {
+                        "totalTokens": tokens,
+                        "totalCost": 1.0,
+                        "models": {
+                            "gpt-example": {
+                                "totalTokens": tokens,
+                                "inputTokens": tokens // 2,
+                                "cacheReadTokens": tokens // 2,
+                            }
+                        },
+                        "routing": {
+                            "efforts": {
+                                "low": {"turns": 1, "totalTokens": tokens}
+                            }
+                        },
+                        "quota": {
+                            "windows": {"300": quota},
+                            "limitReached": index == 1,
+                        },
+                    }
+                }))
+                with patch.object(compact_trails, "AGENT_FILES", ("codex.json",)):
+                    compact_trails._fold_pod_into(rollups, pod)
+
+            day = rollups["codex.json"]["2026-08-01"]
+            self.assertEqual(day["totalTokens"], 300)
+            self.assertEqual(day["models"]["gpt-example"]["inputTokens"], 150)
+            self.assertEqual(day["routing"]["efforts"]["low"]["turns"], 2)
+            self.assertEqual(day["quota"]["windows"], {"300": 75.0})
+            self.assertTrue(day["quota"]["limitReached"])
+
 
 class MergeWithCumulativeTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -355,6 +394,206 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "gemini-3-flash-preview": {"totalTokens": 425_379},
             },
         )
+
+    def test_model_token_components_survive_the_cumulative_merge(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "models": {"gpt-5.5": {"totalTokens": 100}},
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "models": {
+                    "gpt-5.5": {
+                        "totalTokens": 100,
+                        "inputTokens": 10,
+                        "outputTokens": 5,
+                        "cacheCreationTokens": 15,
+                        "cacheReadTokens": 70,
+                    }
+                },
+            }],
+            self.store,
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"]["models"]["gpt-5.5"],
+            {
+                "totalTokens": 100,
+                "inputTokens": 10,
+                "outputTokens": 5,
+                "cacheCreationTokens": 15,
+                "cacheReadTokens": 70,
+            },
+        )
+
+    def test_routing_and_quota_keep_independent_high_waters(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "routing": {
+                    "efforts": {"low": {"turns": 2, "totalTokens": 100}}
+                },
+                "quota": {
+                    "windows": {"300": 75.0}, "limitReached": False,
+                },
+            }
+        })
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 90,
+                "totalCost": 0.9,
+                "routing": {
+                    "efforts": {
+                        "low": {"turns": 1, "totalTokens": 90},
+                        "high": {
+                            "turns": 1, "totalTokens": 40,
+                            "reasoningOutputTokens": 12,
+                        },
+                    },
+                    "speeds": {"fast": {"turns": 1, "totalTokens": 40}},
+                },
+                "quota": {
+                    "windows": {"300": 40.0, "10080": 20.0},
+                    "limitReached": True,
+                },
+                "tokensObserved": False,
+            }],
+            self.store,
+        )
+        day = self.read_store()["2026-08-04"]
+        self.assertEqual(day["routing"]["efforts"]["low"]["totalTokens"], 100)
+        self.assertEqual(day["routing"]["efforts"]["high"]["totalTokens"], 40)
+        self.assertEqual(day["routing"]["speeds"]["fast"]["turns"], 1)
+        self.assertEqual(day["quota"]["windows"], {"300": 75.0, "10080": 20.0})
+        self.assertTrue(day["quota"]["limitReached"])
+
+
+class RoutingTelemetryTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    def write_jsonl(self, relative: str, events: list[dict]) -> Path:
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(json.dumps(event) for event in events) + "\n")
+        return path
+
+    def test_codex_events_become_effort_speed_and_quota_buckets(self) -> None:
+        self.write_jsonl("2026/08/15/rollout.jsonl", [
+            {
+                "type": "event_msg", "timestamp": "2026-08-15T01:00:00Z",
+                "payload": {
+                    "type": "thread_settings_applied",
+                    "thread_settings": {
+                        "reasoning_effort": "low", "service_tier": "priority",
+                    },
+                },
+            },
+            {
+                "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+                "payload": {
+                    "type": "token_count",
+                    "info": {"last_token_usage": {
+                        "total_tokens": 100, "reasoning_output_tokens": 20,
+                    }},
+                    "rate_limits": {
+                        "primary": {"window_minutes": 300, "used_percent": 40},
+                        "secondary": {
+                            "window_minutes": 10080, "used_percent": 12,
+                        },
+                        "rate_limit_reached_type": None,
+                    },
+                },
+            },
+            {
+                "type": "event_msg", "timestamp": "2026-08-15T02:00:00Z",
+                "payload": {
+                    "type": "thread_settings_applied",
+                    "thread_settings": {
+                        "reasoning_effort": "medium", "service_tier": "default",
+                    },
+                },
+            },
+            {
+                "type": "event_msg", "timestamp": "2026-08-15T02:01:00Z",
+                "payload": {
+                    "type": "token_count",
+                    "info": {"last_token_usage": {
+                        "total_tokens": 200, "reasoning_output_tokens": 50,
+                    }},
+                    "rate_limits": {
+                        "primary": {"window_minutes": 300, "used_percent": 80},
+                        "rate_limit_reached_type": "primary",
+                    },
+                },
+            },
+        ])
+        telemetry = sync_usage.collect_codex_routing_since(
+            date(2026, 8, 15), self.root
+        )["2026-08-15"]
+        self.assertEqual(
+            telemetry["routing"]["efforts"],
+            {
+                "low": {
+                    "turns": 1, "totalTokens": 100,
+                    "reasoningOutputTokens": 20,
+                },
+                "medium": {
+                    "turns": 1, "totalTokens": 200,
+                    "reasoningOutputTokens": 50,
+                },
+            },
+        )
+        self.assertEqual(telemetry["routing"]["speeds"]["fast"]["totalTokens"], 100)
+        self.assertEqual(
+            telemetry["routing"]["speeds"]["standard"]["totalTokens"], 200
+        )
+        self.assertEqual(telemetry["quota"]["windows"], {"300": 80.0, "10080": 12.0})
+        self.assertTrue(telemetry["quota"]["limitReached"])
+        self.assertNotIn("session", json.dumps(telemetry).lower())
+
+    def test_claude_stream_updates_are_deduplicated_before_speed_totals(self) -> None:
+        self.write_jsonl("project/session.jsonl", [
+            {
+                "type": "assistant", "timestamp": "2026-08-15T01:00:00Z",
+                "message": {
+                    "id": "private-message-a",
+                    "usage": {"speed": "standard", "input_tokens": 10},
+                },
+            },
+            {
+                "type": "assistant", "timestamp": "2026-08-15T01:00:01Z",
+                "message": {
+                    "id": "private-message-a",
+                    "usage": {
+                        "speed": "standard", "input_tokens": 20,
+                        "cache_read_input_tokens": 10,
+                    },
+                },
+            },
+            {
+                "type": "assistant", "timestamp": "2026-08-15T02:00:00Z",
+                "message": {
+                    "id": "private-message-b",
+                    "usage": {"speed": "fast", "output_tokens": 20},
+                },
+            },
+        ])
+        telemetry = sync_usage.collect_claude_speed_since(
+            date(2026, 8, 15), self.root
+        )["2026-08-15"]["routing"]["speeds"]
+        self.assertEqual(telemetry["standard"], {"turns": 1, "totalTokens": 30})
+        self.assertEqual(telemetry["fast"], {"turns": 1, "totalTokens": 20})
+        self.assertNotIn("private-message", json.dumps(telemetry))
 
 
 class ReconcileTests(unittest.TestCase):

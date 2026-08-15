@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
 DEFAULT_TOPOLOGY_OUTPUT = REPO_ROOT / "assets" / "token-topology.svg"
+DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -39,10 +40,15 @@ ROLE_BUCKETS = {
 }
 AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
 AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
+ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+EFFORT_ORDER = ("none", "low", "medium", "high", "xhigh", "max")
+SPEED_ORDER = ("standard", "fast")
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 
 
-def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
+def _theme_style_lines(
+    *, topology: bool = False, allocation: bool = False
+) -> tuple[str, ...]:
     light_levels = (
         (
             "    .topology-label-0 { fill: #6c6f85; }",
@@ -87,6 +93,18 @@ def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
             "      .heatmap-level-4 { fill: #94e2d5; }",
         )
     )
+    light_agents = (
+        "    .agent-claude { fill: #fe640b; }",
+        "    .agent-codex { fill: #1e66f5; }",
+        "    .agent-traex { fill: #8839ef; }",
+        "    .agent-legacy { fill: #6c6f85; }",
+    ) if allocation else ()
+    dark_agents = (
+        "      .agent-claude { fill: #fab387; }",
+        "      .agent-codex { fill: #89b4fa; }",
+        "      .agent-traex { fill: #cba6f7; }",
+        "      .agent-legacy { fill: #a6adc8; }",
+    ) if allocation else ()
     return (
         "  <style>",
         "    .dashboard-background { fill: #eff1f5; }",
@@ -96,6 +114,7 @@ def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
         "    .dashboard-muted { fill: #6c6f85; }",
         "    .dashboard-accent { fill: #179299; }",
         "    .dashboard-border { stroke: #ccd0da; }",
+        *light_agents,
         *light_levels,
         "    @media (prefers-color-scheme: dark) {",
         "      .dashboard-background { fill: #1e1e2e; }",
@@ -105,6 +124,7 @@ def _theme_style_lines(*, topology: bool = False) -> tuple[str, ...]:
         "      .dashboard-muted { fill: #a6adc8; }",
         "      .dashboard-accent { fill: #94e2d5; }",
         "      .dashboard-border { stroke: #313244; }",
+        *dark_agents,
         *dark_levels,
         "    }",
         "  </style>",
@@ -142,6 +162,19 @@ class TopologyTotals:
     recent_roles: dict[str, int]
     recent_agents: dict[str, int]
     recent_topology: dict[tuple[str, str], int]
+
+
+@dataclass(frozen=True)
+class AllocationTotals:
+    as_of: date
+    recent_start: date
+    agent_tokens: dict[str, int]
+    model_tokens: dict[tuple[str, str], int]
+    efforts: dict[str, dict[str, int]]
+    speeds: dict[str, dict[str, int]]
+    components: dict[str, int]
+    quota_windows: dict[int, float]
+    quota_limit_days: int
 
 
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
@@ -237,6 +270,100 @@ def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
         recent_roles=recent_roles,
         recent_agents=recent_agents,
         recent_topology=recent_topology,
+    )
+
+
+def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
+    """Aggregate the trailing 30-day harness, model, and routing dimensions."""
+    recent_start = as_of - timedelta(days=29)
+    agent_tokens = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
+    model_tokens: defaultdict[tuple[str, str], int] = defaultdict(int)
+    efforts = {
+        effort: {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0}
+        for effort in EFFORT_ORDER
+    }
+    speeds = {
+        speed: {"turns": 0, "totalTokens": 0}
+        for speed in SPEED_ORDER
+    }
+    components = {
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+    }
+    quota_windows: dict[int, float] = {}
+    quota_limit_days: set[date] = set()
+    for path in discover_agent_files(root):
+        raw_agent = path.stem
+        agent = AGENT_BUCKETS[raw_agent]
+        try:
+            store = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"cannot read {path}: {exc}") from exc
+        if not isinstance(store, dict):
+            raise ValueError(f"expected a date-keyed object in {path}")
+        for raw_day, entry in store.items():
+            try:
+                day = date.fromisoformat(raw_day)
+            except (TypeError, ValueError):
+                continue
+            if not recent_start <= day <= as_of or not isinstance(entry, dict):
+                continue
+            tokens = entry.get("totalTokens", 0)
+            if isinstance(tokens, (int, float)) and not isinstance(tokens, bool):
+                agent_tokens[agent] += max(0, int(tokens))
+            models = entry.get("models", {})
+            if isinstance(models, dict):
+                for model, payload in models.items():
+                    if not isinstance(model, str) or not isinstance(payload, dict):
+                        continue
+                    model_tokens[(agent, model)] += max(
+                        0, int(payload.get("totalTokens", 0))
+                    )
+                    for key in components:
+                        value = payload.get(key)
+                        if isinstance(value, (int, float)) and not isinstance(value, bool):
+                            components[key] += max(0, int(value))
+            routing = entry.get("routing", {})
+            if isinstance(routing, dict):
+                for label, payload in routing.get("efforts", {}).items():
+                    if label not in efforts or not isinstance(payload, dict):
+                        continue
+                    for key in efforts[label]:
+                        value = payload.get(key)
+                        if isinstance(value, int) and not isinstance(value, bool):
+                            efforts[label][key] += max(0, value)
+                for label, payload in routing.get("speeds", {}).items():
+                    if label not in speeds or not isinstance(payload, dict):
+                        continue
+                    for key in speeds[label]:
+                        value = payload.get(key)
+                        if isinstance(value, int) and not isinstance(value, bool):
+                            speeds[label][key] += max(0, value)
+            quota = entry.get("quota", {})
+            if isinstance(quota, dict):
+                for raw_minutes, percent in quota.get("windows", {}).items():
+                    try:
+                        minutes = int(raw_minutes)
+                    except (TypeError, ValueError):
+                        continue
+                    if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                        quota_windows[minutes] = max(
+                            float(percent), quota_windows.get(minutes, 0.0)
+                        )
+                if quota.get("limitReached") is True:
+                    quota_limit_days.add(day)
+    return AllocationTotals(
+        as_of=as_of,
+        recent_start=recent_start,
+        agent_tokens=agent_tokens,
+        model_tokens=dict(model_tokens),
+        efforts=efforts,
+        speeds=speeds,
+        components=components,
+        quota_windows=quota_windows,
+        quota_limit_days=len(quota_limit_days),
     )
 
 
@@ -565,6 +692,197 @@ def render_topology_svg(topology: TopologyTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _window_label(minutes: int) -> str:
+    if minutes % (7 * 24 * 60) == 0:
+        return f"{minutes // (7 * 24 * 60)}w window"
+    if minutes % (24 * 60) == 0:
+        return f"{minutes // (24 * 60)}d window"
+    if minutes % 60 == 0:
+        return f"{minutes // 60}h window"
+    return f"{minutes}m window"
+
+
+def render_allocation_svg(allocation: AllocationTotals) -> str:
+    """Render recent harness/model allocation plus observed routing efficiency."""
+    total = sum(allocation.agent_tokens.values())
+    title = f"Recent AI compute allocation through {allocation.as_of.isoformat()}"
+    height = 560
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        f'  <desc id="desc">Harness and model allocation for {_compact_number(total)} '
+        'tokens in the trailing 30 days, with privacy-safe effort, speed, cache, and '
+        'quota telemetry where observed.</desc>',
+        *_theme_style_lines(allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Compute allocation</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
+        'routing telemetry is aggregate-only; no projects or sessions</text>',
+    ]
+
+    bar_x, bar_y, bar_width, bar_height = 16, 88, 1148, 34
+    lines.append(
+        f'  <rect class="dashboard-panel" x="{bar_x}" y="{bar_y}" '
+        f'width="{bar_width}" height="{bar_height}" rx="10"/>'
+    )
+    cursor = float(bar_x)
+    active_agents = [
+        agent for agent in ALLOCATION_AGENT_ORDER if allocation.agent_tokens[agent] > 0
+    ]
+    for index, agent in enumerate(active_agents):
+        value = allocation.agent_tokens[agent]
+        width = bar_width * _share(value, total)
+        if index == len(active_agents) - 1:
+            width = bar_x + bar_width - cursor
+        lines.extend((
+            f'  <rect class="agent-{agent}" x="{cursor:.1f}" y="{bar_y}" '
+            f'width="{max(0.0, width):.1f}" height="{bar_height}" rx="10" '
+            f'data-agent="{agent}" data-tokens="{value}">',
+            f'    <title>{escape(AGENT_LABELS[agent])}: {_compact_number(value)} tokens '
+            f'({escape(_percent(value, total))})</title>',
+            '  </rect>',
+        ))
+        cursor += width
+
+    legend_x = 18
+    for agent in active_agents:
+        value = allocation.agent_tokens[agent]
+        lines.extend((
+            f'  <circle class="agent-{agent}" cx="{legend_x + 5}" cy="148" r="5"/>',
+            f'  <text class="dashboard-secondary" x="{legend_x + 16}" y="153" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="13">{escape(AGENT_LABELS[agent])} {escape(_percent(value, total))} · '
+            f'{_compact_number(value)}</text>',
+        ))
+        legend_x += 250
+
+    panel_y, panel_h, panel_w, panel_gap = 178, 220, 372, 16
+    for column, agent in enumerate(("claude", "codex", "traex")):
+        x = 16 + column * (panel_w + panel_gap)
+        agent_total = allocation.agent_tokens[agent]
+        observed = sorted(
+            (
+                (model, tokens)
+                for (bucket, model), tokens in allocation.model_tokens.items()
+                if bucket == agent and tokens > 0
+            ),
+            key=lambda item: (-item[1], item[0]),
+        )
+        observed_total = sum(tokens for _, tokens in observed)
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="{x}" y="{panel_y}" '
+            f'width="{panel_w}" height="{panel_h}" rx="16"/>',
+            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{panel_y + 27}" r="6"/>',
+            f'  <text class="dashboard-primary" x="{x + 36}" y="{panel_y + 33}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="17" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
+            f'  <text class="dashboard-muted" x="{x + panel_w - 18}" y="{panel_y + 33}" '
+            'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12">{_compact_number(agent_total)} tokens</text>',
+        ))
+        if not observed:
+            lines.append(
+                f'  <text class="dashboard-muted" x="{x + 18}" y="{panel_y + 82}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                'font-size="13">No model detail observed</text>'
+            )
+            continue
+        for row, (model, tokens) in enumerate(observed[:4]):
+            y = panel_y + 66 + row * 37
+            bar_width_value = 112 * _share(tokens, observed_total)
+            label = model if len(model) <= 27 else model[:26] + "…"
+            lines.extend((
+                f'  <text class="dashboard-secondary" x="{x + 18}" y="{y}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{escape(label)}</text>',
+                f'  <rect class="dashboard-border" x="{x + 214}" y="{y - 11}" '
+                'width="112" height="9" rx="4" fill="none" stroke-width="1"/>',
+                f'  <rect class="agent-{agent}" x="{x + 214}" y="{y - 11}" '
+                f'width="{bar_width_value:.1f}" height="9" rx="4" '
+                f'data-agent="{agent}" data-model="{escape(model)}" data-tokens="{tokens}">',
+                f'    <title>{escape(model)}: {_compact_number(tokens)} tokens '
+                f'({escape(_percent(tokens, observed_total))} of observed '
+                f'{escape(AGENT_LABELS[agent])} model tokens)</title>',
+                '  </rect>',
+                f'  <text class="dashboard-muted" x="{x + panel_w - 18}" y="{y}" '
+                'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="11">{escape(_percent(tokens, observed_total))}</text>',
+            ))
+        if len(observed) > 4:
+            lines.append(
+                f'  <text class="dashboard-muted" x="{x + 18}" y="{panel_y + 206}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="11">+{len(observed) - 4} more observed models</text>'
+            )
+
+    metric_y, metric_h, metric_gap = 420, 116, 12
+    metric_w = (1148 - metric_gap * 3) / 4
+    metric_specs: list[tuple[str, str, str]] = []
+    effort_tokens = sum(item["totalTokens"] for item in allocation.efforts.values())
+    effort_turns = sum(item["turns"] for item in allocation.efforts.values())
+    if effort_tokens:
+        effort_summary = " · ".join(
+            f"{name} {_percent(allocation.efforts[name]['totalTokens'], effort_tokens)}"
+            for name in EFFORT_ORDER if allocation.efforts[name]["totalTokens"]
+        )
+        metric_specs.append(("Codex effort", f"{effort_turns} turns", effort_summary))
+    else:
+        metric_specs.append(("Codex effort", "Awaiting telemetry", "low · medium · high"))
+
+    speed_tokens = sum(item["totalTokens"] for item in allocation.speeds.values())
+    speed_turns = sum(item["turns"] for item in allocation.speeds.values())
+    if speed_tokens:
+        fast = allocation.speeds["fast"]["totalTokens"]
+        metric_specs.append(("Speed tier", f"{_percent(fast, speed_tokens)} fast", f"{speed_turns} observed turns"))
+    else:
+        metric_specs.append(("Speed tier", "Awaiting telemetry", "standard · fast"))
+
+    component_total = sum(allocation.components.values())
+    if component_total:
+        cache_read = allocation.components["cacheReadTokens"]
+        metric_specs.append((
+            "Cache reuse", _percent(cache_read, component_total),
+            f"of {_compact_number(component_total)} component tokens",
+        ))
+    else:
+        metric_specs.append(("Cache reuse", "Awaiting telemetry", "read share of component tokens"))
+
+    if allocation.quota_windows:
+        minutes, percent = max(
+            allocation.quota_windows.items(), key=lambda item: (item[1], item[0])
+        )
+        limit_text = (
+            f"{allocation.quota_limit_days} limit-hit day(s)"
+            if allocation.quota_limit_days else "no limit-hit days observed"
+        )
+        metric_specs.append(("Codex quota", f"{percent:.0f}% peak", f"{_window_label(minutes)} · {limit_text}"))
+    else:
+        metric_specs.append(("Codex quota", "Awaiting telemetry", "peak observed window pressure"))
+
+    for index, (label, value, detail) in enumerate(metric_specs):
+        x = 16 + index * (metric_w + metric_gap)
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="{x:.1f}" y="{metric_y}" '
+            f'width="{metric_w:.1f}" height="{metric_h}" rx="14"/>',
+            f'  <text class="dashboard-muted" x="{x + 16:.1f}" y="{metric_y + 27}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12">{escape(label)}</text>',
+            f'  <text class="dashboard-primary" x="{x + 16:.1f}" y="{metric_y + 61}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="18" font-weight="600">{escape(value)}</text>',
+            f'  <text class="dashboard-muted" x="{x + 16:.1f}" y="{metric_y + 88}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="11">{escape(detail)}</text>',
+        ))
+    lines.append("</svg>")
+    return "\n".join(lines) + "\n"
+
+
 def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
@@ -625,6 +943,19 @@ def generate_topology(
     return _update_output(output, expected, check=check)
 
 
+def generate_allocation(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_allocation_svg(aggregate_allocation(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -633,6 +964,11 @@ def main() -> int:
         "--topology-output",
         type=Path,
         default=DEFAULT_TOPOLOGY_OUTPUT,
+    )
+    parser.add_argument(
+        "--allocation-output",
+        type=Path,
+        default=DEFAULT_ALLOCATION_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -644,6 +980,15 @@ def main() -> int:
             generate_topology(
                 args.root,
                 args.topology_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+        (
+            args.allocation_output,
+            generate_allocation(
+                args.root,
+                args.allocation_output,
                 args.as_of,
                 check=args.check,
             ),

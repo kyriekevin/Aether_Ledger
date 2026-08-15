@@ -11,11 +11,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from render_dashboard import (  # noqa: E402
+    AllocationTotals,
     DailyTotals,
+    aggregate_allocation,
     aggregate_topology,
     aggregate_daily,
     generate,
+    generate_allocation,
     generate_topology,
+    render_allocation_svg,
     render_svg,
     render_topology_svg,
 )
@@ -102,6 +106,51 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(totals.recent_topology[("personal", "codex")], 250)
             self.assertEqual(totals.recent_topology[("personal", "legacy")], 25)
             self.assertEqual(totals.recent_topology[("development", "codex")], 460)
+
+
+class AggregateAllocationTests(unittest.TestCase):
+    def test_keeps_only_privacy_safe_recent_routing_dimensions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "personal" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-07-01": {"totalTokens": 999},
+                "2026-08-01": {
+                    "totalTokens": 100,
+                    "models": {
+                        "gpt-example": {
+                            "totalTokens": 100,
+                            "inputTokens": 10,
+                            "outputTokens": 5,
+                            "cacheCreationTokens": 15,
+                            "cacheReadTokens": 70,
+                        }
+                    },
+                    "routing": {
+                        "efforts": {
+                            "low": {
+                                "turns": 2, "totalTokens": 100,
+                                "reasoningOutputTokens": 4,
+                            }
+                        },
+                        "speeds": {"fast": {"turns": 2, "totalTokens": 100}},
+                    },
+                    "quota": {
+                        "windows": {"300": 65.0}, "limitReached": True,
+                    },
+                },
+            }), encoding="utf-8")
+
+            totals = aggregate_allocation(root, date(2026, 8, 1))
+
+            self.assertEqual(totals.agent_tokens["codex"], 100)
+            self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
+            self.assertEqual(totals.efforts["low"]["turns"], 2)
+            self.assertEqual(totals.speeds["fast"]["totalTokens"], 100)
+            self.assertEqual(totals.components["cacheReadTokens"], 70)
+            self.assertEqual(totals.quota_windows, {300: 65.0})
+            self.assertEqual(totals.quota_limit_days, 1)
 
 
 class DashboardTests(unittest.TestCase):
@@ -214,6 +263,70 @@ class DashboardTests(unittest.TestCase):
             self.assertTrue(generate_topology(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate_topology(root, output, check=True))
+
+    def test_allocation_svg_exposes_model_routing_and_efficiency_without_identity(self) -> None:
+        allocation = AllocationTotals(
+            as_of=date(2026, 8, 1),
+            recent_start=date(2026, 7, 3),
+            agent_tokens={
+                "claude": 100, "codex": 200, "traex": 50, "legacy": 0,
+            },
+            model_tokens={
+                ("claude", "claude-opus-example"): 100,
+                ("codex", "gpt-example"): 200,
+                ("traex", "cheap-example"): 50,
+            },
+            efforts={
+                "none": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
+                "low": {"turns": 3, "totalTokens": 120, "reasoningOutputTokens": 10},
+                "medium": {"turns": 1, "totalTokens": 80, "reasoningOutputTokens": 20},
+                "high": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
+                "xhigh": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
+                "max": {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0},
+            },
+            speeds={
+                "standard": {"turns": 3, "totalTokens": 250},
+                "fast": {"turns": 1, "totalTokens": 100},
+            },
+            components={
+                "inputTokens": 20,
+                "outputTokens": 10,
+                "cacheCreationTokens": 20,
+                "cacheReadTokens": 300,
+            },
+            quota_windows={300: 68.0},
+            quota_limit_days=0,
+        )
+
+        svg = render_allocation_svg(allocation)
+
+        ET.fromstring(svg)
+        self.assertIn("Compute allocation", svg)
+        self.assertIn("claude-opus-example", svg)
+        self.assertIn("cheap-example", svg)
+        self.assertIn("Codex effort", svg)
+        self.assertIn("low 60.0%", svg)
+        self.assertIn("28.6% fast", svg)
+        self.assertIn("85.7%", svg)
+        self.assertIn("68% peak", svg)
+        self.assertNotIn("private-repo", svg)
+        self.assertNotIn("session-id", svg)
+        self.assertIn('data-agent="traex"', svg)
+
+    def test_generate_allocation_defaults_to_latest_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-07-31": {"totalTokens": 100}}),
+                encoding="utf-8",
+            )
+            output = root / "assets" / "allocation.svg"
+
+            self.assertTrue(generate_allocation(root, output))
+            self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_allocation(root, output, check=True))
 
 if __name__ == "__main__":
     unittest.main()

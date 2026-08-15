@@ -300,20 +300,24 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-两张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+分配 SVG 展示最近 30 天的 harness 及各 harness 模型组合。Codex effort、standard/Fast
+速度、缓存复用和 Codex 额度压力只统计确实观测到这些匿名聚合数据的日期；缺失的历史遥测
+会明确显示为不可用，不会从 token 总量或金额反推。
+
+三张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
 避免多台设备并发推送时发生生成文件冲突。
 
 颜色强度按分布四分位数计算，而不是线性缩放，因此 trail workload 产生巨大峰值时，
-普通日期仍然可见。发布的 SVG 只包含聚合 token，并且仅在活动视图中包含 API 等价成本；
-它们不包含模型、设备、路径、提示词或仓库级数据。
+普通日期仍然可见。发布的 SVG 包含聚合 token、分配视图中的模型名称，以及活动视图中的
+API 等价成本；它们不包含设备身份、路径、提示词、会话或仓库级数据。
 
 ## 公开数据边界
 
 提交数据仅限 `data/` 下按日期聚合的用量，使用公开长期角色 `work`、`personal`、
-`devbox`，或临时 worker 的不透明 ID。生产脚本不会收集工作目录、仓库名称、提示词、
+`devbox`，或临时 worker 的不透明 ID。生产脚本不会持久化工作目录、仓库名称、提示词、
 会话标识、用户名或主机名。公开数据审计会忽略并禁止 `codex_by_repo.json` 等仓库级导出。
 
 发布或修改数据生产脚本前运行：
@@ -378,6 +382,29 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
+新观测会保留每个模型的四类 token。Codex session 事件还会贡献匿名的路由与额度遥测；
+Claude 事件贡献匿名速度数据：
+
+```json
+{
+  "routing": {
+    "efforts": {
+      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+    },
+    "speeds": {
+      "fast": {"turns": 3, "totalTokens": 210000}
+    }
+  },
+  "quota": {
+    "windows": {"300": 64.0, "10080": 37.0},
+    "limitReached": false
+  }
+}
+```
+
+额度窗口 key 是匿名的分钟数。Message 与 session 标识只在内存中用于去重，绝不写入仓库。
+历史总量仍然有效，但源日志轮转后不会补出 component 或 routing 明细。
+
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
 
@@ -388,7 +415,7 @@ tier，因此表内模型按官方 standard 价计算；未知模型只贡献 to
 
 只在一台写入设备上运行 `scripts/compact_trails.py`。最新数据早于七天前的 pod 会被累加
 到 `data/trail/rollup`，并在同一个提交中删除。每个临时 pod 目录代表独立 worker，
-因此 fold 使用加法聚合。
+因此 token、模型 component 和 routing 计数使用加法聚合；额度窗口保留观测到的最高压力。
 
 始终先预览：
 

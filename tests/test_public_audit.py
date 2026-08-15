@@ -91,6 +91,56 @@ class PublicAuditTests(unittest.TestCase):
         )
         self.assertEqual(issues, [])
 
+    def test_store_schema_accepts_privacy_safe_routing_and_quota(self) -> None:
+        issues: list[str] = []
+        _validate_store_schema(
+            {
+                "2026-08-01": {
+                    "totalTokens": 10,
+                    "routing": {
+                        "efforts": {
+                            "low": {
+                                "turns": 1, "totalTokens": 10,
+                                "reasoningOutputTokens": 2,
+                            }
+                        },
+                        "speeds": {"fast": {"turns": 1, "totalTokens": 10}},
+                    },
+                    "quota": {
+                        "windows": {"300": 42.5}, "limitReached": False,
+                    },
+                }
+            },
+            Path("data/personal/codex.json"),
+            issues,
+        )
+        self.assertEqual(issues, [])
+
+    def test_store_schema_rejects_identity_bearing_routing_dimensions(self) -> None:
+        issues: list[str] = []
+        _validate_store_schema(
+            {
+                "2026-08-01": {
+                    "totalTokens": 10,
+                    "routing": {
+                        "projects": {"private-repo": {"totalTokens": 10}},
+                        "efforts": {
+                            "custom": {"turns": 1, "totalTokens": 10},
+                        },
+                    },
+                    "quota": {
+                        "windows": {"weekly": 120}, "account": "private",
+                    },
+                }
+            },
+            Path("data/personal/codex.json"),
+            issues,
+        )
+        self.assertTrue(any("projects" in issue for issue in issues))
+        self.assertTrue(any("efforts.custom" in issue for issue in issues))
+        self.assertTrue(any("weekly" in issue for issue in issues))
+        self.assertTrue(any("account" in issue for issue in issues))
+
     def test_trail_machine_path_never_contains_raw_identity(self) -> None:
         raw = "worker-hostname-with-job-id"
         previous = os.environ.get(sync_usage.TRAIL_ENV)

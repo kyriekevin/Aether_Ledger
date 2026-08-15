@@ -31,6 +31,13 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
+## Allocation
+
+![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
+
+Allocation shows the latest 30-day harness and model mix. Privacy-safe effort, speed, cache, and
+quota signals appear only for dates where that aggregate telemetry was observed.
+
 ## Topology
 
 ![Aether Ledger recent compute topology](assets/token-topology.svg)

@@ -334,7 +334,12 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Both dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+The allocation SVG shows the trailing 30-day harness and per-harness model mix. It also shows
+Codex effort, standard/Fast speed, cache reuse, and Codex quota pressure only across dates where
+those privacy-safe aggregates were observed. Missing historical telemetry stays explicitly
+unavailable instead of being inferred from total tokens or cost.
+
+All three dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
@@ -342,14 +347,14 @@ own data directory, avoiding generated-asset conflicts when machines push concur
 
 Intensity levels use distribution quartiles rather than a linear scale, so ordinary days remain
 visible when trail workloads create very large peaks. The published SVGs contain aggregate token
-counts and, in the activity view, API-equivalent cost; they do not include model, machine, path,
-prompt, or repository-level data.
+counts, model names in the allocation view, and API-equivalent cost in the activity view. They do
+not include machine identity, paths, prompts, sessions, or repository-level data.
 
 ## Public-data boundary
 
 Committed data is limited to date-keyed aggregate usage under `data/`, using the public durable
 roles `work`, `personal`, and `devbox`, or opaque IDs for ephemeral workers. The producer does not
-collect working directories, repository names, prompts, session identifiers, usernames, or hostnames.
+persist working directories, repository names, prompts, session identifiers, usernames, or hostnames.
 Repository-level exports such as `codex_by_repo.json` are ignored and forbidden by the public-data
 audit.
 
@@ -419,6 +424,30 @@ Codex entries may also contain model token breakdowns and an image counter:
 }
 ```
 
+New observations preserve the four token components under each model. Codex session events also
+contribute aggregate routing and quota telemetry; Claude events contribute aggregate speed data:
+
+```json
+{
+  "routing": {
+    "efforts": {
+      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+    },
+    "speeds": {
+      "fast": {"turns": 3, "totalTokens": 210000}
+    }
+  },
+  "quota": {
+    "windows": {"300": 64.0, "10080": 37.0},
+    "limitReached": false
+  }
+}
+```
+
+Window keys are anonymous durations in minutes. Message and session identifiers are used only for
+in-memory deduplication and are never written. Historical totals remain valid but do not gain
+component or routing detail after their source logs rotate.
+
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
 
@@ -429,8 +458,9 @@ cost.
 ## Trail compaction
 
 Run `scripts/compact_trails.py` on one writer only. Pods whose newest data is older than seven days
-are added into `data/trail/rollup` and removed in the same commit. The fold is additive because every
-ephemeral pod directory represents a distinct worker.
+are added into `data/trail/rollup` and removed in the same commit. Every ephemeral pod directory
+represents a distinct worker, so token, model-component, and routing counters fold additively;
+quota windows retain their maximum observed pressure.
 
 Always preview first:
 
