@@ -397,5 +397,24 @@
     },
     "totalCost": 0.9404305,
     "totalTokens": 397600
+  },
+  "2026-08-15": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.5": {
+        "totalTokens": 8401423
+      },
+      "gpt-5.6-luna": {
+        "totalTokens": 918057
+      },
+      "gpt-5.6-sol": {
+        "totalTokens": 88844951
+      },
+      "gpt-5.6-terra": {
+        "totalTokens": 8667751
+      }
+    },
+    "totalCost": 83.17919638,
+    "totalTokens": 106832182
   }
 }
