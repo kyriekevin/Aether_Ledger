@@ -42,9 +42,15 @@ Topology shows which active agents serve each public environment over the latest
 
 ![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
 
-Allocation drills into each harness's model mix, input/output/cache token flow, and observable
-routing signals. Effort, speed, and quota appear only for dates where their anonymous aggregates
-were actually observed.
+Allocation drills into each harness's model mix without repeating the topology view.
+
+## Efficiency
+
+![Aether Ledger token efficiency dashboard](assets/compute-efficiency.svg)
+
+Efficiency separates input/output/cache token flow from model choice and adds observable routing
+signals. Effort, speed, and quota appear only for dates where their anonymous aggregates were
+actually observed.
 
 ## Ledger
 

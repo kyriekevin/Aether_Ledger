@@ -334,11 +334,11 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-The README orders the views as activity, topology, then allocation: when compute happened, where
-each harness served, and finally how each harness spent its tokens. The allocation SVG therefore
-does not repeat the topology's overall harness-share bar. It drills into the trailing 30-day model
-mix and input/output/cache flow separately for Claude, Codex, and TRAE, followed by comparable
-routing signals where each harness exposes them.
+The README orders the views as activity, topology, allocation, then efficiency: when compute
+happened, where each harness served, which models it used, and finally how its tokens flowed. The
+allocation SVG therefore does not repeat the topology's overall harness-share bar and is limited to
+the trailing 30-day model mix. The efficiency SVG separately compares input/output/cache flow for
+Claude, Codex, and TRAE, followed by routing signals where each harness exposes them.
 
 Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
 Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
@@ -347,7 +347,7 @@ rollout format, the collector also accepts their effort, speed, reasoning, and q
 present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
 total tokens or cost.
 
-All three dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All four dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their

@@ -41,8 +41,14 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
 
-分配图继续下钻每个 harness 内的模型组合、input/output/cache token flow 与可观测路由信号。
-Effort、速度和额度只在对应日期确实观测到匿名聚合数据后显示。
+分配图继续下钻每个 harness 内的模型组合，不再重复拓扑视图。
+
+## 效率
+
+![Aether Ledger token 效率面板](assets/compute-efficiency.svg)
+
+效率图把 input/output/cache token flow 与模型选择分开，并补充可观测路由信号。Effort、
+速度和额度只在对应日期确实观测到匿名聚合数据后显示。
 
 ## 账本
 

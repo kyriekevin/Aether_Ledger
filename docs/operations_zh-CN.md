@@ -300,10 +300,10 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-README 按活动、拓扑、分配排列三张图：先看算力何时发生，再看各环境由哪些 harness 服务，
-最后下钻每个 harness 如何消耗 token。因此分配 SVG 不再重复拓扑图里的 harness 总占比，
-而是分别展示 Claude、Codex、TRAE 最近 30 天的模型组合与 input/output/cache flow，再列出
-各 harness 确实能观测到的路由信号。
+README 按活动、拓扑、分配、效率排列四张图：先看算力何时发生，再看各环境由哪些 harness
+服务、使用了什么模型，最后分析 token 如何流动。因此分配 SVG 不再重复拓扑图里的 harness
+总占比，只展示最近 30 天模型组合；效率 SVG 则单独比较 Claude、Codex、TRAE 的
+input/output/cache flow，再列出各 harness 确实能观测到的路由信号。
 
 Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
 Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
@@ -311,7 +311,7 @@ Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂�
 日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
 不会从 token 总量或金额反推。
 
-三张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+四张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而

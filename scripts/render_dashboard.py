@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
 DEFAULT_TOPOLOGY_OUTPUT = REPO_ROOT / "assets" / "token-topology.svg"
 DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
+DEFAULT_EFFICIENCY_OUTPUT = REPO_ROOT / "assets" / "compute-efficiency.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -793,29 +794,28 @@ def _routing_signal_lines(
 
 
 def render_allocation_svg(allocation: AllocationTotals) -> str:
-    """Render recent model allocation and token efficiency within each harness."""
+    """Render the recent per-harness model allocation."""
     total = sum(allocation.agent_tokens.values())
     title = f"Recent AI compute allocation through {allocation.as_of.isoformat()}"
-    height = 720
+    height = 355
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
         f'  <desc id="desc">Harness and model allocation for {_compact_number(total)} '
-        'tokens in the trailing 30 days, showing model mix and token components '
-        'within each harness plus privacy-safe routing telemetry where observed.</desc>',
+        'tokens in the trailing 30 days, showing model mix within each harness.</desc>',
         *_theme_style_lines(allocation=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="24" font-weight="600">Compute allocation</text>',
+        'font-size="24" font-weight="600">Model allocation</text>',
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
-        'model mix and token flow within each harness · aggregate-only telemetry</text>',
+        'model mix within each harness · harness totals shown for context</text>',
     ]
 
-    panel_y, panel_h, panel_w, panel_gap = 92, 388, 372, 16
+    panel_y, panel_h, panel_w, panel_gap = 92, 235, 372, 16
     for column, agent in enumerate(("claude", "codex", "traex")):
         x = 16 + column * (panel_w + panel_gap)
         agent_total = allocation.agent_tokens[agent]
@@ -873,27 +873,67 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
                 ))
             if len(observed) > 4:
                 lines.append(
-                    f'  <text class="dashboard-muted" x="{x + 18}" y="{panel_y + 236}" '
+                    f'  <text class="dashboard-muted" x="{x + 18}" y="{panel_y + 220}" '
                     'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                     f'font-size="11">+{len(observed) - 4} more observed models</text>'
                 )
+    lines.append("</svg>")
+    return "\n".join(lines) + "\n"
 
-        component_y = panel_y + 258
+
+def _component_css_name(key: str) -> str:
+    return {
+        "inputTokens": "input",
+        "outputTokens": "output",
+        "cacheCreationTokens": "cache-write",
+        "cacheReadTokens": "cache-read",
+    }[key]
+
+
+def render_efficiency_svg(allocation: AllocationTotals) -> str:
+    """Render per-harness token flow and observable routing telemetry."""
+    title = f"Recent AI token efficiency through {allocation.as_of.isoformat()}"
+    height = 470
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        '  <desc id="desc">Input, output, cache, effort, reasoning, speed, and quota '
+        'signals within each harness for the trailing 30 days.</desc>',
+        *_theme_style_lines(allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Token efficiency</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
+        'input/output/cache flow and observable routing signals by harness</text>',
+    ]
+
+    panel_w, panel_gap = 372, 16
+    flow_y = 92
+    for column, agent in enumerate(("claude", "codex", "traex")):
+        x = 16 + column * (panel_w + panel_gap)
+        agent_total = allocation.agent_tokens[agent]
         component_values = allocation.components[agent]
         component_total = sum(component_values.values())
-        lines.append(
-            f'  <text class="dashboard-muted" x="{x + 18}" y="{component_y}" '
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="{x}" y="{flow_y}" '
+            f'width="{panel_w}" height="142" rx="16"/>',
+            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{flow_y + 25}" r="5"/>',
+            f'  <text class="dashboard-primary" x="{x + 35}" y="{flow_y + 30}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="11">TOKEN FLOW WITHIN HARNESS</text>'
-        )
+            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])} token flow</text>',
+        ))
         if component_total:
-            bar_x, bar_y, bar_width, bar_height = x + 18, component_y + 14, 336, 16
             lines.append(
                 f'  <text class="dashboard-muted" x="{x + panel_w - 18}" '
-                f'y="{component_y}" text-anchor="end" '
+                f'y="{flow_y + 30}" text-anchor="end" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="11">{escape(_percent(component_total, agent_total))} coverage</text>'
             )
+            bar_x, bar_y, bar_width, bar_height = x + 18, flow_y + 48, 336, 16
             lines.append(
                 f'  <rect class="dashboard-border" x="{bar_x}" y="{bar_y}" '
                 f'width="{bar_width}" height="{bar_height}" rx="5" fill="none" stroke-width="1"/>'
@@ -904,12 +944,7 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
                 width = bar_width * _share(value, component_total)
                 if index == len(COMPONENT_ORDER) - 1:
                     width = bar_x + bar_width - cursor
-                css_name = {
-                    "inputTokens": "input",
-                    "outputTokens": "output",
-                    "cacheCreationTokens": "cache-write",
-                    "cacheReadTokens": "cache-read",
-                }[key]
+                css_name = _component_css_name(key)
                 lines.extend((
                     f'  <rect class="component-{css_name}" x="{cursor:.1f}" y="{bar_y}" '
                     f'width="{max(0.0, width):.1f}" height="{bar_height}" rx="5" '
@@ -921,13 +956,8 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
                 cursor += width
             for index, key in enumerate(COMPONENT_ORDER):
                 legend_x = x + 18 + (index % 2) * 168
-                legend_y = component_y + 57 + (index // 2) * 25
-                css_name = {
-                    "inputTokens": "input",
-                    "outputTokens": "output",
-                    "cacheCreationTokens": "cache-write",
-                    "cacheReadTokens": "cache-read",
-                }[key]
+                legend_y = flow_y + 91 + (index // 2) * 24
+                css_name = _component_css_name(key)
                 lines.extend((
                     f'  <circle class="component-{css_name}" cx="{legend_x + 5}" '
                     f'cy="{legend_y - 4}" r="4"/>',
@@ -938,15 +968,15 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
                 ))
         else:
             lines.extend((
-                f'  <text class="dashboard-primary" x="{x + 18}" y="{component_y + 38}" '
+                f'  <text class="dashboard-primary" x="{x + 18}" y="{flow_y + 72}" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 'font-size="13">Awaiting component detail</text>',
-                f'  <text class="dashboard-muted" x="{x + 18}" y="{component_y + 62}" '
+                f'  <text class="dashboard-muted" x="{x + 18}" y="{flow_y + 97}" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 'font-size="11">input · output · cache write · cache read</text>',
             ))
 
-    routing_y = 520
+    routing_y = 278
     lines.append(
         f'  <text class="dashboard-primary" x="16" y="{routing_y - 14}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
@@ -956,14 +986,14 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
         x = 16 + column * (panel_w + panel_gap)
         lines.extend((
             f'  <rect class="dashboard-panel" x="{x}" y="{routing_y}" '
-            f'width="{panel_w}" height="170" rx="16"/>',
+            f'width="{panel_w}" height="166" rx="16" data-agent="{agent}"/>',
             f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{routing_y + 25}" r="5"/>',
             f'  <text class="dashboard-primary" x="{x + 35}" y="{routing_y + 30}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
         ))
         for row, (label, value) in enumerate(_routing_signal_lines(allocation, agent)):
-            y = routing_y + 59 + row * 27
+            y = routing_y + 58 + row * 26
             lines.extend((
                 f'  <text class="dashboard-muted" x="{x + 18}" y="{y}" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
@@ -1049,6 +1079,19 @@ def generate_allocation(
     return _update_output(output, expected, check=check)
 
 
+def generate_efficiency(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_efficiency_svg(aggregate_allocation(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -1062,6 +1105,11 @@ def main() -> int:
         "--allocation-output",
         type=Path,
         default=DEFAULT_ALLOCATION_OUTPUT,
+    )
+    parser.add_argument(
+        "--efficiency-output",
+        type=Path,
+        default=DEFAULT_EFFICIENCY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -1082,6 +1130,15 @@ def main() -> int:
             generate_allocation(
                 args.root,
                 args.allocation_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+        (
+            args.efficiency_output,
+            generate_efficiency(
+                args.root,
+                args.efficiency_output,
                 args.as_of,
                 check=args.check,
             ),

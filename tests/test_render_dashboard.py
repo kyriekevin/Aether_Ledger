@@ -18,8 +18,10 @@ from render_dashboard import (  # noqa: E402
     aggregate_daily,
     generate,
     generate_allocation,
+    generate_efficiency,
     generate_topology,
     render_allocation_svg,
+    render_efficiency_svg,
     render_svg,
     render_topology_svg,
 )
@@ -301,7 +303,7 @@ class DashboardTests(unittest.TestCase):
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate_topology(root, output, check=True))
 
-    def test_allocation_svg_exposes_model_routing_and_efficiency_without_identity(self) -> None:
+    def test_allocation_and_efficiency_split_models_from_routing(self) -> None:
         allocation = AllocationTotals(
             as_of=date(2026, 8, 1),
             recent_start=date(2026, 7, 3),
@@ -362,23 +364,29 @@ class DashboardTests(unittest.TestCase):
         )
         allocation.quota_windows["codex"][300] = 68.0
 
-        svg = render_allocation_svg(allocation)
+        allocation_svg = render_allocation_svg(allocation)
+        efficiency_svg = render_efficiency_svg(allocation)
 
-        ET.fromstring(svg)
-        self.assertIn("Compute allocation", svg)
-        self.assertIn("claude-opus-example", svg)
-        self.assertIn("cheap-example", svg)
-        self.assertIn("Observed routing signals", svg)
-        self.assertNotIn("routing telemetry is aggregate-only", svg)
-        self.assertIn("low 60.0%", svg)
-        self.assertIn("50.0% fast", svg)
-        self.assertIn("cache read 80.0%", svg)
-        self.assertIn("100.0% coverage", svg)
-        self.assertIn("not exposed by Claude logs", svg)
-        self.assertIn("68% peak", svg)
-        self.assertNotIn("private-repo", svg)
-        self.assertNotIn("session-id", svg)
-        self.assertIn('data-agent="traex"', svg)
+        ET.fromstring(allocation_svg)
+        ET.fromstring(efficiency_svg)
+        self.assertIn("Model allocation", allocation_svg)
+        self.assertIn("claude-opus-example", allocation_svg)
+        self.assertIn("cheap-example", allocation_svg)
+        self.assertNotIn("Observed routing signals", allocation_svg)
+        self.assertNotIn("cache read", allocation_svg)
+        self.assertIn("Token efficiency", efficiency_svg)
+        self.assertIn("Observed routing signals", efficiency_svg)
+        self.assertIn("low 60.0%", efficiency_svg)
+        self.assertIn("50.0% fast", efficiency_svg)
+        self.assertIn("cache read 80.0%", efficiency_svg)
+        self.assertIn("100.0% coverage", efficiency_svg)
+        self.assertIn("not exposed by Claude logs", efficiency_svg)
+        self.assertIn("68% peak", efficiency_svg)
+        for svg in (allocation_svg, efficiency_svg):
+            self.assertNotIn("private-repo", svg)
+            self.assertNotIn("session-id", svg)
+            self.assertIn('@media (prefers-color-scheme: dark)', svg)
+            self.assertIn('data-agent="traex"', svg)
 
     def test_generate_allocation_defaults_to_latest_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -394,6 +402,14 @@ class DashboardTests(unittest.TestCase):
             self.assertTrue(generate_allocation(root, output))
             self.assertIn("through 2026-07-31", output.read_text(encoding="utf-8"))
             self.assertFalse(generate_allocation(root, output, check=True))
+
+            efficiency_output = root / "assets" / "efficiency.svg"
+            self.assertTrue(generate_efficiency(root, efficiency_output))
+            self.assertIn(
+                "through 2026-07-31",
+                efficiency_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(generate_efficiency(root, efficiency_output, check=True))
 
 if __name__ == "__main__":
     unittest.main()
