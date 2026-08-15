@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430" role="img" aria-labelledby="title desc">
+  <title id="title">AI compute trend through 2026-08-14</title>
+  <desc id="desc">Separate zero-based twelve-week token trajectories for total compute, Claude, Codex, and TRAE.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .agent-line-claude { fill: none; stroke: #fe640b; }
+    .agent-line-codex { fill: none; stroke: #1e66f5; }
+    .agent-line-traex { fill: none; stroke: #8839ef; }
+    .agent-line-legacy { fill: none; stroke: #6c6f85; }
+    .trend-total { fill: none; stroke: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .agent-line-claude { fill: none; stroke: #fab387; }
+      .agent-line-codex { fill: none; stroke: #89b4fa; }
+      .agent-line-traex { fill: none; stroke: #cba6f7; }
+      .agent-line-legacy { fill: none; stroke: #a6adc8; }
+      .trend-total { fill: none; stroke: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="430" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Compute trend</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-05-23–2026-08-14 · 12 adjacent 7-day windows · each panel uses its own zero baseline</text>
+  <rect class="dashboard-panel" x="16" y="92" width="566" height="128" rx="16"/>
+  <text class="dashboard-primary" x="34" y="120" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Total</text>
+  <text class="dashboard-muted" x="564" y="120" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 1.9B · peak 1.9B</text>
+  <line class="dashboard-border" x1="34" y1="191" x2="564" y2="191" stroke-width="1"/>
+  <path class="trend-total" d="M34.0,148.7 L82.2,153.7 L130.4,166.3 L178.5,174.9 L226.7,156.9 L274.9,181.9 L323.1,168.2 L371.3,178.2 L419.5,143.6 L467.6,151.4 L515.8,137.9 L564.0,135.0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-series="total">
+    <title>Total weekly tokens: 1.4B · 1.3B · 837M · 545M · 1.2B · 308M · 771M · 434M · 1.6B · 1.3B · 1.8B · 1.9B</title>
+  </path>
+  <circle class="dashboard-accent" cx="564" cy="135.0" r="4"/>
+  <text class="dashboard-muted" x="34" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 23</text>
+  <text class="dashboard-muted" x="564" y="210" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 8</text>
+  <rect class="dashboard-panel" x="598" y="92" width="566" height="128" rx="16"/>
+  <text class="dashboard-primary" x="616" y="120" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="1146" y="120" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 303M · peak 1B</text>
+  <line class="dashboard-border" x1="616" y1="191" x2="1146" y2="191" stroke-width="1"/>
+  <path class="agent-line-claude" d="M616.0,135.0 L664.2,140.7 L712.4,157.8 L760.5,172.3 L808.7,151.5 L856.9,182.6 L905.1,173.9 L953.3,185.9 L1001.5,188.7 L1049.6,183.1 L1097.8,178.7 L1146.0,174.5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-series="claude">
+    <title>Claude weekly tokens: 1B · 921M · 608M · 342M · 722M · 153M · 313M · 93.9M · 41.4M · 145M · 225M · 303M</title>
+  </path>
+  <circle class="agent-claude" cx="1146" cy="174.5" r="4"/>
+  <text class="dashboard-muted" x="616" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 23</text>
+  <text class="dashboard-muted" x="1146" y="210" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 8</text>
+  <rect class="dashboard-panel" x="16" y="234" width="566" height="128" rx="16"/>
+  <text class="dashboard-primary" x="34" y="262" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="564" y="262" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 642M · peak 1.6B</text>
+  <line class="dashboard-border" x1="34" y1="333" x2="564" y2="333" stroke-width="1"/>
+  <path class="agent-line-codex" d="M34.0,318.4 L82.2,320.7 L130.4,324.8 L178.5,325.8 L226.7,318.2 L274.9,327.5 L323.1,317.3 L371.3,320.8 L419.5,277.0 L467.6,290.2 L515.8,277.5 L564.0,310.0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-series="codex">
+    <title>Codex weekly tokens: 408M · 343M · 228M · 202M · 413M · 155M · 438M · 34M · 1.6B · 1.2B · 1.5B · 642M</title>
+  </path>
+  <circle class="agent-codex" cx="564" cy="310.0" r="4"/>
+  <text class="dashboard-muted" x="34" y="352" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 23</text>
+  <text class="dashboard-muted" x="564" y="352" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 8</text>
+  <rect class="dashboard-panel" x="598" y="234" width="566" height="128" rx="16"/>
+  <text class="dashboard-primary" x="616" y="262" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="1146" y="262" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 952M · peak 952M</text>
+  <line class="dashboard-border" x1="616" y1="333" x2="1146" y2="333" stroke-width="1"/>
+  <path class="agent-line-traex" d="M616.0,333.0 L664.2,333.0 L712.4,333.0 L760.5,333.0 L808.7,333.0 L856.9,333.0 L905.1,332.5 L953.3,333.0 L1001.5,333.0 L1049.6,333.0 L1097.8,331.6 L1146.0,277.0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-series="trae">
+    <title>TRAE weekly tokens: 0 · 0 · 0 · 0 · 0 · 0 · 8.7M · 0 · 0 · 0 · 23.7M · 952M</title>
+  </path>
+  <circle class="agent-traex" cx="1146" cy="277.0" r="4"/>
+  <text class="dashboard-muted" x="616" y="352" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">May 23</text>
+  <text class="dashboard-muted" x="1146" y="352" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 8</text>
+  <text class="dashboard-primary" x="16" y="402" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13" font-weight="600">Latest 30d 6.7B · prior 30d 3B · +127.2%</text>
+</svg>

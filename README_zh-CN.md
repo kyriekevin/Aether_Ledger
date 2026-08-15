@@ -30,6 +30,12 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
+## 趋势
+
+![Aether Ledger 算力趋势面板](assets/compute-trend.svg)
+
+Total、Claude、Codex、TRAE 分别展示从零开始的 12 周完整轨迹；底部比较最近 30 日与此前 30 日。
+
 ## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)

@@ -13,6 +13,11 @@
     .agent-codex { fill: #1e66f5; }
     .agent-traex { fill: #8839ef; }
     .agent-legacy { fill: #6c6f85; }
+    .agent-line-claude { fill: none; stroke: #fe640b; }
+    .agent-line-codex { fill: none; stroke: #1e66f5; }
+    .agent-line-traex { fill: none; stroke: #8839ef; }
+    .agent-line-legacy { fill: none; stroke: #6c6f85; }
+    .trend-total { fill: none; stroke: #179299; }
     .component-input { fill: #40a02b; }
     .component-output { fill: #df8e1d; }
     .component-cache-write { fill: #179299; }
@@ -34,6 +39,11 @@
       .agent-codex { fill: #89b4fa; }
       .agent-traex { fill: #cba6f7; }
       .agent-legacy { fill: #a6adc8; }
+      .agent-line-claude { fill: none; stroke: #fab387; }
+      .agent-line-codex { fill: none; stroke: #89b4fa; }
+      .agent-line-traex { fill: none; stroke: #cba6f7; }
+      .agent-line-legacy { fill: none; stroke: #a6adc8; }
+      .trend-total { fill: none; stroke: #94e2d5; }
       .component-input { fill: #a6e3a1; }
       .component-output { fill: #f9e2af; }
       .component-cache-write { fill: #94e2d5; }
@@ -47,7 +57,7 @@
   </style>
   <rect class="dashboard-background" width="1180" height="470" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Token efficiency</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-16–2026-08-14 · current token-flow shares and routing signals vs preceding 30 days</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-16–2026-08-14 · input/output/cache flow and observable routing signals by harness</text>
   <rect class="dashboard-panel" x="16" y="92" width="372" height="142" rx="16"/>
   <circle class="agent-claude" cx="38" cy="117" r="5"/>
   <text class="dashboard-primary" x="51" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude token flow</text>
