@@ -430,6 +430,25 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "cacheReadTokens": 70,
             },
         )
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 110,
+                "totalCost": 1.1,
+                "models": {"gpt-5.5": {"totalTokens": 110}},
+            }],
+            self.store,
+        )
+        self.assertEqual(
+            self.read_store()["2026-08-04"]["models"]["gpt-5.5"],
+            {
+                "totalTokens": 110,
+                "inputTokens": 10,
+                "outputTokens": 5,
+                "cacheCreationTokens": 15,
+                "cacheReadTokens": 70,
+            },
+        )
 
     def test_routing_and_quota_keep_independent_high_waters(self) -> None:
         self.write_store({
@@ -437,7 +456,13 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalTokens": 100,
                 "totalCost": 1.0,
                 "routing": {
-                    "efforts": {"low": {"turns": 2, "totalTokens": 100}}
+                    "efforts": {
+                        "low": {
+                            "turns": 2,
+                            "totalTokens": 100,
+                            "reasoningOutputTokens": 20,
+                        }
+                    }
                 },
                 "quota": {
                     "windows": {"300": 75.0}, "limitReached": False,
@@ -451,7 +476,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalCost": 0.9,
                 "routing": {
                     "efforts": {
-                        "low": {"turns": 1, "totalTokens": 90},
+                        "low": {"turns": 3, "totalTokens": 100},
                         "high": {
                             "turns": 1, "totalTokens": 40,
                             "reasoningOutputTokens": 12,
@@ -469,6 +494,10 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
         day = self.read_store()["2026-08-04"]
         self.assertEqual(day["routing"]["efforts"]["low"]["totalTokens"], 100)
+        self.assertEqual(day["routing"]["efforts"]["low"]["turns"], 3)
+        self.assertEqual(
+            day["routing"]["efforts"]["low"]["reasoningOutputTokens"], 20
+        )
         self.assertEqual(day["routing"]["efforts"]["high"]["totalTokens"], 40)
         self.assertEqual(day["routing"]["speeds"]["fast"]["turns"], 1)
         self.assertEqual(day["quota"]["windows"], {"300": 75.0, "10080": 20.0})

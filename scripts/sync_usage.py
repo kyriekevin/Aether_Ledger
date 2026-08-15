@@ -786,11 +786,11 @@ def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
         for label, values in buckets.items():
             if not isinstance(values, dict):
                 continue
-            previous = destination.get(label, {})
-            if _token_value(values.get("totalTokens")) >= _token_value(
-                previous.get("totalTokens")
-            ):
-                destination[label] = dict(values)
+            previous = destination.setdefault(label, {})
+            for key in ("turns", "totalTokens", "reasoningOutputTokens"):
+                value = values.get(key)
+                if isinstance(value, int) and not isinstance(value, bool):
+                    previous[key] = max(0, value, _token_value(previous.get(key)))
     return merged
 
 
@@ -887,7 +887,17 @@ def merge_with_cumulative(
                 current_tokens = current["totalTokens"]
                 previous_tokens = previous["totalTokens"] if previous else 0
                 if current_tokens >= previous_tokens:
-                    merged_models[model] = current
+                    merged_model = dict(current)
+                    if previous:
+                        for key in (
+                            "inputTokens",
+                            "outputTokens",
+                            "cacheCreationTokens",
+                            "cacheReadTokens",
+                        ):
+                            if key not in merged_model and key in previous:
+                                merged_model[key] = previous[key]
+                    merged_models[model] = merged_model
             merged["models"] = merged_models
         elif "models" in prev:
             merged["models"] = _canonical_model_totals(prev["models"])
