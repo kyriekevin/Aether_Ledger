@@ -3,8 +3,16 @@
     "costSource": "official",
     "models": {
       "gpt-5.3-codex": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 61056,
+        "inputTokens": 66090,
+        "outputTokens": 2060,
         "totalTokens": 129206
       }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {}
     },
     "totalCost": 0.3103646,
     "totalTokens": 129206
@@ -13,8 +21,16 @@
     "costSource": "official",
     "models": {
       "gpt-5.3-codex": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 711040,
+        "inputTokens": 223856,
+        "outputTokens": 25261,
         "totalTokens": 960157
       }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {}
     },
     "totalCost": 1.739668,
     "totalTokens": 960157
@@ -23,8 +39,16 @@
     "costSource": "official",
     "models": {
       "gpt-5.3-codex": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 365440,
+        "inputTokens": 96132,
+        "outputTokens": 12317,
         "totalTokens": 473889
       }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {}
     },
     "totalCost": 0.809242,
     "totalTokens": 473889
@@ -33,8 +57,16 @@
     "costSource": "official",
     "models": {
       "gpt-5.3-codex": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 168064,
+        "inputTokens": 67837,
+        "outputTokens": 7209,
         "totalTokens": 243110
       }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {}
     },
     "totalCost": 0.49810390000000004,
     "totalTokens": 243110
@@ -43,6 +75,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 16738048,
+        "inputTokens": 2971558,
+        "outputTokens": 246840,
         "totalTokens": 19956446
       }
     },
@@ -53,6 +89,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 39112192,
+        "inputTokens": 6028416,
+        "outputTokens": 346894,
         "totalTokens": 45487502
       }
     },
@@ -64,7 +104,27 @@
     "imageCount": 7,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6085248,
+        "inputTokens": 1448088,
+        "outputTokens": 74282,
         "totalTokens": 7607618
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 13.0,
+        "300": 16.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 2699,
+          "totalTokens": 80854,
+          "turns": 3
+        }
       }
     },
     "totalCost": 31.27881,
@@ -75,7 +135,27 @@
     "imageCount": 30,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 71594112,
+        "inputTokens": 6171177,
+        "outputTokens": 245251,
         "totalTokens": 78010540
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 35.0,
+        "300": 43.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2454,
+          "totalTokens": 13920017,
+          "turns": 124
+        }
       }
     },
     "totalCost": 185.0261775,
@@ -86,7 +166,27 @@
     "imageCount": 11,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 61067008,
+        "inputTokens": 6482668,
+        "outputTokens": 267080,
         "totalTokens": 67816756
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 9.0,
+        "300": 45.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 4760,
+          "totalTokens": 15550718,
+          "turns": 152
+        }
       }
     },
     "totalCost": 177.39810999999997,
@@ -97,7 +197,37 @@
     "imageCount": 32,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 110477056,
+        "inputTokens": 12012633,
+        "outputTokens": 300805,
         "totalTokens": 122790494
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 35.0,
+        "300": 45.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3498,
+          "totalTokens": 29991430,
+          "turns": 239
+        },
+        "medium": {
+          "reasoningOutputTokens": 5262,
+          "totalTokens": 769557,
+          "turns": 20
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 27,
+          "totalTokens": 21503,
+          "turns": 1
+        }
       }
     },
     "totalCost": 310.8146075,
@@ -108,7 +238,27 @@
     "imageCount": 10,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4975360,
+        "inputTokens": 1259976,
+        "outputTokens": 130238,
         "totalTokens": 6365574
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 38.0,
+        "300": 10.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 30819,
+          "totalTokens": 1641700,
+          "turns": 42
+        }
       }
     },
     "totalCost": 31.736750000000004,
@@ -118,7 +268,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10884864,
+        "inputTokens": 936466,
+        "outputTokens": 99831,
         "totalTokens": 11921161
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 41.0,
+        "300": 9.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 362,
+          "totalTokens": 73892,
+          "turns": 3
+        }
       }
     },
     "totalCost": 32.79923,
@@ -128,6 +298,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4505344,
+        "inputTokens": 541164,
+        "outputTokens": 84032,
         "totalTokens": 5130540
       }
     },
@@ -139,7 +313,27 @@
     "imageCount": 22,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 33427200,
+        "inputTokens": 4733604,
+        "outputTokens": 476504,
         "totalTokens": 38637308
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 19.0,
+        "300": 36.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 218262,
+          "totalTokens": 24673301,
+          "turns": 366
+        }
       }
     },
     "totalCost": 136.69185,
@@ -150,20 +344,69 @@
     "imageCount": 7,
     "models": {
       "gpt-5.3-codex-spark": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1643776,
+        "inputTokens": 130268,
+        "outputTokens": 17822,
         "totalTokens": 1791866
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 137588736,
+        "inputTokens": 11629172,
+        "outputTokens": 440258,
         "totalTokens": 149658166
       }
     },
-    "totalCost": 350.36992,
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 40.0,
+        "300": 84.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3594,
+          "totalTokens": 11491005,
+          "turns": 137
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 1198,
+          "totalTokens": 122950,
+          "turns": 4
+        }
+      }
+    },
+    "totalCost": 140.147968,
     "totalTokens": 151450032
   },
   "2026-05-27": {
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7756416,
+        "inputTokens": 2047574,
+        "outputTokens": 162050,
         "totalTokens": 9966040
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 44.0,
+        "300": 12.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 64729,
+          "totalTokens": 3981404,
+          "turns": 67
+        }
       }
     },
     "totalCost": 47.443945,
@@ -173,7 +416,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9712640,
+        "inputTokens": 2103206,
+        "outputTokens": 268266,
         "totalTokens": 12084112
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 46.0,
+        "300": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 8783,
+          "totalTokens": 241818,
+          "turns": 5
+        }
       }
     },
     "totalCost": 58.550824999999996,
@@ -183,7 +446,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13416960,
+        "inputTokens": 1768953,
+        "outputTokens": 167613,
         "totalTokens": 15353526
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 53.0,
+        "300": 11.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 484,
+          "totalTokens": 210910,
+          "turns": 7
+        }
       }
     },
     "totalCost": 51.4540875,
@@ -193,6 +476,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3476224,
+        "inputTokens": 613376,
+        "outputTokens": 50163,
         "totalTokens": 4139763
       }
     },
@@ -203,7 +490,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 37803264,
+        "inputTokens": 4484893,
+        "outputTokens": 458042,
         "totalTokens": 42746199
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 2.0,
+        "300": 20.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 336,
+          "totalTokens": 155119,
+          "turns": 5
+        }
       }
     },
     "totalCost": 137.66839249999998,
@@ -214,7 +521,32 @@
     "imageCount": 26,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 170226816,
+        "inputTokens": 13890674,
+        "outputTokens": 734719,
         "totalTokens": 184852209
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 35.0,
+        "300": 99.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3291,
+          "totalTokens": 36208656,
+          "turns": 268
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 47480,
+          "totalTokens": 4668450,
+          "turns": 89
+        }
       }
     },
     "totalCost": 441.52087000000006,
@@ -225,7 +557,32 @@
     "imageCount": 24,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 16975488,
+        "inputTokens": 1755869,
+        "outputTokens": 194956,
         "totalTokens": 18926313
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 45.0,
+        "300": 30.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 498,
+          "totalTokens": 589887,
+          "turns": 14
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 39659,
+          "totalTokens": 5000300,
+          "turns": 103
+        }
       }
     },
     "totalCost": 57.7894225,
@@ -236,7 +593,27 @@
     "imageCount": 18,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7642112,
+        "inputTokens": 1367344,
+        "outputTokens": 171487,
         "totalTokens": 9180943
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 51.0,
+        "300": 31.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 66011,
+          "totalTokens": 7646480,
+          "turns": 163
+        }
       }
     },
     "totalCost": 39.505965,
@@ -246,7 +623,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 18752896,
+        "inputTokens": 1928282,
+        "outputTokens": 259803,
         "totalTokens": 20940981
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 11.0,
+        "300": 47.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 608,
+          "totalTokens": 181327,
+          "turns": 7
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 17540,
+          "totalTokens": 1484546,
+          "turns": 26
+        }
       }
     },
     "totalCost": 67.02987,
@@ -257,7 +659,32 @@
     "imageCount": 4,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8332544,
+        "inputTokens": 1805560,
+        "outputTokens": 153453,
         "totalTokens": 10291557
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 18.0,
+        "300": 22.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 122,
+          "totalTokens": 14248,
+          "turns": 1
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 26237,
+          "totalTokens": 1900443,
+          "turns": 45
+        }
       }
     },
     "totalCost": 44.494155000000006,
@@ -268,7 +695,27 @@
     "imageCount": 2,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4409472,
+        "inputTokens": 862598,
+        "outputTokens": 69153,
         "totalTokens": 5341223
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 56.0,
+        "300": 39.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 3674,
+          "totalTokens": 491453,
+          "turns": 13
+        }
       }
     },
     "totalCost": 21.48079,
@@ -279,7 +726,27 @@
     "imageCount": 3,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8328576,
+        "inputTokens": 1376478,
+        "outputTokens": 116155,
         "totalTokens": 9821209
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 62.0,
+        "300": 22.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "reasoningOutputTokens": 18296,
+          "totalTokens": 924006,
+          "turns": 26
+        }
       }
     },
     "totalCost": 36.32832,
@@ -289,7 +756,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 51719424,
+        "inputTokens": 4723875,
+        "outputTokens": 289140,
         "totalTokens": 56732439
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 98.0,
+        "300": 84.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2158,
+          "totalTokens": 8456628,
+          "turns": 98
+        },
+        "medium": {
+          "reasoningOutputTokens": 2134,
+          "totalTokens": 179447,
+          "turns": 4
+        }
       }
     },
     "totalCost": 145.3832175,
@@ -300,7 +792,32 @@
     "imageCount": 5,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4675840,
+        "inputTokens": 1139662,
+        "outputTokens": 67989,
         "totalTokens": 5883491
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 99.0,
+        "300": 2.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 4976,
+          "totalTokens": 183828,
+          "turns": 5
+        },
+        "low": {
+          "reasoningOutputTokens": 349,
+          "totalTokens": 242655,
+          "turns": 10
+        }
       }
     },
     "totalCost": 25.189750000000004,
@@ -310,6 +827,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 30464,
+        "inputTokens": 34243,
+        "outputTokens": 4113,
         "totalTokens": 68820
       }
     },
@@ -321,7 +842,27 @@
     "imageCount": 7,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1553536,
+        "inputTokens": 613041,
+        "outputTokens": 48964,
         "totalTokens": 2215541
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 1.0,
+        "300": 4.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 10481,
+          "totalTokens": 1945376,
+          "turns": 51
+        }
       }
     },
     "totalCost": 13.2772325,
@@ -331,6 +872,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 222592,
+        "inputTokens": 88239,
+        "outputTokens": 10184,
         "totalTokens": 321015
       }
     },
@@ -341,7 +886,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 12670464,
+        "inputTokens": 2197367,
+        "outputTokens": 174947,
         "totalTokens": 15042778
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 2.0,
+        "300": 11.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 44,
+          "totalTokens": 18914,
+          "turns": 1
+        }
       }
     },
     "totalCost": 56.4261925,
@@ -351,6 +916,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1297792,
+        "inputTokens": 274676,
+        "outputTokens": 28368,
         "totalTokens": 1600836
       }
     },
@@ -361,7 +930,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 235264,
+        "inputTokens": 161779,
+        "outputTokens": 8284,
         "totalTokens": 405327
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 59.0,
+        "300": 7.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 110,
+          "totalTokens": 13632,
+          "turns": 1
+        }
       }
     },
     "totalCost": 2.9376175,
@@ -371,7 +960,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1928064,
+        "inputTokens": 375238,
+        "outputTokens": 23777,
         "totalTokens": 2327079
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 2.0,
+        "300": 10.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 953,
+          "totalTokens": 381262,
+          "turns": 18
+        }
       }
     },
     "totalCost": 8.88383,
@@ -381,6 +990,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4831488,
+        "inputTokens": 827333,
+        "outputTokens": 69748,
         "totalTokens": 5728569
       }
     },
@@ -391,6 +1004,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 344960,
+        "inputTokens": 66245,
+        "outputTokens": 5815,
         "totalTokens": 417020
       }
     },
@@ -401,7 +1018,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1765248,
+        "inputTokens": 286942,
+        "outputTokens": 28918,
         "totalTokens": 2081108
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 56.0,
+        "300": 12.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 13176,
+          "totalTokens": 2081108,
+          "turns": 33
+        }
       }
     },
     "totalCost": 7.962185,
@@ -411,7 +1048,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 42395776,
+        "inputTokens": 4018920,
+        "outputTokens": 295706,
         "totalTokens": 46710402
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 77.0,
+        "300": 92.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 13653,
+          "totalTokens": 5330373,
+          "turns": 80
+        },
+        "low": {
+          "reasoningOutputTokens": 474,
+          "totalTokens": 784778,
+          "turns": 13
+        }
       }
     },
     "totalCost": 125.40917000000002,
@@ -421,7 +1083,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 61602304,
+        "inputTokens": 6833088,
+        "outputTokens": 311336,
         "totalTokens": 68746728
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 100.0,
+        "300": 58.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2592,
+          "totalTokens": 5043674,
+          "turns": 60
+        }
       }
     },
     "totalCost": 185.76668,
@@ -431,10 +1113,39 @@
     "costSource": "official",
     "models": {
       "gpt-5.4-mini": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3961216,
+        "inputTokens": 507936,
+        "outputTokens": 78233,
         "totalTokens": 4547385
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 69843584,
+        "inputTokens": 5926940,
+        "outputTokens": 401678,
         "totalTokens": 76172202
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 37.0,
+        "300": 100.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 4905,
+          "totalTokens": 952874,
+          "turns": 12
+        },
+        "low": {
+          "reasoningOutputTokens": 1848,
+          "totalTokens": 1863824,
+          "turns": 43
+        }
       }
     },
     "totalCost": 193.5772634,
@@ -444,7 +1155,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 16311552,
+        "inputTokens": 1400341,
+        "outputTokens": 96755,
         "totalTokens": 17808648
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 50.0,
+        "300": 22.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 950,
+          "totalTokens": 2834579,
+          "turns": 41
+        }
       }
     },
     "totalCost": 45.1503275,
@@ -454,7 +1185,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 54822784,
+        "inputTokens": 3651989,
+        "outputTokens": 254339,
         "totalTokens": 58729112
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 72.0,
+        "300": 65.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2590,
+          "totalTokens": 8450348,
+          "turns": 81
+        }
       }
     },
     "totalCost": 133.25376749999998,
@@ -464,10 +1215,34 @@
     "costSource": "official",
     "models": {
       "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 207616,
+        "inputTokens": 99208,
+        "outputTokens": 6861,
         "totalTokens": 313685
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 69363840,
+        "inputTokens": 4064281,
+        "outputTokens": 230494,
         "totalTokens": 73658615
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 23.0,
+        "300": 81.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 4745,
+          "totalTokens": 14737347,
+          "turns": 163
+        }
       }
     },
     "totalCost": 155.6010405,
@@ -477,7 +1252,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 37505152,
+        "inputTokens": 3346318,
+        "outputTokens": 219582,
         "totalTokens": 41071052
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 16.0,
+        "300": 84.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2434,
+          "totalTokens": 6828433,
+          "turns": 85
+        }
       }
     },
     "totalCost": 105.17906500000001,
@@ -487,7 +1282,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2648320,
+        "inputTokens": 917671,
+        "outputTokens": 32821,
         "totalTokens": 3598812
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 18.0,
+        "300": 6.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 268,
+          "totalTokens": 192559,
+          "turns": 8
+        }
       }
     },
     "totalCost": 17.2428625,
@@ -497,7 +1312,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1953792,
+        "inputTokens": 772502,
+        "outputTokens": 26577,
         "totalTokens": 2752871
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 21.0,
+        "300": 8.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 458,
+          "totalTokens": 66344,
+          "turns": 3
+        },
+        "low": {
+          "reasoningOutputTokens": 647,
+          "totalTokens": 271063,
+          "turns": 15
+        }
       }
     },
     "totalCost": 14.091790000000003,
@@ -507,7 +1347,27 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11731968,
+        "inputTokens": 1710384,
+        "outputTokens": 77423,
         "totalTokens": 13519775
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 27.0,
+        "300": 27.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 1047,
+          "totalTokens": 1017278,
+          "turns": 31
+        }
       }
     },
     "totalCost": 41.851485000000004,
@@ -517,7 +1377,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 17296640,
+        "inputTokens": 3571292,
+        "outputTokens": 200268,
         "totalTokens": 21068200
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 39.0,
+        "300": 39.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 769,
+          "totalTokens": 632505,
+          "turns": 16
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 8320,
+          "totalTokens": 1066202,
+          "turns": 24
+        }
       }
     },
     "totalCost": 81.28205000000001,
@@ -528,7 +1413,27 @@
     "imageCount": 8,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 63163648,
+        "inputTokens": 7671746,
+        "outputTokens": 284900,
         "totalTokens": 71120294
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 40.0,
+        "300": 83.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 4363,
+          "totalTokens": 10035272,
+          "turns": 105
+        }
       }
     },
     "totalCost": 196.21888499999997,
@@ -539,7 +1444,32 @@
     "imageCount": 4,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 48403712,
+        "inputTokens": 4373831,
+        "outputTokens": 162993,
         "totalTokens": 52940536
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 52.0,
+        "300": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 13410,
+          "totalTokens": 2310847,
+          "turns": 37
+        },
+        "low": {
+          "reasoningOutputTokens": 1460,
+          "totalTokens": 11000336,
+          "turns": 81
+        }
       }
     },
     "totalCost": 127.40200249999998,
@@ -549,7 +1479,32 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11054976,
+        "inputTokens": 1361799,
+        "outputTokens": 55258,
         "totalTokens": 12472033
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 88.0,
+        "300": 81.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 5848,
+          "totalTokens": 3519187,
+          "turns": 42
+        },
+        "low": {
+          "reasoningOutputTokens": 1111,
+          "totalTokens": 1331170,
+          "turns": 32
+        }
       }
     },
     "totalCost": 34.9855575,
@@ -560,10 +1515,40 @@
     "imageCount": 7,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 20212864,
+        "inputTokens": 1715980,
+        "outputTokens": 45818,
         "totalTokens": 21974662
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 33810432,
+        "inputTokens": 1764199,
+        "outputTokens": 127893,
         "totalTokens": 35702524
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 15.0,
+        "300": 99.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 4426,
+          "totalTokens": 10297380,
+          "turns": 156
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 86430,
+          "turns": 3
+        }
       }
     },
     "totalCost": 117.3426135,
@@ -573,6 +1558,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 716032,
+        "inputTokens": 183301,
+        "outputTokens": 20607,
         "totalTokens": 919940
       }
     },
@@ -583,6 +1572,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 605440,
+        "inputTokens": 180391,
+        "outputTokens": 14421,
         "totalTokens": 800252
       }
     },
@@ -593,10 +1586,33 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 630656,
+        "inputTokens": 174803,
+        "outputTokens": 1668,
         "totalTokens": 807127
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13151488,
+        "inputTokens": 1513851,
+        "outputTokens": 181309,
         "totalTokens": 14846648
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 45.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 1079,
+          "totalTokens": 807127,
+          "turns": 21
+        }
       }
     },
     "totalCost": 40.1775635,
@@ -607,10 +1623,33 @@
     "imageCount": 2,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7436928,
+        "inputTokens": 861819,
+        "outputTokens": 11773,
         "totalTokens": 8310520
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 31868928,
+        "inputTokens": 2426234,
+        "outputTokens": 184337,
         "totalTokens": 34479499
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 54.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 6048,
+          "totalTokens": 8310520,
+          "turns": 135
+        }
       }
     },
     "totalCost": 88.1433605,
@@ -620,10 +1659,33 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7029248,
+        "inputTokens": 618023,
+        "outputTokens": 8555,
         "totalTokens": 7655826
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 27722240,
+        "inputTokens": 1785397,
+        "outputTokens": 138004,
         "totalTokens": 29645641
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 20.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3076,
+          "totalTokens": 7655826,
+          "turns": 102
+        }
       }
     },
     "totalCost": 71.0099225,
@@ -633,10 +1695,38 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1321088,
+        "inputTokens": 482364,
+        "outputTokens": 2347,
         "totalTokens": 1805799
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 37456384,
+        "inputTokens": 2823925,
+        "outputTokens": 228703,
         "totalTokens": 40509012
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 40.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 1111,
+          "totalTokens": 1805799,
+          "turns": 27
+        },
+        "medium": {
+          "reasoningOutputTokens": 4672,
+          "totalTokens": 532792,
+          "turns": 10
+        }
       }
     },
     "totalCost": 87.274749,
@@ -646,10 +1736,33 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3070336,
+        "inputTokens": 756532,
+        "outputTokens": 5996,
         "totalTokens": 3832864
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 29389056,
+        "inputTokens": 2558686,
+        "outputTokens": 178843,
         "totalTokens": 32126585
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3292,
+          "totalTokens": 3832864,
+          "turns": 75
+        }
       }
     },
     "totalCost": 79.450766,
@@ -659,10 +1772,33 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 401920,
+        "inputTokens": 46235,
+        "outputTokens": 824,
         "totalTokens": 448979
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 32832000,
+        "inputTokens": 3782153,
+        "outputTokens": 148697,
         "totalTokens": 36762850
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 496,
+          "totalTokens": 448979,
+          "turns": 8
+        }
       }
     },
     "totalCost": 80.7174875,
@@ -672,6 +1808,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 276992,
+        "inputTokens": 67819,
+        "outputTokens": 3422,
         "totalTokens": 348233
       }
     },
@@ -682,6 +1822,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1132544,
+        "inputTokens": 152935,
+        "outputTokens": 21568,
         "totalTokens": 1307047
       }
     },
@@ -692,6 +1836,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 310016,
+        "inputTokens": 52799,
+        "outputTokens": 1834,
         "totalTokens": 364649
       }
     },
@@ -702,10 +1850,33 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 959872,
+        "inputTokens": 59315,
+        "outputTokens": 2425,
         "totalTokens": 1021612
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5015040,
+        "inputTokens": 267076,
+        "outputTokens": 16664,
         "totalTokens": 5298780
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 15.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 817,
+          "totalTokens": 1021612,
+          "turns": 29
+        }
       }
     },
     "totalCost": 8.0544555,
@@ -715,10 +1886,53 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 202240,
+        "inputTokens": 51039,
+        "outputTokens": 1725,
         "totalTokens": 255004
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 27645184,
+        "inputTokens": 2459096,
+        "outputTokens": 241310,
         "totalTokens": 30345590
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 31.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 149417,
+          "totalTokens": 26473969,
+          "turns": 234
+        },
+        "low": {
+          "reasoningOutputTokens": 1343,
+          "totalTokens": 255004,
+          "turns": 13
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 113214,
+          "totalTokens": 31780577,
+          "turns": 256
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 73118948,
+          "turns": 556
+        },
+        "standard": {
+          "totalTokens": 51026,
+          "turns": 3
+        }
       }
     },
     "totalCost": 67.58946949999999,
@@ -728,7 +1942,25 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1286656,
+        "inputTokens": 360161,
+        "outputTokens": 20424,
         "totalTokens": 1667241
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 40.0
+      }
+    },
+    "routing": {
+      "speeds": {
+        "fast": {
+          "totalTokens": 255202,
+          "turns": 2
+        }
       }
     },
     "totalCost": 6.1137060000000005,
@@ -738,6 +1970,10 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 932096,
+        "inputTokens": 119171,
+        "outputTokens": 20422,
         "totalTokens": 1071689
       }
     },
@@ -748,10 +1984,44 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 74240,
+        "inputTokens": 32665,
+        "outputTokens": 548,
         "totalTokens": 107453
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1363968,
+        "inputTokens": 190051,
+        "outputTokens": 17625,
         "totalTokens": 1571644
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 21.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 2627,
+          "totalTokens": 706390,
+          "turns": 5
+        },
+        "low": {
+          "reasoningOutputTokens": 216,
+          "totalTokens": 107453,
+          "turns": 6
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 801822,
+          "turns": 10
+        }
       }
     },
     "totalCost": 2.669094,
@@ -761,10 +2031,49 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9728,
+        "inputTokens": 10676,
+        "outputTokens": 190,
         "totalTokens": 20594
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5805824,
+        "inputTokens": 697745,
+        "outputTokens": 111044,
         "totalTokens": 6614613
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 36.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 5506,
+          "totalTokens": 978082,
+          "turns": 6
+        },
+        "low": {
+          "reasoningOutputTokens": 113,
+          "totalTokens": 20594,
+          "turns": 2
+        },
+        "medium": {
+          "reasoningOutputTokens": 2961,
+          "totalTokens": 208808,
+          "turns": 7
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 989063,
+          "turns": 7
+        }
       }
     },
     "totalCost": 18.590498,
@@ -774,10 +2083,58 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 440576,
+        "inputTokens": 85925,
+        "outputTokens": 2405,
         "totalTokens": 528906
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 43206144,
+        "inputTokens": 3916486,
+        "outputTokens": 340931,
         "totalTokens": 47463561
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 94.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 258948,
+          "totalTokens": 67352124,
+          "turns": 504
+        },
+        "low": {
+          "reasoningOutputTokens": 1251,
+          "totalTokens": 528906,
+          "turns": 19
+        },
+        "medium": {
+          "reasoningOutputTokens": 10601,
+          "totalTokens": 1436224,
+          "turns": 17
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 550663,
+          "totalTokens": 110641682,
+          "turns": 793
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 147973240,
+          "turns": 1071
+        },
+        "standard": {
+          "totalTokens": 80476425,
+          "turns": 550
+        }
       }
     },
     "totalCost": 66.39127049999999,
@@ -787,10 +2144,49 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4715520,
+        "inputTokens": 443652,
+        "outputTokens": 6383,
         "totalTokens": 5165555
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 82085376,
+        "inputTokens": 5829229,
+        "outputTokens": 532163,
         "totalTokens": 88446768
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 61.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2240,
+          "totalTokens": 5165555,
+          "turns": 64
+        },
+        "medium": {
+          "reasoningOutputTokens": 4505,
+          "totalTokens": 2042088,
+          "turns": 13
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 157316,
+          "totalTokens": 52979506,
+          "turns": 367
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 86980851,
+          "turns": 599
+        }
       }
     },
     "totalCost": 101.97369,
@@ -801,13 +2197,60 @@
     "imageCount": 24,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11371520,
+        "inputTokens": 953882,
+        "outputTokens": 6898,
         "totalTokens": 12332300
       },
       "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 222720,
+        "inputTokens": 91521,
+        "outputTokens": 2583,
         "totalTokens": 316824
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 24574464,
+        "inputTokens": 754649,
+        "outputTokens": 172425,
         "totalTokens": 25501538
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 66.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 140516,
+          "totalTokens": 47163315,
+          "turns": 408
+        },
+        "low": {
+          "reasoningOutputTokens": 1555,
+          "totalTokens": 12419291,
+          "turns": 96
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 98529,
+          "totalTokens": 43368966,
+          "turns": 372
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 59484347,
+          "turns": 499
+        },
+        "standard": {
+          "totalTokens": 42974949,
+          "turns": 360
+        }
       }
     },
     "totalCost": 69.16333468,
@@ -817,7 +2260,26 @@
     "costSource": "official",
     "models": {
       "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 368384,
+        "inputTokens": 102293,
+        "outputTokens": 4215,
         "totalTokens": 474892
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2229,
+          "totalTokens": 474892,
+          "turns": 20
+        }
       }
     },
     "totalCost": 0.06576856,
@@ -827,10 +2289,48 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 14022656,
+        "inputTokens": 1156682,
+        "outputTokens": 12216,
         "totalTokens": 15191554
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 66903680,
+        "inputTokens": 2008096,
+        "outputTokens": 303983,
         "totalTokens": 69215759
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 40.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 6281,
+          "totalTokens": 15973795,
+          "turns": 170
+        },
+        "medium": {
+          "reasoningOutputTokens": 2880,
+          "totalTokens": 959140,
+          "turns": 20
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 3307163,
+          "turns": 46
+        },
+        "standard": {
+          "totalTokens": 11833922,
+          "turns": 91
+        }
       }
     },
     "totalCost": 101.6520745,
@@ -841,10 +2341,48 @@
     "imageCount": 2,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4970496,
+        "inputTokens": 882130,
+        "outputTokens": 12699,
         "totalTokens": 5865325
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 48199168,
+        "inputTokens": 2137153,
+        "outputTokens": 278949,
         "totalTokens": 50615270
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 13.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 5473,
+          "totalTokens": 6013999,
+          "turns": 114
+        },
+        "medium": {
+          "reasoningOutputTokens": 8002,
+          "totalTokens": 1089145,
+          "turns": 34
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 2746581,
+          "turns": 40
+        },
+        "standard": {
+          "totalTokens": 3122657,
+          "turns": 64
+        }
       }
     },
     "totalCost": 84.194365,
@@ -855,10 +2393,49 @@
     "imageCount": 31,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1420288,
+        "inputTokens": 412290,
+        "outputTokens": 6869,
         "totalTokens": 1839447
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 56588160,
+        "inputTokens": 2402626,
+        "outputTokens": 296973,
         "totalTokens": 59287759
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 28.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 11242,
+          "totalTokens": 7146431,
+          "turns": 51
+        },
+        "low": {
+          "reasoningOutputTokens": 3318,
+          "totalTokens": 1839447,
+          "turns": 60
+        },
+        "medium": {
+          "reasoningOutputTokens": 37998,
+          "totalTokens": 27749370,
+          "turns": 261
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 35035920,
+          "turns": 318
+        }
       }
     },
     "totalCost": 105.87696,
@@ -869,7 +2446,32 @@
     "imageCount": 17,
     "models": {
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 15409920,
+        "inputTokens": 994774,
+        "outputTokens": 60729,
         "totalTokens": 16465423
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 13722,
+          "totalTokens": 16200868,
+          "turns": 140
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 16200868,
+          "turns": 140
+        }
       }
     },
     "totalCost": 29.001400000000004,
@@ -879,13 +2481,94 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13124864,
+        "inputTokens": 2786593,
+        "outputTokens": 16148,
         "totalTokens": 15927605
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 105576832,
+        "inputTokens": 3504882,
+        "outputTokens": 376408,
         "totalTokens": 109458122
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 10.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 18714,
+          "totalTokens": 19429155,
+          "turns": 151
+        },
+        "low": {
+          "reasoningOutputTokens": 4325,
+          "totalTokens": 16004912,
+          "turns": 168
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 32279035,
+          "turns": 285
+        }
       }
     },
     "totalCost": 215.65972449999998,
     "totalTokens": 125385727
+  },
+  "2026-08-16": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 401408,
+        "inputTokens": 100939,
+        "outputTokens": 1747,
+        "totalTokens": 504094
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 37125120,
+        "inputTokens": 2719231,
+        "outputTokens": 179371,
+        "totalTokens": 40023722
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 30.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 27311,
+          "totalTokens": 9080147,
+          "turns": 123
+        },
+        "low": {
+          "reasoningOutputTokens": 709,
+          "totalTokens": 504094,
+          "turns": 16
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 62566600,
+          "turns": 541
+        }
+      }
+    },
+    "totalCost": 38.848472,
+    "totalTokens": 40527816
   }
 }

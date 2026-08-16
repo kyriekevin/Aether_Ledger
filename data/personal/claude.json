@@ -3,10 +3,26 @@
     "costSource": "unpriced",
     "models": {
       "agnes-2.0-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 915200,
+        "inputTokens": 952701,
+        "outputTokens": 15359,
         "totalTokens": 1883260
       },
       "nvidia/nemotron-3-ultra-550b-a55b:free": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 346368,
+        "inputTokens": 120913,
+        "outputTokens": 2634,
         "totalTokens": 469915
+      }
+    },
+    "routing": {
+      "speeds": {
+        "standard": {
+          "totalTokens": 2353175,
+          "turns": 47
+        }
       }
     },
     "totalCost": 0.0,

@@ -3,22 +3,65 @@
     "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11915224,
+        "inputTokens": 314406,
+        "outputTokens": 81797,
         "totalTokens": 12311427
       },
       "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1517568,
+        "inputTokens": 103578,
+        "outputTokens": 45658,
         "totalTokens": 1666804
       },
       "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1865728,
+        "inputTokens": 181496,
+        "outputTokens": 32710,
         "totalTokens": 2079934
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1092114,
+        "inputTokens": 435295,
+        "outputTokens": 3555,
         "totalTokens": 1535720
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3639808,
+        "inputTokens": 398421,
+        "outputTokens": 16482,
         "totalTokens": 4054711
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 56832,
+        "inputTokens": 49396,
+        "outputTokens": 1953,
         "totalTokens": 108181
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 58805,
+          "totalTokens": 4683783,
+          "turns": 77
+        },
+        "low": {
+          "reasoningOutputTokens": 4756,
+          "totalTokens": 1535720,
+          "turns": 36
+        },
+        "medium": {
+          "reasoningOutputTokens": 27293,
+          "totalTokens": 15772152,
+          "turns": 185
+        }
       }
     },
     "totalCost": 14.643646274399998,
@@ -28,16 +71,51 @@
     "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 24885710,
+        "inputTokens": 982642,
+        "outputTokens": 211936,
         "totalTokens": 26080288
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8312596,
+        "inputTokens": 1715775,
+        "outputTokens": 10687,
         "totalTokens": 10043166
       },
       "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 570251,
+        "inputTokens": 55229,
+        "outputTokens": 6007,
         "totalTokens": 631487
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 12455424,
+        "inputTokens": 877218,
+        "outputTokens": 32955,
         "totalTokens": 13365597
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 16435,
+          "totalTokens": 813624,
+          "turns": 20
+        },
+        "low": {
+          "reasoningOutputTokens": 4108,
+          "totalTokens": 10043166,
+          "turns": 127
+        },
+        "medium": {
+          "reasoningOutputTokens": 76952,
+          "totalTokens": 39303023,
+          "turns": 386
+        }
       }
     },
     "totalCost": 35.592154519999994,
@@ -47,13 +125,44 @@
     "costSource": "unpriced",
     "models": {
       "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 876544,
+        "inputTokens": 77789,
+        "outputTokens": 18105,
         "totalTokens": 972438
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 258865,
+        "inputTokens": 362290,
+        "outputTokens": 1363,
         "totalTokens": 625827
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8264192,
+        "inputTokens": 339502,
+        "outputTokens": 26492,
         "totalTokens": 8630186
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 13652,
+          "totalTokens": 972438,
+          "turns": 22
+        },
+        "low": {
+          "reasoningOutputTokens": 3309,
+          "totalTokens": 625827,
+          "turns": 15
+        },
+        "medium": {
+          "reasoningOutputTokens": 6448,
+          "totalTokens": 8630186,
+          "turns": 91
+        }
       }
     },
     "totalCost": 6.8753102870000005,
@@ -63,7 +172,20 @@
     "costSource": "official",
     "models": {
       "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 520192,
+        "inputTokens": 144289,
+        "outputTokens": 7770,
         "totalTokens": 672251
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 2483,
+          "totalTokens": 672251,
+          "turns": 15
+        }
       }
     },
     "totalCost": 0.07141131099999999,
@@ -73,10 +195,37 @@
     "costSource": "unpriced",
     "models": {
       "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 911360,
+        "inputTokens": 102300,
+        "outputTokens": 11668,
         "totalTokens": 1025328
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11675,
+        "inputTokens": 9997,
+        "outputTokens": 70,
         "totalTokens": 22123
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 6873,
+          "totalTokens": 787166,
+          "turns": 15
+        },
+        "low": {
+          "reasoningOutputTokens": 381,
+          "totalTokens": 22123,
+          "turns": 1
+        },
+        "medium": {
+          "reasoningOutputTokens": 895,
+          "totalTokens": 238162,
+          "turns": 8
+        }
       }
     },
     "totalCost": 0.06374759,

@@ -3,13 +3,34 @@
     "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 350898,
+        "inputTokens": 69441,
+        "outputTokens": 895,
         "totalTokens": 425379
       },
       "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 21376,
+        "inputTokens": 23499,
+        "outputTokens": 525,
         "totalTokens": 45400
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1415680,
+        "inputTokens": 60566,
+        "outputTokens": 10130,
         "totalTokens": 1486376
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 4145,
+          "totalTokens": 425379,
+          "turns": 14
+        }
       }
     },
     "totalCost": 1.4414869000000001,
@@ -19,13 +40,34 @@
     "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 424045,
+        "inputTokens": 262608,
+        "outputTokens": 1739,
         "totalTokens": 699495
       },
       "gemini-3.1-pro-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5818778,
+        "inputTokens": 890045,
+        "outputTokens": 4764,
         "totalTokens": 6718171
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1108480,
+        "inputTokens": 193092,
+        "outputTokens": 11433,
         "totalTokens": 1313005
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 11103,
+          "totalTokens": 699495,
+          "turns": 26
+        }
       }
     },
     "totalCost": 5.02142685,
@@ -35,19 +77,48 @@
     "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 58895780,
+        "inputTokens": 878746,
+        "outputTokens": 201877,
         "totalTokens": 59976403
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 17148988,
+        "inputTokens": 10019164,
+        "outputTokens": 22911,
         "totalTokens": 27213498
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3498496,
+        "inputTokens": 881769,
+        "outputTokens": 8501,
         "totalTokens": 4388766
       },
       "kimi-k2.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+        "inputTokens": 24833,
+        "outputTokens": 214,
         "totalTokens": 25047
       },
       "minimax-m2.7": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+        "inputTokens": 25458,
+        "outputTokens": 130,
         "totalTokens": 25588
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 22435,
+          "totalTokens": 27300162,
+          "turns": 298
+        }
       }
     },
     "totalCost": 51.2607676,
@@ -57,13 +128,34 @@
     "costSource": "unpriced",
     "models": {
       "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 393193578,
+        "inputTokens": 8318360,
+        "outputTokens": 454025,
         "totalTokens": 401965963
       },
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 61966458,
+        "inputTokens": 21814121,
+        "outputTokens": 56487,
         "totalTokens": 83888288
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4370688,
+        "inputTokens": 2316272,
+        "outputTokens": 28525,
         "totalTokens": 6715485
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 51222,
+          "totalTokens": 84154990,
+          "turns": 804
+        }
       }
     },
     "totalCost": 278.3365124,
@@ -73,10 +165,27 @@
     "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 28747401,
+        "inputTokens": 16739718,
+        "outputTokens": 42469,
         "totalTokens": 45595333
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 134595328,
+        "inputTokens": 33785068,
+        "outputTokens": 651928,
         "totalTokens": 169032324
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 65745,
+          "totalTokens": 45975502,
+          "turns": 426
+        }
       }
     },
     "totalCost": 265.71548005,
@@ -86,13 +195,60 @@
     "costSource": "unpriced",
     "models": {
       "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1102686,
+        "inputTokens": 2806613,
+        "outputTokens": 5666,
         "totalTokens": 3930348
       },
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 73289216,
+        "inputTokens": 4472664,
+        "outputTokens": 349391,
         "totalTokens": 78111271
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 15383,
+          "totalTokens": 4018204,
+          "turns": 36
+        }
       }
     },
     "totalCost": 70.96509680000001,
     "totalTokens": 82041619
+  },
+  "2026-08-16": {
+    "costSource": "unpriced",
+    "models": {
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 186283,
+        "inputTokens": 51501,
+        "outputTokens": 501,
+        "totalTokens": 241053
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2109184,
+        "inputTokens": 200859,
+        "outputTokens": 16075,
+        "totalTokens": 2326118
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 2768,
+          "totalTokens": 241053,
+          "turns": 7
+        }
+      }
+    },
+    "totalCost": 2.57770465,
+    "totalTokens": 2567171
   }
 }

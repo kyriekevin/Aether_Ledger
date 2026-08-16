@@ -3,10 +3,39 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 25294976,
+        "inputTokens": 1767940,
+        "outputTokens": 18564,
         "totalTokens": 27081480
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 158665472,
+        "inputTokens": 1942366,
+        "outputTokens": 257765,
         "totalTokens": 160865603
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 46.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 7279,
+          "totalTokens": 27240503,
+          "turns": 201
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 161012745,
+          "turns": 1263
+        }
       }
     },
     "totalCost": 215.34255299999998,
@@ -15,10 +44,39 @@
   "2026-07-19": {
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 39417728,
+        "inputTokens": 2641741,
+        "outputTokens": 27428,
         "totalTokens": 42086897
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 156244736,
+        "inputTokens": 3320034,
+        "outputTokens": 225638,
         "totalTokens": 159790408
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 9552,
+          "totalTokens": 42322233,
+          "turns": 304
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 160604783,
+          "turns": 1258
+        }
       }
     },
     "totalCost": 261.178749,
@@ -28,10 +86,39 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 12202368,
+        "inputTokens": 3891039,
+        "outputTokens": 10923,
         "totalTokens": 16104330
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 108435200,
+        "inputTokens": 2839185,
+        "outputTokens": 159396,
         "totalTokens": 111433781
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 100.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3114,
+          "totalTokens": 16394104,
+          "turns": 112
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 112069821,
+          "turns": 786
+        }
       }
     },
     "totalCost": 172.274879,
@@ -41,10 +128,39 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 14834944,
+        "inputTokens": 3360384,
+        "outputTokens": 13424,
         "totalTokens": 18208752
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 98999808,
+        "inputTokens": 1849257,
+        "outputTokens": 183525,
         "totalTokens": 101032590
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 93.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 5343,
+          "totalTokens": 18385858,
+          "turns": 148
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 100882165,
+          "turns": 741
+        }
       }
     },
     "totalCost": 151.403546,
@@ -53,10 +169,39 @@
   "2026-07-22": {
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11841408,
+        "inputTokens": 533975,
+        "outputTokens": 10283,
         "totalTokens": 12385666
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 71237888,
+        "inputTokens": 1898850,
+        "outputTokens": 117990,
         "totalTokens": 73254728
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 33.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 4028,
+          "totalTokens": 12385666,
+          "turns": 113
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 73979869,
+          "turns": 495
+        }
       }
     },
     "totalCost": 217.158393,
@@ -66,10 +211,49 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 83208192,
+        "inputTokens": 4984893,
+        "outputTokens": 47103,
         "totalTokens": 88240188
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 367259904,
+        "inputTokens": 8349193,
+        "outputTokens": 569839,
         "totalTokens": 376178936
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 100.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 240,
+          "totalTokens": 1887635,
+          "turns": 13
+        },
+        "low": {
+          "reasoningOutputTokens": 13808,
+          "totalTokens": 88966148,
+          "turns": 570
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 113162,
+          "totalTokens": 171604962,
+          "turns": 1182
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 378268242,
+          "turns": 2707
+        }
       }
     },
     "totalCost": 552.883825,
@@ -79,10 +263,44 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 21094912,
+        "inputTokens": 3058167,
+        "outputTokens": 10369,
         "totalTokens": 24163448
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 108513280,
+        "inputTokens": 2529072,
+        "outputTokens": 287188,
         "totalTokens": 111329540
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 86.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2246,
+          "totalTokens": 24473255,
+          "turns": 140
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 87028,
+          "totalTokens": 111500077,
+          "turns": 806
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 111139157,
+          "turns": 793
+        }
       }
     },
     "totalCost": 176.614721,
@@ -92,10 +310,53 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 36014592,
+        "inputTokens": 2420143,
+        "outputTokens": 20298,
         "totalTokens": 38455033
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 180095744,
+        "inputTokens": 4706394,
+        "outputTokens": 481626,
         "totalTokens": 185283764
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 100.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 1440,
+          "totalTokens": 11325810,
+          "turns": 78
+        },
+        "low": {
+          "reasoningOutputTokens": 5391,
+          "totalTokens": 38871978,
+          "turns": 265
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 1383207,
+          "totalTokens": 1961044454,
+          "turns": 13579
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 3272680243,
+          "turns": 23538
+        },
+        "standard": {
+          "totalTokens": 130666219,
+          "turns": 871
+        }
       }
     },
     "totalCost": 202.83656200000001,
@@ -105,10 +366,44 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 15068160,
+        "inputTokens": 2376050,
+        "outputTokens": 8451,
         "totalTokens": 17452661
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 80435456,
+        "inputTokens": 1944169,
+        "outputTokens": 159493,
         "totalTokens": 82539118
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 12.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 1756,
+          "totalTokens": 17686115,
+          "turns": 108
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 42818,
+          "totalTokens": 82674963,
+          "turns": 610
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 82674963,
+          "turns": 610
+        }
       }
     },
     "totalCost": 74.39122300000001,
@@ -118,10 +413,44 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10104832,
+        "inputTokens": 1720653,
+        "outputTokens": 10451,
         "totalTokens": 11835936
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 91367168,
+        "inputTokens": 2672561,
+        "outputTokens": 265455,
         "totalTokens": 94305184
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 27.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3635,
+          "totalTokens": 11987139,
+          "turns": 109
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 85849,
+          "totalTokens": 94820990,
+          "turns": 686
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 106631001,
+          "turns": 787
+        }
       }
     },
     "totalCost": 80.97925000000001,
@@ -131,10 +460,48 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 23418880,
+        "inputTokens": 2956150,
+        "outputTokens": 14281,
         "totalTokens": 26389311
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 123740928,
+        "inputTokens": 2875594,
+        "outputTokens": 385554,
         "totalTokens": 127002076
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 42.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3471,
+          "totalTokens": 26546447,
+          "turns": 179
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 111937,
+          "totalTokens": 127633203,
+          "turns": 945
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 111466943,
+          "turns": 825
+        },
+        "standard": {
+          "totalTokens": 26537995,
+          "turns": 178
+        }
       }
     },
     "totalCost": 191.418734,
@@ -143,10 +510,58 @@
   "2026-07-29": {
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 26943488,
+        "inputTokens": 3228448,
+        "outputTokens": 16660,
         "totalTokens": 30188596
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 87192320,
+        "inputTokens": 3852773,
+        "outputTokens": 267537,
         "totalTokens": 91312630
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 44.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 86425,
+          "totalTokens": 79815967,
+          "turns": 529
+        },
+        "low": {
+          "reasoningOutputTokens": 4899,
+          "totalTokens": 30423532,
+          "turns": 203
+        },
+        "medium": {
+          "reasoningOutputTokens": 19082,
+          "totalTokens": 11478841,
+          "turns": 106
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 1458,
+          "totalTokens": 577050,
+          "turns": 3
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 80198253,
+          "turns": 531
+        },
+        "standard": {
+          "totalTokens": 41767025,
+          "turns": 301
+        }
       }
     },
     "totalCost": 203.15714699999998,
@@ -155,10 +570,53 @@
   "2026-07-30": {
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8871424,
+        "inputTokens": 3760537,
+        "outputTokens": 5121,
         "totalTokens": 12637082
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 123415296,
+        "inputTokens": 2453047,
+        "outputTokens": 137870,
         "totalTokens": 126006213
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 58.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 17911,
+          "totalTokens": 67663353,
+          "turns": 519
+        },
+        "low": {
+          "reasoningOutputTokens": 1094,
+          "totalTokens": 12717139,
+          "turns": 76
+        },
+        "medium": {
+          "reasoningOutputTokens": 19864,
+          "totalTokens": 58424286,
+          "turns": 389
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 67442727,
+          "turns": 518
+        },
+        "standard": {
+          "totalTokens": 71362051,
+          "turns": 466
+        }
       }
     },
     "totalCost": 277.044789,
@@ -168,10 +626,53 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13356032,
+        "inputTokens": 1347522,
+        "outputTokens": 7179,
         "totalTokens": 14710733
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 140914176,
+        "inputTokens": 2042811,
+        "outputTokens": 187615,
         "totalTokens": 143144602
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 45398,
+          "totalTokens": 142124224,
+          "turns": 880
+        },
+        "low": {
+          "reasoningOutputTokens": 2030,
+          "totalTokens": 14874732,
+          "turns": 89
+        },
+        "medium": {
+          "reasoningOutputTokens": 6328,
+          "totalTokens": 1529102,
+          "turns": 16
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 142045196,
+          "turns": 879
+        },
+        "standard": {
+          "totalTokens": 16482862,
+          "turns": 106
+        }
       }
     },
     "totalCost": 184.473121,
@@ -181,10 +682,44 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 785920,
+        "inputTokens": 144614,
+        "outputTokens": 4546,
         "totalTokens": 935080
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6885888,
+        "inputTokens": 198885,
+        "outputTokens": 40307,
         "totalTokens": 7125080
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 21.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 2329,
+          "totalTokens": 935080,
+          "turns": 34
+        },
+        "medium": {
+          "reasoningOutputTokens": 15745,
+          "totalTokens": 7125080,
+          "turns": 102
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 5964633,
+          "turns": 92
+        }
       }
     },
     "totalCost": 6.898989000000001,
@@ -193,10 +728,49 @@
   "2026-08-04": {
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13194752,
+        "inputTokens": 8504304,
+        "outputTokens": 15990,
         "totalTokens": 21715046
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 180948224,
+        "inputTokens": 3725819,
+        "outputTokens": 421622,
         "totalTokens": 185095665
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 46.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 3980,
+          "totalTokens": 21874494,
+          "turns": 200
+        },
+        "medium": {
+          "reasoningOutputTokens": 18473,
+          "totalTokens": 10694642,
+          "turns": 69
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 133147,
+          "totalTokens": 175957174,
+          "turns": 1410
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 190541848,
+          "turns": 1573
+        }
       }
     },
     "totalCost": 188.88199,
@@ -206,10 +780,49 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 41096960,
+        "inputTokens": 5904789,
+        "outputTokens": 23545,
         "totalTokens": 47025294
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 403486464,
+        "inputTokens": 5847136,
+        "outputTokens": 705728,
         "totalTokens": 410039328
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 95.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 6227,
+          "totalTokens": 47415159,
+          "turns": 306
+        },
+        "medium": {
+          "reasoningOutputTokens": 3776,
+          "totalTokens": 4511352,
+          "turns": 34
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 217738,
+          "totalTokens": 406348610,
+          "turns": 2505
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 458128752,
+          "turns": 2839
+        }
       }
     },
     "totalCost": 302.929527,
@@ -219,10 +832,48 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 137925376,
+        "inputTokens": 6183473,
+        "outputTokens": 66768,
         "totalTokens": 144175617
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 303310080,
+        "inputTokens": 5687772,
+        "outputTokens": 778153,
         "totalTokens": 309776005
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 99.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 17944,
+          "totalTokens": 148626260,
+          "turns": 983
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 223604,
+          "totalTokens": 307172360,
+          "turns": 2146
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 2204902,
+          "turns": 31
+        },
+        "standard": {
+          "totalTokens": 453429523,
+          "turns": 3089
+        }
       }
     },
     "totalCost": 306.79483500000003,
@@ -232,13 +883,206 @@
     "costSource": "official",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 371456,
+        "inputTokens": 147265,
+        "outputTokens": 1413,
         "totalTokens": 520134
       },
       "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10722560,
+        "inputTokens": 634964,
+        "outputTokens": 48234,
         "totalTokens": 11405758
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 29.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 5661,
+          "totalTokens": 4196476,
+          "turns": 35
+        },
+        "low": {
+          "reasoningOutputTokens": 826,
+          "totalTokens": 520134,
+          "turns": 9
+        },
+        "medium": {
+          "reasoningOutputTokens": 9933,
+          "totalTokens": 7315304,
+          "turns": 42
+        },
+        "xhigh": {
+          "reasoningOutputTokens": 130,
+          "totalTokens": 184481,
+          "turns": 1
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 12184229,
+          "turns": 86
+        }
       }
     },
     "totalCost": 10.947563,
     "totalTokens": 11925892
+  },
+  "2026-08-14": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1228800,
+        "inputTokens": 1128456,
+        "outputTokens": 3711,
+        "totalTokens": 2360967
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 170205696,
+        "inputTokens": 1931693,
+        "outputTokens": 163864,
+        "totalTokens": 172301253
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 16.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 42407,
+          "totalTokens": 172550766,
+          "turns": 1283
+        },
+        "low": {
+          "reasoningOutputTokens": 1495,
+          "totalTokens": 2360967,
+          "turns": 32
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 171054656,
+          "turns": 1260
+        },
+        "standard": {
+          "totalTokens": 2344200,
+          "turns": 31
+        }
+      }
+    },
+    "totalCost": 204.293135,
+    "totalTokens": 174662220
+  },
+  "2026-08-15": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 667648,
+        "inputTokens": 3001452,
+        "outputTokens": 1801,
+        "totalTokens": 3670901
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 206828800,
+        "inputTokens": 2266213,
+        "outputTokens": 190770,
+        "totalTokens": 209285783
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 25.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 28517,
+          "totalTokens": 210116596,
+          "turns": 1627
+        },
+        "low": {
+          "reasoningOutputTokens": 467,
+          "totalTokens": 3748626,
+          "turns": 21
+        }
+      },
+      "speeds": {
+        "fast": {
+          "totalTokens": 206577112,
+          "turns": 1590
+        },
+        "standard": {
+          "totalTokens": 7288110,
+          "turns": 58
+        }
+      }
+    },
+    "totalCost": 253.694113,
+    "totalTokens": 212956684
+  },
+  "2026-08-16": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 38912,
+        "inputTokens": 44086,
+        "outputTokens": 547,
+        "totalTokens": 83545
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6974976,
+        "inputTokens": 310708,
+        "outputTokens": 11243,
+        "totalTokens": 7296927
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 28.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 300,
+          "totalTokens": 83545,
+          "turns": 4
+        },
+        "medium": {
+          "reasoningOutputTokens": 5512,
+          "totalTokens": 7405664,
+          "turns": 55
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 7476331,
+          "turns": 58
+        }
+      }
+    },
+    "totalCost": 5.634614,
+    "totalTokens": 7380472
   }
 }
