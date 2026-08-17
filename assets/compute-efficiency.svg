@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470" role="img" aria-labelledby="title desc">
-  <title id="title">Recent AI token efficiency through 2026-08-16</title>
+  <title id="title">Recent AI token efficiency through 2026-08-17</title>
   <desc id="desc">Input, output, cache, effort, reasoning, speed, and quota signals within each harness for the trailing 30 days.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
@@ -65,23 +65,23 @@
   </style>
   <rect class="dashboard-background" width="1180" height="470" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Token efficiency</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-18–2026-08-16 · input/output/cache flow and observable routing signals by harness</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-19–2026-08-17 · input/output/cache flow and observable routing signals by harness</text>
   <rect class="dashboard-panel" x="16" y="92" width="372" height="142" rx="16"/>
   <circle class="agent-claude" cx="38" cy="117" r="5"/>
   <text class="dashboard-primary" x="51" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude token flow</text>
   <text class="dashboard-muted" x="370" y="122" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">100.0% coverage</text>
   <rect class="dashboard-border" x="34" y="140" width="336" height="16" rx="5" fill="none" stroke-width="1"/>
-  <rect class="component-input" x="34.0" y="140" width="0.6" height="16" rx="5" data-agent="claude" data-component="inputTokens" data-tokens="1176259">
+  <rect class="component-input" x="34.0" y="140" width="0.5" height="16" rx="5" data-agent="claude" data-component="inputTokens" data-tokens="1176585">
     <title>Claude input: 1.2M (0.2%)</title>
   </rect>
-  <rect class="component-output" x="34.6" y="140" width="4.1" height="16" rx="5" data-agent="claude" data-component="outputTokens" data-tokens="8698840">
-    <title>Claude output: 8.7M (1.2%)</title>
+  <rect class="component-output" x="34.5" y="140" width="4.1" height="16" rx="5" data-agent="claude" data-component="outputTokens" data-tokens="8921631">
+    <title>Claude output: 8.9M (1.2%)</title>
   </rect>
-  <rect class="component-cache-write" x="38.6" y="140" width="17.2" height="16" rx="5" data-agent="claude" data-component="cacheCreationTokens" data-tokens="36669532">
-    <title>Claude cache write: 36.7M (5.1%)</title>
+  <rect class="component-cache-write" x="38.6" y="140" width="17.2" height="16" rx="5" data-agent="claude" data-component="cacheCreationTokens" data-tokens="37669378">
+    <title>Claude cache write: 37.7M (5.1%)</title>
   </rect>
-  <rect class="component-cache-read" x="55.9" y="140" width="314.1" height="16" rx="5" data-agent="claude" data-component="cacheReadTokens" data-tokens="667934798">
-    <title>Claude cache read: 668M (93.5%)</title>
+  <rect class="component-cache-read" x="55.8" y="140" width="314.2" height="16" rx="5" data-agent="claude" data-component="cacheReadTokens" data-tokens="689589758">
+    <title>Claude cache read: 690M (93.5%)</title>
   </rect>
   <circle class="component-input" cx="39" cy="179" r="4"/>
   <text class="dashboard-secondary" x="49" y="183" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input 0.2%</text>
@@ -94,19 +94,19 @@
   <rect class="dashboard-panel" x="404" y="92" width="372" height="142" rx="16"/>
   <circle class="agent-codex" cx="426" cy="117" r="5"/>
   <text class="dashboard-primary" x="439" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex token flow</text>
-  <text class="dashboard-muted" x="758" y="122" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">93.7% coverage</text>
+  <text class="dashboard-muted" x="758" y="122" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">94.2% coverage</text>
   <rect class="dashboard-border" x="422" y="140" width="336" height="16" rx="5" fill="none" stroke-width="1"/>
-  <rect class="component-input" x="422.0" y="140" width="12.7" height="16" rx="5" data-agent="codex" data-component="inputTokens" data-tokens="195110204">
-    <title>Codex input: 195M (3.8%)</title>
+  <rect class="component-input" x="422.0" y="140" width="12.9" height="16" rx="5" data-agent="codex" data-component="inputTokens" data-tokens="218196709">
+    <title>Codex input: 218M (3.8%)</title>
   </rect>
-  <rect class="component-output" x="434.7" y="140" width="0.8" height="16" rx="5" data-agent="codex" data-component="outputTokens" data-tokens="12074682">
-    <title>Codex output: 12.1M (0.2%)</title>
+  <rect class="component-output" x="434.9" y="140" width="0.8" height="16" rx="5" data-agent="codex" data-component="outputTokens" data-tokens="12740781">
+    <title>Codex output: 12.7M (0.2%)</title>
   </rect>
-  <rect class="component-cache-write" x="435.5" y="140" width="0.0" height="16" rx="5" data-agent="codex" data-component="cacheCreationTokens" data-tokens="0">
+  <rect class="component-cache-write" x="435.6" y="140" width="0.0" height="16" rx="5" data-agent="codex" data-component="cacheCreationTokens" data-tokens="0">
     <title>Codex cache write: 0 (0.0%)</title>
   </rect>
-  <rect class="component-cache-read" x="435.5" y="140" width="322.5" height="16" rx="5" data-agent="codex" data-component="cacheReadTokens" data-tokens="4940978816">
-    <title>Codex cache read: 4.9B (96.0%)</title>
+  <rect class="component-cache-read" x="435.6" y="140" width="322.4" height="16" rx="5" data-agent="codex" data-component="cacheReadTokens" data-tokens="5458575616">
+    <title>Codex cache read: 5.5B (95.9%)</title>
   </rect>
   <circle class="component-input" cx="427" cy="179" r="4"/>
   <text class="dashboard-secondary" x="437" y="183" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input 3.8%</text>
@@ -115,32 +115,32 @@
   <circle class="component-cache-write" cx="427" cy="203" r="4"/>
   <text class="dashboard-secondary" x="437" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache write 0.0%</text>
   <circle class="component-cache-read" cx="595" cy="203" r="4"/>
-  <text class="dashboard-secondary" x="605" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache read 96.0%</text>
+  <text class="dashboard-secondary" x="605" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache read 95.9%</text>
   <rect class="dashboard-panel" x="792" y="92" width="372" height="142" rx="16"/>
   <circle class="agent-traex" cx="814" cy="117" r="5"/>
   <text class="dashboard-primary" x="827" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE token flow</text>
   <text class="dashboard-muted" x="1146" y="122" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">100.0% coverage</text>
   <rect class="dashboard-border" x="810" y="140" width="336" height="16" rx="5" fill="none" stroke-width="1"/>
-  <rect class="component-input" x="810.0" y="140" width="37.8" height="16" rx="5" data-agent="traex" data-component="inputTokens" data-tokens="109984020">
-    <title>TRAE input: 110M (11.2%)</title>
+  <rect class="component-input" x="810.0" y="140" width="38.6" height="16" rx="5" data-agent="traex" data-component="inputTokens" data-tokens="119768233">
+    <title>TRAE input: 120M (11.5%)</title>
   </rect>
-  <rect class="component-output" x="847.8" y="140" width="0.8" height="16" rx="5" data-agent="traex" data-component="outputTokens" data-tokens="2377394">
-    <title>TRAE output: 2.4M (0.2%)</title>
+  <rect class="component-output" x="848.6" y="140" width="0.8" height="16" rx="5" data-agent="traex" data-component="outputTokens" data-tokens="2549794">
+    <title>TRAE output: 2.5M (0.2%)</title>
   </rect>
-  <rect class="component-cache-write" x="848.6" y="140" width="0.0" height="16" rx="5" data-agent="traex" data-component="cacheCreationTokens" data-tokens="0">
+  <rect class="component-cache-write" x="849.4" y="140" width="0.0" height="16" rx="5" data-agent="traex" data-component="cacheCreationTokens" data-tokens="0">
     <title>TRAE cache write: 0 (0.0%)</title>
   </rect>
-  <rect class="component-cache-read" x="848.6" y="140" width="297.4" height="16" rx="5" data-agent="traex" data-component="cacheReadTokens" data-tokens="865397426">
-    <title>TRAE cache read: 865M (88.5%)</title>
+  <rect class="component-cache-read" x="849.4" y="140" width="296.6" height="16" rx="5" data-agent="traex" data-component="cacheReadTokens" data-tokens="919722051">
+    <title>TRAE cache read: 920M (88.3%)</title>
   </rect>
   <circle class="component-input" cx="815" cy="179" r="4"/>
-  <text class="dashboard-secondary" x="825" y="183" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input 11.2%</text>
+  <text class="dashboard-secondary" x="825" y="183" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">input 11.5%</text>
   <circle class="component-output" cx="983" cy="179" r="4"/>
   <text class="dashboard-secondary" x="993" y="183" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">output 0.2%</text>
   <circle class="component-cache-write" cx="815" cy="203" r="4"/>
   <text class="dashboard-secondary" x="825" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache write 0.0%</text>
   <circle class="component-cache-read" cx="983" cy="203" r="4"/>
-  <text class="dashboard-secondary" x="993" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache read 88.5%</text>
+  <text class="dashboard-secondary" x="993" y="207" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">cache read 88.3%</text>
   <text class="dashboard-primary" x="16" y="264" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="600">Observed routing signals</text>
   <rect class="dashboard-panel" x="16" y="278" width="372" height="166" rx="16" data-agent="claude"/>
   <circle class="agent-claude" cx="38" cy="303" r="5"/>
@@ -150,27 +150,27 @@
   <text class="dashboard-muted" x="34" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
   <text class="dashboard-secondary" x="108" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">not exposed separately</text>
   <text class="dashboard-muted" x="34" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
-  <text class="dashboard-secondary" x="108" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.0% fast · 4487 turns</text>
+  <text class="dashboard-secondary" x="108" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.0% fast · 4649 turns</text>
   <text class="dashboard-muted" x="34" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
   <text class="dashboard-secondary" x="108" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">not exposed by Claude logs</text>
   <rect class="dashboard-panel" x="404" y="278" width="372" height="166" rx="16" data-agent="codex"/>
   <circle class="agent-codex" cx="426" cy="303" r="5"/>
   <text class="dashboard-primary" x="439" y="308" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
   <text class="dashboard-muted" x="422" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
-  <text class="dashboard-secondary" x="496" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">low 13.5% · med 4.0% · high 15.9% · xhigh 66.6%</text>
+  <text class="dashboard-secondary" x="496" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">low 12.1% · med 14.0% · high 17.5% · xhigh 56.5%</text>
   <text class="dashboard-muted" x="422" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
-  <text class="dashboard-secondary" x="496" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">4.6M · &lt;0.1% of routed</text>
+  <text class="dashboard-secondary" x="496" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">5.3M · &lt;0.1% of routed</text>
   <text class="dashboard-muted" x="422" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
-  <text class="dashboard-secondary" x="496" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">73.4% fast · 55422 turns</text>
+  <text class="dashboard-secondary" x="496" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">66.7% fast · 61269 turns</text>
   <text class="dashboard-muted" x="422" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
   <text class="dashboard-secondary" x="496" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">100% peak · 1w window</text>
   <rect class="dashboard-panel" x="792" y="278" width="372" height="166" rx="16" data-agent="traex"/>
   <circle class="agent-traex" cx="814" cy="303" r="5"/>
   <text class="dashboard-primary" x="827" y="308" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
   <text class="dashboard-muted" x="810" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
-  <text class="dashboard-secondary" x="884" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">low 5.0% · med 91.8% · high 3.2%</text>
+  <text class="dashboard-secondary" x="884" y="336" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">low 4.6% · med 92.3% · high 3.0%</text>
   <text class="dashboard-muted" x="810" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
-  <text class="dashboard-secondary" x="884" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">395K · 0.2% of routed</text>
+  <text class="dashboard-secondary" x="884" y="362" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">413K · 0.2% of routed</text>
   <text class="dashboard-muted" x="810" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
   <text class="dashboard-secondary" x="884" y="388" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">awaiting session telemetry</text>
   <text class="dashboard-muted" x="810" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>

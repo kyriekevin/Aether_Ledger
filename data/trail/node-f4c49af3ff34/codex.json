@@ -1043,46 +1043,93 @@
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 38912,
-        "inputTokens": 44086,
-        "outputTokens": 547,
-        "totalTokens": 83545
+        "cacheReadTokens": 5954560,
+        "inputTokens": 6681708,
+        "outputTokens": 6505,
+        "totalTokens": 12642773
       },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 6974976,
-        "inputTokens": 310708,
-        "outputTokens": 11243,
-        "totalTokens": 7296927
+        "cacheReadTokens": 175126528,
+        "inputTokens": 1536857,
+        "outputTokens": 123539,
+        "totalTokens": 176786924
       }
     },
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 28.0
+        "10080": 32.0
       }
     },
     "routing": {
       "efforts": {
         "low": {
-          "reasoningOutputTokens": 300,
-          "totalTokens": 83545,
-          "turns": 4
+          "reasoningOutputTokens": 1304,
+          "totalTokens": 12727434,
+          "turns": 97
         },
         "medium": {
-          "reasoningOutputTokens": 5512,
-          "totalTokens": 7405664,
-          "turns": 55
+          "reasoningOutputTokens": 37503,
+          "totalTokens": 176917278,
+          "turns": 1183
         }
       },
       "speeds": {
         "standard": {
-          "totalTokens": 7476331,
-          "turns": 58
+          "totalTokens": 189631834,
+          "turns": 1279
         }
       }
     },
-    "totalCost": 5.634614,
-    "totalTokens": 7380472
+    "totalCost": 135.53468900000001,
+    "totalTokens": 189429697
+  },
+  "2026-08-17": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2946304,
+        "inputTokens": 5668201,
+        "outputTokens": 4880,
+        "totalTokens": 8619385
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 347441408,
+        "inputTokens": 2442160,
+        "outputTokens": 193543,
+        "totalTokens": 350077111
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 42.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "reasoningOutputTokens": 1030,
+          "totalTokens": 8700971,
+          "turns": 60
+        },
+        "medium": {
+          "reasoningOutputTokens": 27638,
+          "totalTokens": 350284834,
+          "turns": 2443
+        }
+      },
+      "speeds": {
+        "standard": {
+          "totalTokens": 357425816,
+          "turns": 2473
+        }
+      }
+    },
+    "totalCost": 221.698351,
+    "totalTokens": 358696496
   }
 }

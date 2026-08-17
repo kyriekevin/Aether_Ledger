@@ -226,29 +226,73 @@
     "models": {
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 186283,
-        "inputTokens": 51501,
-        "outputTokens": 501,
-        "totalTokens": 241053
+        "cacheReadTokens": 226240,
+        "inputTokens": 59194,
+        "outputTokens": 597,
+        "totalTokens": 289200
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 2109184,
-        "inputTokens": 200859,
-        "outputTokens": 16075,
-        "totalTokens": 2326118
+        "cacheReadTokens": 3107072,
+        "inputTokens": 211314,
+        "outputTokens": 20697,
+        "totalTokens": 3339083
       }
     },
     "routing": {
       "efforts": {
         "medium": {
-          "reasoningOutputTokens": 2768,
-          "totalTokens": 241053,
-          "turns": 7
+          "reasoningOutputTokens": 3169,
+          "totalTokens": 289200,
+          "turns": 8
         }
       }
     },
-    "totalCost": 2.57770465,
-    "totalTokens": 2567171
+    "totalCost": 3.273716,
+    "totalTokens": 3628283
+  },
+  "2026-08-17": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 28180731,
+        "inputTokens": 594840,
+        "outputTokens": 112276,
+        "totalTokens": 28887847
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10606521,
+        "inputTokens": 5590936,
+        "outputTokens": 15737,
+        "totalTokens": 16231082
+      },
+      "gemini-3.1-pro-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8452552,
+        "inputTokens": 3280120,
+        "outputTokens": 12046,
+        "totalTokens": 11749419
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6046976,
+        "inputTokens": 300169,
+        "outputTokens": 27623,
+        "totalTokens": 6374768
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 17888,
+          "totalTokens": 16261959,
+          "turns": 183
+        }
+      }
+    },
+    "totalCost": 36.99279595,
+    "totalTokens": 63243116
   }
 }
