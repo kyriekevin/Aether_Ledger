@@ -37,7 +37,7 @@ ROUTING_DIMENSIONS = {
     "speeds": frozenset({"standard", "fast"}),
 }
 ROUTING_BUCKET_KEYS = frozenset(
-    {"calls", "turns", "totalTokens", "reasoningOutputTokens"}
+    {"calls", "turns", "totalTokens", "reasoningCalls", "reasoningOutputTokens"}
 )
 QUOTA_KEYS = frozenset({"windows", "limitReached"})
 

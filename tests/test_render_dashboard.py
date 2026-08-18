@@ -20,11 +20,13 @@ from render_dashboard import (  # noqa: E402
     generate,
     generate_allocation,
     generate_allocation_history,
+    generate_runtime_history,
     generate_runtime_profile,
     generate_topology,
     generate_topology_history,
     render_allocation_svg,
     render_allocation_history_svg,
+    render_runtime_history_svg,
     render_runtime_profile_svg,
     render_svg,
     render_topology_svg,
@@ -143,6 +145,7 @@ class AggregateAllocationTests(unittest.TestCase):
                     "routing": {
                         "efforts": {"medium": {
                             "turns": 3, "totalTokens": 999,
+                            "reasoningCalls": 3,
                             "reasoningOutputTokens": 30,
                         }},
                         "speeds": {"standard": {"turns": 3, "totalTokens": 999}},
@@ -164,6 +167,7 @@ class AggregateAllocationTests(unittest.TestCase):
                         "efforts": {
                             "low": {
                                 "turns": 2, "totalTokens": 100,
+                                "reasoningCalls": 2,
                                 "reasoningOutputTokens": 4,
                             }
                         },
@@ -185,7 +189,12 @@ class AggregateAllocationTests(unittest.TestCase):
                         "cacheReadTokens": 20,
                     }},
                     "routing": {
-                        "speeds": {"standard": {"turns": 1, "totalTokens": 40}}
+                        "efforts": {"xhigh": {
+                            "turns": 1, "totalTokens": 40,
+                            "reasoningCalls": 1,
+                            "reasoningOutputTokens": 12,
+                        }},
+                        "speeds": {"standard": {"turns": 1, "totalTokens": 40}},
                     },
                 }
             }), encoding="utf-8")
@@ -202,6 +211,7 @@ class AggregateAllocationTests(unittest.TestCase):
                     "routing": {
                         "efforts": {"medium": {
                             "turns": 1, "totalTokens": 60,
+                            "reasoningCalls": 1,
                             "reasoningOutputTokens": 3,
                         }}
                     },
@@ -213,15 +223,14 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
             self.assertEqual(totals.efforts["codex"]["low"]["calls"], 2)
+            self.assertEqual(totals.efforts["codex"]["low"]["reasoningCalls"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
-            self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
             self.assertEqual(totals.quota_windows["codex"], {300: 85.0})
             self.assertEqual(totals.quota_observed_days["codex"], 1)
             self.assertEqual(totals.quota_pressure_days["codex"], 1)
             self.assertEqual(totals.quota_limit_days["codex"], 1)
-            self.assertEqual(totals.components["claude"]["inputTokens"], 4)
+            self.assertEqual(totals.efforts["claude"]["xhigh"]["calls"], 1)
             self.assertEqual(totals.speeds["claude"]["standard"]["calls"], 1)
-            self.assertEqual(totals.components["traex"]["cacheReadTokens"], 50)
             self.assertEqual(totals.efforts["traex"]["medium"]["calls"], 1)
             self.assertEqual(len(totals.trend_starts), 8)
             self.assertEqual(totals.trend_starts[0], date(2026, 6, 7))
@@ -233,18 +242,12 @@ class AggregateAllocationTests(unittest.TestCase):
             )
             self.assertIn("codex", totals.weekly_model_observed[3])
             self.assertIn("traex", totals.weekly_model_observed[7])
-            self.assertEqual(
-                totals.weekly_components[3][("codex", "cacheReadTokens")], 700
-            )
-            self.assertIn("codex", totals.weekly_component_observed[3])
-            self.assertEqual(
-                totals.weekly_efforts[3][("codex", "medium")], 999
-            )
+            self.assertEqual(totals.weekly_effort_calls[3][("codex", "medium")], 3)
+            self.assertEqual(totals.weekly_reasoning_calls[3]["codex"], 3)
             self.assertEqual(totals.weekly_reasoning[3]["codex"], 30)
-            self.assertEqual(
-                totals.weekly_speeds[7][("codex", "fast")], 100
-            )
-            self.assertEqual(totals.weekly_quota[7]["codex"], 85.0)
+            self.assertEqual(totals.weekly_speed_calls[7][("codex", "fast")], 2)
+            self.assertEqual(totals.weekly_quota_observed_days[7]["codex"], 1)
+            self.assertEqual(totals.weekly_quota_pressure_days[7]["codex"], 1)
 
 
 class DashboardTests(unittest.TestCase):
@@ -407,41 +410,31 @@ class DashboardTests(unittest.TestCase):
             weekly_model_observed=tuple(
                 {"claude", "codex", "traex"} for _ in range(8)
             ),
-            weekly_components=tuple(
+            weekly_effort_calls=tuple(
                 {
-                    (agent, component): (index + 1) * (component_index + 1)
-                    for agent in ("claude", "codex", "traex")
-                    for component_index, component in enumerate(
-                        (
-                            "inputTokens",
-                            "outputTokens",
-                            "cacheCreationTokens",
-                            "cacheReadTokens",
-                        )
-                    )
-                }
-                for index in range(8)
-            ),
-            weekly_component_observed=tuple(
-                set() if index == 0 else {"claude", "codex", "traex"}
-                for index in range(8)
-            ),
-            weekly_efforts=tuple(
-                {
+                    ("claude", "xhigh"): (index + 1) * 8,
                     ("codex", "low"): (index + 1) * 10,
                     ("codex", "medium"): (index + 1) * 5,
                     ("traex", "medium"): (index + 1) * 6,
                 }
                 for index in range(8)
             ),
+            weekly_reasoning_calls=tuple(
+                {"claude": index + 1, "codex": index + 1, "traex": index + 1}
+                for index in range(8)
+            ),
             weekly_reasoning=tuple(
-                {"codex": index + 1, "traex": index + 1}
+                {
+                    "claude": (index + 1) * 20,
+                    "codex": (index + 1) * 10,
+                    "traex": (index + 1) * 5,
+                }
                 for index in range(8)
             ),
             weekly_effort_observed=tuple(
-                {"codex", "traex"} for _ in range(8)
+                {"claude", "codex", "traex"} for _ in range(8)
             ),
-            weekly_speeds=tuple(
+            weekly_speed_calls=tuple(
                 {
                     ("claude", "standard"): (index + 1) * 10,
                     ("codex", "standard"): (index + 1) * 5,
@@ -452,8 +445,12 @@ class DashboardTests(unittest.TestCase):
             weekly_speed_observed=tuple(
                 {"claude", "codex"} for _ in range(8)
             ),
-            weekly_quota=tuple(
-                {"codex": 20.0 + index, "traex": 10.0 + index}
+            weekly_quota_observed_days=tuple(
+                {"codex": 7, "traex": 7}
+                for _ in range(8)
+            ),
+            weekly_quota_pressure_days=tuple(
+                {"codex": index % 7, "traex": (index + 1) % 7}
                 for index in range(8)
             ),
             weekly_quota_observed=tuple(
@@ -462,7 +459,10 @@ class DashboardTests(unittest.TestCase):
             efforts={
                 agent: {
                     effort: {
-                        "calls": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
+                        "calls": 0,
+                        "totalTokens": 0,
+                        "reasoningCalls": 0,
+                        "reasoningOutputTokens": 0,
                     }
                     for effort in ("none", "low", "medium", "high", "xhigh", "max")
                 }
@@ -472,15 +472,6 @@ class DashboardTests(unittest.TestCase):
                 agent: {
                     speed: {"calls": 0, "totalTokens": 0}
                     for speed in ("standard", "fast")
-                }
-                for agent in ("claude", "codex", "traex", "legacy")
-            },
-            components={
-                agent: {
-                    "inputTokens": 0,
-                    "outputTokens": 0,
-                    "cacheCreationTokens": 0,
-                    "cacheReadTokens": 0,
                 }
                 for agent in ("claude", "codex", "traex", "legacy")
             },
@@ -497,21 +488,33 @@ class DashboardTests(unittest.TestCase):
                 agent: 0 for agent in ("claude", "codex", "traex", "legacy")
             },
         )
+        allocation.efforts["claude"]["xhigh"].update(
+            calls=2,
+            totalTokens=100,
+            reasoningCalls=2,
+            reasoningOutputTokens=100,
+        )
         allocation.efforts["codex"]["low"].update(
-            calls=3, totalTokens=120, reasoningOutputTokens=10
+            calls=3,
+            totalTokens=120,
+            reasoningCalls=3,
+            reasoningOutputTokens=30,
         )
         allocation.efforts["codex"]["medium"].update(
-            calls=1, totalTokens=80, reasoningOutputTokens=20
+            calls=1,
+            totalTokens=80,
+            reasoningCalls=1,
+            reasoningOutputTokens=20,
+        )
+        allocation.efforts["traex"]["medium"].update(
+            calls=2,
+            totalTokens=80,
+            reasoningCalls=2,
+            reasoningOutputTokens=10,
         )
         allocation.speeds["claude"]["standard"].update(calls=2, totalTokens=100)
         allocation.speeds["codex"]["standard"].update(calls=1, totalTokens=100)
         allocation.speeds["codex"]["fast"].update(calls=1, totalTokens=100)
-        allocation.components["claude"].update(
-            inputTokens=5, outputTokens=5, cacheCreationTokens=10, cacheReadTokens=80
-        )
-        allocation.components["codex"].update(
-            inputTokens=20, outputTokens=10, cacheCreationTokens=20, cacheReadTokens=150
-        )
         allocation.quota_windows["codex"][300] = 68.0
         allocation.quota_observed_days["codex"] = 10
         allocation.quota_pressure_days["codex"] = 3
@@ -520,10 +523,12 @@ class DashboardTests(unittest.TestCase):
         allocation_svg = render_allocation_svg(allocation)
         allocation_history_svg = render_allocation_history_svg(allocation)
         runtime_svg = render_runtime_profile_svg(allocation)
+        runtime_history_svg = render_runtime_history_svg(allocation)
 
         ET.fromstring(allocation_svg)
         ET.fromstring(allocation_history_svg)
         ET.fromstring(runtime_svg)
+        ET.fromstring(runtime_history_svg)
         self.assertIn("Model allocation", allocation_svg)
         self.assertIn("current 30-day model mix", allocation_svg)
         self.assertIn("30D SHARE", allocation_svg)
@@ -543,17 +548,30 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
         self.assertIn("Runtime profile", runtime_svg)
+        self.assertIn("Thinking", runtime_svg)
+        self.assertIn("50/call", runtime_svg)
         self.assertIn("lo 75%", runtime_svg)
         self.assertIn("50.0% fast · 2 calls", runtime_svg)
         self.assertIn("3/10 days ≥80% · 1 limit day", runtime_svg)
-        self.assertIn("No compatible session signals observed", runtime_svg)
+        claude_panel = runtime_svg.split('data-agent="claude"', 1)[1].split(
+            'data-agent="codex"', 1
+        )[0]
+        self.assertNotIn(">Speed</text>", claude_panel)
         self.assertNotIn("cache read", runtime_svg)
         self.assertNotIn("not exposed", runtime_svg)
         self.assertNotIn("Token efficiency", runtime_svg)
+        self.assertIn("Runtime history", runtime_history_svg)
+        self.assertIn("Thinking/call", runtime_history_svg)
+        self.assertIn("Fast share", runtime_history_svg)
+        self.assertIn("Quota ≥80%", runtime_history_svg)
+        self.assertIn('data-effort="xhigh"', runtime_history_svg)
+        self.assertIn('data-signal="reasoning"', runtime_history_svg)
+        self.assertNotIn("Token flow", runtime_history_svg)
         for svg in (
             allocation_svg,
             allocation_history_svg,
             runtime_svg,
+            runtime_history_svg,
         ):
             self.assertNotIn("private-repo", svg)
             self.assertNotIn("session-id", svg)
@@ -597,6 +615,18 @@ class DashboardTests(unittest.TestCase):
             )
             self.assertFalse(
                 generate_runtime_profile(root, runtime_output, check=True)
+            )
+
+            runtime_history_output = root / "assets" / "runtime-history.svg"
+            self.assertTrue(
+                generate_runtime_history(root, runtime_history_output)
+            )
+            self.assertIn(
+                "through 2026-07-31",
+                runtime_history_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(
+                generate_runtime_history(root, runtime_history_output, check=True)
             )
 
 if __name__ == "__main__":

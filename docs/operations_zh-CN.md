@@ -306,17 +306,18 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
 + Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
 
-因此 README 的阅读顺序是活动，接着查看拓扑和分配的当前/历史配对，最后看一张当前运行概况：
-先看算力何时发生、在哪里运行及如何变化，再看选择了哪些模型、组合如何迁移，最后查看各
-harness 实际观测到的 session 信号。覆盖范围和指标口径稳定前，不发布运行概况历史图。
+因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对：先看算力何时
+发生、在哪里运行及如何变化，再看选择了哪些模型、组合如何迁移，最后看各 harness 的 effort
+与路由选择如何变化。
 
-Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
-Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
-只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此采集器也会在
-日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
-不会从 token 总量或金额反推。
+Claude assistant 事件提供 effort，支持的模型还会提供 `thinking_tokens`。当前 Claude 环境不能
+选择 Fast，因此不采集、不展示只有 standard 的速度字段；Claude 日志也没有 Codex 式额度字段。
+Codex 提供 effort、reasoning、速度与额度。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于
+低价平替；图中只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此
+采集器也会在日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示
+为不可用，不会从 token 总量或金额反推。Reasoning 强度只在各 harness 内部解释，不跨厂商比较。
 
-六张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
@@ -395,14 +396,19 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 ```
 
 只要 ccusage 能拆分，新观测就会为每个 harness 的每个模型保留四类 token。Codex session
-事件还会贡献匿名的路由与额度遥测；Claude 事件贡献匿名速度数据；兼容的 TRAE session
-事件在确实提供时贡献与 Codex 相同的路由字段：
+事件还会贡献匿名的路由与额度遥测；Claude assistant 事件贡献 effort 与 thinking 遥测；兼容的
+TRAE session 事件在确实提供时贡献与 Codex 相同的路由字段：
 
 ```json
 {
   "routing": {
     "efforts": {
-      "low": {"calls": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {
+        "calls": 12,
+        "totalTokens": 840000,
+        "reasoningCalls": 12,
+        "reasoningOutputTokens": 42000
+      }
     },
     "speeds": {
       "fast": {"calls": 3, "totalTokens": 210000}
@@ -415,7 +421,9 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
-`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。Routing token 来自
+`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。`reasoningCalls` 统计
+harness 明确给出 reasoning 或 thinking token 字段的调用，包括字段明确为零的情况，避免把
+缺失遥测算成零。Routing token 来自
 session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。
 Message 与 session 标识只在内存中用于去重，绝不写入仓库。历史总量仍然有效，但源日志
 轮转后不会补出 component 或 routing 明细。旧条目可能仍保留原来的 `turns` 字段，其含义

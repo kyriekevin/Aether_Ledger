@@ -341,6 +341,7 @@ def _add_routing_bucket(
     tokens: int,
     *,
     reasoning_tokens: int = 0,
+    reasoning_observed: bool = False,
 ) -> None:
     routing = daily.setdefault(day.isoformat(), {}).setdefault("routing", {})
     bucket = routing.setdefault(dimension, {}).setdefault(
@@ -348,6 +349,8 @@ def _add_routing_bucket(
     )
     bucket["calls"] += 1
     bucket["totalTokens"] += tokens
+    if reasoning_observed:
+        bucket["reasoningCalls"] = bucket.get("reasoningCalls", 0) + 1
     if reasoning_tokens:
         bucket["reasoningOutputTokens"] = (
             bucket.get("reasoningOutputTokens", 0) + reasoning_tokens
@@ -409,11 +412,17 @@ def collect_codex_routing_since(
                 tokens = _token_value(usage.get("total_tokens"))
                 if tokens <= 0:
                     continue
-                reasoning = _token_value(usage.get("reasoning_output_tokens"))
+                raw_reasoning = usage.get("reasoning_output_tokens")
+                reasoning_observed = (
+                    isinstance(raw_reasoning, (int, float))
+                    and not isinstance(raw_reasoning, bool)
+                )
+                reasoning = _token_value(raw_reasoning)
                 if effort is not None:
                     _add_routing_bucket(
                         daily, day, "efforts", effort, tokens,
                         reasoning_tokens=reasoning,
+                        reasoning_observed=reasoning_observed,
                     )
                 if speed is not None:
                     _add_routing_bucket(daily, day, "speeds", speed, tokens)
@@ -447,15 +456,15 @@ def collect_codex_routing_since(
     return daily
 
 
-def collect_claude_speed_since(
+def collect_claude_routing_since(
     since: date, projects_dir: Path = CLAUDE_PROJECTS_DIR
 ) -> dict[str, dict]:
-    """Aggregate Claude speed buckets while discarding project/session identity."""
+    """Aggregate Claude effort and thinking tokens without retaining identity."""
     if not projects_dir.is_dir():
         return {}
     # Claude may append the same assistant message several times while streaming.
     # Keep only its largest observed usage. IDs are dedupe keys in memory only.
-    messages: dict[str, tuple[date, str, int]] = {}
+    messages: dict[str, tuple[date, str, int, int, bool]] = {}
     for path in projects_dir.rglob("*.jsonl"):
         try:
             stream = path.open(encoding="utf-8")
@@ -475,9 +484,10 @@ def collect_claude_speed_since(
                 usage = message.get("usage")
                 if not isinstance(usage, dict):
                     continue
-                speed = _normalise_speed(usage.get("speed"))
+                raw_effort = event.get("effort")
+                effort = raw_effort if raw_effort in EFFORT_LEVELS else None
                 day = _event_day(event.get("timestamp"))
-                if speed is None or day is None or day < since:
+                if effort is None or day is None or day < since:
                     continue
                 tokens = sum(
                     _token_value(usage.get(key))
@@ -488,14 +498,31 @@ def collect_claude_speed_since(
                 )
                 if tokens <= 0:
                     continue
+                output_details = usage.get("output_tokens_details")
+                raw_reasoning = (
+                    output_details.get("thinking_tokens")
+                    if isinstance(output_details, dict)
+                    else None
+                )
+                reasoning_observed = (
+                    isinstance(raw_reasoning, (int, float))
+                    and not isinstance(raw_reasoning, bool)
+                )
+                reasoning = _token_value(raw_reasoning)
                 raw_id = message.get("id") or event.get("uuid")
                 dedupe = str(raw_id) if raw_id else f"{path}:{line_number}"
                 previous = messages.get(dedupe)
-                if previous is None or tokens >= previous[2]:
-                    messages[dedupe] = (day, speed, tokens)
+                if previous is None or (tokens, reasoning) >= (previous[2], previous[3]):
+                    messages[dedupe] = (
+                        day, effort, tokens, reasoning, reasoning_observed
+                    )
     daily: dict[str, dict] = {}
-    for day, speed, tokens in messages.values():
-        _add_routing_bucket(daily, day, "speeds", speed, tokens)
+    for day, effort, tokens, reasoning, reasoning_observed in messages.values():
+        _add_routing_bucket(
+            daily, day, "efforts", effort, tokens,
+            reasoning_tokens=reasoning,
+            reasoning_observed=reasoning_observed,
+        )
     return daily
 
 
@@ -805,7 +832,7 @@ def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
                     _token_value(values.get("calls")),
                     _token_value(values.get("turns")),
                 )
-            for key in ("totalTokens", "reasoningOutputTokens"):
+            for key in ("totalTokens", "reasoningCalls", "reasoningOutputTokens"):
                 value = values.get(key)
                 if isinstance(value, int) and not isinstance(value, bool):
                     previous[key] = max(0, value, _token_value(previous.get(key)))
@@ -1526,7 +1553,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
     _attach_telemetry(
-        cc_daily, collect_claude_speed_since(EPOCH, CLAUDE_PROJECTS_DIR)
+        cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
     )
     _attach_telemetry(
         cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)

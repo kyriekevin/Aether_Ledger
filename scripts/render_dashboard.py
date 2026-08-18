@@ -26,6 +26,7 @@ DEFAULT_TOPOLOGY_HISTORY_OUTPUT = REPO_ROOT / "assets" / "token-topology-history
 DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
+DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-profile-history.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -54,17 +55,11 @@ EFFORT_SHORT_LABELS = {
     "max": "max",
 }
 SPEED_ORDER = ("standard", "fast")
-COMPONENT_ORDER = (
-    "inputTokens",
-    "outputTokens",
-    "cacheCreationTokens",
-    "cacheReadTokens",
-)
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 
 
 def _theme_style_lines(
-    *, topology: bool = False, allocation: bool = False
+    *, topology: bool = False, allocation: bool = False, runtime: bool = False
 ) -> tuple[str, ...]:
     light_levels = (
         (
@@ -127,6 +122,14 @@ def _theme_style_lines(
         "    .signal-level-4 { fill: #179299; }",
         ) if allocation else ()),
     ) if allocation or topology else ()
+    light_efforts = (
+        "    .effort-none { fill: #9ca0b0; }",
+        "    .effort-low { fill: #40a02b; }",
+        "    .effort-medium { fill: #1e66f5; }",
+        "    .effort-high { fill: #df8e1d; }",
+        "    .effort-xhigh { fill: #8839ef; }",
+        "    .effort-max { fill: #d20f39; }",
+    ) if runtime else ()
     light_components = (
         "    .component-input { fill: #40a02b; }",
         "    .component-output { fill: #df8e1d; }",
@@ -150,6 +153,14 @@ def _theme_style_lines(
         "      .signal-level-4 { fill: #94e2d5; }",
         ) if allocation else ()),
     ) if allocation or topology else ()
+    dark_efforts = (
+        "      .effort-none { fill: #7f849c; }",
+        "      .effort-low { fill: #a6e3a1; }",
+        "      .effort-medium { fill: #89b4fa; }",
+        "      .effort-high { fill: #f9e2af; }",
+        "      .effort-xhigh { fill: #cba6f7; }",
+        "      .effort-max { fill: #f38ba8; }",
+    ) if runtime else ()
     dark_components = (
         "      .component-input { fill: #a6e3a1; }",
         "      .component-output { fill: #f9e2af; }",
@@ -166,6 +177,7 @@ def _theme_style_lines(
         "    .dashboard-accent { fill: #179299; }",
         "    .dashboard-border { stroke: #ccd0da; }",
         *light_agents,
+        *light_efforts,
         *light_components,
         *light_levels,
         "    @media (prefers-color-scheme: dark) {",
@@ -177,6 +189,7 @@ def _theme_style_lines(
         "      .dashboard-accent { fill: #94e2d5; }",
         "      .dashboard-border { stroke: #313244; }",
         *dark_agents,
+        *dark_efforts,
         *dark_components,
         *dark_levels,
         "    }",
@@ -230,18 +243,17 @@ class AllocationTotals:
     trend_starts: tuple[date, ...]
     weekly_model_tokens: tuple[dict[tuple[str, str], int], ...]
     weekly_model_observed: tuple[set[str], ...]
-    weekly_components: tuple[dict[tuple[str, str], int], ...]
-    weekly_component_observed: tuple[set[str], ...]
-    weekly_efforts: tuple[dict[tuple[str, str], int], ...]
+    weekly_effort_calls: tuple[dict[tuple[str, str], int], ...]
+    weekly_reasoning_calls: tuple[dict[str, int], ...]
     weekly_reasoning: tuple[dict[str, int], ...]
     weekly_effort_observed: tuple[set[str], ...]
-    weekly_speeds: tuple[dict[tuple[str, str], int], ...]
+    weekly_speed_calls: tuple[dict[tuple[str, str], int], ...]
     weekly_speed_observed: tuple[set[str], ...]
-    weekly_quota: tuple[dict[str, float], ...]
+    weekly_quota_observed_days: tuple[dict[str, int], ...]
+    weekly_quota_pressure_days: tuple[dict[str, int], ...]
     weekly_quota_observed: tuple[set[str], ...]
     efforts: dict[str, dict[str, dict[str, int]]]
     speeds: dict[str, dict[str, dict[str, int]]]
-    components: dict[str, dict[str, int]]
     quota_windows: dict[str, dict[int, float]]
     quota_observed_days: dict[str, int]
     quota_pressure_days: dict[str, int]
@@ -374,18 +386,23 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
     model_tokens: defaultdict[tuple[str, str], int] = defaultdict(int)
     weekly_model_tokens = tuple(defaultdict(int) for _ in trend_starts)
     weekly_model_observed = tuple(set() for _ in trend_starts)
-    weekly_components = tuple(defaultdict(int) for _ in trend_starts)
-    weekly_component_observed = tuple(set() for _ in trend_starts)
-    weekly_efforts = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_effort_calls = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_reasoning_calls = tuple(defaultdict(int) for _ in trend_starts)
     weekly_reasoning = tuple(defaultdict(int) for _ in trend_starts)
     weekly_effort_observed = tuple(set() for _ in trend_starts)
-    weekly_speeds = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_speed_calls = tuple(defaultdict(int) for _ in trend_starts)
     weekly_speed_observed = tuple(set() for _ in trend_starts)
-    weekly_quota = tuple(defaultdict(float) for _ in trend_starts)
+    weekly_quota_observed_dates = tuple(defaultdict(set) for _ in trend_starts)
+    weekly_quota_pressure_dates = tuple(defaultdict(set) for _ in trend_starts)
     weekly_quota_observed = tuple(set() for _ in trend_starts)
     efforts = {
         agent: {
-            effort: {"calls": 0, "totalTokens": 0, "reasoningOutputTokens": 0}
+            effort: {
+                "calls": 0,
+                "totalTokens": 0,
+                "reasoningCalls": 0,
+                "reasoningOutputTokens": 0,
+            }
             for effort in EFFORT_ORDER
         }
         for agent in ALLOCATION_AGENT_ORDER
@@ -395,10 +412,6 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
             speed: {"calls": 0, "totalTokens": 0}
             for speed in SPEED_ORDER
         }
-        for agent in ALLOCATION_AGENT_ORDER
-    }
-    components = {
-        agent: {key: 0 for key in COMPONENT_ORDER}
         for agent in ALLOCATION_AGENT_ORDER
     }
     quota_windows: dict[str, dict[int, float]] = {
@@ -435,20 +448,12 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                 trend_models = entry.get("models", {})
                 if isinstance(trend_models, dict) and trend_models:
                     weekly_model_observed[index].add(agent)
-                    component_observed = False
                     for model, payload in trend_models.items():
                         if not isinstance(model, str) or not isinstance(payload, dict):
                             continue
                         weekly_model_tokens[index][(agent, model)] += max(
                             0, int(payload.get("totalTokens", 0))
                         )
-                        for key in COMPONENT_ORDER:
-                            value = payload.get(key)
-                            if isinstance(value, (int, float)) and not isinstance(value, bool):
-                                weekly_components[index][(agent, key)] += max(0, int(value))
-                                component_observed = True
-                    if component_observed:
-                        weekly_component_observed[index].add(agent)
                 trend_routing = entry.get("routing", {})
                 if isinstance(trend_routing, dict):
                     trend_efforts = trend_routing.get("efforts", {})
@@ -457,15 +462,18 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                         for label, payload in trend_efforts.items():
                             if label not in EFFORT_ORDER or not isinstance(payload, dict):
                                 continue
-                            effort_tokens = payload.get("totalTokens")
+                            effort_calls = _routing_calls(payload)
+                            reasoning_calls = payload.get("reasoningCalls")
                             reasoning_tokens = payload.get("reasoningOutputTokens")
-                            if isinstance(effort_tokens, int) and not isinstance(
-                                effort_tokens, bool
-                            ):
-                                weekly_efforts[index][(agent, label)] += max(
-                                    0, effort_tokens
-                                )
+                            if effort_calls:
+                                weekly_effort_calls[index][(agent, label)] += effort_calls
                                 effort_observed = True
+                            if isinstance(reasoning_calls, int) and not isinstance(
+                                reasoning_calls, bool
+                            ):
+                                weekly_reasoning_calls[index][agent] += max(
+                                    0, reasoning_calls
+                                )
                             if isinstance(reasoning_tokens, int) and not isinstance(
                                 reasoning_tokens, bool
                             ):
@@ -480,24 +488,25 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                         for label, payload in trend_speeds.items():
                             if label not in SPEED_ORDER or not isinstance(payload, dict):
                                 continue
-                            speed_tokens = payload.get("totalTokens")
-                            if isinstance(speed_tokens, int) and not isinstance(
-                                speed_tokens, bool
-                            ):
-                                weekly_speeds[index][(agent, label)] += max(
-                                    0, speed_tokens
-                                )
+                            speed_calls = _routing_calls(payload)
+                            if speed_calls:
+                                weekly_speed_calls[index][(agent, label)] += speed_calls
                                 speed_observed = True
                         if speed_observed:
                             weekly_speed_observed[index].add(agent)
                 trend_quota = entry.get("quota", {})
                 if isinstance(trend_quota, dict):
+                    quota_observed = False
+                    quota_pressured = False
                     for percent in trend_quota.get("windows", {}).values():
                         if isinstance(percent, (int, float)) and not isinstance(percent, bool):
-                            weekly_quota[index][agent] = max(
-                                float(percent), weekly_quota[index][agent]
-                            )
-                            weekly_quota_observed[index].add(agent)
+                            quota_observed = True
+                            quota_pressured = quota_pressured or percent >= 80
+                    if quota_observed:
+                        weekly_quota_observed_dates[index][agent].add(day)
+                        weekly_quota_observed[index].add(agent)
+                    if quota_pressured:
+                        weekly_quota_pressure_dates[index][agent].add(day)
             if not recent_start <= day <= as_of:
                 continue
             if isinstance(tokens, (int, float)) and not isinstance(tokens, bool):
@@ -510,10 +519,6 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                     model_tokens[(agent, model)] += max(
                         0, int(payload.get("totalTokens", 0))
                     )
-                    for key in COMPONENT_ORDER:
-                        value = payload.get(key)
-                        if isinstance(value, (int, float)) and not isinstance(value, bool):
-                            components[agent][key] += max(0, int(value))
             routing = entry.get("routing", {})
             if isinstance(routing, dict):
                 for label, payload in routing.get("efforts", {}).items():
@@ -567,18 +572,23 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
         trend_starts=trend_starts,
         weekly_model_tokens=tuple(dict(window) for window in weekly_model_tokens),
         weekly_model_observed=weekly_model_observed,
-        weekly_components=tuple(dict(window) for window in weekly_components),
-        weekly_component_observed=weekly_component_observed,
-        weekly_efforts=tuple(dict(window) for window in weekly_efforts),
+        weekly_effort_calls=tuple(dict(window) for window in weekly_effort_calls),
+        weekly_reasoning_calls=tuple(dict(window) for window in weekly_reasoning_calls),
         weekly_reasoning=tuple(dict(window) for window in weekly_reasoning),
         weekly_effort_observed=weekly_effort_observed,
-        weekly_speeds=tuple(dict(window) for window in weekly_speeds),
+        weekly_speed_calls=tuple(dict(window) for window in weekly_speed_calls),
         weekly_speed_observed=weekly_speed_observed,
-        weekly_quota=tuple(dict(window) for window in weekly_quota),
+        weekly_quota_observed_days=tuple(
+            {agent: len(days) for agent, days in window.items()}
+            for window in weekly_quota_observed_dates
+        ),
+        weekly_quota_pressure_days=tuple(
+            {agent: len(days) for agent, days in window.items()}
+            for window in weekly_quota_pressure_dates
+        ),
         weekly_quota_observed=weekly_quota_observed,
         efforts=efforts,
         speeds=speeds,
-        components=components,
         quota_windows=quota_windows,
         quota_observed_days={
             agent: len(days) for agent, days in quota_observed_days.items()
@@ -1039,15 +1049,24 @@ def _routing_signal_lines(
             if effort_buckets[name]["calls"]
         )))
         lines.append(("Effort calls", f"{_compact_number(effort_calls)} calls"))
+        reasoning_calls = sum(
+            item["reasoningCalls"] for item in effort_buckets.values()
+        )
         reasoning = sum(
             item["reasoningOutputTokens"] for item in effort_buckets.values()
         )
-        if reasoning:
-            lines.append(("Reasoning", f"{_compact_number(reasoning)} tokens"))
+        reasoning_label = "Thinking" if agent == "claude" else "Reasoning"
+        if reasoning_calls:
+            lines.append((
+                reasoning_label,
+                f"{_compact_number(round(reasoning / reasoning_calls))}/call",
+            ))
+        elif reasoning:
+            lines.append((reasoning_label, f"{_compact_number(reasoning)} tokens"))
 
     speed_buckets = allocation.speeds[agent]
     speed_calls = sum(item["calls"] for item in speed_buckets.values())
-    if speed_calls:
+    if agent != "claude" and speed_calls:
         fast_calls = speed_buckets["fast"]["calls"]
         lines.append((
             "Speed",
@@ -1314,7 +1333,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         f'  <title id="title">{escape(title)}</title>',
         '  <desc id="desc">Harness-specific effort, reasoning, speed, and quota '
         'signals observed during the trailing 30 days. Unavailable fields are omitted.</desc>',
-        *_theme_style_lines(allocation=True),
+        *_theme_style_lines(allocation=True, runtime=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
@@ -1363,6 +1382,193 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+
+
+def _signal_level(value: float) -> int:
+    return min(4, max(1, int(value * 4) + 1))
+
+
+def render_runtime_history_svg(allocation: AllocationTotals) -> str:
+    """Render weekly effort mix and other routing-only trends by harness."""
+    title = f"AI runtime history through {allocation.as_of.isoformat()}"
+    height = 430
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        '  <desc id="desc">Eight weekly effort mixes, reasoning or thinking tokens per '
+        'observed call, Fast share, and quota-pressure frequency by harness.</desc>',
+        *_theme_style_lines(allocation=True, runtime=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Runtime history</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{allocation.trend_starts[0].isoformat()}–{allocation.as_of.isoformat()} · '
+        '8 weeks · routing signals only · gaps mean unavailable</text>',
+    ]
+
+    legend_x = 570
+    for index, effort in enumerate(EFFORT_ORDER):
+        x = legend_x + index * 96
+        lines.extend((
+            f'  <rect class="effort-{effort}" x="{x}" y="80" width="9" height="9" rx="2"/>',
+            f'  <text class="dashboard-secondary" x="{x + 14}" y="89" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
+        ))
+
+    panel_y, panel_w, panel_h, panel_gap = 106, 372, 286, 16
+    grid_offset, cell_w, cell_gap = 90, 30, 3
+    for column, agent in enumerate(("claude", "codex", "traex")):
+        x = 16 + column * (panel_w + panel_gap)
+        grid_x = x + grid_offset
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="{x}" y="{panel_y}" '
+            f'width="{panel_w}" height="{panel_h}" rx="16" data-agent="{agent}"/>',
+            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{panel_y + 25}" r="5"/>',
+            f'  <text class="dashboard-primary" x="{x + 35}" y="{panel_y + 30}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
+        ))
+
+        effort_top, effort_h = panel_y + 54, 64
+        divider_x = grid_x + HISTORY_PERIOD_WEEKS * (cell_w + cell_gap) - cell_gap / 2
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{grid_x + 61}" y="{effort_top - 7}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">PREVIOUS 4W</text>',
+            f'  <text class="dashboard-muted" x="{grid_x + 194}" y="{effort_top - 7}" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="9">LATEST 4W</text>',
+            f'  <text class="dashboard-muted" x="{x + 18}" y="{effort_top + 37}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="10">Effort</text>',
+            f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{effort_top - 5}" '
+            f'x2="{divider_x:.1f}" y2="{panel_y + 250}" stroke-width="1" '
+            'stroke-dasharray="2 3"/>',
+        ))
+        effort_available = any(
+            agent in observed for observed in allocation.weekly_effort_observed
+        )
+        if effort_available:
+            for week_index, buckets in enumerate(allocation.weekly_effort_calls):
+                bx = grid_x + week_index * (cell_w + cell_gap)
+                values = {
+                    effort: buckets.get((agent, effort), 0)
+                    for effort in EFFORT_ORDER
+                }
+                total = sum(values.values())
+                if not total:
+                    continue
+                cursor = float(effort_top + effort_h)
+                for effort in EFFORT_ORDER:
+                    calls = values[effort]
+                    segment_h = effort_h * _share(calls, total)
+                    if segment_h < 0.1:
+                        continue
+                    cursor -= segment_h
+                    lines.extend((
+                        f'  <rect class="effort-{effort}" x="{bx}" y="{cursor:.1f}" '
+                        f'width="{cell_w}" height="{segment_h:.1f}" data-agent="{agent}" '
+                        f'data-effort="{effort}" data-week="{allocation.trend_starts[week_index]}">',
+                        f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
+                        f'{escape(effort)} {escape(_percent(calls, total))} · '
+                        f'{calls} calls</title>',
+                        '  </rect>',
+                    ))
+        else:
+            lines.append(
+                f'  <text class="dashboard-muted" x="{grid_x}" y="{effort_top + 37}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                'font-size="10">Awaiting effort backfill</text>'
+            )
+
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{grid_x}" y="{effort_top + 80}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
+            f'  <text class="dashboard-muted" x="{grid_x + 261}" y="{effort_top + 80}" '
+            'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
+        ))
+
+        reasoning_values = []
+        for week_index in range(HISTORY_WEEKS):
+            calls = allocation.weekly_reasoning_calls[week_index].get(agent, 0)
+            tokens = allocation.weekly_reasoning[week_index].get(agent, 0)
+            if calls:
+                reasoning_values.append(tokens / calls)
+        reasoning_ceiling = max(reasoning_values, default=0.0)
+        signal_rows: list[str] = []
+        if reasoning_values:
+            signal_rows.append("reasoning")
+        if agent != "claude" and any(
+            agent in observed for observed in allocation.weekly_speed_observed
+        ):
+            signal_rows.append("speed")
+        if any(agent in observed for observed in allocation.weekly_quota_observed):
+            signal_rows.append("quota")
+
+        signal_top = panel_y + 166
+        for row, signal in enumerate(signal_rows):
+            y = signal_top + row * 32
+            label = {
+                "reasoning": "Thinking/call" if agent == "claude" else "Reason/call",
+                "speed": "Fast share",
+                "quota": "Quota ≥80%",
+            }[signal]
+            lines.append(
+                f'  <text class="dashboard-muted" x="{x + 18}" y="{y + 14}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="10">{escape(label)}</text>'
+            )
+            for week_index in range(HISTORY_WEEKS):
+                if signal == "reasoning":
+                    calls = allocation.weekly_reasoning_calls[week_index].get(agent, 0)
+                    tokens = allocation.weekly_reasoning[week_index].get(agent, 0)
+                    observed = calls > 0
+                    per_call = tokens / calls if calls else 0.0
+                    value = per_call / reasoning_ceiling if reasoning_ceiling else 0.0
+                    detail = f"{_compact_number(round(per_call))} tokens/call"
+                elif signal == "speed":
+                    buckets = allocation.weekly_speed_calls[week_index]
+                    total = sum(
+                        buckets.get((agent, speed), 0) for speed in SPEED_ORDER
+                    )
+                    fast = buckets.get((agent, "fast"), 0)
+                    observed = total > 0
+                    value = _share(fast, total)
+                    detail = f"Fast {_percent(fast, total)}"
+                else:
+                    observed_days = allocation.weekly_quota_observed_days[week_index].get(
+                        agent, 0
+                    )
+                    pressure_days = allocation.weekly_quota_pressure_days[week_index].get(
+                        agent, 0
+                    )
+                    observed = observed_days > 0
+                    value = _share(pressure_days, observed_days)
+                    detail = f"{pressure_days}/{observed_days} pressure days"
+                if not observed:
+                    continue
+                bx = grid_x + week_index * (cell_w + cell_gap)
+                lines.extend((
+                    f'  <rect class="signal-level-{_signal_level(value)}" x="{bx}" y="{y}" '
+                    f'width="{cell_w}" height="18" rx="3" data-agent="{agent}" '
+                    f'data-signal="{signal}" data-week="{allocation.trend_starts[week_index]}">',
+                    f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
+                    f'{escape(detail)}</title>',
+                    '  </rect>',
+                ))
+    lines.extend((
+        '  <text class="dashboard-muted" x="16" y="416" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="10">Reasoning intensity is normalized within each harness, not across vendors.</text>',
+        '</svg>',
+    ))
+    return "\n".join(lines) + "\n"
 
 
 def _atomic_write(path: Path, content: str) -> None:
@@ -1477,6 +1683,19 @@ def generate_runtime_profile(
     return _update_output(output, expected, check=check)
 
 
+def generate_runtime_history(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_runtime_history_svg(aggregate_allocation(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -1505,6 +1724,11 @@ def main() -> int:
         "--runtime-profile-output",
         type=Path,
         default=DEFAULT_RUNTIME_PROFILE_OUTPUT,
+    )
+    parser.add_argument(
+        "--runtime-history-output",
+        type=Path,
+        default=DEFAULT_RUNTIME_HISTORY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -1552,6 +1776,15 @@ def main() -> int:
             generate_runtime_profile(
                 args.root,
                 args.runtime_profile_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+        (
+            args.runtime_history_output,
+            generate_runtime_history(
+                args.root,
+                args.runtime_history_output,
                 args.as_of,
                 check=args.check,
             ),

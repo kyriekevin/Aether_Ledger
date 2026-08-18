@@ -53,9 +53,11 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 运行概况](assets/runtime-profile.svg)
 
-运行概况只展示各 harness 日志确实提供的 session 信号：兼容 Codex 的日志展示 effort 与
-reasoning，可用时展示速度，并统计观测到的额度压力。缺失字段直接省略；model call 路由与
-每日 token 主账分开统计。
+![Aether Ledger 运行历史](assets/runtime-profile-history.svg)
+
+运行图只展示各 harness 日志确实提供的 session 信号：effort、每次 model call 的 reasoning
+或 thinking token、可选择 Fast 时的速度，以及观测到的额度压力。历史图追踪最近 8 周变化，
+但不把不同厂商的字段当成同一口径。缺失字段直接省略；model call 路由与每日 token 主账分开统计。
 
 ## 账本
 

@@ -55,9 +55,12 @@ stacks with the preceding four, using absolute Top 3 + Other values within each 
 
 ![Aether Ledger runtime profile](assets/runtime-profile.svg)
 
-The runtime profile shows only the session signals each harness exposes: effort and reasoning for
-Codex-compatible logs, speed where available, and observed quota pressure. Missing fields are
-omitted, and model-call routing is kept separate from canonical daily token totals.
+![Aether Ledger runtime history](assets/runtime-profile-history.svg)
+
+The runtime views show only the session signals each harness exposes: effort, per-call reasoning
+or thinking, speed where Fast is selectable, and observed quota pressure. The history view tracks
+those signals over eight weeks without treating them as cross-vendor equivalents. Missing fields
+are omitted, and model-call routing stays separate from canonical daily token totals.
 
 ## Ledger
 

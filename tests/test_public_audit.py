@@ -101,6 +101,7 @@ class PublicAuditTests(unittest.TestCase):
                         "efforts": {
                             "low": {
                                 "calls": 1, "totalTokens": 10,
+                                "reasoningCalls": 1,
                                 "reasoningOutputTokens": 2,
                             }
                         },

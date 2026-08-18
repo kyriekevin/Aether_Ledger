@@ -22,6 +22,12 @@
     .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
     .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
     .signal-level-4 { fill: #179299; }
+    .effort-none { fill: #9ca0b0; }
+    .effort-low { fill: #40a02b; }
+    .effort-medium { fill: #1e66f5; }
+    .effort-high { fill: #df8e1d; }
+    .effort-xhigh { fill: #8839ef; }
+    .effort-max { fill: #d20f39; }
     .component-input { fill: #40a02b; }
     .component-output { fill: #df8e1d; }
     .component-cache-write { fill: #179299; }
@@ -52,6 +58,12 @@
       .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
       .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
       .signal-level-4 { fill: #94e2d5; }
+      .effort-none { fill: #7f849c; }
+      .effort-low { fill: #a6e3a1; }
+      .effort-medium { fill: #89b4fa; }
+      .effort-high { fill: #f9e2af; }
+      .effort-xhigh { fill: #cba6f7; }
+      .effort-max { fill: #f38ba8; }
       .component-input { fill: #a6e3a1; }
       .component-output { fill: #f9e2af; }
       .component-cache-write { fill: #94e2d5; }
@@ -69,8 +81,7 @@
   <rect class="dashboard-panel" x="16" y="92" width="372" height="200" rx="16" data-agent="claude"/>
   <circle class="agent-claude" cx="38" cy="117" r="5"/>
   <text class="dashboard-primary" x="51" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
-  <text class="dashboard-muted" x="34" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
-  <text class="dashboard-secondary" x="114" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.0% fast · 4.6K calls</text>
+  <text class="dashboard-muted" x="34" y="160" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">No compatible session signals observed</text>
   <rect class="dashboard-panel" x="404" y="92" width="372" height="200" rx="16" data-agent="codex"/>
   <circle class="agent-codex" cx="426" cy="117" r="5"/>
   <text class="dashboard-primary" x="439" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>

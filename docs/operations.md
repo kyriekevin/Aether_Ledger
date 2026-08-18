@@ -341,20 +341,20 @@ Work, Personal, and Development, so bar height preserves each environment's tota
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
 each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
-The README therefore reads as activity, then current/history pairs for topology and allocation,
-followed by one current runtime profile: when compute happened, where it ran and how that changed,
-which models were selected and how the mix migrated, then which harness-specific session signals
-were observed. Runtime history remains unpublished until its coverage and metric definitions are
-stable.
+The README therefore reads as activity, then current/history pairs for topology, allocation, and
+runtime: when compute happened, where it ran and how that changed, which models were selected and
+how the mix migrated, then how harness-specific effort and routing choices changed.
 
-Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
-Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
-cheap substitute; its model mix is shown literally. Because compatible TRAE builds use the Codex
-rollout format, the collector also accepts their effort, speed, reasoning, and quota events when
-present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
-total tokens or cost.
+Claude assistant events expose effort and, on supported models, `thinking_tokens`; Fast is not
+selectable in the observed Claude setup, so its standard-only speed field is not collected or
+shown. Claude logs expose no Codex-style quota fields. Codex exposes effort, reasoning, speed, and
+quota. TRAE is an internally provided CLI, not a model vendor or an intrinsically cheap substitute;
+its model mix is shown literally. Because compatible TRAE builds use the Codex rollout format, the
+collector also accepts their effort, speed, reasoning, and quota events when present. Missing
+historical telemetry stays explicitly unavailable instead of being inferred from total tokens or
+cost. Reasoning intensity is interpreted only within one harness, never across vendors.
 
-All six dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
@@ -441,14 +441,19 @@ Codex entries may also contain model token breakdowns and an image counter:
 
 New observations preserve the four token components under each model for every harness that
 ccusage can break down. Codex session events also contribute aggregate routing and quota telemetry;
-Claude events contribute aggregate speed data; compatible TRAE session events contribute the same
-routing fields as Codex when present:
+Claude assistant events contribute effort and thinking telemetry; compatible TRAE session events
+contribute the same routing fields as Codex when present:
 
 ```json
 {
   "routing": {
     "efforts": {
-      "low": {"calls": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {
+        "calls": 12,
+        "totalTokens": 840000,
+        "reasoningCalls": 12,
+        "reasoningOutputTokens": 42000
+      }
     },
     "speeds": {
       "fast": {"calls": 3, "totalTokens": 210000}
@@ -462,6 +467,8 @@ routing fields as Codex when present:
 ```
 
 `calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+`reasoningCalls` counts invocations where the harness exposed a reasoning or thinking-token field,
+including an explicit zero, so per-call trends do not turn missing telemetry into zero.
 Routing token totals come from that session stream and are not coverage estimates for the
 independently collected canonical daily total. Window keys are anonymous durations in minutes.
 Message and session identifiers are used only for in-memory deduplication and are never written.

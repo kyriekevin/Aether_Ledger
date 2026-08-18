@@ -40,7 +40,12 @@ class SharedStoreCoverageTests(unittest.TestCase):
                         },
                         "routing": {
                             "efforts": {
-                                "low": {"turns": 1, "totalTokens": tokens}
+                                "low": {
+                                    "turns": 1,
+                                    "totalTokens": tokens,
+                                    "reasoningCalls": 1,
+                                    "reasoningOutputTokens": 5,
+                                }
                             }
                         },
                         "quota": {
@@ -56,6 +61,12 @@ class SharedStoreCoverageTests(unittest.TestCase):
             self.assertEqual(day["totalTokens"], 300)
             self.assertEqual(day["models"]["gpt-example"]["inputTokens"], 150)
             self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 2)
+            self.assertEqual(
+                day["routing"]["efforts"]["low"]["reasoningCalls"], 2
+            )
+            self.assertEqual(
+                day["routing"]["efforts"]["low"]["reasoningOutputTokens"], 10
+            )
             self.assertEqual(day["quota"]["windows"], {"300": 75.0})
             self.assertTrue(day["quota"]["limitReached"])
 
@@ -460,6 +471,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                         "low": {
                             "turns": 2,
                             "totalTokens": 100,
+                            "reasoningCalls": 2,
                             "reasoningOutputTokens": 20,
                         }
                     }
@@ -476,9 +488,12 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalCost": 0.9,
                 "routing": {
                     "efforts": {
-                        "low": {"calls": 3, "totalTokens": 100},
+                        "low": {
+                            "calls": 3, "totalTokens": 100, "reasoningCalls": 1,
+                        },
                         "high": {
                             "calls": 1, "totalTokens": 40,
+                            "reasoningCalls": 1,
                             "reasoningOutputTokens": 12,
                         },
                     },
@@ -496,6 +511,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertEqual(day["routing"]["efforts"]["low"]["totalTokens"], 100)
         self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 3)
         self.assertNotIn("turns", day["routing"]["efforts"]["low"])
+        self.assertEqual(day["routing"]["efforts"]["low"]["reasoningCalls"], 2)
         self.assertEqual(
             day["routing"]["efforts"]["low"]["reasoningOutputTokens"], 20
         )
@@ -575,10 +591,12 @@ class RoutingTelemetryTests(unittest.TestCase):
             {
                 "low": {
                     "calls": 1, "totalTokens": 100,
+                    "reasoningCalls": 1,
                     "reasoningOutputTokens": 20,
                 },
                 "medium": {
                     "calls": 1, "totalTokens": 200,
+                    "reasoningCalls": 1,
                     "reasoningOutputTokens": 50,
                 },
             },
@@ -591,38 +609,55 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.assertTrue(telemetry["quota"]["limitReached"])
         self.assertNotIn("session", json.dumps(telemetry).lower())
 
-    def test_claude_stream_updates_are_deduplicated_before_speed_totals(self) -> None:
+    def test_claude_stream_updates_are_deduplicated_before_routing_totals(self) -> None:
         self.write_jsonl("project/session.jsonl", [
             {
                 "type": "assistant", "timestamp": "2026-08-15T01:00:00Z",
+                "effort": "low",
                 "message": {
                     "id": "private-message-a",
-                    "usage": {"speed": "standard", "input_tokens": 10},
+                    "usage": {
+                        "speed": "standard", "input_tokens": 10,
+                        "output_tokens_details": {"thinking_tokens": 2},
+                    },
                 },
             },
             {
                 "type": "assistant", "timestamp": "2026-08-15T01:00:01Z",
+                "effort": "low",
                 "message": {
                     "id": "private-message-a",
                     "usage": {
                         "speed": "standard", "input_tokens": 20,
                         "cache_read_input_tokens": 10,
+                        "output_tokens_details": {"thinking_tokens": 4},
                     },
                 },
             },
             {
                 "type": "assistant", "timestamp": "2026-08-15T02:00:00Z",
+                "effort": "xhigh",
                 "message": {
                     "id": "private-message-b",
-                    "usage": {"speed": "fast", "output_tokens": 20},
+                    "usage": {
+                        "speed": "standard", "output_tokens": 20,
+                        "output_tokens_details": {"thinking_tokens": 8},
+                    },
                 },
             },
         ])
-        telemetry = sync_usage.collect_claude_speed_since(
+        telemetry = sync_usage.collect_claude_routing_since(
             date(2026, 8, 15), self.root
-        )["2026-08-15"]["routing"]["speeds"]
-        self.assertEqual(telemetry["standard"], {"calls": 1, "totalTokens": 30})
-        self.assertEqual(telemetry["fast"], {"calls": 1, "totalTokens": 20})
+        )["2026-08-15"]["routing"]
+        self.assertEqual(telemetry["efforts"]["low"], {
+            "calls": 1, "totalTokens": 30,
+            "reasoningCalls": 1, "reasoningOutputTokens": 4,
+        })
+        self.assertEqual(telemetry["efforts"]["xhigh"], {
+            "calls": 1, "totalTokens": 20,
+            "reasoningCalls": 1, "reasoningOutputTokens": 8,
+        })
+        self.assertNotIn("speeds", telemetry)
         self.assertNotIn("private-message", json.dumps(telemetry))
 
 

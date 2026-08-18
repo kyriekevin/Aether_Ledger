@@ -263,7 +263,9 @@ def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
                         destination["calls"] = destination.get("calls", 0) + max(
                             0, calls
                         )
-                    for key in ("totalTokens", "reasoningOutputTokens"):
+                    for key in (
+                        "totalTokens", "reasoningCalls", "reasoningOutputTokens",
+                    ):
                         value = payload.get(key)
                         if isinstance(value, int) and not isinstance(value, bool):
                             destination[key] = destination.get(key, 0) + max(0, value)
