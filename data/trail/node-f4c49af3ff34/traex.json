@@ -256,17 +256,17 @@
     "models": {
       "claude-opus-4-8": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 28180731,
-        "inputTokens": 594840,
-        "outputTokens": 112276,
-        "totalTokens": 28887847
+        "cacheReadTokens": 36278191,
+        "inputTokens": 1342747,
+        "outputTokens": 149885,
+        "totalTokens": 37770823
       },
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 10606521,
-        "inputTokens": 5590936,
-        "outputTokens": 15737,
-        "totalTokens": 16231082
+        "cacheReadTokens": 12109100,
+        "inputTokens": 6170591,
+        "outputTokens": 18362,
+        "totalTokens": 18317826
       },
       "gemini-3.1-pro-preview": {
         "cacheCreationTokens": 0,
@@ -286,13 +286,50 @@
     "routing": {
       "efforts": {
         "medium": {
-          "reasoningOutputTokens": 17888,
-          "totalTokens": 16261959,
-          "turns": 183
+          "reasoningOutputTokens": 19773,
+          "totalTokens": 18379539,
+          "turns": 210
         }
       }
     },
-    "totalCost": 36.99279595,
-    "totalTokens": 63243116
+    "totalCost": 46.0941174,
+    "totalTokens": 74212836
+  },
+  "2026-08-18": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 30940981,
+        "inputTokens": 2628433,
+        "outputTokens": 170039,
+        "totalTokens": 33739453
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10881736,
+        "inputTokens": 6063973,
+        "outputTokens": 11784,
+        "totalTokens": 16975998
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 839936,
+        "inputTokens": 77547,
+        "outputTokens": 7756,
+        "totalTokens": 925239
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "reasoningOutputTokens": 18505,
+          "totalTokens": 17037416,
+          "turns": 189
+        }
+      }
+    },
+    "totalCost": 37.5154388,
+    "totalTokens": 51640690
   }
 }

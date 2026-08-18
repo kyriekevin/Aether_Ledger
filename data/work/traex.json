@@ -230,5 +230,40 @@
     },
     "totalCost": 0.06374759,
     "totalTokens": 1047451
+  },
+  "2026-08-18": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 463872,
+        "inputTokens": 247389,
+        "outputTokens": 12494,
+        "totalTokens": 723755
+      },
+      "seed-2.1-turbo": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 18232,
+        "inputTokens": 14106,
+        "outputTokens": 140,
+        "totalTokens": 32478
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "reasoningOutputTokens": 3554,
+          "totalTokens": 514936,
+          "turns": 11
+        },
+        "medium": {
+          "reasoningOutputTokens": 751,
+          "totalTokens": 208819,
+          "turns": 5
+        }
+      }
+    },
+    "totalCost": 0.12016553099999999,
+    "totalTokens": 756233
   }
 }
