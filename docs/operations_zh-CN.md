@@ -306,9 +306,9 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
 + Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
 
-因此 README 的阅读顺序是活动，然后依次查看拓扑和分配的当前/历史配对：先看算力何时发生，
-再看它在哪里运行及如何变化，最后看选择了哪些模型、组合如何迁移。两张实验性的效率 SVG
-仍会继续生成，供后续评估使用；指标口径确认前，不再嵌入 README。
+因此 README 的阅读顺序是活动，接着查看拓扑和分配的当前/历史配对，最后看一张当前运行概况：
+先看算力何时发生、在哪里运行及如何变化，再看选择了哪些模型、组合如何迁移，最后查看各
+harness 实际观测到的 session 信号。覆盖范围和指标口径稳定前，不发布运行概况历史图。
 
 Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
 Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
@@ -316,7 +316,7 @@ Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂�
 日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
 不会从 token 总量或金额反推。
 
-七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+六张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
@@ -402,10 +402,10 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 {
   "routing": {
     "efforts": {
-      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {"calls": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
     },
     "speeds": {
-      "fast": {"turns": 3, "totalTokens": 210000}
+      "fast": {"calls": 3, "totalTokens": 210000}
     }
   },
   "quota": {
@@ -415,8 +415,11 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
-额度窗口 key 是匿名的分钟数。Message 与 session 标识只在内存中用于去重，绝不写入仓库。
-历史总量仍然有效，但源日志轮转后不会补出 component 或 routing 明细。
+`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。Routing token 来自
+session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。
+Message 与 session 标识只在内存中用于去重，绝不写入仓库。历史总量仍然有效，但源日志
+轮转后不会补出 component 或 routing 明细。旧条目可能仍保留原来的 `turns` 字段，其含义
+同样是模型调用次数。
 
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。

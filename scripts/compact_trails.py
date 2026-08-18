@@ -252,7 +252,18 @@ def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
                     if not isinstance(payload, dict):
                         continue
                     destination = destination_buckets.setdefault(label, {})
-                    for key in ("turns", "totalTokens", "reasoningOutputTokens"):
+                    call_values = [
+                        value
+                        for key in ("calls", "turns")
+                        if isinstance((value := payload.get(key)), int)
+                        and not isinstance(value, bool)
+                    ]
+                    calls = max(call_values, default=0)
+                    if calls or "calls" in payload or "turns" in payload:
+                        destination["calls"] = destination.get("calls", 0) + max(
+                            0, calls
+                        )
+                    for key in ("totalTokens", "reasoningOutputTokens"):
                         value = payload.get(key)
                         if isinstance(value, int) and not isinstance(value, bool):
                             destination[key] = destination.get(key, 0) + max(0, value)

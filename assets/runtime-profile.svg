@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="330" viewBox="0 0 1180 330" role="img" aria-labelledby="title desc">
+  <title id="title">Recent AI runtime profile through 2026-08-17</title>
+  <desc id="desc">Harness-specific effort, reasoning, speed, and quota signals observed during the trailing 30 days. Unavailable fields are omitted.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="330" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Runtime profile</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-19–2026-08-17 · harness-specific session signals · unavailable fields omitted</text>
+  <rect class="dashboard-panel" x="16" y="92" width="372" height="200" rx="16" data-agent="claude"/>
+  <circle class="agent-claude" cx="38" cy="117" r="5"/>
+  <text class="dashboard-primary" x="51" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="34" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
+  <text class="dashboard-secondary" x="114" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">0.0% fast · 4.6K calls</text>
+  <rect class="dashboard-panel" x="404" y="92" width="372" height="200" rx="16" data-agent="codex"/>
+  <circle class="agent-codex" cx="426" cy="117" r="5"/>
+  <text class="dashboard-primary" x="439" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="422" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
+  <text class="dashboard-secondary" x="502" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">lo 14% · med 15% · hi 17% · xhi 55%</text>
+  <text class="dashboard-muted" x="422" y="184" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort calls</text>
+  <text class="dashboard-secondary" x="502" y="184" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">46.9K calls</text>
+  <text class="dashboard-muted" x="422" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
+  <text class="dashboard-secondary" x="502" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">5.3M tokens</text>
+  <text class="dashboard-muted" x="422" y="236" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Speed</text>
+  <text class="dashboard-secondary" x="502" y="236" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">67.1% fast · 61.3K calls</text>
+  <text class="dashboard-muted" x="422" y="262" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Quota</text>
+  <text class="dashboard-secondary" x="502" y="262" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">11/30 days ≥80% · 0 limit days</text>
+  <rect class="dashboard-panel" x="792" y="92" width="372" height="200" rx="16" data-agent="traex"/>
+  <circle class="agent-traex" cx="814" cy="117" r="5"/>
+  <text class="dashboard-primary" x="827" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="810" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort</text>
+  <text class="dashboard-secondary" x="890" y="158" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">lo 6% · med 88% · hi 5%</text>
+  <text class="dashboard-muted" x="810" y="184" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Effort calls</text>
+  <text class="dashboard-secondary" x="890" y="184" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">2.8K calls</text>
+  <text class="dashboard-muted" x="810" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Reasoning</text>
+  <text class="dashboard-secondary" x="890" y="210" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">413K tokens</text>
+  <text class="dashboard-muted" x="16" y="316" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Model-call routing is independent of canonical daily token totals.</text>
+</svg>

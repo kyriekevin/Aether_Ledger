@@ -51,6 +51,14 @@ environment's weekly total and harness mix changed.
 The current view keeps the trailing 30-day model mix; the history view compares four weekly model
 stacks with the preceding four, using absolute Top 3 + Other values within each harness.
 
+## Runtime profile
+
+![Aether Ledger runtime profile](assets/runtime-profile.svg)
+
+The runtime profile shows only the session signals each harness exposes: effort and reasoning for
+Codex-compatible logs, speed where available, and observed quota pressure. Missing fields are
+omitted, and model-call routing is kept separate from canonical daily token totals.
+
 ## Ledger
 
 The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,

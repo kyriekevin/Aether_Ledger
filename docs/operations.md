@@ -341,10 +341,11 @@ Work, Personal, and Development, so bar height preserves each environment's tota
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
 each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
-The README therefore reads as activity, then current/history pairs for topology and allocation:
-when compute happened, where it ran and how that changed, then which models were selected and how
-the mix migrated. Two experimental efficiency SVGs remain generated for evaluation but are not
-embedded in the README while their definitions are under review.
+The README therefore reads as activity, then current/history pairs for topology and allocation,
+followed by one current runtime profile: when compute happened, where it ran and how that changed,
+which models were selected and how the mix migrated, then which harness-specific session signals
+were observed. Runtime history remains unpublished until its coverage and metric definitions are
+stable.
 
 Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
 Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
@@ -353,7 +354,7 @@ rollout format, the collector also accepts their effort, speed, reasoning, and q
 present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
 total tokens or cost.
 
-All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All six dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
@@ -447,10 +448,10 @@ routing fields as Codex when present:
 {
   "routing": {
     "efforts": {
-      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {"calls": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
     },
     "speeds": {
-      "fast": {"turns": 3, "totalTokens": 210000}
+      "fast": {"calls": 3, "totalTokens": 210000}
     }
   },
   "quota": {
@@ -460,9 +461,12 @@ routing fields as Codex when present:
 }
 ```
 
-Window keys are anonymous durations in minutes. Message and session identifiers are used only for
-in-memory deduplication and are never written. Historical totals remain valid but do not gain
-component or routing detail after their source logs rotate.
+`calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+Routing token totals come from that session stream and are not coverage estimates for the
+independently collected canonical daily total. Window keys are anonymous durations in minutes.
+Message and session identifiers are used only for in-memory deduplication and are never written.
+Historical totals remain valid but do not gain component or routing detail after their source logs
+rotate. Legacy entries may retain the former `turns` field with the same model-call meaning.
 
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.

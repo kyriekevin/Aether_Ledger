@@ -55,7 +55,7 @@ class SharedStoreCoverageTests(unittest.TestCase):
             day = rollups["codex.json"]["2026-08-01"]
             self.assertEqual(day["totalTokens"], 300)
             self.assertEqual(day["models"]["gpt-example"]["inputTokens"], 150)
-            self.assertEqual(day["routing"]["efforts"]["low"]["turns"], 2)
+            self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 2)
             self.assertEqual(day["quota"]["windows"], {"300": 75.0})
             self.assertTrue(day["quota"]["limitReached"])
 
@@ -476,13 +476,13 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalCost": 0.9,
                 "routing": {
                     "efforts": {
-                        "low": {"turns": 3, "totalTokens": 100},
+                        "low": {"calls": 3, "totalTokens": 100},
                         "high": {
-                            "turns": 1, "totalTokens": 40,
+                            "calls": 1, "totalTokens": 40,
                             "reasoningOutputTokens": 12,
                         },
                     },
-                    "speeds": {"fast": {"turns": 1, "totalTokens": 40}},
+                    "speeds": {"fast": {"calls": 1, "totalTokens": 40}},
                 },
                 "quota": {
                     "windows": {"300": 40.0, "10080": 20.0},
@@ -494,12 +494,13 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
         day = self.read_store()["2026-08-04"]
         self.assertEqual(day["routing"]["efforts"]["low"]["totalTokens"], 100)
-        self.assertEqual(day["routing"]["efforts"]["low"]["turns"], 3)
+        self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 3)
+        self.assertNotIn("turns", day["routing"]["efforts"]["low"])
         self.assertEqual(
             day["routing"]["efforts"]["low"]["reasoningOutputTokens"], 20
         )
         self.assertEqual(day["routing"]["efforts"]["high"]["totalTokens"], 40)
-        self.assertEqual(day["routing"]["speeds"]["fast"]["turns"], 1)
+        self.assertEqual(day["routing"]["speeds"]["fast"]["calls"], 1)
         self.assertEqual(day["quota"]["windows"], {"300": 75.0, "10080": 20.0})
         self.assertTrue(day["quota"]["limitReached"])
 
@@ -573,11 +574,11 @@ class RoutingTelemetryTests(unittest.TestCase):
             telemetry["routing"]["efforts"],
             {
                 "low": {
-                    "turns": 1, "totalTokens": 100,
+                    "calls": 1, "totalTokens": 100,
                     "reasoningOutputTokens": 20,
                 },
                 "medium": {
-                    "turns": 1, "totalTokens": 200,
+                    "calls": 1, "totalTokens": 200,
                     "reasoningOutputTokens": 50,
                 },
             },
@@ -620,8 +621,8 @@ class RoutingTelemetryTests(unittest.TestCase):
         telemetry = sync_usage.collect_claude_speed_since(
             date(2026, 8, 15), self.root
         )["2026-08-15"]["routing"]["speeds"]
-        self.assertEqual(telemetry["standard"], {"turns": 1, "totalTokens": 30})
-        self.assertEqual(telemetry["fast"], {"turns": 1, "totalTokens": 20})
+        self.assertEqual(telemetry["standard"], {"calls": 1, "totalTokens": 30})
+        self.assertEqual(telemetry["fast"], {"calls": 1, "totalTokens": 20})
         self.assertNotIn("private-message", json.dumps(telemetry))
 
 

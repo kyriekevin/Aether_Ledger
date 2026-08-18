@@ -49,6 +49,14 @@ token 总量大于零的自然日累计。
 当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
 堆叠，展示各 harness 内部的模型迁移。
 
+## 运行概况
+
+![Aether Ledger 运行概况](assets/runtime-profile.svg)
+
+运行概况只展示各 harness 日志确实提供的 session 信号：兼容 Codex 的日志展示 effort 与
+reasoning，可用时展示速度，并统计观测到的额度压力。缺失字段直接省略；model call 路由与
+每日 token 主账分开统计。
+
 ## 账本
 
 适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、

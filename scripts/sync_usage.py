@@ -344,9 +344,9 @@ def _add_routing_bucket(
 ) -> None:
     routing = daily.setdefault(day.isoformat(), {}).setdefault("routing", {})
     bucket = routing.setdefault(dimension, {}).setdefault(
-        label, {"turns": 0, "totalTokens": 0}
+        label, {"calls": 0, "totalTokens": 0}
     )
-    bucket["turns"] += 1
+    bucket["calls"] += 1
     bucket["totalTokens"] += tokens
     if reasoning_tokens:
         bucket["reasoningOutputTokens"] = (
@@ -359,7 +359,7 @@ def collect_codex_routing_since(
 ) -> dict[str, dict]:
     """Aggregate privacy-safe Codex routing and quota telemetry.
 
-    Session files expose model effort, service tier, per-turn token deltas, and
+    Session files expose model effort, service tier, per-call token usage, and
     rate-limit snapshots. Only enum buckets, counters, and window percentages
     leave this function; paths, prompts, turn IDs, and session IDs never do.
     """
@@ -774,11 +774,23 @@ def _canonical_model_totals(models: dict) -> dict[str, dict]:
 def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
     if replace:
         return current
-    merged = {
-        dimension: {label: dict(values) for label, values in buckets.items()}
-        for dimension, buckets in prev.items()
-        if isinstance(buckets, dict)
-    }
+    merged: dict[str, dict] = {}
+    for dimension, buckets in prev.items():
+        if not isinstance(buckets, dict):
+            continue
+        destination = merged.setdefault(dimension, {})
+        for label, values in buckets.items():
+            if not isinstance(values, dict):
+                continue
+            normalized = {
+                key: value for key, value in values.items() if key != "turns"
+            }
+            if "calls" in values or "turns" in values:
+                normalized["calls"] = max(
+                    _token_value(values.get("calls")),
+                    _token_value(values.get("turns")),
+                )
+            destination[label] = normalized
     for dimension, buckets in current.items():
         if not isinstance(buckets, dict):
             continue
@@ -787,7 +799,13 @@ def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
             if not isinstance(values, dict):
                 continue
             previous = destination.setdefault(label, {})
-            for key in ("turns", "totalTokens", "reasoningOutputTokens"):
+            if "calls" in values or "turns" in values:
+                previous["calls"] = max(
+                    _token_value(previous.get("calls")),
+                    _token_value(values.get("calls")),
+                    _token_value(values.get("turns")),
+                )
+            for key in ("totalTokens", "reasoningOutputTokens"):
                 value = values.get(key)
                 if isinstance(value, int) and not isinstance(value, bool):
                     previous[key] = max(0, value, _token_value(previous.get(key)))

@@ -20,14 +20,12 @@ from render_dashboard import (  # noqa: E402
     generate,
     generate_allocation,
     generate_allocation_history,
-    generate_efficiency,
-    generate_efficiency_history,
+    generate_runtime_profile,
     generate_topology,
     generate_topology_history,
     render_allocation_svg,
     render_allocation_history_svg,
-    render_efficiency_svg,
-    render_efficiency_history_svg,
+    render_runtime_profile_svg,
     render_svg,
     render_topology_svg,
     render_topology_history_svg,
@@ -172,7 +170,7 @@ class AggregateAllocationTests(unittest.TestCase):
                         "speeds": {"fast": {"turns": 2, "totalTokens": 100}},
                     },
                     "quota": {
-                        "windows": {"300": 65.0}, "limitReached": True,
+                        "windows": {"300": 85.0}, "limitReached": True,
                     },
                 },
             }), encoding="utf-8")
@@ -214,15 +212,17 @@ class AggregateAllocationTests(unittest.TestCase):
 
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
-            self.assertEqual(totals.efforts["codex"]["low"]["turns"], 2)
+            self.assertEqual(totals.efforts["codex"]["low"]["calls"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
             self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
-            self.assertEqual(totals.quota_windows["codex"], {300: 65.0})
+            self.assertEqual(totals.quota_windows["codex"], {300: 85.0})
+            self.assertEqual(totals.quota_observed_days["codex"], 1)
+            self.assertEqual(totals.quota_pressure_days["codex"], 1)
             self.assertEqual(totals.quota_limit_days["codex"], 1)
             self.assertEqual(totals.components["claude"]["inputTokens"], 4)
-            self.assertEqual(totals.speeds["claude"]["standard"]["turns"], 1)
+            self.assertEqual(totals.speeds["claude"]["standard"]["calls"], 1)
             self.assertEqual(totals.components["traex"]["cacheReadTokens"], 50)
-            self.assertEqual(totals.efforts["traex"]["medium"]["turns"], 1)
+            self.assertEqual(totals.efforts["traex"]["medium"]["calls"], 1)
             self.assertEqual(len(totals.trend_starts), 8)
             self.assertEqual(totals.trend_starts[0], date(2026, 6, 7))
             self.assertEqual(
@@ -244,7 +244,7 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(
                 totals.weekly_speeds[7][("codex", "fast")], 100
             )
-            self.assertEqual(totals.weekly_quota[7]["codex"], 65.0)
+            self.assertEqual(totals.weekly_quota[7]["codex"], 85.0)
 
 
 class DashboardTests(unittest.TestCase):
@@ -380,7 +380,7 @@ class DashboardTests(unittest.TestCase):
                 generate_topology_history(root, history_output, check=True)
             )
 
-    def test_allocation_and_efficiency_split_models_from_routing(self) -> None:
+    def test_allocation_and_runtime_profile_split_models_from_routing(self) -> None:
         allocation = AllocationTotals(
             as_of=date(2026, 8, 1),
             recent_start=date(2026, 7, 3),
@@ -462,7 +462,7 @@ class DashboardTests(unittest.TestCase):
             efforts={
                 agent: {
                     effort: {
-                        "turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
+                        "calls": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
                     }
                     for effort in ("none", "low", "medium", "high", "xhigh", "max")
                 }
@@ -470,7 +470,7 @@ class DashboardTests(unittest.TestCase):
             },
             speeds={
                 agent: {
-                    speed: {"turns": 0, "totalTokens": 0}
+                    speed: {"calls": 0, "totalTokens": 0}
                     for speed in ("standard", "fast")
                 }
                 for agent in ("claude", "codex", "traex", "legacy")
@@ -487,19 +487,25 @@ class DashboardTests(unittest.TestCase):
             quota_windows={
                 agent: {} for agent in ("claude", "codex", "traex", "legacy")
             },
+            quota_observed_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
+            quota_pressure_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
             quota_limit_days={
                 agent: 0 for agent in ("claude", "codex", "traex", "legacy")
             },
         )
         allocation.efforts["codex"]["low"].update(
-            turns=3, totalTokens=120, reasoningOutputTokens=10
+            calls=3, totalTokens=120, reasoningOutputTokens=10
         )
         allocation.efforts["codex"]["medium"].update(
-            turns=1, totalTokens=80, reasoningOutputTokens=20
+            calls=1, totalTokens=80, reasoningOutputTokens=20
         )
-        allocation.speeds["claude"]["standard"].update(turns=2, totalTokens=100)
-        allocation.speeds["codex"]["standard"].update(turns=1, totalTokens=100)
-        allocation.speeds["codex"]["fast"].update(turns=1, totalTokens=100)
+        allocation.speeds["claude"]["standard"].update(calls=2, totalTokens=100)
+        allocation.speeds["codex"]["standard"].update(calls=1, totalTokens=100)
+        allocation.speeds["codex"]["fast"].update(calls=1, totalTokens=100)
         allocation.components["claude"].update(
             inputTokens=5, outputTokens=5, cacheCreationTokens=10, cacheReadTokens=80
         )
@@ -507,16 +513,17 @@ class DashboardTests(unittest.TestCase):
             inputTokens=20, outputTokens=10, cacheCreationTokens=20, cacheReadTokens=150
         )
         allocation.quota_windows["codex"][300] = 68.0
+        allocation.quota_observed_days["codex"] = 10
+        allocation.quota_pressure_days["codex"] = 3
+        allocation.quota_limit_days["codex"] = 1
 
         allocation_svg = render_allocation_svg(allocation)
         allocation_history_svg = render_allocation_history_svg(allocation)
-        efficiency_svg = render_efficiency_svg(allocation)
-        efficiency_history_svg = render_efficiency_history_svg(allocation)
+        runtime_svg = render_runtime_profile_svg(allocation)
 
         ET.fromstring(allocation_svg)
         ET.fromstring(allocation_history_svg)
-        ET.fromstring(efficiency_svg)
-        ET.fromstring(efficiency_history_svg)
+        ET.fromstring(runtime_svg)
         self.assertIn("Model allocation", allocation_svg)
         self.assertIn("current 30-day model mix", allocation_svg)
         self.assertIn("30D SHARE", allocation_svg)
@@ -535,29 +542,18 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("LATEST 4 WEEKS", allocation_history_svg)
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
-        self.assertIn("Token efficiency", efficiency_svg)
-        self.assertIn("Observed routing signals", efficiency_svg)
-        self.assertIn("low 60.0%", efficiency_svg)
-        self.assertIn("50.0% fast", efficiency_svg)
-        self.assertIn("cache read 80.0%", efficiency_svg)
-        self.assertIn("100.0% coverage", efficiency_svg)
-        self.assertIn("not exposed by Claude logs", efficiency_svg)
-        self.assertIn("68% peak", efficiency_svg)
-        self.assertNotIn("prior 30d", efficiency_svg)
-        self.assertNotRegex(efficiency_svg, r"[+-]?\d+(?:\.\d+)?pp\b")
-        self.assertIn("Efficiency history", efficiency_history_svg)
-        self.assertIn("Token flow", efficiency_history_svg)
-        self.assertIn("previous 4 vs latest 4", efficiency_history_svg)
-        self.assertIn("PREVIOUS 4W", efficiency_history_svg)
-        self.assertIn("LATEST 4W", efficiency_history_svg)
-        for signal in ("effort", "reasoning", "fast", "quota"):
-            self.assertIn(f'data-signal="{signal}"', efficiency_history_svg)
-        self.assertIn("component detail unavailable", efficiency_history_svg)
+        self.assertIn("Runtime profile", runtime_svg)
+        self.assertIn("lo 75%", runtime_svg)
+        self.assertIn("50.0% fast · 2 calls", runtime_svg)
+        self.assertIn("3/10 days ≥80% · 1 limit day", runtime_svg)
+        self.assertIn("No compatible session signals observed", runtime_svg)
+        self.assertNotIn("cache read", runtime_svg)
+        self.assertNotIn("not exposed", runtime_svg)
+        self.assertNotIn("Token efficiency", runtime_svg)
         for svg in (
             allocation_svg,
             allocation_history_svg,
-            efficiency_svg,
-            efficiency_history_svg,
+            runtime_svg,
         ):
             self.assertNotIn("private-repo", svg)
             self.assertNotIn("session-id", svg)
@@ -593,26 +589,14 @@ class DashboardTests(unittest.TestCase):
                 )
             )
 
-            efficiency_output = root / "assets" / "efficiency.svg"
-            self.assertTrue(generate_efficiency(root, efficiency_output))
+            runtime_output = root / "assets" / "runtime-profile.svg"
+            self.assertTrue(generate_runtime_profile(root, runtime_output))
             self.assertIn(
                 "through 2026-07-31",
-                efficiency_output.read_text(encoding="utf-8"),
-            )
-            self.assertFalse(generate_efficiency(root, efficiency_output, check=True))
-
-            efficiency_history_output = root / "assets" / "efficiency-history.svg"
-            self.assertTrue(
-                generate_efficiency_history(root, efficiency_history_output)
-            )
-            self.assertIn(
-                "through 2026-07-31",
-                efficiency_history_output.read_text(encoding="utf-8"),
+                runtime_output.read_text(encoding="utf-8"),
             )
             self.assertFalse(
-                generate_efficiency_history(
-                    root, efficiency_history_output, check=True
-                )
+                generate_runtime_profile(root, runtime_output, check=True)
             )
 
 if __name__ == "__main__":
