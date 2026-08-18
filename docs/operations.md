@@ -163,6 +163,38 @@ Logs:
 
 Each invocation writes start and finish heartbeat lines to the standard-output log.
 
+### Claude subscription quota
+
+Claude Code exposes subscription pressure to custom status lines, but does not persist those
+snapshots in project transcripts. Install the optional local tap after configuring a command-based
+status line:
+
+```sh
+uv run --script scripts/install_claude_statusline.py --dry-run
+uv run --script scripts/install_claude_statusline.py
+```
+
+The installer copies a small proxy to `~/.local/share/aether-ledger/`, preserves the original
+status-line command in `~/.config/aether-ledger/claude-statusline.json`, and replaces only that one
+setting. The proxy forwards Claude's stdin unchanged to the original status line. While Claude is
+running, it records only the daily high-water percentages for the five-hour and seven-day windows
+in `~/.cache/aether-ledger/claude-rate-limits.json`. It stores no reset time, transcript, path,
+session, credential, or account field.
+
+The proxy performs no network requests and has no background process. When Claude is not running,
+it does nothing. The scheduled writer only reads the local cache, assigns each sample to the
+Asia/Shanghai day when Claude supplied it, and never treats an old snapshot as a new observation.
+Missing, malformed, or unwritable cache data is ignored and cannot break the existing status line
+or scheduled sync.
+
+Restore the exact prior status-line command with:
+
+```sh
+uv run --script scripts/install_claude_statusline.py --uninstall
+```
+
+Uninstall refuses to overwrite the setting if it changed after installation.
+
 ### Concurrent Git access
 
 The writer is not the only scheduled process running Git in this checkout. The downstream Feishu
@@ -334,26 +366,27 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Each analytical dimension pairs that trailing-30-day snapshot with a separate eight-week history
-asset. Every history uses the same adjacent weekly buckets and explicitly splits them into the
+Topology and allocation each pair the trailing-30-day snapshot with a separate eight-week history
+asset. Both histories use the same adjacent weekly buckets and explicitly split them into the
 previous four weeks and the latest four weeks. Topology history uses absolute weekly stacks within
 Work, Personal, and Development, so bar height preserves each environment's total while color
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
-each harness. Efficiency history aligns weekly input/output/cache composition with effort,
-reasoning, Fast, and quota intensity cells.
-Every panel keeps the same semantic dimension as its current snapshot; missing model or telemetry
-coverage stays blank or gray rather than being plotted as zero.
+each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
 The README therefore reads as activity, then current/history pairs for topology, allocation, and
-efficiency: when compute happened, where it ran and how that changed, which models were selected
-and how the mix migrated, then how tokens flowed and routing behavior evolved.
+runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
+seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
+seven-day quota peak bars. Color identifies a harness or effort category while geometry shows
+magnitude, matching the visual grammar of the other history views.
 
-Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
-Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
-cheap substitute; its model mix is shown literally. Because compatible TRAE builds use the Codex
-rollout format, the collector also accepts their effort, speed, reasoning, and quota events when
-present. Missing historical telemetry stays explicitly unavailable instead of being inferred from
-total tokens or cost.
+Claude assistant events expose effort and, on supported models, `thinking_tokens`; Fast is not
+selectable in the observed Claude setup, so its standard-only speed field is not collected or
+shown. Claude logs expose no Codex-style quota fields. Codex exposes effort, reasoning, speed, and
+quota. TRAE is an internally provided CLI, not a model vendor or an intrinsically cheap substitute;
+its model mix is shown literally. Because compatible TRAE builds use the Codex rollout format, the
+collector also accepts their effort, speed, reasoning, and quota events when present. Missing
+historical telemetry stays explicitly unavailable instead of being inferred from total tokens or
+cost. Reasoning intensity is interpreted only within one harness, never across vendors.
 
 All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
@@ -442,17 +475,22 @@ Codex entries may also contain model token breakdowns and an image counter:
 
 New observations preserve the four token components under each model for every harness that
 ccusage can break down. Codex session events also contribute aggregate routing and quota telemetry;
-Claude events contribute aggregate speed data; compatible TRAE session events contribute the same
-routing fields as Codex when present:
+Claude assistant events contribute effort and thinking telemetry; compatible TRAE session events
+contribute the same routing fields as Codex when present:
 
 ```json
 {
   "routing": {
     "efforts": {
-      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {
+        "calls": 12,
+        "totalTokens": 840000,
+        "reasoningCalls": 12,
+        "reasoningOutputTokens": 42000
+      }
     },
     "speeds": {
-      "fast": {"turns": 3, "totalTokens": 210000}
+      "fast": {"calls": 3, "totalTokens": 210000}
     }
   },
   "quota": {
@@ -462,9 +500,14 @@ routing fields as Codex when present:
 }
 ```
 
-Window keys are anonymous durations in minutes. Message and session identifiers are used only for
-in-memory deduplication and are never written. Historical totals remain valid but do not gain
-component or routing detail after their source logs rotate.
+`calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+`reasoningCalls` counts invocations where the harness exposed a reasoning or thinking-token field,
+including an explicit zero, so per-call trends do not turn missing telemetry into zero.
+Routing token totals come from that session stream and are not coverage estimates for the
+independently collected canonical daily total. Window keys are anonymous durations in minutes.
+Message and session identifiers are used only for in-memory deduplication and are never written.
+Historical totals remain valid but do not gain component or routing detail after their source logs
+rotate. Legacy entries may retain the former `turns` field with the same model-call meaning.
 
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.

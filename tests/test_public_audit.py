@@ -100,11 +100,12 @@ class PublicAuditTests(unittest.TestCase):
                     "routing": {
                         "efforts": {
                             "low": {
-                                "turns": 1, "totalTokens": 10,
+                                "calls": 1, "totalTokens": 10,
+                                "reasoningCalls": 1,
                                 "reasoningOutputTokens": 2,
                             }
                         },
-                        "speeds": {"fast": {"turns": 1, "totalTokens": 10}},
+                        "speeds": {"fast": {"calls": 1, "totalTokens": 10}},
                     },
                     "quota": {
                         "windows": {"300": 42.5}, "limitReached": False,

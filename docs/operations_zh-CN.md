@@ -147,6 +147,34 @@ writer 固定使用每日分支创建时继承的代码，白天新合入 `main`
 
 每次运行都会在标准输出日志中写入开始和结束心跳。
 
+### Claude 订阅额度
+
+Claude Code 会把订阅额度压力传给自定义 status line，但不会把这些快照写进项目 transcript。
+配置好 command 类型的 status line 后，可安装这个可选的本地 tap：
+
+```sh
+uv run --script scripts/install_claude_statusline.py --dry-run
+uv run --script scripts/install_claude_statusline.py
+```
+
+安装器把一个轻量 proxy 复制到 `~/.local/share/aether-ledger/`，将原 status-line command 保存在
+`~/.config/aether-ledger/claude-statusline.json`，只替换这一项设置。proxy 会把 Claude 的 stdin
+原样交给原 status line。Claude 运行期间，它只记录 5 小时、7 天窗口在当天出现过的最高百分比，
+写入 `~/.cache/aether-ledger/claude-rate-limits.json`。重置时间、transcript、路径、session、
+credential 和账号字段一律不保存。
+
+proxy 不发起网络请求，也没有常驻进程。Claude 没启动时，它完全不运行。定时 writer 只读本地
+cache，按 Claude 实际提供快照时的 Asia/Shanghai 日期归档，不会把旧快照算成今天的新观测。
+cache 缺失、损坏或无法写入时直接跳过，不会影响原 status line 或定时同步。
+
+恢复安装前的原 command：
+
+```sh
+uv run --script scripts/install_claude_statusline.py --uninstall
+```
+
+如果安装后 status line 又被用户修改，卸载器会拒绝覆盖。
+
 ### Git 并发访问
 
 在这个 checkout 里跑 Git 的不止写入脚本一个进程：还有 `compact_trails.py`，以及人手
@@ -301,22 +329,22 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
 不会进入生成资源。
 
-每个分析维度都将最近 30 日截面与独立的 8 周历史图配对。所有历史图使用相同的连续周桶，并
+拓扑和分配都将最近 30 日截面与独立的 8 周历史图配对。两张历史图使用相同的连续周桶，并
 明确分成前 4 周与近 4 周。拓扑历史在 Work、Personal、Development 内使用绝对周度堆叠，
 柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
-+ Other 堆叠；效率历史把每周 input/output/cache 构成与 Effort、Reasoning、Fast、Quota
-强度格对齐。每张历史图都延续当前截面的同一语义维度；缺少模型或遥测覆盖的周保持为空白或
-灰色，不会被画成零。
++ Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
 
-因此 README 的阅读顺序是活动，然后依次查看拓扑、分配、效率的当前/历史配对：先看算力何时
-发生，再看它在哪里运行及如何变化、选择了哪些模型及组合如何迁移，最后看 token flow 与路由
-行为如何演变。
+因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对。运行截面用长度
+与明确数值展示 effort、Fast 和最近一天的 7 天额度峰值；历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线
+和每周 7 天额度峰值柱。颜色只标识 harness 或 effort 类别，数值大小交给几何位置表达，与其他
+历史图的视觉逻辑一致。
 
-Claude 日志提供 standard/Fast 速度，但没有 Codex 式 effort、独立 reasoning token 或额度字段；
-Codex 提供全部四类信号。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于低价平替；图中
-只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此采集器也会在
-日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示为不可用，
-不会从 token 总量或金额反推。
+Claude assistant 事件提供 effort，支持的模型还会提供 `thinking_tokens`。当前 Claude 环境不能
+选择 Fast，因此不采集、不展示只有 standard 的速度字段；Claude 日志也没有 Codex 式额度字段。
+Codex 提供 effort、reasoning、速度与额度。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于
+低价平替；图中只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此
+采集器也会在日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示
+为不可用，不会从 token 总量或金额反推。Reasoning 强度只在各 harness 内部解释，不跨厂商比较。
 
 七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
@@ -397,17 +425,22 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 ```
 
 只要 ccusage 能拆分，新观测就会为每个 harness 的每个模型保留四类 token。Codex session
-事件还会贡献匿名的路由与额度遥测；Claude 事件贡献匿名速度数据；兼容的 TRAE session
-事件在确实提供时贡献与 Codex 相同的路由字段：
+事件还会贡献匿名的路由与额度遥测；Claude assistant 事件贡献 effort 与 thinking 遥测；兼容的
+TRAE session 事件在确实提供时贡献与 Codex 相同的路由字段：
 
 ```json
 {
   "routing": {
     "efforts": {
-      "low": {"turns": 12, "totalTokens": 840000, "reasoningOutputTokens": 42000}
+      "low": {
+        "calls": 12,
+        "totalTokens": 840000,
+        "reasoningCalls": 12,
+        "reasoningOutputTokens": 42000
+      }
     },
     "speeds": {
-      "fast": {"turns": 3, "totalTokens": 210000}
+      "fast": {"calls": 3, "totalTokens": 210000}
     }
   },
   "quota": {
@@ -417,8 +450,13 @@ Codex 条目还可以包含按模型拆分的 token 和图片计数：
 }
 ```
 
-额度窗口 key 是匿名的分钟数。Message 与 session 标识只在内存中用于去重，绝不写入仓库。
-历史总量仍然有效，但源日志轮转后不会补出 component 或 routing 明细。
+`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。`reasoningCalls` 统计
+harness 明确给出 reasoning 或 thinking token 字段的调用，包括字段明确为零的情况，避免把
+缺失遥测算成零。Routing token 来自
+session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。
+Message 与 session 标识只在内存中用于去重，绝不写入仓库。历史总量仍然有效，但源日志
+轮转后不会补出 component 或 routing 明细。旧条目可能仍保留原来的 `turns` 字段，其含义
+同样是模型调用次数。
 
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。

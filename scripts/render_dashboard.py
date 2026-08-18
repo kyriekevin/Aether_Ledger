@@ -25,8 +25,8 @@ DEFAULT_TOPOLOGY_OUTPUT = REPO_ROOT / "assets" / "token-topology.svg"
 DEFAULT_TOPOLOGY_HISTORY_OUTPUT = REPO_ROOT / "assets" / "token-topology-history.svg"
 DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
-DEFAULT_EFFICIENCY_OUTPUT = REPO_ROOT / "assets" / "compute-efficiency.svg"
-DEFAULT_EFFICIENCY_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-efficiency-history.svg"
+DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
+DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -49,29 +49,17 @@ EFFORT_ORDER = ("none", "low", "medium", "high", "xhigh", "max")
 EFFORT_SHORT_LABELS = {
     "none": "none",
     "low": "low",
-    "medium": "med",
+    "medium": "medium",
     "high": "high",
     "xhigh": "xhigh",
     "max": "max",
 }
 SPEED_ORDER = ("standard", "fast")
-COMPONENT_ORDER = (
-    "inputTokens",
-    "outputTokens",
-    "cacheCreationTokens",
-    "cacheReadTokens",
-)
-COMPONENT_LABELS = {
-    "inputTokens": "input",
-    "outputTokens": "output",
-    "cacheCreationTokens": "cache write",
-    "cacheReadTokens": "cache read",
-}
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 
 
 def _theme_style_lines(
-    *, topology: bool = False, allocation: bool = False
+    *, topology: bool = False, allocation: bool = False, runtime: bool = False
 ) -> tuple[str, ...]:
     light_levels = (
         (
@@ -134,6 +122,15 @@ def _theme_style_lines(
         "    .signal-level-4 { fill: #179299; }",
         ) if allocation else ()),
     ) if allocation or topology else ()
+    light_efforts = (
+        "    .effort-none { fill: #9ca0b0; }",
+        "    .effort-low { fill: #40a02b; }",
+        "    .effort-medium { fill: #1e66f5; }",
+        "    .effort-high { fill: #df8e1d; }",
+        "    .effort-xhigh { fill: #8839ef; }",
+        "    .effort-max { fill: #d20f39; }",
+        "    .line-codex { fill: none; stroke: #1e66f5; }",
+    ) if runtime else ()
     light_components = (
         "    .component-input { fill: #40a02b; }",
         "    .component-output { fill: #df8e1d; }",
@@ -157,6 +154,15 @@ def _theme_style_lines(
         "      .signal-level-4 { fill: #94e2d5; }",
         ) if allocation else ()),
     ) if allocation or topology else ()
+    dark_efforts = (
+        "      .effort-none { fill: #7f849c; }",
+        "      .effort-low { fill: #a6e3a1; }",
+        "      .effort-medium { fill: #89b4fa; }",
+        "      .effort-high { fill: #f9e2af; }",
+        "      .effort-xhigh { fill: #cba6f7; }",
+        "      .effort-max { fill: #f38ba8; }",
+        "      .line-codex { fill: none; stroke: #89b4fa; }",
+    ) if runtime else ()
     dark_components = (
         "      .component-input { fill: #a6e3a1; }",
         "      .component-output { fill: #f9e2af; }",
@@ -173,6 +179,7 @@ def _theme_style_lines(
         "    .dashboard-accent { fill: #179299; }",
         "    .dashboard-border { stroke: #ccd0da; }",
         *light_agents,
+        *light_efforts,
         *light_components,
         *light_levels,
         "    @media (prefers-color-scheme: dark) {",
@@ -184,6 +191,7 @@ def _theme_style_lines(
         "      .dashboard-accent { fill: #94e2d5; }",
         "      .dashboard-border { stroke: #313244; }",
         *dark_agents,
+        *dark_efforts,
         *dark_components,
         *dark_levels,
         "    }",
@@ -237,19 +245,23 @@ class AllocationTotals:
     trend_starts: tuple[date, ...]
     weekly_model_tokens: tuple[dict[tuple[str, str], int], ...]
     weekly_model_observed: tuple[set[str], ...]
-    weekly_components: tuple[dict[tuple[str, str], int], ...]
-    weekly_component_observed: tuple[set[str], ...]
-    weekly_efforts: tuple[dict[tuple[str, str], int], ...]
+    weekly_effort_calls: tuple[dict[tuple[str, str], int], ...]
+    weekly_reasoning_calls: tuple[dict[str, int], ...]
     weekly_reasoning: tuple[dict[str, int], ...]
     weekly_effort_observed: tuple[set[str], ...]
-    weekly_speeds: tuple[dict[tuple[str, str], int], ...]
+    weekly_speed_calls: tuple[dict[tuple[str, str], int], ...]
     weekly_speed_observed: tuple[set[str], ...]
-    weekly_quota: tuple[dict[str, float], ...]
+    weekly_quota_observed_days: tuple[dict[str, int], ...]
+    weekly_quota_pressure_days: tuple[dict[str, int], ...]
+    weekly_quota_7d_peak: tuple[dict[str, float], ...]
     weekly_quota_observed: tuple[set[str], ...]
     efforts: dict[str, dict[str, dict[str, int]]]
     speeds: dict[str, dict[str, dict[str, int]]]
-    components: dict[str, dict[str, int]]
     quota_windows: dict[str, dict[int, float]]
+    latest_quota_day: dict[str, date | None]
+    latest_quota_windows: dict[str, dict[int, float]]
+    quota_observed_days: dict[str, int]
+    quota_pressure_days: dict[str, int]
     quota_limit_days: dict[str, int]
 
 
@@ -358,6 +370,16 @@ def aggregate_topology(root: Path, as_of: date) -> TopologyTotals:
     )
 
 
+def _routing_calls(payload: dict) -> int:
+    values = [
+        value
+        for key in ("calls", "turns")
+        if isinstance((value := payload.get(key)), int)
+        and not isinstance(value, bool)
+    ]
+    return max(0, *values)
+
+
 def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
     """Aggregate the trailing 30-day harness, model, and routing dimensions."""
     recent_start = as_of - timedelta(days=29)
@@ -369,37 +391,51 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
     model_tokens: defaultdict[tuple[str, str], int] = defaultdict(int)
     weekly_model_tokens = tuple(defaultdict(int) for _ in trend_starts)
     weekly_model_observed = tuple(set() for _ in trend_starts)
-    weekly_components = tuple(defaultdict(int) for _ in trend_starts)
-    weekly_component_observed = tuple(set() for _ in trend_starts)
-    weekly_efforts = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_effort_calls = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_reasoning_calls = tuple(defaultdict(int) for _ in trend_starts)
     weekly_reasoning = tuple(defaultdict(int) for _ in trend_starts)
     weekly_effort_observed = tuple(set() for _ in trend_starts)
-    weekly_speeds = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_speed_calls = tuple(defaultdict(int) for _ in trend_starts)
     weekly_speed_observed = tuple(set() for _ in trend_starts)
-    weekly_quota = tuple(defaultdict(float) for _ in trend_starts)
+    weekly_quota_observed_dates = tuple(defaultdict(set) for _ in trend_starts)
+    weekly_quota_pressure_dates = tuple(defaultdict(set) for _ in trend_starts)
+    weekly_quota_7d_peak = tuple(defaultdict(float) for _ in trend_starts)
     weekly_quota_observed = tuple(set() for _ in trend_starts)
     efforts = {
         agent: {
-            effort: {"turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0}
+            effort: {
+                "calls": 0,
+                "totalTokens": 0,
+                "reasoningCalls": 0,
+                "reasoningOutputTokens": 0,
+            }
             for effort in EFFORT_ORDER
         }
         for agent in ALLOCATION_AGENT_ORDER
     }
     speeds = {
         agent: {
-            speed: {"turns": 0, "totalTokens": 0}
+            speed: {"calls": 0, "totalTokens": 0}
             for speed in SPEED_ORDER
         }
-        for agent in ALLOCATION_AGENT_ORDER
-    }
-    components = {
-        agent: {key: 0 for key in COMPONENT_ORDER}
         for agent in ALLOCATION_AGENT_ORDER
     }
     quota_windows: dict[str, dict[int, float]] = {
         agent: {} for agent in ALLOCATION_AGENT_ORDER
     }
+    latest_quota_day: dict[str, date | None] = {
+        agent: None for agent in ALLOCATION_AGENT_ORDER
+    }
+    latest_quota_windows: dict[str, dict[int, float]] = {
+        agent: {} for agent in ALLOCATION_AGENT_ORDER
+    }
     quota_limit_days: dict[str, set[date]] = {
+        agent: set() for agent in ALLOCATION_AGENT_ORDER
+    }
+    quota_observed_days: dict[str, set[date]] = {
+        agent: set() for agent in ALLOCATION_AGENT_ORDER
+    }
+    quota_pressure_days: dict[str, set[date]] = {
         agent: set() for agent in ALLOCATION_AGENT_ORDER
     }
     for path in discover_agent_files(root):
@@ -424,20 +460,12 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                 trend_models = entry.get("models", {})
                 if isinstance(trend_models, dict) and trend_models:
                     weekly_model_observed[index].add(agent)
-                    component_observed = False
                     for model, payload in trend_models.items():
                         if not isinstance(model, str) or not isinstance(payload, dict):
                             continue
                         weekly_model_tokens[index][(agent, model)] += max(
                             0, int(payload.get("totalTokens", 0))
                         )
-                        for key in COMPONENT_ORDER:
-                            value = payload.get(key)
-                            if isinstance(value, (int, float)) and not isinstance(value, bool):
-                                weekly_components[index][(agent, key)] += max(0, int(value))
-                                component_observed = True
-                    if component_observed:
-                        weekly_component_observed[index].add(agent)
                 trend_routing = entry.get("routing", {})
                 if isinstance(trend_routing, dict):
                     trend_efforts = trend_routing.get("efforts", {})
@@ -446,15 +474,18 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                         for label, payload in trend_efforts.items():
                             if label not in EFFORT_ORDER or not isinstance(payload, dict):
                                 continue
-                            effort_tokens = payload.get("totalTokens")
+                            effort_calls = _routing_calls(payload)
+                            reasoning_calls = payload.get("reasoningCalls")
                             reasoning_tokens = payload.get("reasoningOutputTokens")
-                            if isinstance(effort_tokens, int) and not isinstance(
-                                effort_tokens, bool
-                            ):
-                                weekly_efforts[index][(agent, label)] += max(
-                                    0, effort_tokens
-                                )
+                            if effort_calls:
+                                weekly_effort_calls[index][(agent, label)] += effort_calls
                                 effort_observed = True
+                            if isinstance(reasoning_calls, int) and not isinstance(
+                                reasoning_calls, bool
+                            ):
+                                weekly_reasoning_calls[index][agent] += max(
+                                    0, reasoning_calls
+                                )
                             if isinstance(reasoning_tokens, int) and not isinstance(
                                 reasoning_tokens, bool
                             ):
@@ -469,24 +500,33 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                         for label, payload in trend_speeds.items():
                             if label not in SPEED_ORDER or not isinstance(payload, dict):
                                 continue
-                            speed_tokens = payload.get("totalTokens")
-                            if isinstance(speed_tokens, int) and not isinstance(
-                                speed_tokens, bool
-                            ):
-                                weekly_speeds[index][(agent, label)] += max(
-                                    0, speed_tokens
-                                )
+                            speed_calls = _routing_calls(payload)
+                            if speed_calls:
+                                weekly_speed_calls[index][(agent, label)] += speed_calls
                                 speed_observed = True
                         if speed_observed:
                             weekly_speed_observed[index].add(agent)
                 trend_quota = entry.get("quota", {})
                 if isinstance(trend_quota, dict):
-                    for percent in trend_quota.get("windows", {}).values():
+                    quota_observed = False
+                    quota_pressured = False
+                    for raw_minutes, percent in trend_quota.get("windows", {}).items():
                         if isinstance(percent, (int, float)) and not isinstance(percent, bool):
-                            weekly_quota[index][agent] = max(
-                                float(percent), weekly_quota[index][agent]
-                            )
-                            weekly_quota_observed[index].add(agent)
+                            quota_observed = True
+                            quota_pressured = quota_pressured or percent >= 80
+                            try:
+                                minutes = int(raw_minutes)
+                            except (TypeError, ValueError):
+                                continue
+                            if minutes == 10080:
+                                weekly_quota_7d_peak[index][agent] = max(
+                                    float(percent), weekly_quota_7d_peak[index][agent]
+                                )
+                    if quota_observed:
+                        weekly_quota_observed_dates[index][agent].add(day)
+                        weekly_quota_observed[index].add(agent)
+                    if quota_pressured:
+                        weekly_quota_pressure_dates[index][agent].add(day)
             if not recent_start <= day <= as_of:
                 continue
             if isinstance(tokens, (int, float)) and not isinstance(tokens, bool):
@@ -499,37 +539,65 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                     model_tokens[(agent, model)] += max(
                         0, int(payload.get("totalTokens", 0))
                     )
-                    for key in COMPONENT_ORDER:
-                        value = payload.get(key)
-                        if isinstance(value, (int, float)) and not isinstance(value, bool):
-                            components[agent][key] += max(0, int(value))
             routing = entry.get("routing", {})
             if isinstance(routing, dict):
                 for label, payload in routing.get("efforts", {}).items():
                     if label not in efforts[agent] or not isinstance(payload, dict):
                         continue
                     for key in efforts[agent][label]:
-                        value = payload.get(key)
+                        value = (
+                            _routing_calls(payload)
+                            if key == "calls"
+                            else payload.get(key)
+                        )
                         if isinstance(value, int) and not isinstance(value, bool):
                             efforts[agent][label][key] += max(0, value)
                 for label, payload in routing.get("speeds", {}).items():
                     if label not in speeds[agent] or not isinstance(payload, dict):
                         continue
                     for key in speeds[agent][label]:
-                        value = payload.get(key)
+                        value = (
+                            _routing_calls(payload)
+                            if key == "calls"
+                            else payload.get(key)
+                        )
                         if isinstance(value, int) and not isinstance(value, bool):
                             speeds[agent][label][key] += max(0, value)
             quota = entry.get("quota", {})
             if isinstance(quota, dict):
+                quota_observed = False
+                quota_pressured = False
                 for raw_minutes, percent in quota.get("windows", {}).items():
                     try:
                         minutes = int(raw_minutes)
                     except (TypeError, ValueError):
                         continue
                     if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                        quota_observed = True
+                        quota_pressured = quota_pressured or percent >= 80
                         quota_windows[agent][minutes] = max(
                             float(percent), quota_windows[agent].get(minutes, 0.0)
                         )
+                if quota_observed:
+                    quota_observed_days[agent].add(day)
+                    if latest_quota_day[agent] is None or day > latest_quota_day[agent]:
+                        latest_quota_day[agent] = day
+                        latest_quota_windows[agent] = {}
+                    if day == latest_quota_day[agent]:
+                        for raw_minutes, percent in quota.get("windows", {}).items():
+                            try:
+                                minutes = int(raw_minutes)
+                            except (TypeError, ValueError):
+                                continue
+                            if isinstance(percent, (int, float)) and not isinstance(
+                                percent, bool
+                            ):
+                                latest_quota_windows[agent][minutes] = max(
+                                    float(percent),
+                                    latest_quota_windows[agent].get(minutes, 0.0),
+                                )
+                if quota_pressured:
+                    quota_pressure_days[agent].add(day)
                 if quota.get("limitReached") is True:
                     quota_limit_days[agent].add(day)
     return AllocationTotals(
@@ -540,19 +608,35 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
         trend_starts=trend_starts,
         weekly_model_tokens=tuple(dict(window) for window in weekly_model_tokens),
         weekly_model_observed=weekly_model_observed,
-        weekly_components=tuple(dict(window) for window in weekly_components),
-        weekly_component_observed=weekly_component_observed,
-        weekly_efforts=tuple(dict(window) for window in weekly_efforts),
+        weekly_effort_calls=tuple(dict(window) for window in weekly_effort_calls),
+        weekly_reasoning_calls=tuple(dict(window) for window in weekly_reasoning_calls),
         weekly_reasoning=tuple(dict(window) for window in weekly_reasoning),
         weekly_effort_observed=weekly_effort_observed,
-        weekly_speeds=tuple(dict(window) for window in weekly_speeds),
+        weekly_speed_calls=tuple(dict(window) for window in weekly_speed_calls),
         weekly_speed_observed=weekly_speed_observed,
-        weekly_quota=tuple(dict(window) for window in weekly_quota),
+        weekly_quota_observed_days=tuple(
+            {agent: len(days) for agent, days in window.items()}
+            for window in weekly_quota_observed_dates
+        ),
+        weekly_quota_pressure_days=tuple(
+            {agent: len(days) for agent, days in window.items()}
+            for window in weekly_quota_pressure_dates
+        ),
+        weekly_quota_7d_peak=tuple(
+            dict(window) for window in weekly_quota_7d_peak
+        ),
         weekly_quota_observed=weekly_quota_observed,
         efforts=efforts,
         speeds=speeds,
-        components=components,
         quota_windows=quota_windows,
+        latest_quota_day=latest_quota_day,
+        latest_quota_windows=latest_quota_windows,
+        quota_observed_days={
+            agent: len(days) for agent, days in quota_observed_days.items()
+        },
+        quota_pressure_days={
+            agent: len(days) for agent, days in quota_pressure_days.items()
+        },
         quota_limit_days={
             agent: len(days) for agent, days in quota_limit_days.items()
         },
@@ -992,69 +1076,56 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _window_label(minutes: int) -> str:
-    if minutes % (7 * 24 * 60) == 0:
-        return f"{minutes // (7 * 24 * 60)}w window"
-    if minutes % (24 * 60) == 0:
-        return f"{minutes // (24 * 60)}d window"
-    if minutes % 60 == 0:
-        return f"{minutes // 60}h window"
-    return f"{minutes}m window"
-
-
 def _routing_signal_lines(
     allocation: AllocationTotals, agent: str
 ) -> tuple[tuple[str, str], ...]:
+    lines: list[tuple[str, str]] = []
     effort_buckets = allocation.efforts[agent]
-    effort_tokens = sum(item["totalTokens"] for item in effort_buckets.values())
-    if agent == "claude":
-        effort_text = "not exposed by Claude logs"
-        reasoning_text = "not exposed separately"
-    elif effort_tokens:
-        effort_text = " · ".join(
+    effort_calls = sum(item["calls"] for item in effort_buckets.values())
+    if effort_calls:
+        lines.append(("Effort", " · ".join(
             f"{EFFORT_SHORT_LABELS[name]} "
-            f"{_percent(effort_buckets[name]['totalTokens'], effort_tokens)}"
+            f"{100 * effort_buckets[name]['calls'] / effort_calls:.0f}%"
             for name in EFFORT_ORDER
-            if effort_buckets[name]["totalTokens"]
+            if effort_buckets[name]["calls"]
+        )))
+        lines.append(("Effort calls", f"{_compact_number(effort_calls)} calls"))
+        reasoning_calls = sum(
+            item["reasoningCalls"] for item in effort_buckets.values()
         )
         reasoning = sum(
             item["reasoningOutputTokens"] for item in effort_buckets.values()
         )
-        reasoning_text = (
-            f"{_compact_number(reasoning)} · {_percent(reasoning, effort_tokens)} of routed"
-        )
-    else:
-        effort_text = "awaiting compatible session telemetry"
-        reasoning_text = "awaiting compatible session telemetry"
+        reasoning_label = "Thinking" if agent == "claude" else "Reasoning"
+        if reasoning_calls:
+            lines.append((
+                reasoning_label,
+                f"{_compact_number(round(reasoning / reasoning_calls))}/call",
+            ))
+        elif reasoning:
+            lines.append((reasoning_label, f"{_compact_number(reasoning)} tokens"))
 
     speed_buckets = allocation.speeds[agent]
-    speed_tokens = sum(item["totalTokens"] for item in speed_buckets.values())
-    speed_turns = sum(item["turns"] for item in speed_buckets.values())
-    if speed_tokens:
-        fast = speed_buckets["fast"]["totalTokens"]
-        speed_text = f"{_percent(fast, speed_tokens)} fast · {speed_turns} turns"
-    else:
-        speed_text = "awaiting session telemetry"
+    speed_calls = sum(item["calls"] for item in speed_buckets.values())
+    if agent != "claude" and speed_calls:
+        fast_calls = speed_buckets["fast"]["calls"]
+        lines.append((
+            "Speed",
+            f"{_percent(fast_calls, speed_calls)} fast · "
+            f"{_compact_number(speed_calls)} calls",
+        ))
 
-    if agent == "claude":
-        quota_text = "not exposed by Claude logs"
-    elif allocation.quota_windows[agent]:
-        minutes, percent = max(
-            allocation.quota_windows[agent].items(),
-            key=lambda item: (item[1], item[0]),
-        )
+    observed_days = allocation.quota_observed_days[agent]
+    if observed_days:
+        pressure_days = allocation.quota_pressure_days[agent]
         hits = allocation.quota_limit_days[agent]
-        hit_text = f" · {hits} hit day(s)" if hits else ""
-        quota_text = f"{percent:.0f}% peak · {_window_label(minutes)}{hit_text}"
-    else:
-        quota_text = "awaiting compatible session telemetry"
+        hit_label = "limit day" if hits == 1 else "limit days"
+        lines.append((
+            "Quota",
+            f"{pressure_days}/{observed_days} days ≥80% · {hits} {hit_label}",
+        ))
 
-    return (
-        ("Effort", effort_text),
-        ("Reasoning", reasoning_text),
-        ("Speed", speed_text),
-        ("Quota", quota_text),
-    )
+    return tuple(lines)
 
 
 def render_allocation_svg(allocation: AllocationTotals) -> str:
@@ -1293,304 +1364,368 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _component_css_name(key: str) -> str:
-    return {
-        "inputTokens": "input",
-        "outputTokens": "output",
-        "cacheCreationTokens": "cache-write",
-        "cacheReadTokens": "cache-read",
-    }[key]
+def _effort_mix_text(values: dict[str, int]) -> str:
+    total = sum(values.values())
+    if not total:
+        return "unavailable"
+    return " · ".join(
+        f"{EFFORT_SHORT_LABELS[effort]} {_percent(values[effort], total)}"
+        for effort in EFFORT_ORDER
+        if values[effort]
+    )
 
 
-def render_efficiency_svg(allocation: AllocationTotals) -> str:
-    """Render per-harness token flow and observable routing telemetry."""
-    title = f"Recent AI token efficiency through {allocation.as_of.isoformat()}"
-    height = 470
+def _trajectory(
+    values: list[float | None],
+    left: float,
+    right: float,
+    top: float,
+    height: float,
+    domain: tuple[float, float] | None = None,
+) -> tuple[str, list[tuple[float, float] | None], float, float]:
+    observed = [value for value in values if value is not None]
+    if domain is None:
+        low = min(observed, default=0.0)
+        high = max(observed, default=1.0)
+        if high <= low:
+            padding = max(1.0, abs(high) * 0.1)
+            low -= padding
+            high += padding
+    else:
+        low, high = domain
+    step = (right - left) / max(1, len(values) - 1)
+    points: list[tuple[float, float] | None] = []
+    commands: list[str] = []
+    continuing = False
+    for index, value in enumerate(values):
+        if value is None:
+            points.append(None)
+            continuing = False
+            continue
+        x = left + index * step
+        y = top + height * (1 - (value - low) / (high - low))
+        points.append((x, y))
+        commands.append(f"{'L' if continuing else 'M'} {x:.1f} {y:.1f}")
+        continuing = True
+    return " ".join(commands), points, low, high
+
+
+def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
+    """Render the current effort, Fast share, and latest seven-day quota."""
+    title = f"Runtime profile through {allocation.as_of.isoformat()}"
+    height = 420
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Input, output, cache, effort, reasoning, speed, and quota '
-        'signals within each harness for the trailing 30 days.</desc>',
-        *_theme_style_lines(allocation=True),
+        '  <desc id="desc">Current 30-day effort mix, Codex Fast share, and latest '
+        'observed seven-day quota percentages.</desc>',
+        *_theme_style_lines(allocation=True, runtime=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="24" font-weight="600">Token efficiency</text>',
+        'font-size="24" font-weight="600">Runtime profile</text>',
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
-        'input/output/cache flow and observable routing signals by harness</text>',
+        'observed model-call routing</text>',
+        '  <text class="dashboard-primary" x="34" y="104" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="14" font-weight="600">Effort mix</text>',
+        '  <line class="dashboard-border" x1="34" y1="114" x2="1146" y2="114" '
+        'stroke-width="1"/>',
     ]
 
-    panel_w, panel_gap = 372, 16
-    flow_y = 92
-    for column, agent in enumerate(("claude", "codex", "traex")):
-        x = 16 + column * (panel_w + panel_gap)
-        agent_total = allocation.agent_tokens[agent]
-        component_values = allocation.components[agent]
-        component_total = sum(component_values.values())
+    legend_x = 620
+    for index, effort in enumerate(EFFORT_ORDER):
+        x = legend_x + index * 88
         lines.extend((
-            f'  <rect class="dashboard-panel" x="{x}" y="{flow_y}" '
-            f'width="{panel_w}" height="142" rx="16"/>',
-            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{flow_y + 25}" r="5"/>',
-            f'  <text class="dashboard-primary" x="{x + 35}" y="{flow_y + 30}" '
+            f'  <rect class="effort-{effort}" x="{x}" y="94" '
+            'width="8" height="8" rx="2"/>',
+            f'  <text class="dashboard-muted" x="{x + 12}" y="102" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])} token flow</text>',
+            f'font-size="9">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
         ))
-        if component_total:
-            lines.append(
-                f'  <text class="dashboard-muted" x="{x + panel_w - 18}" '
-                f'y="{flow_y + 30}" text-anchor="end" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="11">{escape(_percent(component_total, agent_total))} coverage</text>'
-            )
-            bar_x, bar_y, bar_width, bar_height = x + 18, flow_y + 48, 336, 16
-            lines.append(
-                f'  <rect class="dashboard-border" x="{bar_x}" y="{bar_y}" '
-                f'width="{bar_width}" height="{bar_height}" rx="5" fill="none" stroke-width="1"/>'
-            )
-            cursor = float(bar_x)
-            for index, key in enumerate(COMPONENT_ORDER):
-                value = component_values[key]
-                width = bar_width * _share(value, component_total)
-                if index == len(COMPONENT_ORDER) - 1:
-                    width = bar_x + bar_width - cursor
-                css_name = _component_css_name(key)
-                lines.extend((
-                    f'  <rect class="component-{css_name}" x="{cursor:.1f}" y="{bar_y}" '
-                    f'width="{max(0.0, width):.1f}" height="{bar_height}" rx="5" '
-                    f'data-agent="{agent}" data-component="{key}" data-tokens="{value}">',
-                    f'    <title>{escape(AGENT_LABELS[agent])} {escape(COMPONENT_LABELS[key])}: '
-                    f'{_compact_number(value)} ({escape(_percent(value, component_total))})</title>',
-                    '  </rect>',
-                ))
-                cursor += width
-            for index, key in enumerate(COMPONENT_ORDER):
-                legend_x = x + 18 + (index % 2) * 168
-                legend_y = flow_y + 91 + (index // 2) * 24
-                css_name = _component_css_name(key)
-                lines.extend((
-                    f'  <circle class="component-{css_name}" cx="{legend_x + 5}" '
-                    f'cy="{legend_y - 4}" r="4"/>',
-                    f'  <text class="dashboard-secondary" x="{legend_x + 15}" y="{legend_y}" '
-                    'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                    f'font-size="11">{escape(COMPONENT_LABELS[key])} '
-                    f'{escape(_percent(component_values[key], component_total))}</text>',
-                ))
-        else:
-            lines.extend((
-                f'  <text class="dashboard-primary" x="{x + 18}" y="{flow_y + 72}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                'font-size="13">Awaiting component detail</text>',
-                f'  <text class="dashboard-muted" x="{x + 18}" y="{flow_y + 97}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                'font-size="11">input · output · cache write · cache read</text>',
-            ))
 
-    routing_y = 278
-    lines.append(
-        f'  <text class="dashboard-primary" x="16" y="{routing_y - 14}" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="16" font-weight="600">Observed routing signals</text>'
-    )
-    for column, agent in enumerate(("claude", "codex", "traex")):
-        x = 16 + column * (panel_w + panel_gap)
+    bar_x, bar_w = 170, 760
+    for row, agent in enumerate(("claude", "codex", "traex")):
+        y = 138 + row * 58
+        buckets = allocation.efforts[agent]
+        values = {effort: buckets[effort]["calls"] for effort in EFFORT_ORDER}
+        total = sum(values.values())
         lines.extend((
-            f'  <rect class="dashboard-panel" x="{x}" y="{routing_y}" '
-            f'width="{panel_w}" height="166" rx="16" data-agent="{agent}"/>',
-            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{routing_y + 25}" r="5"/>',
-            f'  <text class="dashboard-primary" x="{x + 35}" y="{routing_y + 30}" '
+            f'  <circle class="agent-{agent}" cx="42" cy="{y + 9}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="54" y="{y + 13}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
+            f'font-size="12">{escape(AGENT_LABELS[agent])}</text>',
         ))
-        for row, (label, value) in enumerate(_routing_signal_lines(allocation, agent)):
-            y = routing_y + 58 + row * 26
+        if not total:
+            lines.append(
+                f'  <text class="dashboard-muted" x="{bar_x}" y="{y + 13}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                'font-size="11">awaiting backfill</text>'
+            )
+            continue
+        cursor = float(bar_x)
+        for effort in EFFORT_ORDER:
+            calls = values[effort]
+            width = bar_w * _share(calls, total)
+            if width < 0.1:
+                continue
             lines.extend((
-                f'  <text class="dashboard-muted" x="{x + 18}" y="{y}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="11">{escape(label)}</text>',
-                f'  <text class="dashboard-secondary" x="{x + 92}" y="{y}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="11">{escape(value)}</text>',
+                f'  <rect class="effort-{effort}" x="{cursor:.1f}" y="{y}" '
+                f'width="{width:.1f}" height="18" data-agent="{agent}" '
+                f'data-effort="{effort}">',
+                f'    <title>{escape(AGENT_LABELS[agent])} · {escape(effort)} '
+                f'{escape(_percent(calls, total))} · {calls} calls</title>',
+                '  </rect>',
             ))
+            cursor += width
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{bar_x}" y="{y + 38}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{escape(_effort_mix_text(values))}</text>',
+            f'  <text class="dashboard-muted" x="1120" y="{y + 13}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{_compact_number(total)} calls</text>',
+        ))
+
+    lines.append(
+        '  <line class="dashboard-border" x1="34" y1="314" x2="1146" y2="314" '
+        'stroke-width="1"/>'
+    )
+    codex_speeds = allocation.speeds["codex"]
+    speed_total = sum(item["calls"] for item in codex_speeds.values())
+    fast_calls = codex_speeds["fast"]["calls"]
+    quota_agents = [
+        agent
+        for agent in ("claude", "codex")
+        if 10080 in allocation.latest_quota_windows[agent]
+    ]
+    if speed_total:
+        fast_share = _share(fast_calls, speed_total)
+        lines.extend((
+            '  <text class="dashboard-primary" x="34" y="340" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Fast</text>',
+            '  <circle class="agent-codex" cx="42" cy="372" r="4"/>',
+            '  <text class="dashboard-secondary" x="54" y="376" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="11">Codex</text>',
+            '  <rect class="heatmap-level-0" x="110" y="363" width="300" height="14" rx="4"/>',
+            f'  <rect class="agent-codex" x="110" y="363" width="{300 * fast_share:.1f}" '
+            'height="14" rx="4"/>',
+            f'  <text class="dashboard-primary" x="430" y="376" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12" font-weight="600">{escape(_percent(fast_calls, speed_total))} fast</text>',
+        ))
+    if speed_total and quota_agents:
+        lines.append(
+            '  <line class="dashboard-border" x1="570" y1="330" x2="570" '
+            'y2="400" stroke-width="1"/>'
+        )
+    if quota_agents:
+        lines.append(
+            '  <text class="dashboard-primary" x="600" y="340" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">7-day quota peak</text>'
+        )
+    for row, agent in enumerate(quota_agents):
+        percent = allocation.latest_quota_windows[agent][10080]
+        day = allocation.latest_quota_day[agent]
+        suffix = f" · {day.strftime('%b %-d')}" if day is not None else ""
+        y = 354 + row * 28
+        lines.extend((
+            f'  <circle class="agent-{agent}" cx="608" cy="{y + 7}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="620" y="{y + 11}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{escape(AGENT_LABELS[agent])}</text>',
+            f'  <rect class="heatmap-level-0" x="700" y="{y}" width="290" height="14" rx="4"/>',
+            f'  <rect class="agent-{agent}" x="700" y="{y}" '
+            f'width="{2.9 * percent:.1f}" height="14" rx="4"/>',
+            f'  <text class="dashboard-primary" x="1120" y="{y + 11}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10" font-weight="600">7d {percent:.0f}%{escape(suffix)}</text>',
+        ))
     lines.append("</svg>")
     return "\n".join(lines) + "\n"
 
 
-def _signal_level(value: float) -> int:
-    """Map an observed 0..1 signal to a visible four-level intensity."""
-    return min(4, max(1, int(value * 4) + 1))
-
-
-def render_efficiency_history_svg(allocation: AllocationTotals) -> str:
-    """Render weekly token-flow composition and routing signal history."""
-    title = f"AI token efficiency history through {allocation.as_of.isoformat()}"
-    height = 430
+def render_runtime_history_svg(allocation: AllocationTotals) -> str:
+    """Render weekly effort, Fast share, and seven-day quota history."""
+    title = f"Runtime history through {allocation.as_of.isoformat()}"
+    height = 520
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
         f'  <title id="title">{escape(title)}</title>',
-        '  <desc id="desc">Eight weekly token-component compositions and observed '
-        'effort, reasoning, Fast, and quota signals within each harness, split into '
-        'previous and latest four-week periods.</desc>',
-        *_theme_style_lines(allocation=True),
+        '  <desc id="desc">Eight weekly effort distributions, Codex Fast trajectory, '
+        'and seven-day quota peak bars.</desc>',
+        *_theme_style_lines(allocation=True, runtime=True),
         f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
         '  <text class="dashboard-primary" x="16" y="42" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="24" font-weight="600">Efficiency history</text>',
+        'font-size="24" font-weight="600">Runtime history</text>',
         f'  <text class="dashboard-muted" x="16" y="66" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
         f'{allocation.trend_starts[0].isoformat()}–{allocation.as_of.isoformat()} · '
-        '8 weeks · previous 4 vs latest 4 · token flow + routing intensity · gray = unavailable</text>',
+        'previous four weeks vs latest four weeks</text>',
     ]
-
-    legend_x = 600
-    for index, key in enumerate(COMPONENT_ORDER):
-        x = legend_x + index * 138
-        css_name = _component_css_name(key)
+    plot_left, plot_right = 230.0, 1060.0
+    step = (plot_right - plot_left) / (HISTORY_WEEKS - 1)
+    divider_x = plot_left + step * 3.5
+    lines.extend((
+        f'  <text class="dashboard-muted" x="{plot_left + step * 1.5:.1f}" y="88" '
+        'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">PREVIOUS 4 WEEKS</text>',
+        f'  <text class="dashboard-muted" x="{plot_left + step * 5.5:.1f}" y="88" '
+        'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">LATEST 4 WEEKS</text>',
+        f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="78" '
+        f'x2="{divider_x:.1f}" y2="490" stroke-width="1" stroke-dasharray="2 3"/>',
+        '  <text class="dashboard-primary" x="34" y="112" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="14" font-weight="600">Effort mix</text>',
+    ))
+    legend_x = 620
+    for index, effort in enumerate(EFFORT_ORDER):
+        x = legend_x + index * 88
         lines.extend((
-            f'  <rect class="component-{css_name}" x="{x}" y="80" '
-            'width="9" height="9" rx="2"/>',
-            f'  <text class="dashboard-secondary" x="{x + 14}" y="89" '
+            f'  <rect class="effort-{effort}" x="{x}" y="102" '
+            'width="8" height="8" rx="2"/>',
+            f'  <text class="dashboard-muted" x="{x + 12}" y="110" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="10">{escape(COMPONENT_LABELS[key])}</text>',
+            f'font-size="9">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
         ))
 
-    panel_y, panel_w, panel_h, panel_gap = 106, 372, 300, 16
-    grid_offset, cell_w, cell_gap = 90, 30, 3
-    effort_weights = {name: index for index, name in enumerate(EFFORT_ORDER)}
-    for column, agent in enumerate(("claude", "codex", "traex")):
-        x = 16 + column * (panel_w + panel_gap)
-        grid_x = x + grid_offset
+    effort_rows = {"claude": 128, "codex": 182, "traex": 236}
+    cell_w, bar_h = 44, 28
+    for agent, row_y in effort_rows.items():
         lines.extend((
-            f'  <rect class="dashboard-panel" x="{x}" y="{panel_y}" '
-            f'width="{panel_w}" height="{panel_h}" rx="16"/>',
-            f'  <circle class="agent-{agent}" cx="{x + 22}" cy="{panel_y + 25}" r="5"/>',
-            f'  <text class="dashboard-primary" x="{x + 35}" y="{panel_y + 30}" '
+            f'  <circle class="agent-{agent}" cx="42" cy="{row_y + 14}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="54" y="{row_y + 18}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="15" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
+            f'font-size="11">{escape(AGENT_LABELS[agent])}</text>',
         ))
-
-        flow_top, flow_h = panel_y + 54, 68
-        divider_x = (
-            grid_x
-            + HISTORY_PERIOD_WEEKS * (cell_w + cell_gap)
-            - cell_gap / 2
-        )
-        lines.extend((
-            f'  <text class="dashboard-muted" x="{grid_x + 61}" y="{flow_top - 7}" '
-            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="9">PREVIOUS 4W</text>',
-            f'  <text class="dashboard-muted" x="{grid_x + 194}" y="{flow_top - 7}" '
-            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="9">LATEST 4W</text>',
-            f'  <text class="dashboard-muted" x="{x + 18}" y="{flow_top + 38}" '
-            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="11">Token flow</text>',
-            f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{flow_top - 5}" '
-            f'x2="{divider_x:.1f}" y2="{panel_y + 278}" stroke-width="1" '
-            'stroke-dasharray="2 3"/>',
-        ))
-        for week_index, window in enumerate(allocation.weekly_components):
-            bx = grid_x + week_index * (cell_w + cell_gap)
-            if agent not in allocation.weekly_component_observed[week_index]:
-                lines.append(
-                    f'  <rect class="heatmap-level-0" x="{bx}" y="{flow_top}" '
-                    f'width="{cell_w}" height="{flow_h}" rx="3" data-agent="{agent}" '
-                    f'data-week="{allocation.trend_starts[week_index]}" '
-                    'data-signal="components"><title>component detail unavailable</title></rect>'
-                )
-                continue
-            values = {key: window.get((agent, key), 0) for key in COMPONENT_ORDER}
+        for week_index, weekly in enumerate(allocation.weekly_effort_calls):
+            values = {effort: weekly.get((agent, effort), 0) for effort in EFFORT_ORDER}
             total = sum(values.values())
-            cursor = float(flow_top + flow_h)
-            for key in COMPONENT_ORDER:
-                value = values[key]
-                segment_h = flow_h * _share(value, total)
-                if segment_h <= 0:
+            if not total:
+                continue
+            x = plot_left + week_index * step - cell_w / 2
+            cursor_y = float(row_y + bar_h)
+            for effort in EFFORT_ORDER:
+                calls = values[effort]
+                segment_h = bar_h * _share(calls, total)
+                if segment_h < 0.1:
                     continue
-                cursor -= segment_h
-                css_name = _component_css_name(key)
+                cursor_y -= segment_h
                 lines.extend((
-                    f'  <rect class="component-{css_name}" x="{bx}" y="{cursor:.1f}" '
+                    f'  <rect class="effort-{effort}" x="{x:.1f}" y="{cursor_y:.1f}" '
                     f'width="{cell_w}" height="{segment_h:.1f}" data-agent="{agent}" '
-                    f'data-component="{key}" data-week="{allocation.trend_starts[week_index]}">',
+                    f'data-effort="{effort}" data-week="{allocation.trend_starts[week_index]}">',
                     f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
-                    f'{escape(COMPONENT_LABELS[key])}: {escape(_percent(value, total))} '
-                    f'of {_compact_number(total)}</title>',
+                    f'{escape(AGENT_LABELS[agent])} · {escape(effort)} '
+                    f'{escape(_percent(calls, total))} · {calls} calls</title>',
                     '  </rect>',
                 ))
+
+    lines.extend((
+        '  <line class="dashboard-border" x1="34" y1="292" x2="1146" y2="292" '
+        'stroke-width="1"/>',
+        '  <text class="dashboard-primary" x="34" y="320" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="14" font-weight="600">Fast share</text>',
+    ))
+    fast_values: list[float | None] = []
+    for weekly in allocation.weekly_speed_calls:
+        total = sum(weekly.get(("codex", speed), 0) for speed in SPEED_ORDER)
+        fast_values.append(
+            _share(weekly.get(("codex", "fast"), 0), total) if total else None
+        )
+    path, points, _, _ = _trajectory(
+        fast_values, plot_left, plot_right, 334, 44, domain=(0.0, 1.0)
+    )
+    lines.extend((
+        '  <circle class="agent-codex" cx="42" cy="356" r="4"/>',
+        '  <text class="dashboard-secondary" x="54" y="360" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="11">Codex</text>',
+        '  <text class="dashboard-muted" x="205" y="343" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">100%</text>',
+        '  <text class="dashboard-muted" x="205" y="380" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">0%</text>',
+        f'  <line class="dashboard-border" x1="{plot_left}" y1="378" '
+        f'x2="{plot_right}" y2="378" stroke-width="1"/>',
+    ))
+    if path:
+        lines.append(
+            f'  <path class="line-codex" d="{path}" stroke-width="2.5" '
+            'stroke-linecap="round" stroke-linejoin="round"/>'
+        )
+    for week_index, point in enumerate(points):
+        if point is None or fast_values[week_index] is None:
+            continue
+        x, y = point
         lines.extend((
-            f'  <text class="dashboard-muted" x="{grid_x}" y="{flow_top + 84}" '
-            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-            f'  <text class="dashboard-muted" x="{grid_x + 261}" y="{flow_top + 84}" '
-            'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
+            f'  <circle class="agent-codex" cx="{x:.1f}" cy="{y:.1f}" r="4">',
+            f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
+            f'Fast {_percent(round(1000 * fast_values[week_index]), 1000)}</title>',
+            '  </circle>',
         ))
 
-        signal_rows = ("Effort", "Reasoning", "Fast", "Quota")
-        signal_top = panel_y + 152
-        for row, label in enumerate(signal_rows):
-            y = signal_top + row * 28
-            lines.append(
-                f'  <text class="dashboard-muted" x="{x + 18}" y="{y + 14}" '
-                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-                f'font-size="10">{label}</text>'
-            )
-            for week_index in range(HISTORY_WEEKS):
-                if label == "Effort":
-                    observed = agent in allocation.weekly_effort_observed[week_index]
-                    buckets = allocation.weekly_efforts[week_index]
-                    denominator = sum(
-                        buckets.get((agent, effort), 0) for effort in EFFORT_ORDER
-                    )
-                    weighted = sum(
-                        effort_weights[effort] * buckets.get((agent, effort), 0)
-                        for effort in EFFORT_ORDER
-                    )
-                    value = _share(weighted, denominator * 5)
-                    detail = f"weighted effort {value * 5:.1f}/5"
-                elif label == "Reasoning":
-                    observed = agent in allocation.weekly_effort_observed[week_index]
-                    buckets = allocation.weekly_efforts[week_index]
-                    denominator = sum(
-                        buckets.get((agent, effort), 0) for effort in EFFORT_ORDER
-                    )
-                    reasoning = allocation.weekly_reasoning[week_index].get(agent, 0)
-                    value = _share(reasoning, denominator)
-                    detail = f"reasoning {_percent(reasoning, denominator)} of routed"
-                elif label == "Fast":
-                    observed = agent in allocation.weekly_speed_observed[week_index]
-                    buckets = allocation.weekly_speeds[week_index]
-                    denominator = sum(
-                        buckets.get((agent, speed), 0) for speed in SPEED_ORDER
-                    )
-                    fast = buckets.get((agent, "fast"), 0)
-                    value = _share(fast, denominator)
-                    detail = f"Fast {_percent(fast, denominator)}"
-                else:
-                    observed = agent in allocation.weekly_quota_observed[week_index]
-                    percent = allocation.weekly_quota[week_index].get(agent, 0.0)
-                    value = max(0.0, min(1.0, percent / 100))
-                    detail = f"quota peak {percent:.0f}%"
-                bx = grid_x + week_index * (cell_w + cell_gap)
-                css_class = (
-                    f"signal-level-{_signal_level(value)}"
-                    if observed
-                    else "heatmap-level-0"
-                )
-                lines.extend((
-                    f'  <rect class="{css_class}" x="{bx}" y="{y}" '
-                    f'width="{cell_w}" height="18" rx="3" data-agent="{agent}" '
-                    f'data-signal="{label.lower()}" '
-                    f'data-week="{allocation.trend_starts[week_index]}">',
-                    f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
-                    f'{escape(detail) if observed else "unavailable"}</title>',
-                    '  </rect>',
-                ))
-    lines.append("</svg>")
+    lines.extend((
+        '  <line class="dashboard-border" x1="34" y1="402" x2="1146" y2="402" '
+        'stroke-width="1"/>',
+        '  <text class="dashboard-primary" x="34" y="430" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="14" font-weight="600">7-day quota peak</text>',
+        '  <circle class="agent-claude" cx="42" cy="456" r="4"/>',
+        '  <text class="dashboard-secondary" x="54" y="460" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="10">Claude</text>',
+        '  <circle class="agent-codex" cx="118" cy="456" r="4"/>',
+        '  <text class="dashboard-secondary" x="130" y="460" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="10">Codex</text>',
+        '  <text class="dashboard-muted" x="205" y="440" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">100%</text>',
+        '  <text class="dashboard-muted" x="205" y="480" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="9">0%</text>',
+        f'  <line class="dashboard-border" x1="{plot_left}" y1="478" '
+        f'x2="{plot_right}" y2="478" stroke-width="1"/>',
+    ))
+    quota_bar_w = 18
+    for week_index, weekly in enumerate(allocation.weekly_quota_7d_peak):
+        center = plot_left + week_index * step
+        for offset, agent in ((-12, "claude"), (12, "codex")):
+            percent = weekly.get(agent)
+            if percent is None:
+                continue
+            bar_height = 40 * max(0.0, min(100.0, percent)) / 100
+            x = center + offset - quota_bar_w / 2
+            y = 478 - bar_height
+            lines.extend((
+                f'  <rect class="agent-{agent}" x="{x:.1f}" y="{y:.1f}" '
+                f'width="{quota_bar_w}" height="{bar_height:.1f}" '
+                f'data-agent="{agent}" data-week="{allocation.trend_starts[week_index]}">',
+                f'    <title>{allocation.trend_starts[week_index].isoformat()} · '
+                f'{escape(AGENT_LABELS[agent])} · 7d peak {percent:.0f}%</title>',
+                '  </rect>',
+            ))
+    lines.extend((
+        f'  <text class="dashboard-muted" x="{plot_left}" y="505" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
+        f'  <text class="dashboard-muted" x="{plot_right}" y="505" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
+        '</svg>',
+    ))
     return "\n".join(lines) + "\n"
 
 
@@ -1693,7 +1828,7 @@ def generate_allocation_history(
     return _update_output(output, expected, check=check)
 
 
-def generate_efficiency(
+def generate_runtime_profile(
     root: Path,
     output: Path,
     as_of: date | None = None,
@@ -1702,11 +1837,11 @@ def generate_efficiency(
 ) -> bool:
     if as_of is None:
         as_of = _latest_activity_day(aggregate_daily(root))
-    expected = render_efficiency_svg(aggregate_allocation(root, as_of))
+    expected = render_runtime_profile_svg(aggregate_allocation(root, as_of))
     return _update_output(output, expected, check=check)
 
 
-def generate_efficiency_history(
+def generate_runtime_history(
     root: Path,
     output: Path,
     as_of: date | None = None,
@@ -1715,7 +1850,7 @@ def generate_efficiency_history(
 ) -> bool:
     if as_of is None:
         as_of = _latest_activity_day(aggregate_daily(root))
-    expected = render_efficiency_history_svg(aggregate_allocation(root, as_of))
+    expected = render_runtime_history_svg(aggregate_allocation(root, as_of))
     return _update_output(output, expected, check=check)
 
 
@@ -1744,14 +1879,14 @@ def main() -> int:
         default=DEFAULT_ALLOCATION_HISTORY_OUTPUT,
     )
     parser.add_argument(
-        "--efficiency-output",
+        "--runtime-profile-output",
         type=Path,
-        default=DEFAULT_EFFICIENCY_OUTPUT,
+        default=DEFAULT_RUNTIME_PROFILE_OUTPUT,
     )
     parser.add_argument(
-        "--efficiency-history-output",
+        "--runtime-history-output",
         type=Path,
-        default=DEFAULT_EFFICIENCY_HISTORY_OUTPUT,
+        default=DEFAULT_RUNTIME_HISTORY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -1795,19 +1930,19 @@ def main() -> int:
             ),
         ),
         (
-            args.efficiency_output,
-            generate_efficiency(
+            args.runtime_profile_output,
+            generate_runtime_profile(
                 args.root,
-                args.efficiency_output,
+                args.runtime_profile_output,
                 args.as_of,
                 check=args.check,
             ),
         ),
         (
-            args.efficiency_history_output,
-            generate_efficiency_history(
+            args.runtime_history_output,
+            generate_runtime_history(
                 args.root,
-                args.efficiency_history_output,
+                args.runtime_history_output,
                 args.as_of,
                 check=args.check,
             ),

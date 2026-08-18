@@ -205,6 +205,9 @@ DAILY_BRANCH_PREFIX = "usage/"
 CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
+CLAUDE_QUOTA_CACHE_PATH = (
+    Path.home() / ".cache" / "aether-ledger" / "claude-rate-limits.json"
+)
 
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 SPEED_LEVELS = frozenset({"standard", "fast"})
@@ -341,13 +344,16 @@ def _add_routing_bucket(
     tokens: int,
     *,
     reasoning_tokens: int = 0,
+    reasoning_observed: bool = False,
 ) -> None:
     routing = daily.setdefault(day.isoformat(), {}).setdefault("routing", {})
     bucket = routing.setdefault(dimension, {}).setdefault(
-        label, {"turns": 0, "totalTokens": 0}
+        label, {"calls": 0, "totalTokens": 0}
     )
-    bucket["turns"] += 1
+    bucket["calls"] += 1
     bucket["totalTokens"] += tokens
+    if reasoning_observed:
+        bucket["reasoningCalls"] = bucket.get("reasoningCalls", 0) + 1
     if reasoning_tokens:
         bucket["reasoningOutputTokens"] = (
             bucket.get("reasoningOutputTokens", 0) + reasoning_tokens
@@ -359,7 +365,7 @@ def collect_codex_routing_since(
 ) -> dict[str, dict]:
     """Aggregate privacy-safe Codex routing and quota telemetry.
 
-    Session files expose model effort, service tier, per-turn token deltas, and
+    Session files expose model effort, service tier, per-call token usage, and
     rate-limit snapshots. Only enum buckets, counters, and window percentages
     leave this function; paths, prompts, turn IDs, and session IDs never do.
     """
@@ -409,11 +415,17 @@ def collect_codex_routing_since(
                 tokens = _token_value(usage.get("total_tokens"))
                 if tokens <= 0:
                     continue
-                reasoning = _token_value(usage.get("reasoning_output_tokens"))
+                raw_reasoning = usage.get("reasoning_output_tokens")
+                reasoning_observed = (
+                    isinstance(raw_reasoning, (int, float))
+                    and not isinstance(raw_reasoning, bool)
+                )
+                reasoning = _token_value(raw_reasoning)
                 if effort is not None:
                     _add_routing_bucket(
                         daily, day, "efforts", effort, tokens,
                         reasoning_tokens=reasoning,
+                        reasoning_observed=reasoning_observed,
                     )
                 if speed is not None:
                     _add_routing_bucket(daily, day, "speeds", speed, tokens)
@@ -447,15 +459,15 @@ def collect_codex_routing_since(
     return daily
 
 
-def collect_claude_speed_since(
+def collect_claude_routing_since(
     since: date, projects_dir: Path = CLAUDE_PROJECTS_DIR
 ) -> dict[str, dict]:
-    """Aggregate Claude speed buckets while discarding project/session identity."""
+    """Aggregate Claude effort and thinking tokens without retaining identity."""
     if not projects_dir.is_dir():
         return {}
     # Claude may append the same assistant message several times while streaming.
     # Keep only its largest observed usage. IDs are dedupe keys in memory only.
-    messages: dict[str, tuple[date, str, int]] = {}
+    messages: dict[str, tuple[date, str, int, int, bool]] = {}
     for path in projects_dir.rglob("*.jsonl"):
         try:
             stream = path.open(encoding="utf-8")
@@ -475,9 +487,10 @@ def collect_claude_speed_since(
                 usage = message.get("usage")
                 if not isinstance(usage, dict):
                     continue
-                speed = _normalise_speed(usage.get("speed"))
+                raw_effort = event.get("effort")
+                effort = raw_effort if raw_effort in EFFORT_LEVELS else None
                 day = _event_day(event.get("timestamp"))
-                if speed is None or day is None or day < since:
+                if effort is None or day is None or day < since:
                     continue
                 tokens = sum(
                     _token_value(usage.get(key))
@@ -488,14 +501,68 @@ def collect_claude_speed_since(
                 )
                 if tokens <= 0:
                     continue
+                output_details = usage.get("output_tokens_details")
+                raw_reasoning = (
+                    output_details.get("thinking_tokens")
+                    if isinstance(output_details, dict)
+                    else None
+                )
+                reasoning_observed = (
+                    isinstance(raw_reasoning, (int, float))
+                    and not isinstance(raw_reasoning, bool)
+                )
+                reasoning = _token_value(raw_reasoning)
                 raw_id = message.get("id") or event.get("uuid")
                 dedupe = str(raw_id) if raw_id else f"{path}:{line_number}"
                 previous = messages.get(dedupe)
-                if previous is None or tokens >= previous[2]:
-                    messages[dedupe] = (day, speed, tokens)
+                if previous is None or (tokens, reasoning) >= (previous[2], previous[3]):
+                    messages[dedupe] = (
+                        day, effort, tokens, reasoning, reasoning_observed
+                    )
     daily: dict[str, dict] = {}
-    for day, speed, tokens in messages.values():
-        _add_routing_bucket(daily, day, "speeds", speed, tokens)
+    for day, effort, tokens, reasoning, reasoning_observed in messages.values():
+        _add_routing_bucket(
+            daily, day, "efforts", effort, tokens,
+            reasoning_tokens=reasoning,
+            reasoning_observed=reasoning_observed,
+        )
+    return daily
+
+
+def collect_claude_quota_since(
+    since: date, cache_path: Path = CLAUDE_QUOTA_CACHE_PATH
+) -> dict[str, dict]:
+    """Read privacy-safe status-line quota snapshots without network access."""
+    try:
+        cache = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    days = cache.get("days") if isinstance(cache, dict) else None
+    if not isinstance(days, dict):
+        return {}
+    daily: dict[str, dict] = {}
+    for raw_day, entry in days.items():
+        try:
+            day = date.fromisoformat(raw_day)
+        except (TypeError, ValueError):
+            continue
+        if day < since or not isinstance(entry, dict):
+            continue
+        raw_windows = entry.get("windows")
+        if not isinstance(raw_windows, dict):
+            continue
+        windows: dict[str, float] = {}
+        for minutes in ("300", "10080"):
+            percent = raw_windows.get(minutes)
+            if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                windows[minutes] = min(100.0, max(0.0, float(percent)))
+        if windows:
+            daily[raw_day] = {
+                "quota": {
+                    "windows": windows,
+                    "limitReached": any(percent >= 100 for percent in windows.values()),
+                }
+            }
     return daily
 
 
@@ -774,11 +841,23 @@ def _canonical_model_totals(models: dict) -> dict[str, dict]:
 def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
     if replace:
         return current
-    merged = {
-        dimension: {label: dict(values) for label, values in buckets.items()}
-        for dimension, buckets in prev.items()
-        if isinstance(buckets, dict)
-    }
+    merged: dict[str, dict] = {}
+    for dimension, buckets in prev.items():
+        if not isinstance(buckets, dict):
+            continue
+        destination = merged.setdefault(dimension, {})
+        for label, values in buckets.items():
+            if not isinstance(values, dict):
+                continue
+            normalized = {
+                key: value for key, value in values.items() if key != "turns"
+            }
+            if "calls" in values or "turns" in values:
+                normalized["calls"] = max(
+                    _token_value(values.get("calls")),
+                    _token_value(values.get("turns")),
+                )
+            destination[label] = normalized
     for dimension, buckets in current.items():
         if not isinstance(buckets, dict):
             continue
@@ -787,10 +866,32 @@ def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
             if not isinstance(values, dict):
                 continue
             previous = destination.setdefault(label, {})
-            for key in ("turns", "totalTokens", "reasoningOutputTokens"):
-                value = values.get(key)
-                if isinstance(value, int) and not isinstance(value, bool):
-                    previous[key] = max(0, value, _token_value(previous.get(key)))
+            if "calls" in values or "turns" in values:
+                previous["calls"] = max(
+                    _token_value(previous.get("calls")),
+                    _token_value(values.get("calls")),
+                    _token_value(values.get("turns")),
+                )
+            total_tokens = values.get("totalTokens")
+            if isinstance(total_tokens, int) and not isinstance(total_tokens, bool):
+                previous["totalTokens"] = max(
+                    0, total_tokens, _token_value(previous.get("totalTokens"))
+                )
+            reasoning_calls = values.get("reasoningCalls")
+            if isinstance(reasoning_calls, int) and not isinstance(
+                reasoning_calls, bool
+            ):
+                prior_calls = _token_value(previous.get("reasoningCalls"))
+                if reasoning_calls >= prior_calls:
+                    previous["reasoningCalls"] = max(0, reasoning_calls)
+                    previous["reasoningOutputTokens"] = _token_value(
+                        values.get("reasoningOutputTokens")
+                    )
+            elif "reasoningOutputTokens" in values and "reasoningCalls" not in previous:
+                previous["reasoningOutputTokens"] = max(
+                    _token_value(previous.get("reasoningOutputTokens")),
+                    _token_value(values.get("reasoningOutputTokens")),
+                )
     return merged
 
 
@@ -1508,7 +1609,10 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
     _attach_telemetry(
-        cc_daily, collect_claude_speed_since(EPOCH, CLAUDE_PROJECTS_DIR)
+        cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
+    )
+    _attach_telemetry(
+        cc_daily, collect_claude_quota_since(EPOCH, CLAUDE_QUOTA_CACHE_PATH)
     )
     _attach_telemetry(
         cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)

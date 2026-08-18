@@ -20,14 +20,14 @@ from render_dashboard import (  # noqa: E402
     generate,
     generate_allocation,
     generate_allocation_history,
-    generate_efficiency,
-    generate_efficiency_history,
+    generate_runtime_history,
+    generate_runtime_profile,
     generate_topology,
     generate_topology_history,
     render_allocation_svg,
     render_allocation_history_svg,
-    render_efficiency_svg,
-    render_efficiency_history_svg,
+    render_runtime_history_svg,
+    render_runtime_profile_svg,
     render_svg,
     render_topology_svg,
     render_topology_history_svg,
@@ -145,6 +145,7 @@ class AggregateAllocationTests(unittest.TestCase):
                     "routing": {
                         "efforts": {"medium": {
                             "turns": 3, "totalTokens": 999,
+                            "reasoningCalls": 3,
                             "reasoningOutputTokens": 30,
                         }},
                         "speeds": {"standard": {"turns": 3, "totalTokens": 999}},
@@ -166,13 +167,14 @@ class AggregateAllocationTests(unittest.TestCase):
                         "efforts": {
                             "low": {
                                 "turns": 2, "totalTokens": 100,
+                                "reasoningCalls": 2,
                                 "reasoningOutputTokens": 4,
                             }
                         },
                         "speeds": {"fast": {"turns": 2, "totalTokens": 100}},
                     },
                     "quota": {
-                        "windows": {"300": 65.0}, "limitReached": True,
+                        "windows": {"300": 85.0}, "limitReached": True,
                     },
                 },
             }), encoding="utf-8")
@@ -187,7 +189,16 @@ class AggregateAllocationTests(unittest.TestCase):
                         "cacheReadTokens": 20,
                     }},
                     "routing": {
-                        "speeds": {"standard": {"turns": 1, "totalTokens": 40}}
+                        "efforts": {"xhigh": {
+                            "turns": 1, "totalTokens": 40,
+                            "reasoningCalls": 1,
+                            "reasoningOutputTokens": 12,
+                        }},
+                        "speeds": {"standard": {"turns": 1, "totalTokens": 40}},
+                    },
+                    "quota": {
+                        "windows": {"300": 8.0, "10080": 64.0},
+                        "limitReached": False,
                     },
                 }
             }), encoding="utf-8")
@@ -204,6 +215,7 @@ class AggregateAllocationTests(unittest.TestCase):
                     "routing": {
                         "efforts": {"medium": {
                             "turns": 1, "totalTokens": 60,
+                            "reasoningCalls": 1,
                             "reasoningOutputTokens": 3,
                         }}
                     },
@@ -214,15 +226,22 @@ class AggregateAllocationTests(unittest.TestCase):
 
             self.assertEqual(totals.agent_tokens["codex"], 100)
             self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 100)
-            self.assertEqual(totals.efforts["codex"]["low"]["turns"], 2)
+            self.assertEqual(totals.efforts["codex"]["low"]["calls"], 2)
+            self.assertEqual(totals.efforts["codex"]["low"]["reasoningCalls"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
-            self.assertEqual(totals.components["codex"]["cacheReadTokens"], 70)
-            self.assertEqual(totals.quota_windows["codex"], {300: 65.0})
+            self.assertEqual(totals.quota_windows["codex"], {300: 85.0})
+            self.assertEqual(totals.latest_quota_day["codex"], date(2026, 8, 1))
+            self.assertEqual(totals.latest_quota_windows["codex"], {300: 85.0})
+            self.assertEqual(totals.latest_quota_day["claude"], date(2026, 8, 1))
+            self.assertEqual(
+                totals.latest_quota_windows["claude"], {300: 8.0, 10080: 64.0}
+            )
+            self.assertEqual(totals.quota_observed_days["codex"], 1)
+            self.assertEqual(totals.quota_pressure_days["codex"], 1)
             self.assertEqual(totals.quota_limit_days["codex"], 1)
-            self.assertEqual(totals.components["claude"]["inputTokens"], 4)
-            self.assertEqual(totals.speeds["claude"]["standard"]["turns"], 1)
-            self.assertEqual(totals.components["traex"]["cacheReadTokens"], 50)
-            self.assertEqual(totals.efforts["traex"]["medium"]["turns"], 1)
+            self.assertEqual(totals.efforts["claude"]["xhigh"]["calls"], 1)
+            self.assertEqual(totals.speeds["claude"]["standard"]["calls"], 1)
+            self.assertEqual(totals.efforts["traex"]["medium"]["calls"], 1)
             self.assertEqual(len(totals.trend_starts), 8)
             self.assertEqual(totals.trend_starts[0], date(2026, 6, 7))
             self.assertEqual(
@@ -233,18 +252,13 @@ class AggregateAllocationTests(unittest.TestCase):
             )
             self.assertIn("codex", totals.weekly_model_observed[3])
             self.assertIn("traex", totals.weekly_model_observed[7])
-            self.assertEqual(
-                totals.weekly_components[3][("codex", "cacheReadTokens")], 700
-            )
-            self.assertIn("codex", totals.weekly_component_observed[3])
-            self.assertEqual(
-                totals.weekly_efforts[3][("codex", "medium")], 999
-            )
+            self.assertEqual(totals.weekly_effort_calls[3][("codex", "medium")], 3)
+            self.assertEqual(totals.weekly_reasoning_calls[3]["codex"], 3)
             self.assertEqual(totals.weekly_reasoning[3]["codex"], 30)
-            self.assertEqual(
-                totals.weekly_speeds[7][("codex", "fast")], 100
-            )
-            self.assertEqual(totals.weekly_quota[7]["codex"], 65.0)
+            self.assertEqual(totals.weekly_speed_calls[7][("codex", "fast")], 2)
+            self.assertEqual(totals.weekly_quota_observed_days[7]["codex"], 1)
+            self.assertEqual(totals.weekly_quota_pressure_days[7]["codex"], 1)
+            self.assertEqual(totals.weekly_quota_7d_peak[7]["claude"], 64.0)
 
 
 class DashboardTests(unittest.TestCase):
@@ -380,7 +394,7 @@ class DashboardTests(unittest.TestCase):
                 generate_topology_history(root, history_output, check=True)
             )
 
-    def test_allocation_and_efficiency_split_models_from_routing(self) -> None:
+    def test_allocation_and_runtime_views_split_models_from_routing(self) -> None:
         allocation = AllocationTotals(
             as_of=date(2026, 8, 1),
             recent_start=date(2026, 7, 3),
@@ -407,41 +421,31 @@ class DashboardTests(unittest.TestCase):
             weekly_model_observed=tuple(
                 {"claude", "codex", "traex"} for _ in range(8)
             ),
-            weekly_components=tuple(
+            weekly_effort_calls=tuple(
                 {
-                    (agent, component): (index + 1) * (component_index + 1)
-                    for agent in ("claude", "codex", "traex")
-                    for component_index, component in enumerate(
-                        (
-                            "inputTokens",
-                            "outputTokens",
-                            "cacheCreationTokens",
-                            "cacheReadTokens",
-                        )
-                    )
-                }
-                for index in range(8)
-            ),
-            weekly_component_observed=tuple(
-                set() if index == 0 else {"claude", "codex", "traex"}
-                for index in range(8)
-            ),
-            weekly_efforts=tuple(
-                {
+                    ("claude", "xhigh"): (index + 1) * 8,
                     ("codex", "low"): (index + 1) * 10,
                     ("codex", "medium"): (index + 1) * 5,
                     ("traex", "medium"): (index + 1) * 6,
                 }
                 for index in range(8)
             ),
+            weekly_reasoning_calls=tuple(
+                {"claude": index + 1, "codex": index + 1, "traex": index + 1}
+                for index in range(8)
+            ),
             weekly_reasoning=tuple(
-                {"codex": index + 1, "traex": index + 1}
+                {
+                    "claude": (index + 1) * 20,
+                    "codex": (index + 1) * 10,
+                    "traex": (index + 1) * 5,
+                }
                 for index in range(8)
             ),
             weekly_effort_observed=tuple(
-                {"codex", "traex"} for _ in range(8)
+                {"claude", "codex", "traex"} for _ in range(8)
             ),
-            weekly_speeds=tuple(
+            weekly_speed_calls=tuple(
                 {
                     ("claude", "standard"): (index + 1) * 10,
                     ("codex", "standard"): (index + 1) * 5,
@@ -452,8 +456,16 @@ class DashboardTests(unittest.TestCase):
             weekly_speed_observed=tuple(
                 {"claude", "codex"} for _ in range(8)
             ),
-            weekly_quota=tuple(
-                {"codex": 20.0 + index, "traex": 10.0 + index}
+            weekly_quota_observed_days=tuple(
+                {"codex": 7, "traex": 7}
+                for _ in range(8)
+            ),
+            weekly_quota_pressure_days=tuple(
+                {"codex": index % 7, "traex": (index + 1) % 7}
+                for index in range(8)
+            ),
+            weekly_quota_7d_peak=tuple(
+                {"claude": 10.0 + index, "codex": 20.0 + index}
                 for index in range(8)
             ),
             weekly_quota_observed=tuple(
@@ -462,7 +474,10 @@ class DashboardTests(unittest.TestCase):
             efforts={
                 agent: {
                     effort: {
-                        "turns": 0, "totalTokens": 0, "reasoningOutputTokens": 0,
+                        "calls": 0,
+                        "totalTokens": 0,
+                        "reasoningCalls": 0,
+                        "reasoningOutputTokens": 0,
                     }
                     for effort in ("none", "low", "medium", "high", "xhigh", "max")
                 }
@@ -470,53 +485,75 @@ class DashboardTests(unittest.TestCase):
             },
             speeds={
                 agent: {
-                    speed: {"turns": 0, "totalTokens": 0}
+                    speed: {"calls": 0, "totalTokens": 0}
                     for speed in ("standard", "fast")
-                }
-                for agent in ("claude", "codex", "traex", "legacy")
-            },
-            components={
-                agent: {
-                    "inputTokens": 0,
-                    "outputTokens": 0,
-                    "cacheCreationTokens": 0,
-                    "cacheReadTokens": 0,
                 }
                 for agent in ("claude", "codex", "traex", "legacy")
             },
             quota_windows={
                 agent: {} for agent in ("claude", "codex", "traex", "legacy")
             },
+            latest_quota_day={
+                agent: None for agent in ("claude", "codex", "traex", "legacy")
+            },
+            latest_quota_windows={
+                agent: {} for agent in ("claude", "codex", "traex", "legacy")
+            },
+            quota_observed_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
+            quota_pressure_days={
+                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+            },
             quota_limit_days={
                 agent: 0 for agent in ("claude", "codex", "traex", "legacy")
             },
         )
+        allocation.efforts["claude"]["xhigh"].update(
+            calls=2,
+            totalTokens=100,
+            reasoningCalls=2,
+            reasoningOutputTokens=100,
+        )
         allocation.efforts["codex"]["low"].update(
-            turns=3, totalTokens=120, reasoningOutputTokens=10
+            calls=3,
+            totalTokens=120,
+            reasoningCalls=3,
+            reasoningOutputTokens=30,
         )
         allocation.efforts["codex"]["medium"].update(
-            turns=1, totalTokens=80, reasoningOutputTokens=20
+            calls=1,
+            totalTokens=80,
+            reasoningCalls=1,
+            reasoningOutputTokens=20,
         )
-        allocation.speeds["claude"]["standard"].update(turns=2, totalTokens=100)
-        allocation.speeds["codex"]["standard"].update(turns=1, totalTokens=100)
-        allocation.speeds["codex"]["fast"].update(turns=1, totalTokens=100)
-        allocation.components["claude"].update(
-            inputTokens=5, outputTokens=5, cacheCreationTokens=10, cacheReadTokens=80
+        allocation.efforts["traex"]["medium"].update(
+            calls=2,
+            totalTokens=80,
+            reasoningCalls=2,
+            reasoningOutputTokens=10,
         )
-        allocation.components["codex"].update(
-            inputTokens=20, outputTokens=10, cacheCreationTokens=20, cacheReadTokens=150
-        )
+        allocation.speeds["claude"]["standard"].update(calls=2, totalTokens=100)
+        allocation.speeds["codex"]["standard"].update(calls=1, totalTokens=100)
+        allocation.speeds["codex"]["fast"].update(calls=1, totalTokens=100)
         allocation.quota_windows["codex"][300] = 68.0
+        allocation.latest_quota_day["claude"] = date(2026, 8, 1)
+        allocation.latest_quota_windows["claude"] = {300: 8.0, 10080: 64.0}
+        allocation.latest_quota_day["codex"] = date(2026, 8, 1)
+        allocation.latest_quota_windows["codex"] = {300: 68.0}
+        allocation.quota_observed_days["codex"] = 10
+        allocation.quota_pressure_days["codex"] = 3
+        allocation.quota_limit_days["codex"] = 1
 
         allocation_svg = render_allocation_svg(allocation)
         allocation_history_svg = render_allocation_history_svg(allocation)
-        efficiency_svg = render_efficiency_svg(allocation)
-        efficiency_history_svg = render_efficiency_history_svg(allocation)
+        profile_svg = render_runtime_profile_svg(allocation)
+        history_svg = render_runtime_history_svg(allocation)
 
         ET.fromstring(allocation_svg)
         ET.fromstring(allocation_history_svg)
-        ET.fromstring(efficiency_svg)
-        ET.fromstring(efficiency_history_svg)
+        ET.fromstring(profile_svg)
+        ET.fromstring(history_svg)
         self.assertIn("Model allocation", allocation_svg)
         self.assertIn("current 30-day model mix", allocation_svg)
         self.assertIn("30D SHARE", allocation_svg)
@@ -535,29 +572,34 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("LATEST 4 WEEKS", allocation_history_svg)
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
-        self.assertIn("Token efficiency", efficiency_svg)
-        self.assertIn("Observed routing signals", efficiency_svg)
-        self.assertIn("low 60.0%", efficiency_svg)
-        self.assertIn("50.0% fast", efficiency_svg)
-        self.assertIn("cache read 80.0%", efficiency_svg)
-        self.assertIn("100.0% coverage", efficiency_svg)
-        self.assertIn("not exposed by Claude logs", efficiency_svg)
-        self.assertIn("68% peak", efficiency_svg)
-        self.assertNotIn("prior 30d", efficiency_svg)
-        self.assertNotRegex(efficiency_svg, r"[+-]?\d+(?:\.\d+)?pp\b")
-        self.assertIn("Efficiency history", efficiency_history_svg)
-        self.assertIn("Token flow", efficiency_history_svg)
-        self.assertIn("previous 4 vs latest 4", efficiency_history_svg)
-        self.assertIn("PREVIOUS 4W", efficiency_history_svg)
-        self.assertIn("LATEST 4W", efficiency_history_svg)
-        for signal in ("effort", "reasoning", "fast", "quota"):
-            self.assertIn(f'data-signal="{signal}"', efficiency_history_svg)
-        self.assertIn("component detail unavailable", efficiency_history_svg)
+        self.assertIn("Runtime profile", profile_svg)
+        self.assertIn("low 75.0%", profile_svg)
+        self.assertIn("50.0% fast", profile_svg)
+        self.assertIn("7-day quota peak", profile_svg)
+        self.assertIn("7d 64% · Aug 1", profile_svg)
+        self.assertIn('data-effort="xhigh"', profile_svg)
+        self.assertNotIn("Reasoning", profile_svg)
+        self.assertNotIn("Thinking", profile_svg)
+        self.assertNotIn("8-WEEK", profile_svg)
+        self.assertIn("Runtime history", history_svg)
+        self.assertIn("PREVIOUS 4 WEEKS", history_svg)
+        self.assertIn('class="line-codex"', history_svg)
+        self.assertIn("7-day quota peak", history_svg)
+        self.assertIn("7d peak 10%", history_svg)
+        self.assertIn('data-week="2026-07-26"', history_svg)
+        self.assertNotIn("Reasoning", history_svg)
+        self.assertNotIn("Thinking", history_svg)
+        self.assertNotIn('<rect class="signal-level-', history_svg)
+        for svg in (profile_svg, history_svg):
+            self.assertNotIn("cache read", svg)
+            self.assertNotIn("not exposed", svg)
+            self.assertNotIn("Token efficiency", svg)
+            self.assertNotIn("Token flow", svg)
         for svg in (
             allocation_svg,
             allocation_history_svg,
-            efficiency_svg,
-            efficiency_history_svg,
+            profile_svg,
+            history_svg,
         ):
             self.assertNotIn("private-repo", svg)
             self.assertNotIn("session-id", svg)
@@ -593,27 +635,45 @@ class DashboardTests(unittest.TestCase):
                 )
             )
 
-            efficiency_output = root / "assets" / "efficiency.svg"
-            self.assertTrue(generate_efficiency(root, efficiency_output))
+            profile_output = root / "assets" / "runtime-profile.svg"
+            self.assertTrue(generate_runtime_profile(root, profile_output))
             self.assertIn(
                 "through 2026-07-31",
-                efficiency_output.read_text(encoding="utf-8"),
-            )
-            self.assertFalse(generate_efficiency(root, efficiency_output, check=True))
-
-            efficiency_history_output = root / "assets" / "efficiency-history.svg"
-            self.assertTrue(
-                generate_efficiency_history(root, efficiency_history_output)
-            )
-            self.assertIn(
-                "through 2026-07-31",
-                efficiency_history_output.read_text(encoding="utf-8"),
+                profile_output.read_text(encoding="utf-8"),
             )
             self.assertFalse(
-                generate_efficiency_history(
-                    root, efficiency_history_output, check=True
-                )
+                generate_runtime_profile(root, profile_output, check=True)
             )
+
+            history_output = root / "assets" / "runtime-history.svg"
+            self.assertTrue(generate_runtime_history(root, history_output))
+            self.assertIn(
+                "through 2026-07-31",
+                history_output.read_text(encoding="utf-8"),
+            )
+            self.assertFalse(
+                generate_runtime_history(root, history_output, check=True)
+            )
+
+    def test_runtime_profile_omits_fast_without_speed_telemetry(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-08-01": {
+                    "totalTokens": 100,
+                    "models": {"gpt-example": {"totalTokens": 100}},
+                }
+            }), encoding="utf-8")
+
+            svg = render_runtime_profile_svg(
+                aggregate_allocation(root, date(2026, 8, 1))
+            )
+
+            self.assertNotIn(">Fast</text>", svg)
+            self.assertNotIn("0.0% fast", svg)
+
 
 if __name__ == "__main__":
     unittest.main()

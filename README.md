@@ -51,16 +51,16 @@ environment's weekly total and harness mix changed.
 The current view keeps the trailing 30-day model mix; the history view compares four weekly model
 stacks with the preceding four, using absolute Top 3 + Other values within each harness.
 
-## Efficiency
+## Runtime
 
-![Aether Ledger token efficiency dashboard](assets/compute-efficiency.svg)
+![Aether Ledger runtime profile](assets/runtime-profile.svg)
 
-![Aether Ledger token efficiency history](assets/compute-efficiency-history.svg)
+![Aether Ledger runtime history](assets/runtime-history.svg)
 
-Efficiency separates input/output/cache token flow from model choice and adds observable routing
-signals. Its history view uses the same previous-four/latest-four weekly axis for token flow,
-effort, reasoning, Fast, and quota intensity. Missing telemetry stays unavailable rather than
-becoming zero.
+The current view shows the latest 30-day effort mix, Codex Fast share, and the latest day's
+seven-day quota peak.
+The history view uses smaller weekly effort stacks, a Fast trajectory, and weekly seven-day quota
+peak bars, so magnitude comes from length, height, and position rather than color intensity.
 
 ## Ledger
 
