@@ -49,15 +49,15 @@ token 总量大于零的自然日累计。
 当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
 堆叠，展示各 harness 内部的模型迁移。
 
-## 运行概况
+## 运行
 
 ![Aether Ledger 运行概况](assets/runtime-profile.svg)
 
-![Aether Ledger 运行历史](assets/runtime-profile-history.svg)
+![Aether Ledger 运行历史](assets/runtime-history.svg)
 
-运行图只展示各 harness 日志确实提供的 session 信号：effort、每次 model call 的 reasoning
-或 thinking token、可选择 Fast 时的速度，以及观测到的额度压力。历史图追踪最近 8 周变化，
-但不把不同厂商的字段当成同一口径。缺失字段直接省略；model call 路由与每日 token 主账分开统计。
+当前图展示最近 30 天的 effort 组合、Codex Fast 占比和最新 7 天额度。历史图使用更小的周度
+effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、高度和位置表达，不再依赖
+颜色深浅。
 
 ## 账本
 

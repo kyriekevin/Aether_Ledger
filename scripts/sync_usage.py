@@ -872,10 +872,26 @@ def _merge_routing(prev: dict, current: dict, *, replace: bool) -> dict:
                     _token_value(values.get("calls")),
                     _token_value(values.get("turns")),
                 )
-            for key in ("totalTokens", "reasoningCalls", "reasoningOutputTokens"):
-                value = values.get(key)
-                if isinstance(value, int) and not isinstance(value, bool):
-                    previous[key] = max(0, value, _token_value(previous.get(key)))
+            total_tokens = values.get("totalTokens")
+            if isinstance(total_tokens, int) and not isinstance(total_tokens, bool):
+                previous["totalTokens"] = max(
+                    0, total_tokens, _token_value(previous.get("totalTokens"))
+                )
+            reasoning_calls = values.get("reasoningCalls")
+            if isinstance(reasoning_calls, int) and not isinstance(
+                reasoning_calls, bool
+            ):
+                prior_calls = _token_value(previous.get("reasoningCalls"))
+                if reasoning_calls >= prior_calls:
+                    previous["reasoningCalls"] = max(0, reasoning_calls)
+                    previous["reasoningOutputTokens"] = _token_value(
+                        values.get("reasoningOutputTokens")
+                    )
+            elif "reasoningOutputTokens" in values and "reasoningCalls" not in previous:
+                previous["reasoningOutputTokens"] = max(
+                    _token_value(previous.get("reasoningOutputTokens")),
+                    _token_value(values.get("reasoningOutputTokens")),
+                )
     return merged
 
 

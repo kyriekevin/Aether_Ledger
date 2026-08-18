@@ -51,16 +51,15 @@ environment's weekly total and harness mix changed.
 The current view keeps the trailing 30-day model mix; the history view compares four weekly model
 stacks with the preceding four, using absolute Top 3 + Other values within each harness.
 
-## Runtime profile
+## Runtime
 
 ![Aether Ledger runtime profile](assets/runtime-profile.svg)
 
-![Aether Ledger runtime history](assets/runtime-profile-history.svg)
+![Aether Ledger runtime history](assets/runtime-history.svg)
 
-The runtime views show only the session signals each harness exposes: effort, per-call reasoning
-or thinking, speed where Fast is selectable, and observed quota pressure. The history view tracks
-those signals over eight weeks without treating them as cross-vendor equivalents. Missing fields
-are omitted, and model-call routing stays separate from canonical daily token totals.
+The current view shows the latest 30-day effort mix, Codex Fast share, and latest seven-day quota.
+The history view uses smaller weekly effort stacks, a Fast trajectory, and weekly seven-day quota
+peak bars, so magnitude comes from length, height, and position rather than color intensity.
 
 ## Ledger
 

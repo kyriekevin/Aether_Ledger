@@ -334,9 +334,10 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
 + Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
 
-因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对：先看算力何时
-发生、在哪里运行及如何变化，再看选择了哪些模型、组合如何迁移，最后看各 harness 的 effort
-与路由选择如何变化。
+因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对。运行截面用长度
+与明确数值展示 effort、Fast 和最新 7 天额度；历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线
+和每周 7 天额度峰值柱。颜色只标识 harness 或 effort 类别，数值大小交给几何位置表达，与其他
+历史图的视觉逻辑一致。
 
 Claude assistant 事件提供 effort，支持的模型还会提供 `thinking_tokens`。当前 Claude 环境不能
 选择 Fast，因此不采集、不展示只有 standard 的速度字段；Claude 日志也没有 Codex 式额度字段。

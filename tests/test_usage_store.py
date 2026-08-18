@@ -520,6 +520,47 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertEqual(day["quota"]["windows"], {"300": 75.0, "10080": 20.0})
         self.assertTrue(day["quota"]["limitReached"])
 
+    def test_reasoning_tokens_and_observed_calls_update_as_one_pair(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "routing": {
+                    "efforts": {
+                        "high": {
+                            "turns": 5,
+                            "totalTokens": 100,
+                            "reasoningOutputTokens": 50_000,
+                        }
+                    }
+                },
+            }
+        })
+
+        sync_usage.merge_with_cumulative(
+            [{
+                "date": "2026-08-04",
+                "totalTokens": 100,
+                "totalCost": 1.0,
+                "routing": {
+                    "efforts": {
+                        "high": {
+                            "calls": 2,
+                            "totalTokens": 40,
+                            "reasoningCalls": 2,
+                            "reasoningOutputTokens": 600,
+                        }
+                    }
+                },
+            }],
+            self.store,
+        )
+
+        bucket = self.read_store()["2026-08-04"]["routing"]["efforts"]["high"]
+        self.assertEqual(bucket["calls"], 5)
+        self.assertEqual(bucket["reasoningCalls"], 2)
+        self.assertEqual(bucket["reasoningOutputTokens"], 600)
+
 
 class RoutingTelemetryTests(unittest.TestCase):
     def setUp(self) -> None:
