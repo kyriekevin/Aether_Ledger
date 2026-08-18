@@ -1528,7 +1528,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         lines.append(
             '  <text class="dashboard-primary" x="600" y="340" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-            'font-size="14" font-weight="600">Latest-day 7-day peak</text>'
+            'font-size="14" font-weight="600">7-day quota peak</text>'
         )
     for row, agent in enumerate(quota_agents):
         percent = allocation.latest_quota_windows[agent][10080]

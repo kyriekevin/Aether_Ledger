@@ -575,7 +575,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Runtime profile", profile_svg)
         self.assertIn("low 75.0%", profile_svg)
         self.assertIn("50.0% fast", profile_svg)
-        self.assertIn("Latest-day 7-day peak", profile_svg)
+        self.assertIn("7-day quota peak", profile_svg)
         self.assertIn("7d 64% · Aug 1", profile_svg)
         self.assertIn('data-effort="xhigh"', profile_svg)
         self.assertNotIn("Reasoning", profile_svg)
