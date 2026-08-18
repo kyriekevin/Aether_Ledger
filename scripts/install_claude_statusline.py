@@ -72,17 +72,25 @@ def install(
     settings = _read_object(settings_path)
     current = _settings_command(settings, settings_path)
     target = install_dir / SOURCE_PROXY.name
-    installed = shlex.join([python, str(target)])
+    installed = shlex.join([python, str(target), "--config", str(config_path)])
 
     existing_config = {}
     if config_path.exists():
         existing_config = _read_object(config_path)
+    prior_installed = existing_config.get("installedCommand")
+    prior_original = existing_config.get("originalCommand")
     if current == installed:
         original = existing_config.get("originalCommand")
         if not isinstance(original, str) or not original.strip():
             raise RuntimeError("statusLine points to the quota tap but its recovery config is missing")
         if dry_run:
             return False
+    elif current == prior_installed:
+        if not isinstance(prior_original, str) or not prior_original.strip():
+            raise RuntimeError("installed quota tap has no recoverable original command")
+        original = prior_original
+        if dry_run:
+            return True
     else:
         if str(target) in current:
             raise RuntimeError("statusLine already mentions the quota tap in an unknown form")

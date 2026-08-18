@@ -57,7 +57,8 @@ stacks with the preceding four, using absolute Top 3 + Other values within each 
 
 ![Aether Ledger runtime history](assets/runtime-history.svg)
 
-The current view shows the latest 30-day effort mix, Codex Fast share, and latest seven-day quota.
+The current view shows the latest 30-day effort mix, Codex Fast share, and the latest day's
+seven-day quota peak.
 The history view uses smaller weekly effort stacks, a Fast trajectory, and weekly seven-day quota
 peak bars, so magnitude comes from length, height, and position rather than color intensity.
 

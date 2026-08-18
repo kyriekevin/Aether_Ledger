@@ -1490,40 +1490,46 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             f'font-size="10">{_compact_number(total)} calls</text>',
         ))
 
-    lines.extend((
+    lines.append(
         '  <line class="dashboard-border" x1="34" y1="314" x2="1146" y2="314" '
-        'stroke-width="1"/>',
-        '  <text class="dashboard-primary" x="34" y="340" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="14" font-weight="600">Fast</text>',
-    ))
+        'stroke-width="1"/>'
+    )
     codex_speeds = allocation.speeds["codex"]
     speed_total = sum(item["calls"] for item in codex_speeds.values())
     fast_calls = codex_speeds["fast"]["calls"]
-    fast_share = _share(fast_calls, speed_total)
-    lines.extend((
-        '  <circle class="agent-codex" cx="42" cy="372" r="4"/>',
-        '  <text class="dashboard-secondary" x="54" y="376" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="11">Codex</text>',
-        '  <rect class="heatmap-level-0" x="110" y="363" width="300" height="14" rx="4"/>',
-        f'  <rect class="agent-codex" x="110" y="363" width="{300 * fast_share:.1f}" '
-        'height="14" rx="4"/>',
-        f'  <text class="dashboard-primary" x="430" y="376" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        f'font-size="12" font-weight="600">{escape(_percent(fast_calls, speed_total))} fast</text>',
-        '  <line class="dashboard-border" x1="570" y1="330" x2="570" y2="400" '
-        'stroke-width="1"/>',
-        '  <text class="dashboard-primary" x="600" y="340" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="14" font-weight="600">Latest 7-day quota</text>',
-    ))
-
     quota_agents = [
         agent
         for agent in ("claude", "codex")
         if 10080 in allocation.latest_quota_windows[agent]
     ]
+    if speed_total:
+        fast_share = _share(fast_calls, speed_total)
+        lines.extend((
+            '  <text class="dashboard-primary" x="34" y="340" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Fast</text>',
+            '  <circle class="agent-codex" cx="42" cy="372" r="4"/>',
+            '  <text class="dashboard-secondary" x="54" y="376" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="11">Codex</text>',
+            '  <rect class="heatmap-level-0" x="110" y="363" width="300" height="14" rx="4"/>',
+            f'  <rect class="agent-codex" x="110" y="363" width="{300 * fast_share:.1f}" '
+            'height="14" rx="4"/>',
+            f'  <text class="dashboard-primary" x="430" y="376" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12" font-weight="600">{escape(_percent(fast_calls, speed_total))} fast</text>',
+        ))
+    if speed_total and quota_agents:
+        lines.append(
+            '  <line class="dashboard-border" x1="570" y1="330" x2="570" '
+            'y2="400" stroke-width="1"/>'
+        )
+    if quota_agents:
+        lines.append(
+            '  <text class="dashboard-primary" x="600" y="340" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Latest-day 7-day peak</text>'
+        )
     for row, agent in enumerate(quota_agents):
         percent = allocation.latest_quota_windows[agent][10080]
         day = allocation.latest_quota_day[agent]

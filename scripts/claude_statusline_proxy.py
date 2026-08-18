@@ -8,6 +8,7 @@ waters in a local cache and forwards the original JSON unchanged.
 
 from __future__ import annotations
 
+import argparse
 import fcntl
 import json
 import os
@@ -123,14 +124,17 @@ def _original_command(config_path: Path = CONFIG_PATH) -> Optional[str]:
     return command if isinstance(command, str) and command.strip() else None
 
 
-def main() -> int:
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path, default=CONFIG_PATH)
+    args = parser.parse_args(argv)
     raw = sys.stdin.read()
     try:
         capture_rate_limits(raw)
     except Exception:
         # Usage capture must never break the user's existing status line.
         pass
-    command = _original_command()
+    command = _original_command(args.config)
     if command is None:
         return 0
     completed = subprocess.run(

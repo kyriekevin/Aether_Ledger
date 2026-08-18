@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import io
 import json
+import os
+import shlex
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -71,7 +74,7 @@ class ClaudeStatuslineCaptureTests(unittest.TestCase):
                 patch.object(proxy, "capture_rate_limits", side_effect=OSError), \
                 patch.object(proxy, "_original_command", return_value="hud"), \
                 patch.object(proxy.subprocess, "run", return_value=completed) as run:
-            self.assertEqual(proxy.main(), 7)
+            self.assertEqual(proxy.main([]), 7)
         self.assertEqual(run.call_args.args[0], ["/bin/bash", "-c", "hud"])
         self.assertEqual(run.call_args.kwargs["input"], raw)
 
@@ -103,6 +106,7 @@ class ClaudeStatuslineInstallerTests(unittest.TestCase):
         installed_settings = json.loads(self.settings.read_text(encoding="utf-8"))
         installed_command = installed_settings["statusLine"]["command"]
         self.assertIn("claude_statusline_proxy.py", installed_command)
+        self.assertIn(str(self.config), installed_command)
         self.assertTrue((self.install_dir / "claude_statusline_proxy.py").exists())
         self.assertEqual(
             json.loads(self.config.read_text(encoding="utf-8"))["originalCommand"],
@@ -127,6 +131,39 @@ class ClaudeStatuslineInstallerTests(unittest.TestCase):
         self.settings.write_text(json.dumps(payload), encoding="utf-8")
         with self.assertRaisesRegex(RuntimeError, "changed after installation"):
             installer.uninstall(self.settings, self.config)
+
+    def test_reinstalling_to_another_directory_preserves_original_command(self) -> None:
+        self.install()
+        second_dir = self.root / "second-install"
+        self.assertTrue(installer.install(
+            self.settings,
+            second_dir,
+            self.config,
+            "/usr/bin/python3",
+        ))
+        recovery = json.loads(self.config.read_text(encoding="utf-8"))
+        self.assertEqual(recovery["originalCommand"], "existing hud")
+        installed = json.loads(self.settings.read_text(encoding="utf-8"))
+        self.assertIn(str(second_dir), installed["statusLine"]["command"])
+
+    def test_custom_recovery_config_is_passed_to_installed_proxy(self) -> None:
+        self.settings.write_text(json.dumps({
+            "statusLine": {"type": "command", "command": "printf sentinel"},
+        }), encoding="utf-8")
+        self.install()
+        installed = json.loads(self.settings.read_text(encoding="utf-8"))
+        command = installed["statusLine"]["command"]
+        self.assertIn(str(self.config), command)
+        completed = subprocess.run(
+            shlex.split(command),
+            input="{}",
+            text=True,
+            capture_output=True,
+            check=False,
+            env={**os.environ, "HOME": str(self.root)},
+        )
+        self.assertEqual(completed.returncode, 0)
+        self.assertEqual(completed.stdout, "sentinel")
 
 
 if __name__ == "__main__":

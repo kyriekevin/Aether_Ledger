@@ -374,8 +374,8 @@ shows harness substitution. Allocation history uses absolute Top 3 model + Other
 each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
 The README therefore reads as activity, then current/history pairs for topology, allocation, and
-runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest
-seven-day quota. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
+runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
+seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
 seven-day quota peak bars. Color identifies a harness or effort category while geometry shows
 magnitude, matching the visual grammar of the other history views.
 

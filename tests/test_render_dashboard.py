@@ -575,6 +575,7 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Runtime profile", profile_svg)
         self.assertIn("low 75.0%", profile_svg)
         self.assertIn("50.0% fast", profile_svg)
+        self.assertIn("Latest-day 7-day peak", profile_svg)
         self.assertIn("7d 64% · Aug 1", profile_svg)
         self.assertIn('data-effort="xhigh"', profile_svg)
         self.assertNotIn("Reasoning", profile_svg)
@@ -653,6 +654,25 @@ class DashboardTests(unittest.TestCase):
             self.assertFalse(
                 generate_runtime_history(root, history_output, check=True)
             )
+
+    def test_runtime_profile_omits_fast_without_speed_telemetry(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-08-01": {
+                    "totalTokens": 100,
+                    "models": {"gpt-example": {"totalTokens": 100}},
+                }
+            }), encoding="utf-8")
+
+            svg = render_runtime_profile_svg(
+                aggregate_allocation(root, date(2026, 8, 1))
+            )
+
+            self.assertNotIn(">Fast</text>", svg)
+            self.assertNotIn("0.0% fast", svg)
 
 
 if __name__ == "__main__":
