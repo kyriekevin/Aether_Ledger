@@ -147,6 +147,34 @@ writer 固定使用每日分支创建时继承的代码，白天新合入 `main`
 
 每次运行都会在标准输出日志中写入开始和结束心跳。
 
+### Claude 订阅额度
+
+Claude Code 会把订阅额度压力传给自定义 status line，但不会把这些快照写进项目 transcript。
+配置好 command 类型的 status line 后，可安装这个可选的本地 tap：
+
+```sh
+uv run --script scripts/install_claude_statusline.py --dry-run
+uv run --script scripts/install_claude_statusline.py
+```
+
+安装器把一个轻量 proxy 复制到 `~/.local/share/aether-ledger/`，将原 status-line command 保存在
+`~/.config/aether-ledger/claude-statusline.json`，只替换这一项设置。proxy 会把 Claude 的 stdin
+原样交给原 status line。Claude 运行期间，它只记录 5 小时、7 天窗口在当天出现过的最高百分比，
+写入 `~/.cache/aether-ledger/claude-rate-limits.json`。重置时间、transcript、路径、session、
+credential 和账号字段一律不保存。
+
+proxy 不发起网络请求，也没有常驻进程。Claude 没启动时，它完全不运行。定时 writer 只读本地
+cache，按 Claude 实际提供快照时的 Asia/Shanghai 日期归档，不会把旧快照算成今天的新观测。
+cache 缺失、损坏或无法写入时直接跳过，不会影响原 status line 或定时同步。
+
+恢复安装前的原 command：
+
+```sh
+uv run --script scripts/install_claude_statusline.py --uninstall
+```
+
+如果安装后 status line 又被用户修改，卸载器会拒绝覆盖。
+
 ### Git 并发访问
 
 在这个 checkout 里跑 Git 的不止写入脚本一个进程：还有 `compact_trails.py`，以及人手

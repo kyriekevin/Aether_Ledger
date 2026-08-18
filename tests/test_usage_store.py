@@ -660,6 +660,43 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.assertNotIn("speeds", telemetry)
         self.assertNotIn("private-message", json.dumps(telemetry))
 
+    def test_claude_quota_cache_is_imported_without_stale_or_unknown_windows(self) -> None:
+        cache = self.root / "claude-rate-limits.json"
+        cache.write_text(json.dumps({
+            "version": 1,
+            "days": {
+                "2026-08-14": {"windows": {"300": 99}},
+                "2026-08-15": {
+                    "observedAt": "2026-08-15T12:00:00+08:00",
+                    "windows": {"300": 82.5, "10080": 100, "60": 50},
+                },
+                "invalid": {"windows": {"300": 10}},
+            },
+        }), encoding="utf-8")
+
+        telemetry = sync_usage.collect_claude_quota_since(
+            date(2026, 8, 15), cache
+        )
+
+        self.assertEqual(telemetry, {
+            "2026-08-15": {
+                "quota": {
+                    "windows": {"300": 82.5, "10080": 100.0},
+                    "limitReached": True,
+                }
+            }
+        })
+
+    def test_missing_or_malformed_claude_quota_cache_is_ignored(self) -> None:
+        cache = self.root / "claude-rate-limits.json"
+        self.assertEqual(
+            sync_usage.collect_claude_quota_since(date(2026, 8, 15), cache), {}
+        )
+        cache.write_text("not json", encoding="utf-8")
+        self.assertEqual(
+            sync_usage.collect_claude_quota_since(date(2026, 8, 15), cache), {}
+        )
+
 
 class ReconcileTests(unittest.TestCase):
     """The high-water rule is right on the schedule and wrong after an upgrade."""

@@ -163,6 +163,38 @@ Logs:
 
 Each invocation writes start and finish heartbeat lines to the standard-output log.
 
+### Claude subscription quota
+
+Claude Code exposes subscription pressure to custom status lines, but does not persist those
+snapshots in project transcripts. Install the optional local tap after configuring a command-based
+status line:
+
+```sh
+uv run --script scripts/install_claude_statusline.py --dry-run
+uv run --script scripts/install_claude_statusline.py
+```
+
+The installer copies a small proxy to `~/.local/share/aether-ledger/`, preserves the original
+status-line command in `~/.config/aether-ledger/claude-statusline.json`, and replaces only that one
+setting. The proxy forwards Claude's stdin unchanged to the original status line. While Claude is
+running, it records only the daily high-water percentages for the five-hour and seven-day windows
+in `~/.cache/aether-ledger/claude-rate-limits.json`. It stores no reset time, transcript, path,
+session, credential, or account field.
+
+The proxy performs no network requests and has no background process. When Claude is not running,
+it does nothing. The scheduled writer only reads the local cache, assigns each sample to the
+Asia/Shanghai day when Claude supplied it, and never treats an old snapshot as a new observation.
+Missing, malformed, or unwritable cache data is ignored and cannot break the existing status line
+or scheduled sync.
+
+Restore the exact prior status-line command with:
+
+```sh
+uv run --script scripts/install_claude_statusline.py --uninstall
+```
+
+Uninstall refuses to overwrite the setting if it changed after installation.
+
 ### Concurrent Git access
 
 The writer is not the only scheduled process running Git in this checkout. The downstream Feishu

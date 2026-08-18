@@ -205,6 +205,9 @@ DAILY_BRANCH_PREFIX = "usage/"
 CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
+CLAUDE_QUOTA_CACHE_PATH = (
+    Path.home() / ".cache" / "aether-ledger" / "claude-rate-limits.json"
+)
 
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 SPEED_LEVELS = frozenset({"standard", "fast"})
@@ -523,6 +526,43 @@ def collect_claude_routing_since(
             reasoning_tokens=reasoning,
             reasoning_observed=reasoning_observed,
         )
+    return daily
+
+
+def collect_claude_quota_since(
+    since: date, cache_path: Path = CLAUDE_QUOTA_CACHE_PATH
+) -> dict[str, dict]:
+    """Read privacy-safe status-line quota snapshots without network access."""
+    try:
+        cache = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    days = cache.get("days") if isinstance(cache, dict) else None
+    if not isinstance(days, dict):
+        return {}
+    daily: dict[str, dict] = {}
+    for raw_day, entry in days.items():
+        try:
+            day = date.fromisoformat(raw_day)
+        except (TypeError, ValueError):
+            continue
+        if day < since or not isinstance(entry, dict):
+            continue
+        raw_windows = entry.get("windows")
+        if not isinstance(raw_windows, dict):
+            continue
+        windows: dict[str, float] = {}
+        for minutes in ("300", "10080"):
+            percent = raw_windows.get(minutes)
+            if isinstance(percent, (int, float)) and not isinstance(percent, bool):
+                windows[minutes] = min(100.0, max(0.0, float(percent)))
+        if windows:
+            daily[raw_day] = {
+                "quota": {
+                    "windows": windows,
+                    "limitReached": any(percent >= 100 for percent in windows.values()),
+                }
+            }
     return daily
 
 
@@ -1554,6 +1594,9 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         cc_daily, cx_daily, op_daily = [], [], []
     _attach_telemetry(
         cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
+    )
+    _attach_telemetry(
+        cc_daily, collect_claude_quota_since(EPOCH, CLAUDE_QUOTA_CACHE_PATH)
     )
     _attach_telemetry(
         cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
