@@ -51,17 +51,6 @@ environment's weekly total and harness mix changed.
 The current view keeps the trailing 30-day model mix; the history view compares four weekly model
 stacks with the preceding four, using absolute Top 3 + Other values within each harness.
 
-## Efficiency
-
-![Aether Ledger token efficiency dashboard](assets/compute-efficiency.svg)
-
-![Aether Ledger token efficiency history](assets/compute-efficiency-history.svg)
-
-Efficiency separates input/output/cache token flow from model choice and adds observable routing
-signals. Its history view uses the same previous-four/latest-four weekly axis for token flow,
-effort, reasoning, Fast, and quota intensity. Missing telemetry stays unavailable rather than
-becoming zero.
-
 ## Ledger
 
 The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,

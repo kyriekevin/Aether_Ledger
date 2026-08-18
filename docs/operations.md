@@ -334,19 +334,17 @@ snapshot as the activity SVG. Trail workers and persistent `devbox` stores are c
 `Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
 for collection and operations.
 
-Each analytical dimension pairs that trailing-30-day snapshot with a separate eight-week history
-asset. Every history uses the same adjacent weekly buckets and explicitly splits them into the
+Topology and allocation each pair the trailing-30-day snapshot with a separate eight-week history
+asset. Both histories use the same adjacent weekly buckets and explicitly split them into the
 previous four weeks and the latest four weeks. Topology history uses absolute weekly stacks within
 Work, Personal, and Development, so bar height preserves each environment's total while color
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
-each harness. Efficiency history aligns weekly input/output/cache composition with effort,
-reasoning, Fast, and quota intensity cells.
-Every panel keeps the same semantic dimension as its current snapshot; missing model or telemetry
-coverage stays blank or gray rather than being plotted as zero.
+each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
-The README therefore reads as activity, then current/history pairs for topology, allocation, and
-efficiency: when compute happened, where it ran and how that changed, which models were selected
-and how the mix migrated, then how tokens flowed and routing behavior evolved.
+The README therefore reads as activity, then current/history pairs for topology and allocation:
+when compute happened, where it ran and how that changed, then which models were selected and how
+the mix migrated. Two experimental efficiency SVGs remain generated for evaluation but are not
+embedded in the README while their definitions are under review.
 
 Claude logs expose standard/Fast speed but no Codex-style effort, reasoning-token, or quota fields.
 Codex exposes all four. TRAE is an internally provided CLI, not a model vendor or an intrinsically
