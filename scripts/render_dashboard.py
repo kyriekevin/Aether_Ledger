@@ -45,6 +45,11 @@ ROLE_BUCKETS = {
 AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
 AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
 ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+# Quota is a session-log field. Codex writes it; Claude logs carry no
+# equivalent, so Claude can never appear in a quota chart and is not
+# offered a slot that would sit empty. Compatible TRAE builds use the
+# Codex rollout format but no observed build has emitted quota events.
+QUOTA_AGENT_ORDER = ("codex",)
 EFFORT_ORDER = ("none", "low", "medium", "high", "xhigh", "max")
 EFFORT_SHORT_LABELS = {
     "none": "none",
@@ -1499,7 +1504,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
     fast_calls = codex_speeds["fast"]["calls"]
     quota_agents = [
         agent
-        for agent in ("claude", "codex")
+        for agent in QUOTA_AGENT_ORDER
         if 10080 in allocation.latest_quota_windows[agent]
     ]
     if speed_total:
@@ -1682,14 +1687,16 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         '  <text class="dashboard-primary" x="34" y="430" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">7-day quota peak</text>',
-        '  <circle class="agent-claude" cx="42" cy="456" r="4"/>',
-        '  <text class="dashboard-secondary" x="54" y="460" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="10">Claude</text>',
-        '  <circle class="agent-codex" cx="118" cy="456" r="4"/>',
-        '  <text class="dashboard-secondary" x="130" y="460" '
-        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
-        'font-size="10">Codex</text>',
+        *(
+            line
+            for slot, agent in enumerate(QUOTA_AGENT_ORDER)
+            for line in (
+                f'  <circle class="agent-{agent}" cx="{42 + slot * 76}" cy="456" r="4"/>',
+                f'  <text class="dashboard-secondary" x="{54 + slot * 76}" y="460" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="10">{escape(AGENT_LABELS[agent])}</text>',
+            )
+        ),
         '  <text class="dashboard-muted" x="205" y="440" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">100%</text>',
@@ -1702,10 +1709,11 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     quota_bar_w = 18
     for week_index, weekly in enumerate(allocation.weekly_quota_7d_peak):
         center = plot_left + week_index * step
-        for offset, agent in ((-12, "claude"), (12, "codex")):
-            percent = weekly.get(agent)
-            if percent is None:
-                continue
+        drawn = [a for a in QUOTA_AGENT_ORDER if weekly.get(a) is not None]
+        span = 24 * (len(drawn) - 1)
+        for slot, agent in enumerate(drawn):
+            percent = weekly[agent]
+            offset = slot * 24 - span / 2
             bar_height = 40 * max(0.0, min(100.0, percent)) / 100
             x = center + offset - quota_bar_w / 2
             y = 478 - bar_height

@@ -57,10 +57,11 @@ stacks with the preceding four, using absolute Top 3 + Other values within each 
 
 ![Aether Ledger runtime history](assets/runtime-history.svg)
 
-The current view shows the latest 30-day effort mix, Codex Fast share, and the latest day's
-seven-day quota peak.
-The history view uses smaller weekly effort stacks, a Fast trajectory, and weekly seven-day quota
-peak bars, so magnitude comes from length, height, and position rather than color intensity.
+The current view shows the latest 30-day effort mix across all three harnesses, and Codex's Fast
+share and latest seven-day quota peak. The history view uses smaller weekly effort stacks, a Fast
+trajectory, and weekly seven-day quota peak bars, so magnitude comes from length, height, and
+position rather than color intensity. Effort is read from every harness's own session logs; Fast
+and quota are Codex fields, and no equivalent exists in Claude's logs.
 
 ## Ledger
 
