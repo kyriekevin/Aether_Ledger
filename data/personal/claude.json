@@ -18,10 +18,16 @@
       }
     },
     "routing": {
+      "efforts": {
+        "high": {
+          "calls": 47,
+          "totalTokens": 2353175
+        }
+      },
       "speeds": {
         "standard": {
-          "totalTokens": 2353175,
-          "turns": 47
+          "calls": 47,
+          "totalTokens": 2353175
         }
       }
     },

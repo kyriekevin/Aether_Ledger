@@ -48,19 +48,22 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 77,
+          "reasoningCalls": 77,
           "reasoningOutputTokens": 58805,
-          "totalTokens": 4683783,
-          "turns": 77
+          "totalTokens": 4683783
         },
         "low": {
+          "calls": 36,
+          "reasoningCalls": 36,
           "reasoningOutputTokens": 4756,
-          "totalTokens": 1535720,
-          "turns": 36
+          "totalTokens": 1535720
         },
         "medium": {
+          "calls": 185,
+          "reasoningCalls": 185,
           "reasoningOutputTokens": 27293,
-          "totalTokens": 15772152,
-          "turns": 185
+          "totalTokens": 15772152
         }
       }
     },
@@ -102,19 +105,22 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 20,
+          "reasoningCalls": 20,
           "reasoningOutputTokens": 16435,
-          "totalTokens": 813624,
-          "turns": 20
+          "totalTokens": 813624
         },
         "low": {
+          "calls": 127,
+          "reasoningCalls": 127,
           "reasoningOutputTokens": 4108,
-          "totalTokens": 10043166,
-          "turns": 127
+          "totalTokens": 10043166
         },
         "medium": {
+          "calls": 386,
+          "reasoningCalls": 386,
           "reasoningOutputTokens": 76952,
-          "totalTokens": 39303023,
-          "turns": 386
+          "totalTokens": 39303023
         }
       }
     },
@@ -149,19 +155,22 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 22,
+          "reasoningCalls": 22,
           "reasoningOutputTokens": 13652,
-          "totalTokens": 972438,
-          "turns": 22
+          "totalTokens": 972438
         },
         "low": {
+          "calls": 15,
+          "reasoningCalls": 15,
           "reasoningOutputTokens": 3309,
-          "totalTokens": 625827,
-          "turns": 15
+          "totalTokens": 625827
         },
         "medium": {
+          "calls": 91,
+          "reasoningCalls": 91,
           "reasoningOutputTokens": 6448,
-          "totalTokens": 8630186,
-          "turns": 91
+          "totalTokens": 8630186
         }
       }
     },
@@ -182,9 +191,10 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 15,
+          "reasoningCalls": 15,
           "reasoningOutputTokens": 2483,
-          "totalTokens": 672251,
-          "turns": 15
+          "totalTokens": 672251
         }
       }
     },
@@ -212,19 +222,22 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 15,
+          "reasoningCalls": 15,
           "reasoningOutputTokens": 6873,
-          "totalTokens": 787166,
-          "turns": 15
+          "totalTokens": 787166
         },
         "low": {
+          "calls": 1,
+          "reasoningCalls": 1,
           "reasoningOutputTokens": 381,
-          "totalTokens": 22123,
-          "turns": 1
+          "totalTokens": 22123
         },
         "medium": {
+          "calls": 8,
+          "reasoningCalls": 8,
           "reasoningOutputTokens": 895,
-          "totalTokens": 238162,
-          "turns": 8
+          "totalTokens": 238162
         }
       }
     },
@@ -252,14 +265,16 @@
     "routing": {
       "efforts": {
         "high": {
+          "calls": 11,
+          "reasoningCalls": 11,
           "reasoningOutputTokens": 3554,
-          "totalTokens": 514936,
-          "turns": 11
+          "totalTokens": 514936
         },
         "medium": {
+          "calls": 5,
+          "reasoningCalls": 5,
           "reasoningOutputTokens": 751,
-          "totalTokens": 208819,
-          "turns": 5
+          "totalTokens": 208819
         }
       }
     },
