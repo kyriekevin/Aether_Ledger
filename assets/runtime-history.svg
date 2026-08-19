@@ -214,35 +214,33 @@
   </circle>
   <line class="dashboard-border" x1="34" y1="402" x2="1146" y2="402" stroke-width="1"/>
   <text class="dashboard-primary" x="34" y="430" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">7-day quota peak</text>
-  <circle class="agent-claude" cx="42" cy="456" r="4"/>
-  <text class="dashboard-secondary" x="54" y="460" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Claude</text>
-  <circle class="agent-codex" cx="118" cy="456" r="4"/>
-  <text class="dashboard-secondary" x="130" y="460" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Codex</text>
+  <circle class="agent-codex" cx="42" cy="456" r="4"/>
+  <text class="dashboard-secondary" x="54" y="460" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Codex</text>
   <text class="dashboard-muted" x="205" y="440" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">100%</text>
   <text class="dashboard-muted" x="205" y="480" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">0%</text>
   <line class="dashboard-border" x1="230.0" y1="478" x2="1060.0" y2="478" stroke-width="1"/>
-  <rect class="agent-codex" x="233.0" y="446.8" width="18" height="31.2" data-agent="codex" data-week="2026-06-24">
+  <rect class="agent-codex" x="221.0" y="446.8" width="18" height="31.2" data-agent="codex" data-week="2026-06-24">
     <title>2026-06-24 · Codex · 7d peak 78%</title>
   </rect>
-  <rect class="agent-codex" x="351.6" y="462.0" width="18" height="16.0" data-agent="codex" data-week="2026-07-01">
+  <rect class="agent-codex" x="339.6" y="462.0" width="18" height="16.0" data-agent="codex" data-week="2026-07-01">
     <title>2026-07-01 · Codex · 7d peak 40%</title>
   </rect>
-  <rect class="agent-codex" x="470.1" y="442.8" width="18" height="35.2" data-agent="codex" data-week="2026-07-08">
+  <rect class="agent-codex" x="458.1" y="442.8" width="18" height="35.2" data-agent="codex" data-week="2026-07-08">
     <title>2026-07-08 · Codex · 7d peak 88%</title>
   </rect>
-  <rect class="agent-codex" x="588.7" y="438.0" width="18" height="40.0" data-agent="codex" data-week="2026-07-15">
+  <rect class="agent-codex" x="576.7" y="438.0" width="18" height="40.0" data-agent="codex" data-week="2026-07-15">
     <title>2026-07-15 · Codex · 7d peak 100%</title>
   </rect>
-  <rect class="agent-codex" x="707.3" y="438.0" width="18" height="40.0" data-agent="codex" data-week="2026-07-22">
+  <rect class="agent-codex" x="695.3" y="438.0" width="18" height="40.0" data-agent="codex" data-week="2026-07-22">
     <title>2026-07-22 · Codex · 7d peak 100%</title>
   </rect>
-  <rect class="agent-codex" x="825.9" y="440.0" width="18" height="38.0" data-agent="codex" data-week="2026-07-29">
+  <rect class="agent-codex" x="813.9" y="440.0" width="18" height="38.0" data-agent="codex" data-week="2026-07-29">
     <title>2026-07-29 · Codex · 7d peak 95%</title>
   </rect>
-  <rect class="agent-codex" x="944.4" y="438.4" width="18" height="39.6" data-agent="codex" data-week="2026-08-05">
+  <rect class="agent-codex" x="932.4" y="438.4" width="18" height="39.6" data-agent="codex" data-week="2026-08-05">
     <title>2026-08-05 · Codex · 7d peak 99%</title>
   </rect>
-  <rect class="agent-codex" x="1063.0" y="459.2" width="18" height="18.8" data-agent="codex" data-week="2026-08-12">
+  <rect class="agent-codex" x="1051.0" y="459.2" width="18" height="18.8" data-agent="codex" data-week="2026-08-12">
     <title>2026-08-12 · Codex · 7d peak 47%</title>
   </rect>
   <text class="dashboard-muted" x="230.0" y="505" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 24</text>

@@ -163,38 +163,6 @@ Logs:
 
 Each invocation writes start and finish heartbeat lines to the standard-output log.
 
-### Claude subscription quota
-
-Claude Code exposes subscription pressure to custom status lines, but does not persist those
-snapshots in project transcripts. Install the optional local tap after configuring a command-based
-status line:
-
-```sh
-uv run --script scripts/install_claude_statusline.py --dry-run
-uv run --script scripts/install_claude_statusline.py
-```
-
-The installer copies a small proxy to `~/.local/share/aether-ledger/`, preserves the original
-status-line command in `~/.config/aether-ledger/claude-statusline.json`, and replaces only that one
-setting. The proxy forwards Claude's stdin unchanged to the original status line. While Claude is
-running, it records only the daily high-water percentages for the five-hour and seven-day windows
-in `~/.cache/aether-ledger/claude-rate-limits.json`. It stores no reset time, transcript, path,
-session, credential, or account field.
-
-The proxy performs no network requests and has no background process. When Claude is not running,
-it does nothing. The scheduled writer only reads the local cache, assigns each sample to the
-Asia/Shanghai day when Claude supplied it, and never treats an old snapshot as a new observation.
-Missing, malformed, or unwritable cache data is ignored and cannot break the existing status line
-or scheduled sync.
-
-Restore the exact prior status-line command with:
-
-```sh
-uv run --script scripts/install_claude_statusline.py --uninstall
-```
-
-Uninstall refuses to overwrite the setting if it changed after installation.
-
 ### Concurrent Git access
 
 The writer is not the only scheduled process running Git in this checkout. The downstream Feishu
@@ -376,12 +344,13 @@ each harness. Missing model coverage stays blank or gray rather than being plott
 The README therefore reads as activity, then current/history pairs for topology, allocation, and
 runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
 seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
-seven-day quota peak bars. Color identifies a harness or effort category while geometry shows
+seven-day quota peak bars. Effort covers every harness; Fast and quota are Codex-only, so a single
+quota series is centred on each week rather than paired against an empty slot. Color identifies a harness or effort category while geometry shows
 magnitude, matching the visual grammar of the other history views.
 
 Claude assistant events expose effort and, on supported models, `thinking_tokens`; Fast is not
 selectable in the observed Claude setup, so its standard-only speed field is not collected or
-shown. Claude logs expose no Codex-style quota fields. Codex exposes effort, reasoning, speed, and
+shown. Claude logs expose no Codex-style quota fields. Claude does report quota, but only to `statusLine.command`, and reading that stream means wrapping the status line the user already runs -- a wrapper that cannot be made fully transparent, so no Claude quota is collected or charted. Codex exposes effort, reasoning, speed, and
 quota. TRAE is an internally provided CLI, not a model vendor or an intrinsically cheap substitute;
 its model mix is shown literally. Because compatible TRAE builds use the Codex rollout format, the
 collector also accepts their effort, speed, reasoning, and quota events when present. Missing

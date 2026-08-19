@@ -55,9 +55,10 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 运行历史](assets/runtime-history.svg)
 
-当前图展示最近 30 天的 effort 组合、Codex Fast 占比和最近一天的 7 天额度峰值。历史图使用更小的周度
-effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、高度和位置表达，不再依赖
-颜色深浅。
+当前图展示三个 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
+峰值。历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、
+高度和位置表达，不再依赖颜色深浅。effort 从各 harness 自己的 session 日志读取；Fast 和额度是
+Codex 的字段，Claude 的日志里没有对应物。
 
 ## 账本
 

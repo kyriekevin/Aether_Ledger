@@ -174,7 +174,8 @@ class AggregateAllocationTests(unittest.TestCase):
                         "speeds": {"fast": {"turns": 2, "totalTokens": 100}},
                     },
                     "quota": {
-                        "windows": {"300": 85.0}, "limitReached": True,
+                        "windows": {"300": 85.0, "10080": 64.0},
+                        "limitReached": True,
                     },
                 },
             }), encoding="utf-8")
@@ -195,10 +196,6 @@ class AggregateAllocationTests(unittest.TestCase):
                             "reasoningOutputTokens": 12,
                         }},
                         "speeds": {"standard": {"turns": 1, "totalTokens": 40}},
-                    },
-                    "quota": {
-                        "windows": {"300": 8.0, "10080": 64.0},
-                        "limitReached": False,
                     },
                 }
             }), encoding="utf-8")
@@ -229,13 +226,13 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(totals.efforts["codex"]["low"]["calls"], 2)
             self.assertEqual(totals.efforts["codex"]["low"]["reasoningCalls"], 2)
             self.assertEqual(totals.speeds["codex"]["fast"]["totalTokens"], 100)
-            self.assertEqual(totals.quota_windows["codex"], {300: 85.0})
+            self.assertEqual(totals.quota_windows["codex"], {300: 85.0, 10080: 64.0})
             self.assertEqual(totals.latest_quota_day["codex"], date(2026, 8, 1))
-            self.assertEqual(totals.latest_quota_windows["codex"], {300: 85.0})
-            self.assertEqual(totals.latest_quota_day["claude"], date(2026, 8, 1))
             self.assertEqual(
-                totals.latest_quota_windows["claude"], {300: 8.0, 10080: 64.0}
+                totals.latest_quota_windows["codex"], {300: 85.0, 10080: 64.0}
             )
+            self.assertIsNone(totals.latest_quota_day["claude"])
+            self.assertEqual(totals.latest_quota_windows["claude"], {})
             self.assertEqual(totals.quota_observed_days["codex"], 1)
             self.assertEqual(totals.quota_pressure_days["codex"], 1)
             self.assertEqual(totals.quota_limit_days["codex"], 1)
@@ -258,7 +255,7 @@ class AggregateAllocationTests(unittest.TestCase):
             self.assertEqual(totals.weekly_speed_calls[7][("codex", "fast")], 2)
             self.assertEqual(totals.weekly_quota_observed_days[7]["codex"], 1)
             self.assertEqual(totals.weekly_quota_pressure_days[7]["codex"], 1)
-            self.assertEqual(totals.weekly_quota_7d_peak[7]["claude"], 64.0)
+            self.assertEqual(totals.weekly_quota_7d_peak[7]["codex"], 64.0)
 
 
 class DashboardTests(unittest.TestCase):
@@ -467,7 +464,7 @@ class DashboardTests(unittest.TestCase):
             weekly_quota_7d_peak=tuple(
                 {"claude": 10.0 + index, "codex": 20.0 + index}
                 for index in range(8)
-            ),
+            ),  # the Claude series is deliberate: the renderer must drop it
             weekly_quota_observed=tuple(
                 {"codex", "traex"} for _ in range(8)
             ),
@@ -537,10 +534,8 @@ class DashboardTests(unittest.TestCase):
         allocation.speeds["codex"]["standard"].update(calls=1, totalTokens=100)
         allocation.speeds["codex"]["fast"].update(calls=1, totalTokens=100)
         allocation.quota_windows["codex"][300] = 68.0
-        allocation.latest_quota_day["claude"] = date(2026, 8, 1)
-        allocation.latest_quota_windows["claude"] = {300: 8.0, 10080: 64.0}
         allocation.latest_quota_day["codex"] = date(2026, 8, 1)
-        allocation.latest_quota_windows["codex"] = {300: 68.0}
+        allocation.latest_quota_windows["codex"] = {300: 68.0, 10080: 64.0}
         allocation.quota_observed_days["codex"] = 10
         allocation.quota_pressure_days["codex"] = 3
         allocation.quota_limit_days["codex"] = 1
@@ -585,7 +580,14 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("PREVIOUS 4 WEEKS", history_svg)
         self.assertIn('class="line-codex"', history_svg)
         self.assertIn("7-day quota peak", history_svg)
-        self.assertIn("7d peak 10%", history_svg)
+        self.assertIn("7d peak 20%", history_svg)
+        # Quota is Codex-only, so a stale Claude series is charted nowhere and
+        # claims no legend slot -- and the single Codex bar sits on the week's
+        # centre instead of hanging off the side of an empty pair.
+        self.assertNotIn("7d peak 10%", history_svg)
+        self.assertNotIn('<circle class="agent-claude" cx="42" cy="456"', history_svg)
+        self.assertIn('<circle class="agent-codex" cx="42" cy="456"', history_svg)
+        self.assertIn('<rect class="agent-codex" x="221.0"', history_svg)
         self.assertIn('data-week="2026-07-26"', history_svg)
         self.assertNotIn("Reasoning", history_svg)
         self.assertNotIn("Thinking", history_svg)
