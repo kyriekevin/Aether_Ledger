@@ -1347,5 +1347,61 @@
     },
     "totalCost": 9.5515315,
     "totalTokens": 6596734
+  },
+  "2026-08-20": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 729600,
+        "inputTokens": 176072,
+        "outputTokens": 2767,
+        "totalTokens": 908439
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 15228672,
+        "inputTokens": 263094,
+        "outputTokens": 38733,
+        "totalTokens": 15530499
+      },
+      "gpt-5.6-terra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3106944,
+        "inputTokens": 105633,
+        "outputTokens": 12446,
+        "totalTokens": 3225023
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 53.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 26,
+          "reasoningCalls": 26,
+          "reasoningOutputTokens": 1249,
+          "totalTokens": 908439
+        },
+        "medium": {
+          "calls": 112,
+          "reasoningCalls": 112,
+          "reasoningOutputTokens": 13427,
+          "totalTokens": 15574039
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 129,
+          "totalTokens": 16241191
+        }
+      }
+    },
+    "totalCost": 23.504016999999997,
+    "totalTokens": 19663961
   }
 }
