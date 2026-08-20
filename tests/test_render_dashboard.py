@@ -285,6 +285,18 @@ class DashboardTests(unittest.TestCase):
         for level in range(5):
             self.assertIn(f'class="heatmap-level-{level}"', svg)
 
+    def test_activity_month_labels_stop_at_as_of(self) -> None:
+        svg = render_svg({}, date(2026, 8, 31))
+        root = ET.fromstring(svg)
+        september_x = [
+            node.get("x")
+            for node in root.findall("{*}text")
+            if node.text == "Sep"
+        ]
+
+        self.assertEqual(september_x, ["58"])
+        self.assertNotIn('data-date="2026-09-', svg)
+
     def test_generate_defaults_to_latest_recorded_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -317,7 +329,7 @@ class DashboardTests(unittest.TestCase):
             history_svg = render_topology_history_svg(totals)
 
             ET.fromstring(svg)
-            ET.fromstring(history_svg)
+            history_root = ET.fromstring(history_svg)
             self.assertIn("Recent compute topology", svg)
             self.assertIn("Development", svg)
             self.assertIn("100.0% · 2M", svg)
@@ -349,6 +361,23 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('data-role="development"', history_svg)
             self.assertIn('data-agent="codex"', history_svg)
             self.assertIn('data-week="2026-07-26"', history_svg)
+            period_headings = history_root.findall("{*}text")
+            self.assertEqual(
+                [
+                    node.get("x")
+                    for node in period_headings
+                    if node.text == "PREVIOUS 4 WEEKS"
+                ],
+                ["110.5", "498.5", "886.5"],
+            )
+            self.assertEqual(
+                [
+                    node.get("x")
+                    for node in period_headings
+                    if node.text == "LATEST 4 WEEKS"
+                ],
+                ["274.5", "662.5", "1050.5"],
+            )
 
     def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

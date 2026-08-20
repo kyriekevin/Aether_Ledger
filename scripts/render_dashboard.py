@@ -799,7 +799,10 @@ def render_svg(totals: dict[date, DailyTotals], as_of: date) -> str:
     for week in range(WEEKS):
         week_start = grid_start + timedelta(days=week * 7)
         candidates = [week_start + timedelta(days=offset) for offset in range(7)]
-        month_day = next((day for day in candidates if day.day <= 7), None)
+        month_day = next(
+            (day for day in candidates if day <= as_of and day.day <= 7),
+            None,
+        )
         if month_day is None or (month_day.year, month_day.month) in seen_months:
             continue
         seen_months.add((month_day.year, month_day.month))
@@ -976,6 +979,22 @@ def render_topology_svg(topology: TopologyTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _history_period_centers(
+    plot_x: float, bar_w: float, bar_gap: float
+) -> tuple[float, float]:
+    period_width = (
+        HISTORY_PERIOD_WEEKS * bar_w
+        + (HISTORY_PERIOD_WEEKS - 1) * bar_gap
+    )
+    previous = plot_x + period_width / 2
+    latest = (
+        plot_x
+        + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap)
+        + period_width / 2
+    )
+    return previous, latest
+
+
 def render_topology_history_svg(topology: TopologyTotals) -> str:
     """Render weekly absolute topology as environment-level stacked bars."""
     agents = tuple(
@@ -1023,6 +1042,9 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
         plot_top = panel_y + 72
         baseline = plot_top + plot_h
         divider_x = plot_x + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap) - bar_gap / 2
+        previous_center, latest_center = _history_period_centers(
+            plot_x, bar_w, bar_gap
+        )
         weekly_totals = [
             sum(window.get((role, agent), 0) for agent in agents)
             for window in topology.weekly_topology
@@ -1040,10 +1062,10 @@ def render_topology_history_svg(topology: TopologyTotals) -> str:
             f'peak {_compact_number(maximum)}</text>',
             f'  <line class="dashboard-border" x1="{plot_x}" y1="{baseline}" '
             f'x2="{plot_x + 328}" y2="{baseline}" stroke-width="1"/>',
-            f'  <text class="dashboard-muted" x="{plot_x + 76}" y="{panel_y + 61}" '
+            f'  <text class="dashboard-muted" x="{previous_center:.1f}" y="{panel_y + 61}" '
             'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="9">PREVIOUS 4 WEEKS</text>',
-            f'  <text class="dashboard-muted" x="{plot_x + 246}" y="{panel_y + 61}" '
+            f'  <text class="dashboard-muted" x="{latest_center:.1f}" y="{panel_y + 61}" '
             'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="9">LATEST 4 WEEKS</text>',
             f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{plot_top - 5}" '
@@ -1309,11 +1331,14 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
         plot_top = panel_y + 102
         baseline = plot_top + plot_h
         divider_x = plot_x + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap) - bar_gap / 2
+        previous_center, latest_center = _history_period_centers(
+            plot_x, bar_w, bar_gap
+        )
         lines.extend((
-            f'  <text class="dashboard-muted" x="{plot_x + 76}" y="{plot_top - 8}" '
+            f'  <text class="dashboard-muted" x="{previous_center:.1f}" y="{plot_top - 8}" '
             'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="9">PREVIOUS 4 WEEKS</text>',
-            f'  <text class="dashboard-muted" x="{plot_x + 241}" y="{plot_top - 8}" '
+            f'  <text class="dashboard-muted" x="{latest_center:.1f}" y="{plot_top - 8}" '
             'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="9">LATEST 4 WEEKS</text>',
             f'  <line class="dashboard-border" x1="{plot_x}" y1="{baseline}" '
