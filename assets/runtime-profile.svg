@@ -96,51 +96,51 @@
   <text class="dashboard-muted" x="1072" y="102" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">max</text>
   <circle class="agent-claude" cx="42" cy="141" r="4"/>
   <text class="dashboard-secondary" x="54" y="145" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Claude</text>
-  <rect class="effort-low" x="170.0" y="132" width="0.1" height="18" data-agent="claude" data-effort="low">
+  <rect class="effort-low" x="140.0" y="132" width="0.2" height="18" data-agent="claude" data-effort="low">
     <title>Claude · low &lt;0.1% · 1 calls</title>
   </rect>
-  <rect class="effort-medium" x="170.1" y="132" width="0.1" height="18" data-agent="claude" data-effort="medium">
+  <rect class="effort-medium" x="140.2" y="132" width="0.2" height="18" data-agent="claude" data-effort="medium">
     <title>Claude · medium &lt;0.1% · 1 calls</title>
   </rect>
-  <rect class="effort-high" x="170.3" y="132" width="6.1" height="18" data-agent="claude" data-effort="high">
+  <rect class="effort-high" x="140.3" y="132" width="7.1" height="18" data-agent="claude" data-effort="high">
     <title>Claude · high 0.8% · 47 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="176.4" y="132" width="740.6" height="18" data-agent="claude" data-effort="xhigh">
+  <rect class="effort-xhigh" x="147.4" y="132" width="857.6" height="18" data-agent="claude" data-effort="xhigh">
     <title>Claude · xhigh 97.5% · 5700 calls</title>
   </rect>
-  <rect class="effort-max" x="917.0" y="132" width="13.0" height="18" data-agent="claude" data-effort="max">
+  <rect class="effort-max" x="1005.0" y="132" width="15.0" height="18" data-agent="claude" data-effort="max">
     <title>Claude · max 1.7% · 100 calls</title>
   </rect>
-  <text class="dashboard-muted" x="170" y="168" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low &lt;0.1% · medium &lt;0.1% · high 0.8% · xhigh 97.5% · max 1.7%</text>
+  <text class="dashboard-muted" x="140" y="168" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low &lt;0.1% · medium &lt;0.1% · high 0.8% · xhigh 97.5% · max 1.7%</text>
   <text class="dashboard-muted" x="1120" y="145" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">5.8K calls</text>
   <circle class="agent-codex" cx="42" cy="189" r="4"/>
   <text class="dashboard-secondary" x="54" y="193" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Codex</text>
-  <rect class="effort-low" x="170.0" y="180" width="95.5" height="18" data-agent="codex" data-effort="low">
+  <rect class="effort-low" x="140.0" y="180" width="110.6" height="18" data-agent="codex" data-effort="low">
     <title>Codex · low 12.6% · 6125 calls</title>
   </rect>
-  <rect class="effort-medium" x="265.5" y="180" width="114.4" height="18" data-agent="codex" data-effort="medium">
+  <rect class="effort-medium" x="250.6" y="180" width="132.4" height="18" data-agent="codex" data-effort="medium">
     <title>Codex · medium 15.0% · 7332 calls</title>
   </rect>
-  <rect class="effort-high" x="379.9" y="180" width="149.8" height="18" data-agent="codex" data-effort="high">
+  <rect class="effort-high" x="383.1" y="180" width="173.4" height="18" data-agent="codex" data-effort="high">
     <title>Codex · high 19.7% · 9603 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="529.7" y="180" width="400.3" height="18" data-agent="codex" data-effort="xhigh">
+  <rect class="effort-xhigh" x="556.5" y="180" width="463.5" height="18" data-agent="codex" data-effort="xhigh">
     <title>Codex · xhigh 52.7% · 25661 calls</title>
   </rect>
-  <text class="dashboard-muted" x="170" y="216" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 12.6% · medium 15.0% · high 19.7% · xhigh 52.7%</text>
+  <text class="dashboard-muted" x="140" y="216" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 12.6% · medium 15.0% · high 19.7% · xhigh 52.7%</text>
   <text class="dashboard-muted" x="1120" y="193" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">48.7K calls</text>
   <circle class="agent-traex" cx="42" cy="237" r="4"/>
   <text class="dashboard-secondary" x="54" y="241" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">TRAE</text>
-  <rect class="effort-low" x="170.0" y="228" width="45.0" height="18" data-agent="traex" data-effort="low">
+  <rect class="effort-low" x="140.0" y="228" width="52.1" height="18" data-agent="traex" data-effort="low">
     <title>TRAE · low 5.9% · 179 calls</title>
   </rect>
-  <rect class="effort-medium" x="215.0" y="228" width="674.8" height="18" data-agent="traex" data-effort="medium">
+  <rect class="effort-medium" x="192.1" y="228" width="781.4" height="18" data-agent="traex" data-effort="medium">
     <title>TRAE · medium 88.8% · 2686 calls</title>
   </rect>
-  <rect class="effort-high" x="889.8" y="228" width="40.2" height="18" data-agent="traex" data-effort="high">
+  <rect class="effort-high" x="973.5" y="228" width="46.5" height="18" data-agent="traex" data-effort="high">
     <title>TRAE · high 5.3% · 160 calls</title>
   </rect>
-  <text class="dashboard-muted" x="170" y="264" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 5.9% · medium 88.8% · high 5.3%</text>
+  <text class="dashboard-muted" x="140" y="264" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 5.9% · medium 88.8% · high 5.3%</text>
   <text class="dashboard-muted" x="1120" y="241" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">3K calls</text>
   <line class="dashboard-border" x1="34" y1="282" x2="1146" y2="282" stroke-width="1"/>
   <text class="dashboard-primary" x="34" y="308" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Fast</text>

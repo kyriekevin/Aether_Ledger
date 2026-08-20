@@ -1477,7 +1477,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             f'font-size="9">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
         ))
 
-    bar_x, bar_w = 170, 760
+    bar_x, bar_w = 140, 880
     for row, agent in enumerate(("claude", "codex", "traex")):
         y = 132 + row * 48
         buckets = allocation.efforts[agent]
@@ -1679,6 +1679,7 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
             _share(weekly.get(("codex", "fast"), 0), total) if total else None
         )
     fast_left, fast_right = 150.0, 550.0
+    fast_divider = (fast_left + fast_right) / 2
     signal_top, signal_height, signal_baseline = 296, 34, 330
     path, points, _, _ = _trajectory(
         fast_values,
@@ -1701,6 +1702,9 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         'font-size="9">0%</text>',
         f'  <line class="dashboard-border" x1="{fast_left}" y1="{signal_baseline}" '
         f'x2="{fast_right}" y2="{signal_baseline}" stroke-width="1"/>',
+        f'  <line class="dashboard-border" x1="{fast_divider:.1f}" y1="292" '
+        f'x2="{fast_divider:.1f}" y2="334" stroke-width="1" '
+        'stroke-dasharray="2 3"/>',
     ))
     if path:
         lines.append(
@@ -1742,7 +1746,13 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         'x2="1136" y2="330" stroke-width="1"/>',
     ))
     quota_left, quota_right = 740.0, 1136.0
+    quota_divider = (quota_left + quota_right) / 2
     quota_step = (quota_right - quota_left) / (HISTORY_WEEKS - 1)
+    lines.append(
+        f'  <line class="dashboard-border" x1="{quota_divider:.1f}" y1="292" '
+        f'x2="{quota_divider:.1f}" y2="334" stroke-width="1" '
+        'stroke-dasharray="2 3"/>'
+    )
     quota_bar_w = 16
     for week_index, weekly in enumerate(allocation.weekly_quota_7d_peak):
         center = quota_left + week_index * quota_step

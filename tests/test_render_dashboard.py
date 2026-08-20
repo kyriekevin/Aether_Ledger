@@ -603,6 +603,19 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("7-day quota peak", profile_svg)
         self.assertIn("7d 64% · Aug 1", profile_svg)
         self.assertIn('data-effort="xhigh"', profile_svg)
+        effort_bars = [
+            node
+            for node in profile_root.findall("{*}rect")
+            if node.get("data-effort") is not None
+        ]
+        self.assertEqual(min(float(node.get("x", "0")) for node in effort_bars), 140)
+        self.assertEqual(
+            max(
+                float(node.get("x", "0")) + float(node.get("width", "0"))
+                for node in effort_bars
+            ),
+            1020,
+        )
         fast_bar = next(
             node for node in profile_root.findall("{*}rect")
             if node.get("class") == "agent-codex" and node.get("x") == "110"
@@ -648,6 +661,12 @@ class DashboardTests(unittest.TestCase):
             signal_titles,
             {"Fast share": "280", "7-day quota peak": "280"},
         )
+        compact_dividers = [
+            node.get("x1")
+            for node in history_root.findall("{*}line")
+            if node.get("stroke-dasharray") == "2 3"
+        ]
+        self.assertEqual(compact_dividers, ["645.0", "350.0", "938.0"])
         self.assertIn('data-week="2026-07-26"', history_svg)
         self.assertNotIn("Reasoning", history_svg)
         self.assertNotIn("Thinking", history_svg)
