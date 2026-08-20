@@ -1507,6 +1507,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         for agent in QUOTA_AGENT_ORDER
         if 10080 in allocation.latest_quota_windows[agent]
     ]
+    signal_bar_y = 363
     if speed_total:
         fast_share = _share(fast_calls, speed_total)
         lines.extend((
@@ -1517,8 +1518,10 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             '  <text class="dashboard-secondary" x="54" y="376" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="11">Codex</text>',
-            '  <rect class="heatmap-level-0" x="110" y="363" width="300" height="14" rx="4"/>',
-            f'  <rect class="agent-codex" x="110" y="363" width="{300 * fast_share:.1f}" '
+            f'  <rect class="heatmap-level-0" x="110" y="{signal_bar_y}" '
+            'width="300" height="14" rx="4"/>',
+            f'  <rect class="agent-codex" x="110" y="{signal_bar_y}" '
+            f'width="{300 * fast_share:.1f}" '
             'height="14" rx="4"/>',
             f'  <text class="dashboard-primary" x="430" y="376" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
@@ -1539,16 +1542,16 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         percent = allocation.latest_quota_windows[agent][10080]
         day = allocation.latest_quota_day[agent]
         suffix = f" · {day.strftime('%b %-d')}" if day is not None else ""
-        y = 354 + row * 28
+        y = signal_bar_y + row * 28
         lines.extend((
-            f'  <circle class="agent-{agent}" cx="608" cy="{y + 7}" r="4"/>',
-            f'  <text class="dashboard-secondary" x="620" y="{y + 11}" '
+            f'  <circle class="agent-{agent}" cx="608" cy="{y + 9}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="620" y="{y + 13}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{escape(AGENT_LABELS[agent])}</text>',
             f'  <rect class="heatmap-level-0" x="700" y="{y}" width="290" height="14" rx="4"/>',
             f'  <rect class="agent-{agent}" x="700" y="{y}" '
             f'width="{2.9 * percent:.1f}" height="14" rx="4"/>',
-            f'  <text class="dashboard-primary" x="1120" y="{y + 11}" text-anchor="end" '
+            f'  <text class="dashboard-primary" x="1120" y="{y + 13}" text-anchor="end" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10" font-weight="600">7d {percent:.0f}%{escape(suffix)}</text>',
         ))

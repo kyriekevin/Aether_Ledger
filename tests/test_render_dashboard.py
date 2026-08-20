@@ -573,6 +573,27 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("7-day quota peak", profile_svg)
         self.assertIn("7d 64% · Aug 1", profile_svg)
         self.assertIn('data-effort="xhigh"', profile_svg)
+        profile_root = ET.fromstring(profile_svg)
+        fast_bar = next(
+            node for node in profile_root.findall("{*}rect")
+            if node.get("class") == "agent-codex" and node.get("x") == "110"
+        )
+        quota_bar = next(
+            node for node in profile_root.findall("{*}rect")
+            if node.get("class") == "agent-codex" and node.get("x") == "700"
+        )
+        self.assertEqual(fast_bar.get("y"), quota_bar.get("y"))
+        fast_marker = next(
+            node for node in profile_root.findall("{*}circle")
+            if node.get("class") == "agent-codex"
+            and node.get("cx") == "42"
+            and float(node.get("cy", "0")) > 300
+        )
+        quota_marker = next(
+            node for node in profile_root.findall("{*}circle")
+            if node.get("class") == "agent-codex" and node.get("cx") == "608"
+        )
+        self.assertEqual(fast_marker.get("cy"), quota_marker.get("cy"))
         self.assertNotIn("Reasoning", profile_svg)
         self.assertNotIn("Thinking", profile_svg)
         self.assertNotIn("8-WEEK", profile_svg)
