@@ -78,8 +78,8 @@
   <text class="dashboard-primary" x="34" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Work</text>
   <text class="dashboard-muted" x="370" y="136" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 768M · peak 768M</text>
   <line class="dashboard-border" x1="34" y1="290" x2="362" y2="290" stroke-width="1"/>
-  <text class="dashboard-muted" x="110" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
-  <text class="dashboard-muted" x="280" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
+  <text class="dashboard-muted" x="110.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
+  <text class="dashboard-muted" x="274.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="192.5" y1="173" x2="192.5" y2="294" stroke-width="1" stroke-dasharray="2 3"/>
   <rect class="agent-claude" x="34" y="249.7" width="30" height="40.3" data-role="work" data-agent="claude" data-week="2026-06-25">
     <title>Work · 2026-06-25 · Claude: 276M of 472M</title>
@@ -144,8 +144,8 @@
   <text class="dashboard-primary" x="422" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Personal</text>
   <text class="dashboard-muted" x="758" y="136" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 119M · peak 263M</text>
   <line class="dashboard-border" x1="422" y1="290" x2="750" y2="290" stroke-width="1"/>
-  <text class="dashboard-muted" x="498" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
-  <text class="dashboard-muted" x="668" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
+  <text class="dashboard-muted" x="498.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
+  <text class="dashboard-muted" x="662.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="580.5" y1="173" x2="580.5" y2="294" stroke-width="1" stroke-dasharray="2 3"/>
   <rect class="agent-codex" x="422" y="281.6" width="30" height="8.4" data-role="personal" data-agent="codex" data-week="2026-06-25">
     <title>Personal · 2026-06-25 · Codex: 19.7M of 19.7M</title>
@@ -174,8 +174,8 @@
   <text class="dashboard-primary" x="810" y="136" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Development</text>
   <text class="dashboard-muted" x="1146" y="136" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">latest 1.4B · peak 1.4B</text>
   <line class="dashboard-border" x1="810" y1="290" x2="1138" y2="290" stroke-width="1"/>
-  <text class="dashboard-muted" x="886" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
-  <text class="dashboard-muted" x="1056" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
+  <text class="dashboard-muted" x="886.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
+  <text class="dashboard-muted" x="1050.5" y="167" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="968.5" y1="173" x2="968.5" y2="294" stroke-width="1" stroke-dasharray="2 3"/>
   <rect class="agent-codex" x="810" y="288.6" width="30" height="1.4" data-role="development" data-agent="codex" data-week="2026-06-25">
     <title>Development · 2026-06-25 · Codex: 17.2M of 17.2M</title>

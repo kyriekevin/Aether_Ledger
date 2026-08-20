@@ -285,6 +285,18 @@ class DashboardTests(unittest.TestCase):
         for level in range(5):
             self.assertIn(f'class="heatmap-level-{level}"', svg)
 
+    def test_activity_month_labels_stop_at_as_of(self) -> None:
+        svg = render_svg({}, date(2026, 8, 31))
+        root = ET.fromstring(svg)
+        september_x = [
+            node.get("x")
+            for node in root.findall("{*}text")
+            if node.text == "Sep"
+        ]
+
+        self.assertEqual(september_x, ["58"])
+        self.assertNotIn('data-date="2026-09-', svg)
+
     def test_generate_defaults_to_latest_recorded_activity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -317,7 +329,7 @@ class DashboardTests(unittest.TestCase):
             history_svg = render_topology_history_svg(totals)
 
             ET.fromstring(svg)
-            ET.fromstring(history_svg)
+            history_root = ET.fromstring(history_svg)
             self.assertIn("Recent compute topology", svg)
             self.assertIn("Development", svg)
             self.assertIn("100.0% · 2M", svg)
@@ -349,6 +361,23 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('data-role="development"', history_svg)
             self.assertIn('data-agent="codex"', history_svg)
             self.assertIn('data-week="2026-07-26"', history_svg)
+            period_headings = history_root.findall("{*}text")
+            self.assertEqual(
+                [
+                    node.get("x")
+                    for node in period_headings
+                    if node.text == "PREVIOUS 4 WEEKS"
+                ],
+                ["110.5", "498.5", "886.5"],
+            )
+            self.assertEqual(
+                [
+                    node.get("x")
+                    for node in period_headings
+                    if node.text == "LATEST 4 WEEKS"
+                ],
+                ["274.5", "662.5", "1050.5"],
+            )
 
     def test_topology_reports_an_empty_recent_window(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -547,8 +576,8 @@ class DashboardTests(unittest.TestCase):
 
         ET.fromstring(allocation_svg)
         ET.fromstring(allocation_history_svg)
-        ET.fromstring(profile_svg)
-        ET.fromstring(history_svg)
+        profile_root = ET.fromstring(profile_svg)
+        history_root = ET.fromstring(history_svg)
         self.assertIn("Model allocation", allocation_svg)
         self.assertIn("current 30-day model mix", allocation_svg)
         self.assertIn("30D SHARE", allocation_svg)
@@ -568,15 +597,50 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
         self.assertIn("Runtime profile", profile_svg)
+        self.assertEqual(profile_root.get("height"), "390")
         self.assertIn("low 75.0%", profile_svg)
         self.assertIn("50.0% fast", profile_svg)
         self.assertIn("7-day quota peak", profile_svg)
         self.assertIn("7d 64% · Aug 1", profile_svg)
         self.assertIn('data-effort="xhigh"', profile_svg)
+        effort_bars = [
+            node
+            for node in profile_root.findall("{*}rect")
+            if node.get("data-effort") is not None
+        ]
+        self.assertEqual(min(float(node.get("x", "0")) for node in effort_bars), 140)
+        self.assertEqual(
+            max(
+                float(node.get("x", "0")) + float(node.get("width", "0"))
+                for node in effort_bars
+            ),
+            1020,
+        )
+        fast_bar = next(
+            node for node in profile_root.findall("{*}rect")
+            if node.get("class") == "agent-codex" and node.get("x") == "110"
+        )
+        quota_bar = next(
+            node for node in profile_root.findall("{*}rect")
+            if node.get("class") == "agent-codex" and node.get("x") == "700"
+        )
+        self.assertEqual(fast_bar.get("y"), quota_bar.get("y"))
+        fast_marker = next(
+            node for node in profile_root.findall("{*}circle")
+            if node.get("class") == "agent-codex"
+            and node.get("cx") == "42"
+            and float(node.get("cy", "0")) > 300
+        )
+        quota_marker = next(
+            node for node in profile_root.findall("{*}circle")
+            if node.get("class") == "agent-codex" and node.get("cx") == "608"
+        )
+        self.assertEqual(fast_marker.get("cy"), quota_marker.get("cy"))
         self.assertNotIn("Reasoning", profile_svg)
         self.assertNotIn("Thinking", profile_svg)
         self.assertNotIn("8-WEEK", profile_svg)
         self.assertIn("Runtime history", history_svg)
+        self.assertEqual(history_root.get("height"), "380")
         self.assertIn("PREVIOUS 4 WEEKS", history_svg)
         self.assertIn('class="line-codex"', history_svg)
         self.assertIn("7-day quota peak", history_svg)
@@ -585,9 +649,24 @@ class DashboardTests(unittest.TestCase):
         # claims no legend slot -- and the single Codex bar sits on the week's
         # centre instead of hanging off the side of an empty pair.
         self.assertNotIn("7d peak 10%", history_svg)
-        self.assertNotIn('<circle class="agent-claude" cx="42" cy="456"', history_svg)
-        self.assertIn('<circle class="agent-codex" cx="42" cy="456"', history_svg)
-        self.assertIn('<rect class="agent-codex" x="221.0"', history_svg)
+        self.assertNotIn('<circle class="agent-claude" cx="628" cy="316"', history_svg)
+        self.assertIn('<circle class="agent-codex" cx="628" cy="316"', history_svg)
+        self.assertIn('<rect class="agent-codex" x="732.0"', history_svg)
+        signal_titles = {
+            node.text: node.get("y")
+            for node in history_root.findall("{*}text")
+            if node.text in {"Fast share", "7-day quota peak"}
+        }
+        self.assertEqual(
+            signal_titles,
+            {"Fast share": "280", "7-day quota peak": "280"},
+        )
+        compact_dividers = [
+            node.get("x1")
+            for node in history_root.findall("{*}line")
+            if node.get("stroke-dasharray") == "2 3"
+        ]
+        self.assertEqual(compact_dividers, ["645.0", "350.0", "938.0"])
         self.assertIn('data-week="2026-07-26"', history_svg)
         self.assertNotIn("Reasoning", history_svg)
         self.assertNotIn("Thinking", history_svg)
