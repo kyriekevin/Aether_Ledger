@@ -1443,7 +1443,7 @@ def _trajectory(
 def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
     """Render the current effort, Fast share, and latest seven-day quota."""
     title = f"Runtime profile through {allocation.as_of.isoformat()}"
-    height = 420
+    height = 390
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
@@ -1479,7 +1479,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
 
     bar_x, bar_w = 170, 760
     for row, agent in enumerate(("claude", "codex", "traex")):
-        y = 138 + row * 58
+        y = 132 + row * 48
         buckets = allocation.efforts[agent]
         values = {effort: buckets[effort]["calls"] for effort in EFFORT_ORDER}
         total = sum(values.values())
@@ -1512,7 +1512,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             ))
             cursor += width
         lines.extend((
-            f'  <text class="dashboard-muted" x="{bar_x}" y="{y + 38}" '
+            f'  <text class="dashboard-muted" x="{bar_x}" y="{y + 36}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{escape(_effort_mix_text(values))}</text>',
             f'  <text class="dashboard-muted" x="1120" y="{y + 13}" text-anchor="end" '
@@ -1521,7 +1521,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         ))
 
     lines.append(
-        '  <line class="dashboard-border" x1="34" y1="314" x2="1146" y2="314" '
+        '  <line class="dashboard-border" x1="34" y1="282" x2="1146" y2="282" '
         'stroke-width="1"/>'
     )
     codex_speeds = allocation.speeds["codex"]
@@ -1532,15 +1532,15 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         for agent in QUOTA_AGENT_ORDER
         if 10080 in allocation.latest_quota_windows[agent]
     ]
-    signal_bar_y = 363
+    signal_bar_y = 331
     if speed_total:
         fast_share = _share(fast_calls, speed_total)
         lines.extend((
-            '  <text class="dashboard-primary" x="34" y="340" '
+            '  <text class="dashboard-primary" x="34" y="308" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="14" font-weight="600">Fast</text>',
-            '  <circle class="agent-codex" cx="42" cy="372" r="4"/>',
-            '  <text class="dashboard-secondary" x="54" y="376" '
+            '  <circle class="agent-codex" cx="42" cy="340" r="4"/>',
+            '  <text class="dashboard-secondary" x="54" y="344" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="11">Codex</text>',
             f'  <rect class="heatmap-level-0" x="110" y="{signal_bar_y}" '
@@ -1548,18 +1548,18 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             f'  <rect class="agent-codex" x="110" y="{signal_bar_y}" '
             f'width="{300 * fast_share:.1f}" '
             'height="14" rx="4"/>',
-            f'  <text class="dashboard-primary" x="430" y="376" '
+            f'  <text class="dashboard-primary" x="430" y="344" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="12" font-weight="600">{escape(_percent(fast_calls, speed_total))} fast</text>',
         ))
     if speed_total and quota_agents:
         lines.append(
-            '  <line class="dashboard-border" x1="570" y1="330" x2="570" '
-            'y2="400" stroke-width="1"/>'
+            '  <line class="dashboard-border" x1="570" y1="298" x2="570" '
+            'y2="366" stroke-width="1"/>'
         )
     if quota_agents:
         lines.append(
-            '  <text class="dashboard-primary" x="600" y="340" '
+            '  <text class="dashboard-primary" x="600" y="308" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="14" font-weight="600">7-day quota peak</text>'
         )
@@ -1587,7 +1587,7 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
 def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     """Render weekly effort, Fast share, and seven-day quota history."""
     title = f"Runtime history through {allocation.as_of.isoformat()}"
-    height = 520
+    height = 380
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
@@ -1615,7 +1615,7 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">LATEST 4 WEEKS</text>',
         f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="78" '
-        f'x2="{divider_x:.1f}" y2="490" stroke-width="1" stroke-dasharray="2 3"/>',
+        f'x2="{divider_x:.1f}" y2="242" stroke-width="1" stroke-dasharray="2 3"/>',
         '  <text class="dashboard-primary" x="34" y="112" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">Effort mix</text>',
@@ -1631,12 +1631,12 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
             f'font-size="9">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
         ))
 
-    effort_rows = {"claude": 128, "codex": 182, "traex": 236}
-    cell_w, bar_h = 44, 28
+    effort_rows = {"claude": 124, "codex": 166, "traex": 208}
+    cell_w, bar_h = 44, 24
     for agent, row_y in effort_rows.items():
         lines.extend((
-            f'  <circle class="agent-{agent}" cx="42" cy="{row_y + 14}" r="4"/>',
-            f'  <text class="dashboard-secondary" x="54" y="{row_y + 18}" '
+            f'  <circle class="agent-{agent}" cx="42" cy="{row_y + 12}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="54" y="{row_y + 16}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="11">{escape(AGENT_LABELS[agent])}</text>',
         ))
@@ -1664,9 +1664,11 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
                 ))
 
     lines.extend((
-        '  <line class="dashboard-border" x1="34" y1="292" x2="1146" y2="292" '
+        '  <line class="dashboard-border" x1="34" y1="254" x2="1146" y2="254" '
         'stroke-width="1"/>',
-        '  <text class="dashboard-primary" x="34" y="320" '
+        '  <line class="dashboard-border" x1="590" y1="268" x2="590" y2="360" '
+        'stroke-width="1"/>',
+        '  <text class="dashboard-primary" x="34" y="280" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">Fast share</text>',
     ))
@@ -1676,22 +1678,29 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         fast_values.append(
             _share(weekly.get(("codex", "fast"), 0), total) if total else None
         )
+    fast_left, fast_right = 150.0, 550.0
+    signal_top, signal_height, signal_baseline = 296, 34, 330
     path, points, _, _ = _trajectory(
-        fast_values, plot_left, plot_right, 334, 44, domain=(0.0, 1.0)
+        fast_values,
+        fast_left,
+        fast_right,
+        signal_top,
+        signal_height,
+        domain=(0.0, 1.0),
     )
     lines.extend((
-        '  <circle class="agent-codex" cx="42" cy="356" r="4"/>',
-        '  <text class="dashboard-secondary" x="54" y="360" '
+        '  <circle class="agent-codex" cx="42" cy="316" r="4"/>',
+        '  <text class="dashboard-secondary" x="54" y="320" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="11">Codex</text>',
-        '  <text class="dashboard-muted" x="205" y="343" text-anchor="end" '
+        '  <text class="dashboard-muted" x="135" y="303" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">100%</text>',
-        '  <text class="dashboard-muted" x="205" y="380" text-anchor="end" '
+        '  <text class="dashboard-muted" x="135" y="333" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">0%</text>',
-        f'  <line class="dashboard-border" x1="{plot_left}" y1="378" '
-        f'x2="{plot_right}" y2="378" stroke-width="1"/>',
+        f'  <line class="dashboard-border" x1="{fast_left}" y1="{signal_baseline}" '
+        f'x2="{fast_right}" y2="{signal_baseline}" stroke-width="1"/>',
     ))
     if path:
         lines.append(
@@ -1710,41 +1719,41 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         ))
 
     lines.extend((
-        '  <line class="dashboard-border" x1="34" y1="402" x2="1146" y2="402" '
-        'stroke-width="1"/>',
-        '  <text class="dashboard-primary" x="34" y="430" '
+        '  <text class="dashboard-primary" x="620" y="280" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">7-day quota peak</text>',
         *(
             line
             for slot, agent in enumerate(QUOTA_AGENT_ORDER)
             for line in (
-                f'  <circle class="agent-{agent}" cx="{42 + slot * 76}" cy="456" r="4"/>',
-                f'  <text class="dashboard-secondary" x="{54 + slot * 76}" y="460" '
+                f'  <circle class="agent-{agent}" cx="{628 + slot * 76}" cy="316" r="4"/>',
+                f'  <text class="dashboard-secondary" x="{640 + slot * 76}" y="320" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="10">{escape(AGENT_LABELS[agent])}</text>',
             )
         ),
-        '  <text class="dashboard-muted" x="205" y="440" text-anchor="end" '
+        '  <text class="dashboard-muted" x="725" y="303" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">100%</text>',
-        '  <text class="dashboard-muted" x="205" y="480" text-anchor="end" '
+        '  <text class="dashboard-muted" x="725" y="333" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">0%</text>',
-        f'  <line class="dashboard-border" x1="{plot_left}" y1="478" '
-        f'x2="{plot_right}" y2="478" stroke-width="1"/>',
+        '  <line class="dashboard-border" x1="740" y1="330" '
+        'x2="1136" y2="330" stroke-width="1"/>',
     ))
-    quota_bar_w = 18
+    quota_left, quota_right = 740.0, 1136.0
+    quota_step = (quota_right - quota_left) / (HISTORY_WEEKS - 1)
+    quota_bar_w = 16
     for week_index, weekly in enumerate(allocation.weekly_quota_7d_peak):
-        center = plot_left + week_index * step
+        center = quota_left + week_index * quota_step
         drawn = [a for a in QUOTA_AGENT_ORDER if weekly.get(a) is not None]
         span = 24 * (len(drawn) - 1)
         for slot, agent in enumerate(drawn):
             percent = weekly[agent]
             offset = slot * 24 - span / 2
-            bar_height = 40 * max(0.0, min(100.0, percent)) / 100
+            bar_height = signal_height * max(0.0, min(100.0, percent)) / 100
             x = center + offset - quota_bar_w / 2
-            y = 478 - bar_height
+            y = signal_baseline - bar_height
             lines.extend((
                 f'  <rect class="agent-{agent}" x="{x:.1f}" y="{y:.1f}" '
                 f'width="{quota_bar_w}" height="{bar_height:.1f}" '
@@ -1754,10 +1763,16 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
                 '  </rect>',
             ))
     lines.extend((
-        f'  <text class="dashboard-muted" x="{plot_left}" y="505" '
+        f'  <text class="dashboard-muted" x="{fast_left}" y="358" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-        f'  <text class="dashboard-muted" x="{plot_right}" y="505" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="{fast_right}" y="358" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
+        f'  <text class="dashboard-muted" x="{quota_left}" y="358" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
+        f'  <text class="dashboard-muted" x="{quota_right}" y="358" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
         '</svg>',
