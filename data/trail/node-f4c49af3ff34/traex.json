@@ -27,9 +27,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 14,
+          "reasoningCalls": 14,
           "reasoningOutputTokens": 4145,
-          "totalTokens": 425379,
-          "turns": 14
+          "totalTokens": 425379
         }
       }
     },
@@ -64,9 +65,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 26,
+          "reasoningCalls": 26,
           "reasoningOutputTokens": 11103,
-          "totalTokens": 699495,
-          "turns": 26
+          "totalTokens": 699495
         }
       }
     },
@@ -115,9 +117,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 298,
+          "reasoningCalls": 298,
           "reasoningOutputTokens": 22435,
-          "totalTokens": 27300162,
-          "turns": 298
+          "totalTokens": 27300162
         }
       }
     },
@@ -152,9 +155,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 804,
+          "reasoningCalls": 804,
           "reasoningOutputTokens": 51222,
-          "totalTokens": 84154990,
-          "turns": 804
+          "totalTokens": 84154990
         }
       }
     },
@@ -182,9 +186,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 426,
+          "reasoningCalls": 426,
           "reasoningOutputTokens": 65745,
-          "totalTokens": 45975502,
-          "turns": 426
+          "totalTokens": 45975502
         }
       }
     },
@@ -212,9 +217,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 36,
+          "reasoningCalls": 36,
           "reasoningOutputTokens": 15383,
-          "totalTokens": 4018204,
-          "turns": 36
+          "totalTokens": 4018204
         }
       }
     },
@@ -242,9 +248,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 8,
+          "reasoningCalls": 8,
           "reasoningOutputTokens": 3169,
-          "totalTokens": 289200,
-          "turns": 8
+          "totalTokens": 289200
         }
       }
     },
@@ -286,9 +293,10 @@
     "routing": {
       "efforts": {
         "medium": {
+          "calls": 210,
+          "reasoningCalls": 210,
           "reasoningOutputTokens": 19773,
-          "totalTokens": 18379539,
-          "turns": 210
+          "totalTokens": 18379539
         }
       }
     },
@@ -300,36 +308,68 @@
     "models": {
       "claude-opus-4-8": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 30940981,
-        "inputTokens": 2628433,
-        "outputTokens": 170039,
-        "totalTokens": 33739453
+        "cacheReadTokens": 31498751,
+        "inputTokens": 2839936,
+        "outputTokens": 180296,
+        "totalTokens": 34518983
       },
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 10881736,
-        "inputTokens": 6063973,
-        "outputTokens": 11784,
-        "totalTokens": 16975998
+        "cacheReadTokens": 11832735,
+        "inputTokens": 6604459,
+        "outputTokens": 12612,
+        "totalTokens": 18473529
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 839936,
-        "inputTokens": 77547,
-        "outputTokens": 7756,
-        "totalTokens": 925239
+        "cacheReadTokens": 1880064,
+        "inputTokens": 269084,
+        "outputTokens": 16189,
+        "totalTokens": 2165337
       }
     },
     "routing": {
       "efforts": {
         "medium": {
-          "reasoningOutputTokens": 18505,
-          "totalTokens": 17037416,
-          "turns": 189
+          "calls": 212,
+          "reasoningCalls": 212,
+          "reasoningOutputTokens": 23723,
+          "totalTokens": 18534947
         }
       }
     },
-    "totalCost": 37.5154388,
-    "totalTokens": 51640690
+    "totalCost": 41.159279749999996,
+    "totalTokens": 55157849
+  },
+  "2026-08-21": {
+    "costSource": "unpriced",
+    "models": {
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 185406,
+        "inputTokens": 81708,
+        "outputTokens": 676,
+        "totalTokens": 270652
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 500480,
+        "inputTokens": 37980,
+        "outputTokens": 5828,
+        "totalTokens": 544288
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 9,
+          "reasoningCalls": 9,
+          "reasoningOutputTokens": 2862,
+          "totalTokens": 270652
+        }
+      }
+    },
+    "totalCost": 0.6671323,
+    "totalTokens": 814940
   }
 }
