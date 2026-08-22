@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="390" viewBox="0 0 1180 390" role="img" aria-labelledby="title desc">
-  <title id="title">Runtime profile through 2026-08-21</title>
+  <title id="title">Runtime profile through 2026-08-22</title>
   <desc id="desc">Current 30-day effort mix, Codex Fast share, and latest observed seven-day quota percentages.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
@@ -79,7 +79,7 @@
   </style>
   <rect class="dashboard-background" width="1180" height="390" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Runtime profile</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-23–2026-08-21 · observed model-call routing</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-24–2026-08-22 · observed model-call routing</text>
   <text class="dashboard-primary" x="34" y="104" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Effort mix</text>
   <line class="dashboard-border" x1="34" y1="114" x2="1146" y2="114" stroke-width="1"/>
   <rect class="effort-none" x="620" y="94" width="8" height="8" rx="2"/>
@@ -105,30 +105,30 @@
   <rect class="effort-high" x="140.3" y="132" width="7.0" height="18" data-agent="claude" data-effort="high">
     <title>Claude · high 0.8% · 47 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="147.3" y="132" width="857.9" height="18" data-agent="claude" data-effort="xhigh">
-    <title>Claude · xhigh 97.5% · 5797 calls</title>
+  <rect class="effort-xhigh" x="147.3" y="132" width="857.7" height="18" data-agent="claude" data-effort="xhigh">
+    <title>Claude · xhigh 97.5% · 5720 calls</title>
   </rect>
-  <rect class="effort-max" x="1005.2" y="132" width="14.8" height="18" data-agent="claude" data-effort="max">
+  <rect class="effort-max" x="1005.0" y="132" width="15.0" height="18" data-agent="claude" data-effort="max">
     <title>Claude · max 1.7% · 100 calls</title>
   </rect>
   <text class="dashboard-muted" x="140" y="168" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low &lt;0.1% · medium &lt;0.1% · high 0.8% · xhigh 97.5% · max 1.7%</text>
   <text class="dashboard-muted" x="1120" y="145" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">5.9K calls</text>
   <circle class="agent-codex" cx="42" cy="189" r="4"/>
   <text class="dashboard-secondary" x="54" y="193" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Codex</text>
-  <rect class="effort-low" x="140.0" y="180" width="104.1" height="18" data-agent="codex" data-effort="low">
-    <title>Codex · low 11.8% · 5887 calls</title>
+  <rect class="effort-low" x="140.0" y="180" width="97.6" height="18" data-agent="codex" data-effort="low">
+    <title>Codex · low 11.1% · 5333 calls</title>
   </rect>
-  <rect class="effort-medium" x="244.1" y="180" width="152.3" height="18" data-agent="codex" data-effort="medium">
-    <title>Codex · medium 17.3% · 8614 calls</title>
+  <rect class="effort-medium" x="237.6" y="180" width="158.9" height="18" data-agent="codex" data-effort="medium">
+    <title>Codex · medium 18.1% · 8682 calls</title>
   </rect>
-  <rect class="effort-high" x="396.4" y="180" width="169.8" height="18" data-agent="codex" data-effort="high">
-    <title>Codex · high 19.3% · 9603 calls</title>
+  <rect class="effort-high" x="396.5" y="180" width="175.5" height="18" data-agent="codex" data-effort="high">
+    <title>Codex · high 19.9% · 9590 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="566.2" y="180" width="453.8" height="18" data-agent="codex" data-effort="xhigh">
-    <title>Codex · xhigh 51.6% · 25661 calls</title>
+  <rect class="effort-xhigh" x="572.0" y="180" width="448.0" height="18" data-agent="codex" data-effort="xhigh">
+    <title>Codex · xhigh 50.9% · 24479 calls</title>
   </rect>
-  <text class="dashboard-muted" x="140" y="216" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 11.8% · medium 17.3% · high 19.3% · xhigh 51.6%</text>
-  <text class="dashboard-muted" x="1120" y="193" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">49.8K calls</text>
+  <text class="dashboard-muted" x="140" y="216" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">low 11.1% · medium 18.1% · high 19.9% · xhigh 50.9%</text>
+  <text class="dashboard-muted" x="1120" y="193" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">48.1K calls</text>
   <circle class="agent-traex" cx="42" cy="237" r="4"/>
   <text class="dashboard-secondary" x="54" y="241" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">TRAE</text>
   <rect class="effort-low" x="140.0" y="228" width="51.5" height="18" data-agent="traex" data-effort="low">
@@ -147,13 +147,13 @@
   <circle class="agent-codex" cx="42" cy="340" r="4"/>
   <text class="dashboard-secondary" x="54" y="344" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Codex</text>
   <rect class="heatmap-level-0" x="110" y="331" width="300" height="14" rx="4"/>
-  <rect class="agent-codex" x="110" y="331" width="187.5" height="14" rx="4"/>
-  <text class="dashboard-primary" x="430" y="344" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12" font-weight="600">62.5% fast</text>
+  <rect class="agent-codex" x="110" y="331" width="182.5" height="14" rx="4"/>
+  <text class="dashboard-primary" x="430" y="344" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12" font-weight="600">60.8% fast</text>
   <line class="dashboard-border" x1="570" y1="298" x2="570" y2="366" stroke-width="1"/>
   <text class="dashboard-primary" x="600" y="308" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">7-day quota peak</text>
   <circle class="agent-codex" cx="608" cy="340" r="4"/>
   <text class="dashboard-secondary" x="620" y="344" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Codex</text>
   <rect class="heatmap-level-0" x="700" y="331" width="290" height="14" rx="4"/>
-  <rect class="agent-codex" x="700" y="331" width="156.6" height="14" rx="4"/>
-  <text class="dashboard-primary" x="1120" y="344" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">7d 54% · Aug 21</text>
+  <rect class="agent-codex" x="700" y="331" width="14.5" height="14" rx="4"/>
+  <text class="dashboard-primary" x="1120" y="344" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">7d 5% · Aug 22</text>
 </svg>
