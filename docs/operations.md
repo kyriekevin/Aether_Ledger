@@ -314,9 +314,12 @@ the host's Git identity. The rollover workflow uses the GitHub Actions bot ident
 ## Downstream consumers
 
 `main` intentionally contains only finalized daily snapshots. A consumer that needs intraday
-values, such as the Feishu signature pusher, should read the same checkout used by
-`sync_usage.py`; that checkout follows today's usage branch. A separate clone pinned to `main`
-will be up to one day behind by design.
+values, such as the Feishu signature pusher, reads the writer's own worktree —
+`~/.cache/aether-ledger/writer`, or wherever `--writer-worktree` put it — because that is the
+only checkout following today's usage branch. The source checkout is not a substitute: the
+installer requires it to give up today's branch before the writer worktree can exist, so it sits
+on `main` or on whatever its owner is working on, and today has no data there. A separate clone
+pinned to `main` will be up to one day behind by design.
 
 ## Dashboard
 
