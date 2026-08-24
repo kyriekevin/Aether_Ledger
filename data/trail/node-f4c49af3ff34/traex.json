@@ -346,30 +346,68 @@
     "models": {
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 185406,
-        "inputTokens": 81708,
-        "outputTokens": 676,
-        "totalTokens": 270652
+        "cacheReadTokens": 217098,
+        "inputTokens": 85856,
+        "outputTokens": 755,
+        "totalTokens": 306893
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 500480,
-        "inputTokens": 37980,
-        "outputTokens": 5828,
-        "totalTokens": 544288
+        "cacheReadTokens": 665344,
+        "inputTokens": 40571,
+        "outputTokens": 6997,
+        "totalTokens": 712912
       }
     },
     "routing": {
       "efforts": {
         "medium": {
-          "calls": 9,
-          "reasoningCalls": 9,
-          "reasoningOutputTokens": 2862,
-          "totalTokens": 270652
+          "calls": 10,
+          "reasoningCalls": 10,
+          "reasoningOutputTokens": 3184,
+          "totalTokens": 306893
         }
       }
     },
-    "totalCost": 0.6671323,
-    "totalTokens": 814940
+    "totalCost": 0.8014849000000001,
+    "totalTokens": 1019805
+  },
+  "2026-08-24": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 63825681,
+        "inputTokens": 4727175,
+        "outputTokens": 293734,
+        "totalTokens": 68846590
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6410529,
+        "inputTokens": 6643136,
+        "outputTokens": 12891,
+        "totalTokens": 13087946
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1391872,
+        "inputTokens": 59524,
+        "outputTokens": 10066,
+        "totalTokens": 1461462
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 175,
+          "reasoningCalls": 175,
+          "reasoningOutputTokens": 21390,
+          "totalTokens": 13149165
+        }
+      }
+    },
+    "totalCost": 67.86836895,
+    "totalTokens": 83395998
   }
 }

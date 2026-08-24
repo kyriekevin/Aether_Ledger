@@ -390,7 +390,7 @@
         }
       }
     },
-    "totalCost": 350.36992,
+    "totalCost": 140.147968,
     "totalTokens": 151450032
   },
   "2026-05-27": {
@@ -2719,7 +2719,7 @@
         }
       }
     },
-    "totalCost": 203.99397900000002,
+    "totalCost": 199.086433,
     "totalTokens": 181954032
   },
   "2026-08-18": {
@@ -2785,7 +2785,7 @@
         }
       }
     },
-    "totalCost": 218.8983155,
+    "totalCost": 209.240016,
     "totalTokens": 164189091
   },
   "2026-08-19": {
@@ -2847,7 +2847,7 @@
         }
       }
     },
-    "totalCost": 49.2681355,
+    "totalCost": 31.43187,
     "totalTokens": 20750796
   },
   "2026-08-21": {
@@ -2898,5 +2898,58 @@
     },
     "totalCost": 5.736765,
     "totalTokens": 2328867
+  },
+  "2026-08-24": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4343808,
+        "inputTokens": 1027386,
+        "outputTokens": 8642,
+        "totalTokens": 5379836
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 100039168,
+        "inputTokens": 3270190,
+        "outputTokens": 393240,
+        "totalTokens": 103702598
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 5.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 84,
+          "reasoningCalls": 84,
+          "reasoningOutputTokens": 3098,
+          "totalTokens": 5379836
+        },
+        "medium": {
+          "calls": 454,
+          "reasoningCalls": 454,
+          "reasoningOutputTokens": 94755,
+          "totalTokens": 95291090
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 301,
+          "totalTokens": 41083836
+        },
+        "standard": {
+          "calls": 143,
+          "totalTokens": 53725176
+        }
+      }
+    },
+    "totalCost": 170.15915850000002,
+    "totalTokens": 109082434
   }
 }

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="380" viewBox="0 0 1180 380" role="img" aria-labelledby="title desc">
-  <title id="title">Runtime history through 2026-08-23</title>
+  <title id="title">Runtime history through 2026-08-24</title>
   <desc id="desc">Eight weekly effort distributions, Codex Fast trajectory, and seven-day quota peak bars.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
@@ -79,7 +79,7 @@
   </style>
   <rect class="dashboard-background" width="1180" height="380" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Runtime history</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-06-29–2026-08-23 · previous four weeks vs latest four weeks</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-06-30–2026-08-24 · previous four weeks vs latest four weeks</text>
   <text class="dashboard-muted" x="407.9" y="88" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">PREVIOUS 4 WEEKS</text>
   <text class="dashboard-muted" x="882.1" y="88" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="645.0" y1="78" x2="645.0" y2="242" stroke-width="1" stroke-dasharray="2 3"/>
@@ -98,126 +98,132 @@
   <text class="dashboard-muted" x="1072" y="110" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">max</text>
   <circle class="agent-claude" cx="42" cy="136" r="4"/>
   <text class="dashboard-secondary" x="54" y="140" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Claude</text>
-  <rect class="effort-xhigh" x="563.7" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-07-20">
-    <title>2026-07-20 · Claude · xhigh 100.0% · 261 calls</title>
+  <rect class="effort-xhigh" x="563.7" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-07-21">
+    <title>2026-07-21 · Claude · xhigh 100.0% · 482 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="682.3" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-07-27">
-    <title>2026-07-27 · Claude · xhigh 100.0% · 934 calls</title>
+  <rect class="effort-xhigh" x="682.3" y="124.4" width="44" height="23.6" data-agent="claude" data-effort="xhigh" data-week="2026-07-28">
+    <title>2026-07-28 · Claude · xhigh 98.3% · 713 calls</title>
   </rect>
-  <rect class="effort-high" x="800.9" y="147.2" width="44" height="0.8" data-agent="claude" data-effort="high" data-week="2026-08-03">
-    <title>2026-08-03 · Claude · high 3.4% · 47 calls</title>
+  <rect class="effort-max" x="682.3" y="124.0" width="44" height="0.4" data-agent="claude" data-effort="max" data-week="2026-07-28">
+    <title>2026-07-28 · Claude · max 1.7% · 12 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="800.9" y="125.8" width="44" height="21.4" data-agent="claude" data-effort="xhigh" data-week="2026-08-03">
-    <title>2026-08-03 · Claude · xhigh 89.3% · 1222 calls</title>
+  <rect class="effort-high" x="800.9" y="147.4" width="44" height="0.6" data-agent="claude" data-effort="high" data-week="2026-08-04">
+    <title>2026-08-04 · Claude · high 2.5% · 47 calls</title>
   </rect>
-  <rect class="effort-max" x="800.9" y="124.0" width="44" height="1.8" data-agent="claude" data-effort="max" data-week="2026-08-03">
-    <title>2026-08-03 · Claude · max 7.3% · 100 calls</title>
+  <rect class="effort-xhigh" x="800.9" y="125.1" width="44" height="22.2" data-agent="claude" data-effort="xhigh" data-week="2026-08-04">
+    <title>2026-08-04 · Claude · xhigh 92.7% · 1710 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="919.4" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-08-10">
-    <title>2026-08-10 · Claude · xhigh 100.0% · 2082 calls</title>
+  <rect class="effort-max" x="800.9" y="124.0" width="44" height="1.1" data-agent="claude" data-effort="max" data-week="2026-08-04">
+    <title>2026-08-04 · Claude · max 4.8% · 88 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="1038.0" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-08-17">
-    <title>2026-08-17 · Claude · xhigh 99.9% · 1309 calls</title>
+  <rect class="effort-xhigh" x="919.4" y="124.0" width="44" height="24.0" data-agent="claude" data-effort="xhigh" data-week="2026-08-11">
+    <title>2026-08-11 · Claude · xhigh 99.9% · 1757 calls</title>
+  </rect>
+  <rect class="effort-medium" x="1038.0" y="147.7" width="44" height="0.3" data-agent="claude" data-effort="medium" data-week="2026-08-18">
+    <title>2026-08-18 · Claude · medium 1.2% · 17 calls</title>
+  </rect>
+  <rect class="effort-xhigh" x="1038.0" y="124.0" width="44" height="23.7" data-agent="claude" data-effort="xhigh" data-week="2026-08-18">
+    <title>2026-08-18 · Claude · xhigh 98.8% · 1435 calls</title>
   </rect>
   <circle class="agent-codex" cx="42" cy="178" r="4"/>
   <text class="dashboard-secondary" x="54" y="182" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Codex</text>
-  <rect class="effort-low" x="208.0" y="166.2" width="44" height="23.8" data-agent="codex" data-effort="low" data-week="2026-06-29">
-    <title>2026-06-29 · Codex · low 99.1% · 323 calls</title>
+  <rect class="effort-low" x="208.0" y="169.6" width="44" height="20.4" data-agent="codex" data-effort="low" data-week="2026-06-30">
+    <title>2026-06-30 · Codex · low 85.2% · 155 calls</title>
   </rect>
-  <rect class="effort-high" x="208.0" y="166.0" width="44" height="0.2" data-agent="codex" data-effort="high" data-week="2026-06-29">
-    <title>2026-06-29 · Codex · high 0.9% · 3 calls</title>
+  <rect class="effort-high" x="208.0" y="169.2" width="44" height="0.4" data-agent="codex" data-effort="high" data-week="2026-06-30">
+    <title>2026-06-30 · Codex · high 1.6% · 3 calls</title>
   </rect>
-  <rect class="effort-low" x="326.6" y="170.9" width="44" height="19.1" data-agent="codex" data-effort="low" data-week="2026-07-06">
-    <title>2026-07-06 · Codex · low 79.4% · 398 calls</title>
+  <rect class="effort-xhigh" x="208.0" y="166.0" width="44" height="3.2" data-agent="codex" data-effort="xhigh" data-week="2026-06-30">
+    <title>2026-06-30 · Codex · xhigh 13.2% · 24 calls</title>
   </rect>
-  <rect class="effort-high" x="326.6" y="167.1" width="44" height="3.8" data-agent="codex" data-effort="high" data-week="2026-07-06">
-    <title>2026-07-06 · Codex · high 15.8% · 79 calls</title>
+  <rect class="effort-low" x="326.6" y="170.0" width="44" height="20.0" data-agent="codex" data-effort="low" data-week="2026-07-07">
+    <title>2026-07-07 · Codex · low 83.2% · 390 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="326.6" y="166.0" width="44" height="1.1" data-agent="codex" data-effort="xhigh" data-week="2026-07-06">
-    <title>2026-07-06 · Codex · xhigh 4.8% · 24 calls</title>
+  <rect class="effort-high" x="326.6" y="166.0" width="44" height="4.0" data-agent="codex" data-effort="high" data-week="2026-07-07">
+    <title>2026-07-07 · Codex · high 16.8% · 79 calls</title>
   </rect>
-  <rect class="effort-low" x="445.1" y="166.0" width="44" height="24.0" data-agent="codex" data-effort="low" data-week="2026-07-13">
-    <title>2026-07-13 · Codex · low 100.0% · 795 calls</title>
+  <rect class="effort-low" x="445.1" y="166.3" width="44" height="23.7" data-agent="codex" data-effort="low" data-week="2026-07-14">
+    <title>2026-07-14 · Codex · low 98.9% · 926 calls</title>
   </rect>
-  <rect class="effort-low" x="563.7" y="187.9" width="44" height="2.1" data-agent="codex" data-effort="low" data-week="2026-07-20">
-    <title>2026-07-20 · Codex · low 8.8% · 1566 calls</title>
+  <rect class="effort-medium" x="445.1" y="166.0" width="44" height="0.3" data-agent="codex" data-effort="medium" data-week="2026-07-14">
+    <title>2026-07-14 · Codex · medium 1.1% · 10 calls</title>
   </rect>
-  <rect class="effort-high" x="563.7" y="187.8" width="44" height="0.1" data-agent="codex" data-effort="high" data-week="2026-07-20">
-    <title>2026-07-20 · Codex · high 0.5% · 91 calls</title>
+  <rect class="effort-low" x="563.7" y="188.0" width="44" height="2.0" data-agent="codex" data-effort="low" data-week="2026-07-21">
+    <title>2026-07-21 · Codex · low 8.5% · 1565 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="563.7" y="166.0" width="44" height="21.8" data-agent="codex" data-effort="xhigh" data-week="2026-07-20">
-    <title>2026-07-20 · Codex · xhigh 90.7% · 16177 calls</title>
+  <rect class="effort-high" x="563.7" y="187.9" width="44" height="0.1" data-agent="codex" data-effort="high" data-week="2026-07-21">
+    <title>2026-07-21 · Codex · high 0.5% · 91 calls</title>
   </rect>
-  <rect class="effort-low" x="682.3" y="186.2" width="44" height="3.8" data-agent="codex" data-effort="low" data-week="2026-07-27">
-    <title>2026-07-27 · Codex · low 15.8% · 908 calls</title>
+  <rect class="effort-xhigh" x="563.7" y="166.0" width="44" height="21.9" data-agent="codex" data-effort="xhigh" data-week="2026-07-21">
+    <title>2026-07-21 · Codex · xhigh 91.1% · 16863 calls</title>
   </rect>
-  <rect class="effort-medium" x="682.3" y="183.2" width="44" height="3.0" data-agent="codex" data-effort="medium" data-week="2026-07-27">
-    <title>2026-07-27 · Codex · medium 12.5% · 719 calls</title>
+  <rect class="effort-low" x="682.3" y="185.9" width="44" height="4.1" data-agent="codex" data-effort="low" data-week="2026-07-28">
+    <title>2026-07-28 · Codex · low 17.0% · 867 calls</title>
   </rect>
-  <rect class="effort-high" x="682.3" y="173.9" width="44" height="9.3" data-agent="codex" data-effort="high" data-week="2026-07-27">
-    <title>2026-07-27 · Codex · high 38.6% · 2214 calls</title>
+  <rect class="effort-medium" x="682.3" y="182.1" width="44" height="3.9" data-agent="codex" data-effort="medium" data-week="2026-07-28">
+    <title>2026-07-28 · Codex · medium 16.1% · 821 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="682.3" y="166.0" width="44" height="7.9" data-agent="codex" data-effort="xhigh" data-week="2026-07-27">
-    <title>2026-07-27 · Codex · xhigh 33.0% · 1890 calls</title>
+  <rect class="effort-high" x="682.3" y="171.7" width="44" height="10.4" data-agent="codex" data-effort="high" data-week="2026-07-28">
+    <title>2026-07-28 · Codex · high 43.4% · 2219 calls</title>
   </rect>
-  <rect class="effort-low" x="800.9" y="185.1" width="44" height="4.9" data-agent="codex" data-effort="low" data-week="2026-08-03">
-    <title>2026-08-03 · Codex · low 20.3% · 2307 calls</title>
+  <rect class="effort-xhigh" x="682.3" y="166.0" width="44" height="5.7" data-agent="codex" data-effort="xhigh" data-week="2026-07-28">
+    <title>2026-07-28 · Codex · xhigh 23.6% · 1204 calls</title>
   </rect>
-  <rect class="effort-medium" x="800.9" y="184.0" width="44" height="1.2" data-agent="codex" data-effort="medium" data-week="2026-08-03">
-    <title>2026-08-03 · Codex · medium 4.9% · 557 calls</title>
+  <rect class="effort-low" x="800.9" y="185.0" width="44" height="5.0" data-agent="codex" data-effort="low" data-week="2026-08-04">
+    <title>2026-08-04 · Codex · low 20.9% · 2394 calls</title>
   </rect>
-  <rect class="effort-high" x="800.9" y="182.0" width="44" height="1.9" data-agent="codex" data-effort="high" data-week="2026-08-03">
-    <title>2026-08-03 · Codex · high 8.1% · 923 calls</title>
+  <rect class="effort-medium" x="800.9" y="183.9" width="44" height="1.1" data-agent="codex" data-effort="medium" data-week="2026-08-04">
+    <title>2026-08-04 · Codex · medium 4.5% · 517 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="800.9" y="166.0" width="44" height="16.0" data-agent="codex" data-effort="xhigh" data-week="2026-08-03">
-    <title>2026-08-03 · Codex · xhigh 66.7% · 7593 calls</title>
+  <rect class="effort-high" x="800.9" y="181.9" width="44" height="2.0" data-agent="codex" data-effort="high" data-week="2026-08-04">
+    <title>2026-08-04 · Codex · high 8.3% · 953 calls</title>
   </rect>
-  <rect class="effort-low" x="919.4" y="186.7" width="44" height="3.3" data-agent="codex" data-effort="low" data-week="2026-08-10">
-    <title>2026-08-10 · Codex · low 13.8% · 797 calls</title>
+  <rect class="effort-xhigh" x="800.9" y="166.0" width="44" height="15.9" data-agent="codex" data-effort="xhigh" data-week="2026-08-04">
+    <title>2026-08-04 · Codex · xhigh 66.3% · 7594 calls</title>
   </rect>
-  <rect class="effort-medium" x="919.4" y="179.6" width="44" height="7.1" data-agent="codex" data-effort="medium" data-week="2026-08-10">
-    <title>2026-08-10 · Codex · medium 29.7% · 1715 calls</title>
+  <rect class="effort-low" x="919.4" y="187.6" width="44" height="2.4" data-agent="codex" data-effort="low" data-week="2026-08-11">
+    <title>2026-08-11 · Codex · low 10.2% · 1159 calls</title>
   </rect>
-  <rect class="effort-high" x="919.4" y="166.0" width="44" height="13.6" data-agent="codex" data-effort="high" data-week="2026-08-10">
-    <title>2026-08-10 · Codex · high 56.5% · 3270 calls</title>
+  <rect class="effort-medium" x="919.4" y="175.9" width="44" height="11.7" data-agent="codex" data-effort="medium" data-week="2026-08-11">
+    <title>2026-08-11 · Codex · medium 48.7% · 5559 calls</title>
   </rect>
-  <rect class="effort-low" x="1038.0" y="187.9" width="44" height="2.1" data-agent="codex" data-effort="low" data-week="2026-08-17">
-    <title>2026-08-17 · Codex · low 8.7% · 876 calls</title>
+  <rect class="effort-high" x="919.4" y="166.0" width="44" height="9.9" data-agent="codex" data-effort="high" data-week="2026-08-11">
+    <title>2026-08-11 · Codex · high 41.1% · 4697 calls</title>
   </rect>
-  <rect class="effort-medium" x="1038.0" y="174.1" width="44" height="13.9" data-agent="codex" data-effort="medium" data-week="2026-08-17">
-    <title>2026-08-17 · Codex · medium 57.8% · 5837 calls</title>
+  <rect class="effort-low" x="1038.0" y="188.0" width="44" height="2.0" data-agent="codex" data-effort="low" data-week="2026-08-18">
+    <title>2026-08-18 · Codex · low 8.2% · 431 calls</title>
   </rect>
-  <rect class="effort-high" x="1038.0" y="166.1" width="44" height="7.9" data-agent="codex" data-effort="high" data-week="2026-08-17">
-    <title>2026-08-17 · Codex · high 32.9% · 3326 calls</title>
+  <rect class="effort-medium" x="1038.0" y="174.8" width="44" height="13.2" data-agent="codex" data-effort="medium" data-week="2026-08-18">
+    <title>2026-08-18 · Codex · medium 55.0% · 2880 calls</title>
   </rect>
-  <rect class="effort-xhigh" x="1038.0" y="166.0" width="44" height="0.1" data-agent="codex" data-effort="xhigh" data-week="2026-08-17">
-    <title>2026-08-17 · Codex · xhigh 0.6% · 63 calls</title>
+  <rect class="effort-high" x="1038.0" y="166.3" width="44" height="8.5" data-agent="codex" data-effort="high" data-week="2026-08-18">
+    <title>2026-08-18 · Codex · high 35.6% · 1864 calls</title>
+  </rect>
+  <rect class="effort-xhigh" x="1038.0" y="166.0" width="44" height="0.3" data-agent="codex" data-effort="xhigh" data-week="2026-08-18">
+    <title>2026-08-18 · Codex · xhigh 1.2% · 63 calls</title>
   </rect>
   <circle class="agent-traex" cx="42" cy="220" r="4"/>
   <text class="dashboard-secondary" x="54" y="224" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">TRAE</text>
-  <rect class="effort-low" x="800.9" y="227.4" width="44" height="4.6" data-agent="traex" data-effort="low" data-week="2026-08-03">
-    <title>2026-08-03 · TRAE · low 19.3% · 163 calls</title>
+  <rect class="effort-low" x="800.9" y="227.7" width="44" height="4.3" data-agent="traex" data-effort="low" data-week="2026-08-04">
+    <title>2026-08-04 · TRAE · low 17.8% · 178 calls</title>
   </rect>
-  <rect class="effort-medium" x="800.9" y="210.8" width="44" height="16.6" data-agent="traex" data-effort="medium" data-week="2026-08-03">
-    <title>2026-08-03 · TRAE · medium 69.2% · 585 calls</title>
+  <rect class="effort-medium" x="800.9" y="210.9" width="44" height="16.9" data-agent="traex" data-effort="medium" data-week="2026-08-04">
+    <title>2026-08-04 · TRAE · medium 70.3% · 702 calls</title>
   </rect>
-  <rect class="effort-high" x="800.9" y="208.0" width="44" height="2.8" data-agent="traex" data-effort="high" data-week="2026-08-03">
-    <title>2026-08-03 · TRAE · high 11.5% · 97 calls</title>
+  <rect class="effort-high" x="800.9" y="208.0" width="44" height="2.9" data-agent="traex" data-effort="high" data-week="2026-08-04">
+    <title>2026-08-04 · TRAE · high 11.9% · 119 calls</title>
   </rect>
-  <rect class="effort-low" x="919.4" y="231.8" width="44" height="0.2" data-agent="traex" data-effort="low" data-week="2026-08-10">
-    <title>2026-08-10 · TRAE · low 0.9% · 16 calls</title>
+  <rect class="effort-medium" x="919.4" y="208.4" width="44" height="23.6" data-agent="traex" data-effort="medium" data-week="2026-08-11">
+    <title>2026-08-11 · TRAE · medium 98.3% · 1790 calls</title>
   </rect>
-  <rect class="effort-medium" x="919.4" y="208.7" width="44" height="23.1" data-agent="traex" data-effort="medium" data-week="2026-08-10">
-    <title>2026-08-10 · TRAE · medium 96.1% · 1697 calls</title>
+  <rect class="effort-high" x="919.4" y="208.0" width="44" height="0.4" data-agent="traex" data-effort="high" data-week="2026-08-11">
+    <title>2026-08-11 · TRAE · high 1.6% · 30 calls</title>
   </rect>
-  <rect class="effort-high" x="919.4" y="208.0" width="44" height="0.7" data-agent="traex" data-effort="high" data-week="2026-08-10">
-    <title>2026-08-10 · TRAE · high 2.9% · 52 calls</title>
+  <rect class="effort-medium" x="1038.0" y="208.6" width="44" height="23.4" data-agent="traex" data-effort="medium" data-week="2026-08-18">
+    <title>2026-08-18 · TRAE · medium 97.3% · 402 calls</title>
   </rect>
-  <rect class="effort-medium" x="1038.0" y="208.6" width="44" height="23.4" data-agent="traex" data-effort="medium" data-week="2026-08-17">
-    <title>2026-08-17 · TRAE · medium 97.5% · 436 calls</title>
-  </rect>
-  <rect class="effort-high" x="1038.0" y="208.0" width="44" height="0.6" data-agent="traex" data-effort="high" data-week="2026-08-17">
-    <title>2026-08-17 · TRAE · high 2.5% · 11 calls</title>
+  <rect class="effort-high" x="1038.0" y="208.0" width="44" height="0.6" data-agent="traex" data-effort="high" data-week="2026-08-18">
+    <title>2026-08-18 · TRAE · high 2.7% · 11 calls</title>
   </rect>
   <line class="dashboard-border" x1="34" y1="254" x2="1146" y2="254" stroke-width="1"/>
   <line class="dashboard-border" x1="590" y1="268" x2="590" y2="360" stroke-width="1"/>
@@ -228,27 +234,27 @@
   <text class="dashboard-muted" x="135" y="333" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">0%</text>
   <line class="dashboard-border" x1="150.0" y1="330" x2="550.0" y2="330" stroke-width="1"/>
   <line class="dashboard-border" x1="350.0" y1="292" x2="350.0" y2="334" stroke-width="1" stroke-dasharray="2 3"/>
-  <path class="line-codex" d="M 207.1 330.0 L 264.3 296.3 L 321.4 297.6 L 378.6 311.4 L 435.7 323.6 L 492.9 308.7 L 550.0 321.7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-codex" d="M 207.1 330.0 L 264.3 296.2 L 321.4 298.5 L 378.6 309.3 L 435.7 323.5 L 492.9 314.6 L 550.0 318.5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
   <circle class="agent-codex" cx="207.1" cy="330.0" r="4">
-    <title>2026-07-06 · Fast 0.0%</title>
+    <title>2026-07-07 · Fast 0.0%</title>
   </circle>
-  <circle class="agent-codex" cx="264.3" cy="296.3" r="4">
-    <title>2026-07-13 · Fast 99.1%</title>
+  <circle class="agent-codex" cx="264.3" cy="296.2" r="4">
+    <title>2026-07-14 · Fast 99.3%</title>
   </circle>
-  <circle class="agent-codex" cx="321.4" cy="297.6" r="4">
-    <title>2026-07-20 · Fast 95.2%</title>
+  <circle class="agent-codex" cx="321.4" cy="298.5" r="4">
+    <title>2026-07-21 · Fast 92.6%</title>
   </circle>
-  <circle class="agent-codex" cx="378.6" cy="311.4" r="4">
-    <title>2026-07-27 · Fast 54.6%</title>
+  <circle class="agent-codex" cx="378.6" cy="309.3" r="4">
+    <title>2026-07-28 · Fast 60.9%</title>
   </circle>
-  <circle class="agent-codex" cx="435.7" cy="323.6" r="4">
-    <title>2026-08-03 · Fast 18.8%</title>
+  <circle class="agent-codex" cx="435.7" cy="323.5" r="4">
+    <title>2026-08-04 · Fast 19.1%</title>
   </circle>
-  <circle class="agent-codex" cx="492.9" cy="308.7" r="4">
-    <title>2026-08-10 · Fast 62.8%</title>
+  <circle class="agent-codex" cx="492.9" cy="314.6" r="4">
+    <title>2026-08-11 · Fast 45.2%</title>
   </circle>
-  <circle class="agent-codex" cx="550.0" cy="321.7" r="4">
-    <title>2026-08-17 · Fast 24.5%</title>
+  <circle class="agent-codex" cx="550.0" cy="318.5" r="4">
+    <title>2026-08-18 · Fast 33.8%</title>
   </circle>
   <text class="dashboard-primary" x="620" y="280" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">7-day quota peak</text>
   <circle class="agent-codex" cx="628" cy="316" r="4"/>
@@ -257,32 +263,32 @@
   <text class="dashboard-muted" x="725" y="333" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">0%</text>
   <line class="dashboard-border" x1="740" y1="330" x2="1136" y2="330" stroke-width="1"/>
   <line class="dashboard-border" x1="938.0" y1="292" x2="938.0" y2="334" stroke-width="1" stroke-dasharray="2 3"/>
-  <rect class="agent-codex" x="732.0" y="303.5" width="16" height="26.5" data-agent="codex" data-week="2026-06-29">
-    <title>2026-06-29 · Codex · 7d peak 78%</title>
+  <rect class="agent-codex" x="732.0" y="316.7" width="16" height="13.3" data-agent="codex" data-week="2026-06-30">
+    <title>2026-06-30 · Codex · 7d peak 39%</title>
   </rect>
-  <rect class="agent-codex" x="788.6" y="300.1" width="16" height="29.9" data-agent="codex" data-week="2026-07-06">
-    <title>2026-07-06 · Codex · 7d peak 88%</title>
+  <rect class="agent-codex" x="788.6" y="300.1" width="16" height="29.9" data-agent="codex" data-week="2026-07-07">
+    <title>2026-07-07 · Codex · 7d peak 88%</title>
   </rect>
-  <rect class="agent-codex" x="845.1" y="297.7" width="16" height="32.3" data-agent="codex" data-week="2026-07-13">
-    <title>2026-07-13 · Codex · 7d peak 95%</title>
+  <rect class="agent-codex" x="845.1" y="296.0" width="16" height="34.0" data-agent="codex" data-week="2026-07-14">
+    <title>2026-07-14 · Codex · 7d peak 100%</title>
   </rect>
-  <rect class="agent-codex" x="901.7" y="296.0" width="16" height="34.0" data-agent="codex" data-week="2026-07-20">
-    <title>2026-07-20 · Codex · 7d peak 100%</title>
+  <rect class="agent-codex" x="901.7" y="296.0" width="16" height="34.0" data-agent="codex" data-week="2026-07-21">
+    <title>2026-07-21 · Codex · 7d peak 100%</title>
   </rect>
-  <rect class="agent-codex" x="958.3" y="297.7" width="16" height="32.3" data-agent="codex" data-week="2026-07-27">
-    <title>2026-07-27 · Codex · 7d peak 95%</title>
+  <rect class="agent-codex" x="958.3" y="297.7" width="16" height="32.3" data-agent="codex" data-week="2026-07-28">
+    <title>2026-07-28 · Codex · 7d peak 95%</title>
   </rect>
-  <rect class="agent-codex" x="1014.9" y="296.3" width="16" height="33.7" data-agent="codex" data-week="2026-08-03">
-    <title>2026-08-03 · Codex · 7d peak 99%</title>
+  <rect class="agent-codex" x="1014.9" y="296.3" width="16" height="33.7" data-agent="codex" data-week="2026-08-04">
+    <title>2026-08-04 · Codex · 7d peak 99%</title>
   </rect>
-  <rect class="agent-codex" x="1071.4" y="316.1" width="16" height="13.9" data-agent="codex" data-week="2026-08-10">
-    <title>2026-08-10 · Codex · 7d peak 41%</title>
+  <rect class="agent-codex" x="1071.4" y="315.7" width="16" height="14.3" data-agent="codex" data-week="2026-08-11">
+    <title>2026-08-11 · Codex · 7d peak 42%</title>
   </rect>
-  <rect class="agent-codex" x="1128.0" y="311.6" width="16" height="18.4" data-agent="codex" data-week="2026-08-17">
-    <title>2026-08-17 · Codex · 7d peak 54%</title>
+  <rect class="agent-codex" x="1128.0" y="311.6" width="16" height="18.4" data-agent="codex" data-week="2026-08-18">
+    <title>2026-08-18 · Codex · 7d peak 54%</title>
   </rect>
-  <text class="dashboard-muted" x="150.0" y="358" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 29</text>
-  <text class="dashboard-muted" x="550.0" y="358" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 17</text>
-  <text class="dashboard-muted" x="740.0" y="358" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 29</text>
-  <text class="dashboard-muted" x="1136.0" y="358" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 17</text>
+  <text class="dashboard-muted" x="150.0" y="358" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 30</text>
+  <text class="dashboard-muted" x="550.0" y="358" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 18</text>
+  <text class="dashboard-muted" x="740.0" y="358" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 30</text>
+  <text class="dashboard-muted" x="1136.0" y="358" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 18</text>
 </svg>
