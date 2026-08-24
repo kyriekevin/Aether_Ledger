@@ -150,6 +150,9 @@ daily branch it ends that tick before reading usage, so the following invocation
 new code snapshot. This keeps scheduled commits data-only and isolates development branch switches
 and dirty files from launchd. Linked worktrees still share Git metadata: a concurrent fetch, pull,
 or rebase in another worktree can make one tick defer, and the next scheduled run retries it.
+Refs are shared too: the writer fast-forwards the local `main` ref after each fetch, but Git will
+not move a branch a worktree has checked out, so a source checkout parked on `main` keeps that ref
+and is the only thing that advances it, by its own `git pull`.
 Re-running the installer reuses the registered writer worktree and reloads the agent.
 
 The installer migrates an existing approved `machine_name`, then unloads and removes the legacy

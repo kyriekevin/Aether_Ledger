@@ -1189,6 +1189,36 @@ def _current_branch() -> str | None:
     return result.stdout.strip() if result.returncode == 0 and result.stdout.strip() else None
 
 
+def _main_is_checked_out_elsewhere() -> bool:
+    """True if another worktree holds main, so this one must not move that ref.
+
+    Only ever asked once `_current_branch()` has said this worktree is not on
+    main, which makes any listed holder of main some other worktree.
+
+    Git refuses to move a branch a worktree has checked out, because that would
+    leave its index and files describing a commit its branch no longer points
+    at. A developer checkout parked on main is the normal state here, not a
+    fault: refusing is Git working as intended, so the run reads the refusal
+    ahead of time and leaves main to whoever holds it. Nothing downstream
+    suffers — every decision this writer makes reads origin/main, and the local
+    ref is a courtesy for the human checkout, which pulls for itself.
+
+    An unreadable listing answers yes, because the two mistakes do not cost the
+    same. Guessing "held" when it is free skips one courtesy update nothing
+    reads. Guessing "free" when it is held brings back the fatal this exists to
+    remove, and does it in the worst case there is: a listing that failed by
+    timing out has already spent 30 of the 30 seconds the signature pusher will
+    wait for the lock this run is holding, and a `branch -f` behind it can spend
+    30 more.
+    """
+    listing = _git(["worktree", "list", "--porcelain"])
+    if listing.returncode != 0:
+        print(f"cannot list worktrees; leaving local main alone: {listing.stderr.strip()}",
+              file=sys.stderr)
+        return True
+    return any(line.strip() == "branch refs/heads/main" for line in listing.stdout.splitlines())
+
+
 def _sync_local_main() -> None:
     """Fast-forward the local main ref without overwriting local-only work."""
     remote_ref = "refs/remotes/origin/main"
@@ -1206,6 +1236,8 @@ def _sync_local_main() -> None:
         return
     if _current_branch() == "main":
         updated = _git(["merge", "--ff-only", "origin/main"])
+    elif _main_is_checked_out_elsewhere():
+        return
     else:
         updated = _git(["branch", "-f", "main", "origin/main"])
     if updated.returncode != 0:
