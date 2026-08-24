@@ -22,6 +22,19 @@ def result(returncode: int = 0, stdout: str = "", stderr: str = "") -> subproces
     return subprocess.CompletedProcess([], returncode, stdout=stdout, stderr=stderr)
 
 
+WORKTREE_LIST_WITHOUT_MAIN = (
+    "worktree /writer\n"
+    "HEAD 1111111111111111111111111111111111111111\n"
+    "branch refs/heads/usage/2026-08-03\n\n"
+)
+
+WORKTREE_LIST_WITH_MAIN = WORKTREE_LIST_WITHOUT_MAIN + (
+    "worktree /checkout\n"
+    "HEAD 2222222222222222222222222222222222222222\n"
+    "branch refs/heads/main\n\n"
+)
+
+
 class DailyBranchTests(unittest.TestCase):
     def test_defers_usage_fetch_after_switching_to_a_new_code_snapshot(self) -> None:
         with (
@@ -240,19 +253,53 @@ class DailyBranchTests(unittest.TestCase):
     @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
     @patch.object(sync_usage, "_ref_exists", return_value=True)
     def test_fast_forwards_main_ref_while_usage_is_checked_out(self, _exists, _current) -> None:
+        worktrees = result(stdout=WORKTREE_LIST_WITHOUT_MAIN)
         with patch.object(
             sync_usage,
             "_git",
-            side_effect=[result(), result()],
+            side_effect=[result(), worktrees, result()],
         ) as git:
             sync_usage._sync_local_main()
         self.assertEqual(
             [call.args[0] for call in git.call_args_list],
             [
                 ["merge-base", "--is-ancestor", "main", "origin/main"],
+                ["worktree", "list", "--porcelain"],
                 ["branch", "-f", "main", "origin/main"],
             ],
         )
+
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    def test_leaves_main_to_the_worktree_holding_it(self, _exists, _current) -> None:
+        worktrees = result(stdout=WORKTREE_LIST_WITH_MAIN)
+        with (
+            patch.object(sync_usage, "_git", side_effect=[result(), worktrees]) as git,
+            redirect_stderr(io.StringIO()) as err,
+        ):
+            sync_usage._sync_local_main()
+        self.assertEqual(
+            [call.args[0] for call in git.call_args_list],
+            [
+                ["merge-base", "--is-ancestor", "main", "origin/main"],
+                ["worktree", "list", "--porcelain"],
+            ],
+        )
+        self.assertEqual(err.getvalue(), "")
+
+    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    def test_an_unreadable_worktree_listing_keeps_hands_off_main(self, _exists, _current) -> None:
+        """Guessing "free" wrongly is the expensive mistake, so guess "held"."""
+        failed = result(returncode=124, stderr="git timed out after 30s")
+        with (
+            patch.object(sync_usage, "_git", side_effect=[result(), failed]) as git,
+            redirect_stderr(io.StringIO()) as err,
+        ):
+            sync_usage._sync_local_main()
+        self.assertNotIn(["branch", "-f", "main", "origin/main"],
+                         [call.args[0] for call in git.call_args_list])
+        self.assertIn("leaving local main alone", err.getvalue())
 
     @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
     @patch.object(sync_usage, "_ref_exists", return_value=True)
@@ -583,6 +630,91 @@ class RealRepositoryCleanupTests(unittest.TestCase):
 
         sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertIn("usage/2026-08-02", self.branches())
+
+
+class RealRepositoryMainRefTests(unittest.TestCase):
+    """Drive the local-main fast-forward against a real repository.
+
+    Which command Git refuses, and when, is the whole point here, and no
+    side_effect sequence can prove it: `git branch -f` on a branch another
+    worktree holds is fatal even when the ref would not move at all, which is
+    why skipping the update only when main already matches origin/main would
+    have left the noise in place.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.repo = self.root / "repo"
+        self.repo.mkdir()
+        env = patch.dict(
+            os.environ,
+            {"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull},
+        )
+        env.start()
+        self.addCleanup(env.stop)
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.git("config", "commit.gpgsign", "false")
+        self.commit("seed")
+        self.behind = self.git("rev-parse", "main")
+
+        # The writer sits on the day branch, one snapshot behind origin/main.
+        self.git("switch", "-q", "-c", "usage/2026-08-03")
+        self.commit("chore(data): finalize 2026-08-02 snapshot")
+        self.ahead = self.git("rev-parse", "HEAD")
+        self.git("update-ref", "refs/remotes/origin/main", self.ahead)
+
+        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def git(self, *args: str) -> str:
+        r = subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, f"git {' '.join(args)} failed: {r.stderr}")
+        return r.stdout.strip()
+
+    def commit(self, subject: str) -> None:
+        (self.repo / "seed").write_text(f"{subject}\n")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", subject)
+
+    def sync(self) -> str:
+        with redirect_stderr(io.StringIO()) as err:
+            sync_usage._sync_local_main()
+        return err.getvalue()
+
+    def test_fast_forwards_main_when_no_worktree_holds_it(self) -> None:
+        self.assertEqual(self.sync(), "")
+        self.assertEqual(self.git("rev-parse", "main"), self.ahead)
+
+    def test_leaves_main_alone_when_another_worktree_holds_it(self) -> None:
+        self.git("worktree", "add", "-q", str(self.root / "checkout"), "main")
+        # Guards the scenario itself: Git really does refuse this, and says so
+        # fatally, which is the noise the run must not produce every 15 minutes.
+        refused = subprocess.run(
+            ["git", "branch", "-f", "main", "origin/main"],
+            cwd=self.repo, capture_output=True, text=True,
+        )
+        self.assertNotEqual(refused.returncode, 0)
+
+        self.assertEqual(self.sync(), "")
+        self.assertEqual(self.git("rev-parse", "main"), self.behind)
+
+    def test_an_up_to_date_main_is_no_excuse_to_skip_the_check(self) -> None:
+        """The refusal does not depend on the ref moving, so neither can the guard."""
+        self.git("update-ref", "refs/remotes/origin/main", self.behind)
+        self.git("worktree", "add", "-q", str(self.root / "checkout"), "main")
+        refused = subprocess.run(
+            ["git", "branch", "-f", "main", "origin/main"],
+            cwd=self.repo, capture_output=True, text=True,
+        )
+        self.assertNotEqual(refused.returncode, 0)
+
+        self.assertEqual(self.sync(), "")
+        self.assertEqual(self.git("rev-parse", "main"), self.behind)
 
 
 class GitLockTests(unittest.TestCase):
