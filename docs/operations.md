@@ -168,10 +168,12 @@ Each invocation writes start and finish heartbeat lines to the standard-output l
 
 ### Concurrent Git access
 
-The writer is not the only scheduled process running Git in this checkout. The downstream Feishu
-signature pusher pulls the same working tree, and its launchd `WatchPaths` watch the very data
-files the writer produces, so a write wakes it up mid-sync. Git has no cross-process lock for a
-working tree: concurrent fetches truncate and rewrite `.git/FETCH_HEAD` under each other, which
+The writer is not the only process running Git in this checkout: `compact_trails.py` does too, as
+do a human's terminal, editor, and any linked worktree — the last three under no lock at all. The
+downstream Feishu signature pusher used to pull this working tree as well, and its launchd
+`WatchPaths` watch the very data files the writer produces, so a write wakes it up mid-sync; it
+was the largest single contributor to the race below and now runs no Git at all (see below). Git
+has no cross-process lock for a working tree: concurrent fetches truncate and rewrite `.git/FETCH_HEAD` under each other, which
 surfaces as `fatal: Cannot rebase onto multiple branches.`; remote-ref updates lose their
 compare-and-swap (`cannot lock ref ... is at X but expected Y`); and a concurrent fetch can update
 the checked-out branch's ref, after which `pull` tries to fast-forward the working tree under the
@@ -314,9 +316,12 @@ the host's Git identity. The rollover workflow uses the GitHub Actions bot ident
 ## Downstream consumers
 
 `main` intentionally contains only finalized daily snapshots. A consumer that needs intraday
-values, such as the Feishu signature pusher, should read the same checkout used by
-`sync_usage.py`; that checkout follows today's usage branch. A separate clone pinned to `main`
-will be up to one day behind by design.
+values, such as the Feishu signature pusher, reads the writer's own worktree —
+`~/.cache/aether-ledger/writer`, or wherever `--writer-worktree` put it — because that is the
+only checkout following today's usage branch. The source checkout is not a substitute: the
+installer requires it to give up today's branch before the writer worktree can exist, so it sits
+on `main` or on whatever its owner is working on, and today has no data there. A separate clone
+pinned to `main` will be up to one day behind by design.
 
 ## Dashboard
 

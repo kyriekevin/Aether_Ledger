@@ -281,9 +281,11 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 
 ## 下游消费者
 
-`main` 只包含已经结束的每日快照。需要日内数据的消费者（例如飞书签名推送器）应读取
-与 `sync_usage.py` 相同的 checkout；该 checkout 会跟随当天 usage 分支。单独固定在
-`main` 的 clone 按设计最多会落后一天。
+`main` 只包含已经结束的每日快照。需要日内数据的消费者（例如飞书签名推送器）要读 writer
+自己的 worktree——默认 `~/.cache/aether-ledger/writer`，被 `--writer-worktree` 改过就以那里
+为准——因为只有它跟着当天 usage 分支走。源 checkout 不能替代：安装 writer worktree 前必须
+先让它交出当天分支，所以它要么停在 `main`，要么停在主人正在做的事情上，那里没有今天的
+数据。单独固定在 `main` 的 clone 按设计最多会落后一天。
 
 ## 活动面板
 
