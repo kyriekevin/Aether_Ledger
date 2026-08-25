@@ -409,5 +409,36 @@
     },
     "totalCost": 67.86836895,
     "totalTokens": 83395998
+  },
+  "2026-08-25": {
+    "costSource": "unpriced",
+    "models": {
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 187487,
+        "inputTokens": 169372,
+        "outputTokens": 645,
+        "totalTokens": 362048
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 818688,
+        "inputTokens": 36544,
+        "outputTokens": 6360,
+        "totalTokens": 861592
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 13,
+          "reasoningCalls": 13,
+          "reasoningOutputTokens": 4544,
+          "totalTokens": 362048
+        }
+      }
+    },
+    "totalCost": 0.87885935,
+    "totalTokens": 1223640
   }
 }

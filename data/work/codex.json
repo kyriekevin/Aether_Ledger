@@ -390,7 +390,7 @@
         }
       }
     },
-    "totalCost": 140.147968,
+    "totalCost": 350.36992,
     "totalTokens": 151450032
   },
   "2026-05-27": {
@@ -2719,7 +2719,7 @@
         }
       }
     },
-    "totalCost": 199.086433,
+    "totalCost": 203.99397900000002,
     "totalTokens": 181954032
   },
   "2026-08-18": {
@@ -2785,7 +2785,7 @@
         }
       }
     },
-    "totalCost": 209.240016,
+    "totalCost": 218.8983155,
     "totalTokens": 164189091
   },
   "2026-08-19": {
@@ -2847,7 +2847,7 @@
         }
       }
     },
-    "totalCost": 31.43187,
+    "totalCost": 49.2681355,
     "totalTokens": 20750796
   },
   "2026-08-21": {
@@ -2951,5 +2951,77 @@
     },
     "totalCost": 170.15915850000002,
     "totalTokens": 109082434
+  },
+  "2026-08-25": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2176000,
+        "inputTokens": 1184090,
+        "outputTokens": 5408,
+        "totalTokens": 3365498
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 68297344,
+        "inputTokens": 3236192,
+        "outputTokens": 248077,
+        "totalTokens": 71781613
+      },
+      "gpt-5.6-terra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2864640,
+        "inputTokens": 638339,
+        "outputTokens": 49712,
+        "totalTokens": 3552691
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 9.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 191,
+          "reasoningCalls": 191,
+          "reasoningOutputTokens": 60186,
+          "totalTokens": 35576282
+        },
+        "low": {
+          "calls": 44,
+          "reasoningCalls": 44,
+          "reasoningOutputTokens": 2263,
+          "totalTokens": 3365498
+        },
+        "medium": {
+          "calls": 197,
+          "reasoningCalls": 197,
+          "reasoningOutputTokens": 36128,
+          "totalTokens": 19746508
+        },
+        "xhigh": {
+          "calls": 76,
+          "reasoningCalls": 76,
+          "reasoningOutputTokens": 17547,
+          "totalTokens": 17278446
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 245,
+          "totalTokens": 51668191
+        },
+        "standard": {
+          "calls": 128,
+          "totalTokens": 18881170
+        }
+      }
+    },
+    "totalCost": 134.0797365,
+    "totalTokens": 78699802
   }
 }
