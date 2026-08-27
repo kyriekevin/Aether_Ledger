@@ -422,10 +422,10 @@
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 818688,
-        "inputTokens": 36544,
-        "outputTokens": 6360,
-        "totalTokens": 861592
+        "cacheReadTokens": 1249280,
+        "inputTokens": 76606,
+        "outputTokens": 9301,
+        "totalTokens": 1335187
       }
     },
     "routing": {
@@ -438,7 +438,59 @@
         }
       }
     },
-    "totalCost": 0.87885935,
-    "totalTokens": 1223640
+    "totalCost": 1.3826953499999999,
+    "totalTokens": 1697235
+  },
+  "2026-08-26": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 772608,
+        "inputTokens": 30285,
+        "outputTokens": 3597,
+        "totalTokens": 806490
+      }
+    },
+    "totalCost": 0.645639,
+    "totalTokens": 806490
+  },
+  "2026-08-27": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 12804885,
+        "inputTokens": 2711181,
+        "outputTokens": 65235,
+        "totalTokens": 15581301
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1863480,
+        "inputTokens": 1851654,
+        "outputTokens": 4877,
+        "totalTokens": 3745129
+      },
+      "gemini-3.1-pro-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 221766,
+        "inputTokens": 247502,
+        "outputTokens": 4041,
+        "totalTokens": 474090
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 75,
+          "reasoningCalls": 75,
+          "reasoningOutputTokens": 25118,
+          "totalTokens": 3745129
+        }
+      }
+    },
+    "totalCost": 23.210703700000003,
+    "totalTokens": 19800520
   }
 }
