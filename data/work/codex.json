@@ -3156,5 +3156,65 @@
     },
     "totalCost": 98.310954,
     "totalTokens": 66898910
+  },
+  "2026-08-28": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 54016,
+        "inputTokens": 28978,
+        "outputTokens": 1005,
+        "totalTokens": 83999
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9715328,
+        "inputTokens": 1851516,
+        "outputTokens": 59664,
+        "totalTokens": 11626508
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 1.0,
+        "300": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 23,
+          "reasoningCalls": 23,
+          "reasoningOutputTokens": 7610,
+          "totalTokens": 1602585
+        },
+        "low": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 647,
+          "totalTokens": 83999
+        },
+        "medium": {
+          "calls": 20,
+          "reasoningCalls": 20,
+          "reasoningOutputTokens": 66,
+          "totalTokens": 3256176
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 48,
+          "totalTokens": 5674354
+        },
+        "standard": {
+          "calls": 20,
+          "totalTokens": 3256176
+        }
+      }
+    },
+    "totalCost": 24.517980000000005,
+    "totalTokens": 11710507
   }
 }

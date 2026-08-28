@@ -460,17 +460,17 @@
     "models": {
       "claude-opus-4-8": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 12804885,
-        "inputTokens": 2711181,
-        "outputTokens": 65235,
-        "totalTokens": 15581301
+        "cacheReadTokens": 16772559,
+        "inputTokens": 5570798,
+        "outputTokens": 84853,
+        "totalTokens": 22428210
       },
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1863480,
-        "inputTokens": 1851654,
-        "outputTokens": 4877,
-        "totalTokens": 3745129
+        "cacheReadTokens": 2098984,
+        "inputTokens": 2337207,
+        "outputTokens": 5306,
+        "totalTokens": 4467294
       },
       "gemini-3.1-pro-preview": {
         "cacheCreationTokens": 0,
@@ -483,14 +483,52 @@
     "routing": {
       "efforts": {
         "medium": {
-          "calls": 75,
-          "reasoningCalls": 75,
-          "reasoningOutputTokens": 25118,
-          "totalTokens": 3745129
+          "calls": 81,
+          "reasoningCalls": 81,
+          "reasoningOutputTokens": 25797,
+          "totalTokens": 4467294
         }
       }
     },
-    "totalCost": 23.210703700000003,
-    "totalTokens": 19800520
+    "totalCost": 40.238914400000006,
+    "totalTokens": 27369594
+  },
+  "2026-08-28": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 10097394,
+        "inputTokens": 159415,
+        "outputTokens": 37645,
+        "totalTokens": 10294454
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1387598,
+        "inputTokens": 682683,
+        "outputTokens": 2434,
+        "totalTokens": 2079946
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8393984,
+        "inputTokens": 387884,
+        "outputTokens": 30867,
+        "totalTokens": 8812735
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 42,
+          "reasoningCalls": 42,
+          "reasoningOutputTokens": 7231,
+          "totalTokens": 2079946
+        }
+      }
+    },
+    "totalCost": 14.2673424,
+    "totalTokens": 21187135
   }
 }
