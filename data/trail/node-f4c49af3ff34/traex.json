@@ -498,17 +498,17 @@
     "models": {
       "claude-opus-4-8": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 10097394,
-        "inputTokens": 159415,
-        "outputTokens": 37645,
-        "totalTokens": 10294454
+        "cacheReadTokens": 13945812,
+        "inputTokens": 482092,
+        "outputTokens": 53074,
+        "totalTokens": 14480978
       },
       "gemini-3-flash-preview": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1387598,
-        "inputTokens": 682683,
-        "outputTokens": 2434,
-        "totalTokens": 2079946
+        "cacheReadTokens": 1536356,
+        "inputTokens": 771282,
+        "outputTokens": 3379,
+        "totalTokens": 2322705
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -521,14 +521,28 @@
     "routing": {
       "efforts": {
         "medium": {
-          "calls": 42,
-          "reasoningCalls": 42,
-          "reasoningOutputTokens": 7231,
-          "totalTokens": 2079946
+          "calls": 54,
+          "reasoningCalls": 54,
+          "reasoningOutputTokens": 11688,
+          "totalTokens": 2322705
         }
       }
     },
-    "totalCost": 14.2673424,
-    "totalTokens": 21187135
+    "totalCost": 18.2452338,
+    "totalTokens": 25616418
+  },
+  "2026-08-30": {
+    "costSource": "official",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+        "inputTokens": 99787,
+        "outputTokens": 432,
+        "totalTokens": 100219
+      }
+    },
+    "totalCost": 0.509735,
+    "totalTokens": 100219
   }
 }

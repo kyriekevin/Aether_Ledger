@@ -390,7 +390,7 @@
         }
       }
     },
-    "totalCost": 350.36992,
+    "totalCost": 140.147968,
     "totalTokens": 151450032
   },
   "2026-05-27": {
@@ -2719,7 +2719,7 @@
         }
       }
     },
-    "totalCost": 203.99397900000002,
+    "totalCost": 199.086433,
     "totalTokens": 181954032
   },
   "2026-08-18": {
@@ -2785,7 +2785,7 @@
         }
       }
     },
-    "totalCost": 218.8983155,
+    "totalCost": 209.240016,
     "totalTokens": 164189091
   },
   "2026-08-19": {
@@ -2847,7 +2847,7 @@
         }
       }
     },
-    "totalCost": 49.2681355,
+    "totalCost": 31.43187,
     "totalTokens": 20750796
   },
   "2026-08-21": {
@@ -3021,7 +3021,7 @@
         }
       }
     },
-    "totalCost": 134.0797365,
+    "totalCost": 126.60942149999998,
     "totalTokens": 78699802
   },
   "2026-08-26": {
@@ -3216,5 +3216,58 @@
     },
     "totalCost": 24.517980000000005,
     "totalTokens": 11710507
+  },
+  "2026-08-30": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2062080,
+        "inputTokens": 1309160,
+        "outputTokens": 18361,
+        "totalTokens": 3389601
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 1.0,
+        "300": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 613,
+          "totalTokens": 298167
+        },
+        "max": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 10078,
+          "totalTokens": 395742
+        },
+        "medium": {
+          "calls": 20,
+          "reasoningCalls": 20,
+          "reasoningOutputTokens": 859,
+          "totalTokens": 2701619
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 1,
+          "totalTokens": 65678
+        },
+        "standard": {
+          "calls": 25,
+          "totalTokens": 3027271
+        }
+      }
+    },
+    "totalCost": 8.403109,
+    "totalTokens": 3389601
   }
 }
