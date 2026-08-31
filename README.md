@@ -31,6 +31,18 @@ useful work.
 Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
 bill. Active days count every calendar day with a positive token total.
 
+## Tasks
+
+> [!NOTE]
+> The task dashboard is reserved here while privacy-safe Multica aggregates accumulate. It will
+> show task volume, completion rate, duration, tokens per task, and the Mac/Devbox split.
+
+One terminal Multica run counts as one task; in-flight runs are excluded. Task collection is
+opt-in: map each Multica runtime's custom name to `work`, `personal`, or `devbox`, then let the
+scheduled Mac writer collect it. The same Mac-side collection includes mapped Devbox runtimes, so
+it does not require another collector or SSH on the Devbox. See [Operations](docs/operations.md#sources-and-retention)
+for the config and source-boundary rules.
+
 ## Topology
 
 ![Aether Ledger recent compute topology](assets/token-topology.svg)

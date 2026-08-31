@@ -30,6 +30,17 @@ Token 不是技能点，而是我把想法转化为有价值成果时所投入�
 金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
 token 总量大于零的自然日累计。
 
+## Task
+
+> [!NOTE]
+> 这里先为 task 看板保留固定入口；积累足够的匿名 Multica 聚合数据后，将展示 task 数、
+> 完成率、耗时、每 task token，以及 Mac/Devbox 分布。
+
+每个进入终态的 Multica run 计为一个 task，运行中的 run 暂不计入。task 采集按需启用：把
+Multica runtime 的自定义名称映射到 `work`、`personal` 或 `devbox`，再由 Mac 上的定时 writer
+统一拉取。已映射的 Devbox runtime 也由这台 Mac 直接采集，不需要在 Devbox 另装采集器或 SSH。
+配置方法和数据源边界见[运维文档](docs/operations_zh-CN.md#数据来源与留存)。
+
 ## 拓扑
 
 ![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
