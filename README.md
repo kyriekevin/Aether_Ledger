@@ -33,9 +33,11 @@ bill. Active days count every calendar day with a positive token total.
 
 ## Tasks
 
+![Aether Ledger Multica task activity](assets/task-activity.svg)
+
 > [!NOTE]
-> The task dashboard is reserved here while privacy-safe Multica aggregates accumulate. It will
-> show task volume, completion rate, duration, tokens per task, and the Mac/Devbox split.
+> Until privacy-safe Multica aggregates accumulate, the dashboard shows an explicit empty state.
+> It will populate with task volume, completion rate, duration, tokens per task, and the Mac/Devbox split.
 
 One terminal Multica run counts as one task; in-flight runs are excluded. Task collection is
 opt-in: map each Multica runtime's custom name to `work`, `personal`, or `devbox`, then let the

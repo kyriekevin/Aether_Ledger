@@ -32,8 +32,10 @@ token 总量大于零的自然日累计。
 
 ## Task
 
+![Aether Ledger Multica task 活动面板](assets/task-activity.svg)
+
 > [!NOTE]
-> 这里先为 task 看板保留固定入口；积累足够的匿名 Multica 聚合数据后，将展示 task 数、
+> 在积累匿名 Multica 聚合数据前，看板会明确显示为空状态；有数据后会自动展示 task 数、
 > 完成率、耗时、每 task token，以及 Mac/Devbox 分布。
 
 每个进入终态的 Multica run 计为一个 task，运行中的 run 暂不计入。task 采集按需启用：把

@@ -16,12 +16,14 @@ from render_dashboard import (  # noqa: E402
     _compact_number,
     aggregate_allocation,
     aggregate_daily,
+    aggregate_tasks,
     aggregate_topology,
     generate,
     generate_allocation,
     generate_allocation_history,
     generate_runtime_history,
     generate_runtime_profile,
+    generate_task_activity,
     generate_topology,
     generate_topology_history,
     render_allocation_svg,
@@ -29,6 +31,7 @@ from render_dashboard import (  # noqa: E402
     render_runtime_history_svg,
     render_runtime_profile_svg,
     render_svg,
+    render_task_activity_svg,
     render_topology_svg,
     render_topology_history_svg,
 )
@@ -87,6 +90,48 @@ class AggregateDailyTests(unittest.TestCase):
             path.write_text("[]", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "date-keyed object"):
                 aggregate_daily(Path(directory))
+
+
+class TaskActivityTests(unittest.TestCase):
+    def test_renders_real_multica_task_aggregates(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "data" / "multica.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({
+                "2026-08-01": {
+                    "usage": {"devbox": {"codex": {"totalTokens": 900}}},
+                    "tasks": {"devbox": {"codex": {
+                        "total": 3,
+                        "completed": 2,
+                        "failed": 1,
+                        "cancelled": 0,
+                        "withUsage": 3,
+                        "durationSeconds": 540,
+                    }}},
+                }
+            }), encoding="utf-8")
+
+            totals = aggregate_tasks(root, date(2026, 8, 1))
+            svg = render_task_activity_svg(totals)
+
+            self.assertEqual(totals.total, 3)
+            self.assertEqual(totals.by_role["devbox"], 3)
+            self.assertIn("66.7%", svg)
+            self.assertIn("3.0 min", svg)
+            self.assertIn("300", svg)
+            ET.fromstring(svg)
+
+    def test_generates_explicit_empty_state_without_multica_data(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "assets" / "task-activity.svg"
+
+            self.assertTrue(generate_task_activity(root, output, date(2026, 8, 1)))
+            self.assertIn("Awaiting Multica task data", output.read_text(encoding="utf-8"))
+            self.assertFalse(
+                generate_task_activity(root, output, date(2026, 8, 1), check=True)
+            )
 
 
 class AggregateTopologyTests(unittest.TestCase):

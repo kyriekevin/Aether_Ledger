@@ -27,6 +27,7 @@ DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
 DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
+DEFAULT_TASK_ACTIVITY_OUTPUT = REPO_ROOT / "assets" / "task-activity.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -231,6 +232,21 @@ class UsageRecord:
 
 
 @dataclass(frozen=True)
+class TaskTotals:
+    as_of: date
+    recent_start: date
+    total: int
+    completed: int
+    failed: int
+    cancelled: int
+    with_usage: int
+    duration_seconds: int
+    tokens: int
+    by_role: dict[str, int]
+    by_agent: dict[str, int]
+
+
+@dataclass(frozen=True)
 class TopologyTotals:
     as_of: date
     recent_start: date
@@ -305,6 +321,77 @@ def iter_multica_usage(root: Path):
             for agent, entry in agents.items():
                 if agent in AGENT_ORDER and isinstance(entry, dict):
                     yield role, agent, day, entry
+
+
+def _nonnegative_int(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    return max(0, int(value))
+
+
+def aggregate_tasks(root: Path, as_of: date) -> TaskTotals:
+    """Aggregate the trailing 30 days of privacy-safe Multica task data."""
+    recent_start = as_of - timedelta(days=29)
+    totals = {
+        "total": 0,
+        "completed": 0,
+        "failed": 0,
+        "cancelled": 0,
+        "withUsage": 0,
+        "durationSeconds": 0,
+    }
+    by_role = {role: 0 for role in ROLE_ORDER[:3]}
+    by_agent = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
+    path = Path(root) / "data" / "multica.json"
+    store = {}
+    if path.exists():
+        try:
+            store = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"cannot read {path}: {exc}") from exc
+        if not isinstance(store, dict):
+            raise ValueError(f"expected a date-keyed object in {path}")
+    for raw_day, day_entry in store.items():
+        try:
+            day = date.fromisoformat(raw_day)
+        except (TypeError, ValueError):
+            continue
+        if not recent_start <= day <= as_of or not isinstance(day_entry, dict):
+            continue
+        tasks = day_entry.get("tasks", {})
+        if not isinstance(tasks, dict):
+            continue
+        for role, agents in tasks.items():
+            if role not in by_role or not isinstance(agents, dict):
+                continue
+            for raw_agent, entry in agents.items():
+                agent = AGENT_BUCKETS.get(raw_agent)
+                if agent not in by_agent or not isinstance(entry, dict):
+                    continue
+                count = _nonnegative_int(entry.get("total"))
+                totals["total"] += count
+                by_role[role] += count
+                by_agent[agent] += count
+                for key in ("completed", "failed", "cancelled", "withUsage", "durationSeconds"):
+                    totals[key] += _nonnegative_int(entry.get(key))
+    tokens = sum(
+        _nonnegative_int(entry.get("totalTokens"))
+        for _role, _agent, day, entry in iter_multica_usage(root)
+        if recent_start <= day <= as_of
+    )
+    return TaskTotals(
+        as_of=as_of,
+        recent_start=recent_start,
+        total=totals["total"],
+        completed=totals["completed"],
+        failed=totals["failed"],
+        cancelled=totals["cancelled"],
+        with_usage=totals["withUsage"],
+        duration_seconds=totals["durationSeconds"],
+        tokens=tokens,
+        by_role=by_role,
+        by_agent=by_agent,
+    )
 
 
 def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
@@ -1859,6 +1946,100 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_task_activity_svg(totals: TaskTotals) -> str:
+    """Render real Multica task aggregates, including a useful empty state."""
+    height = 350
+
+    def ratio(numerator: int, denominator: int, suffix: str = "") -> str:
+        if not denominator:
+            return "—"
+        return f"{numerator / denominator:.1f}{suffix}"
+
+    cards = (
+        ("TASKS · 30D", str(totals.total) if totals.total else "—"),
+        ("COMPLETION", ratio(totals.completed * 100, totals.total, "%")),
+        ("AVG DURATION", ratio(totals.duration_seconds / 60, totals.total, " min")),
+        ("TOKENS / TASK", _compact_number(round(totals.tokens / totals.total)) if totals.total else "—"),
+    )
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">Task activity through {totals.as_of.isoformat()}</title>',
+        '  <desc id="desc">Thirty-day Multica task volume, completion, duration, '
+        'tokens per task, runtime-role split, and agent split.</desc>',
+        *_theme_style_lines(topology=True, allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Multica task activity</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{totals.recent_start.isoformat()}–{totals.as_of.isoformat()} · terminal runs only</text>',
+    ]
+    for index, (label, value) in enumerate(cards):
+        x = 16 + index * 287
+        lines.extend((
+            f'  <rect class="dashboard-panel dashboard-border" x="{x}" y="84" '
+            'width="278" height="78" rx="10" stroke-width="1"/>',
+            f'  <text class="dashboard-muted" x="{x + 16}" y="108" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{label}</text>',
+            f'  <text class="dashboard-primary" x="{x + 16}" y="145" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="28" font-weight="600">{escape(value)}</text>',
+        ))
+    if not totals.total:
+        lines.extend((
+            '  <rect class="dashboard-panel dashboard-border" x="16" y="180" '
+            'width="1148" height="146" rx="12" stroke-width="1" stroke-dasharray="5 5"/>',
+            '  <text class="dashboard-primary" x="590" y="232" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="18" font-weight="600">Awaiting Multica task data</text>',
+            '  <text class="dashboard-muted" x="590" y="260" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">'
+            'The first configured Mac-side sync will populate this dashboard.</text>',
+            '  <text class="dashboard-muted" x="590" y="284" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">'
+            'Planned dimensions · task volume · completion · duration · tokens/task · Mac/Devbox</text>',
+        ))
+    else:
+        lines.extend((
+            '  <text class="dashboard-primary" x="34" y="202" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Runtime roles</text>',
+            '  <text class="dashboard-primary" x="620" y="202" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Agents</text>',
+        ))
+        role_labels = {"work": "Mac · work", "personal": "Mac · personal", "devbox": "Devbox"}
+        role_classes = {"work": "topology-work", "personal": "topology-personal", "devbox": "topology-development"}
+        for index, role in enumerate(ROLE_ORDER[:3]):
+            y = 236 + index * 30
+            value = totals.by_role[role]
+            lines.extend((
+                f'  <circle class="{role_classes[role]}" cx="42" cy="{y - 4}" r="5"/>',
+                f'  <text class="dashboard-secondary" x="56" y="{y}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{role_labels[role]}</text>',
+                f'  <text class="dashboard-primary" x="540" y="{y}" text-anchor="end" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{value} tasks</text>',
+            ))
+        for index, agent in enumerate(ALLOCATION_AGENT_ORDER):
+            y = 236 + index * 23
+            lines.extend((
+                f'  <circle class="agent-{agent}" cx="628" cy="{y - 4}" r="5"/>',
+                f'  <text class="dashboard-secondary" x="642" y="{y}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{escape(AGENT_LABELS[agent])}</text>',
+                f'  <text class="dashboard-primary" x="1130" y="{y}" text-anchor="end" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="12">{totals.by_agent[agent]} tasks</text>',
+            ))
+    lines.append('</svg>')
+    return "\n".join(lines) + "\n"
+
+
 def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
@@ -1984,6 +2165,19 @@ def generate_runtime_history(
     return _update_output(output, expected, check=check)
 
 
+def generate_task_activity(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_task_activity_svg(aggregate_tasks(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -2017,6 +2211,11 @@ def main() -> int:
         "--runtime-history-output",
         type=Path,
         default=DEFAULT_RUNTIME_HISTORY_OUTPUT,
+    )
+    parser.add_argument(
+        "--task-activity-output",
+        type=Path,
+        default=DEFAULT_TASK_ACTIVITY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -2073,6 +2272,15 @@ def main() -> int:
             generate_runtime_history(
                 args.root,
                 args.runtime_history_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+        (
+            args.task_activity_output,
+            generate_task_activity(
+                args.root,
+                args.task_activity_output,
                 args.as_of,
                 check=args.check,
             ),
