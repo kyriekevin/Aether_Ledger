@@ -23,6 +23,14 @@ Aether Ledger 记录我如何使用 Claude Code、Codex 与 TRAE CLI，并让这
 历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
 Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
 
+## 任务
+
+![Aether Ledger 任务活动面板](assets/task-activity.svg)
+
+一个 task 对应一份实际产生 token 的本地 session 日志。面板按 harness 展示最近 30 天的任务量，
+并在 task 遥测覆盖的日期内计算每任务调用数与每任务 token，从而观察使用深度，同时避免把模型调用
+次数误当成用户任务数。该字段从新 schema 上线后的首次同步开始积累，不反推此前的 token 历史。
+
 ## 活动
 
 ![Aether Ledger 活动面板](assets/token-activity.svg)

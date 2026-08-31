@@ -26,7 +26,7 @@ FORBIDDEN_TEXT = (
 FORBIDDEN_JSON_KEYS = frozenset({"cwd", "source"})
 STORE_ENTRY_KEYS = frozenset({
     "totalTokens", "totalCost", "costSource", "models", "imageCount",
-    "routing", "quota",
+    "routing", "quota", "taskCount",
 })
 MODEL_ENTRY_KEYS = frozenset({
     "totalTokens", "inputTokens", "outputTokens",
@@ -81,7 +81,7 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
         unknown = set(entry).difference(STORE_ENTRY_KEYS)
         for key in sorted(unknown):
             issues.append(f"{path}: {day} field {key!r} is not in the public schema")
-        for key in ("totalTokens", "imageCount"):
+        for key in ("totalTokens", "imageCount", "taskCount"):
             metric = entry.get(key)
             if metric is not None and (
                 not isinstance(metric, int) or isinstance(metric, bool) or metric < 0

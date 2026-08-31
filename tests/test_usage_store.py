@@ -31,6 +31,7 @@ class SharedStoreCoverageTests(unittest.TestCase):
                     "2026-08-01": {
                         "totalTokens": tokens,
                         "totalCost": 1.0,
+                        "taskCount": index + 1,
                         "models": {
                             "gpt-example": {
                                 "totalTokens": tokens,
@@ -59,6 +60,7 @@ class SharedStoreCoverageTests(unittest.TestCase):
 
             day = rollups["codex.json"]["2026-08-01"]
             self.assertEqual(day["totalTokens"], 300)
+            self.assertEqual(day["taskCount"], 3)
             self.assertEqual(day["models"]["gpt-example"]["inputTokens"], 150)
             self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 2)
             self.assertEqual(
@@ -91,6 +93,20 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertEqual(
             self.read_store()["2026-08-04"], {"totalTokens": 250, "totalCost": 2.5}
         )
+
+    def test_task_count_keeps_its_independent_high_water(self) -> None:
+        self.write_store({
+            "2026-08-04": {
+                "totalTokens": 100, "totalCost": 1.0, "taskCount": 3,
+            }
+        })
+
+        sync_usage.merge_with_cumulative([{
+            "date": "2026-08-04", "totalTokens": 200,
+            "totalCost": 2.0, "taskCount": 2,
+        }], self.store)
+
+        self.assertEqual(self.read_store()["2026-08-04"]["taskCount"], 3)
 
     def test_same_tokens_repriced_lower_flow_through(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 4.0}})
@@ -700,6 +716,49 @@ class RoutingTelemetryTests(unittest.TestCase):
         })
         self.assertNotIn("speeds", telemetry)
         self.assertNotIn("private-message", json.dumps(telemetry))
+
+    def test_task_counts_use_one_token_bearing_session_without_identity(self) -> None:
+        self.write_jsonl("one/rollout.jsonl", [{
+            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+            "payload": {"type": "token_count", "info": {
+                "last_token_usage": {"total_tokens": 100}
+            }},
+        }, {
+            "type": "event_msg", "timestamp": "2026-08-15T02:01:00Z",
+            "payload": {"type": "token_count", "info": {
+                "last_token_usage": {"total_tokens": 200}
+            }},
+        }])
+        self.write_jsonl("two/rollout.jsonl", [{
+            "type": "event_msg", "timestamp": "2026-08-15T03:01:00Z",
+            "payload": {"type": "token_count", "info": {
+                "last_token_usage": {"total_tokens": 50}
+            }},
+        }])
+
+        telemetry = sync_usage.collect_task_counts_since(
+            date(2026, 8, 15), self.root, harness="codex"
+        )
+
+        self.assertEqual(telemetry, {"2026-08-15": {"taskCount": 2}})
+        self.assertNotIn("rollout", json.dumps(telemetry))
+
+    def test_claude_task_count_ignores_sessions_without_usage(self) -> None:
+        self.write_jsonl("used/session.jsonl", [{
+            "type": "assistant", "timestamp": "2026-08-15T01:00:00Z",
+            "message": {"usage": {"input_tokens": 10}},
+        }])
+        self.write_jsonl("empty/session.jsonl", [{
+            "type": "user", "timestamp": "2026-08-15T02:00:00Z",
+            "message": {"content": "private"},
+        }])
+
+        self.assertEqual(
+            sync_usage.collect_task_counts_since(
+                date(2026, 8, 15), self.root, harness="claude"
+            ),
+            {"2026-08-15": {"taskCount": 1}},
+        )
 
 
 class ReconcileTests(unittest.TestCase):

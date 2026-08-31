@@ -526,6 +526,66 @@ def collect_claude_routing_since(
     return daily
 
 
+def collect_task_counts_since(
+    since: date, sessions_dir: Path, *, harness: str
+) -> dict[str, dict]:
+    """Count distinct token-bearing session logs without retaining identity.
+
+    A task is one local session file and is attributed to its first observed
+    token-bearing event. Paths and session identifiers are used only while the
+    collector runs; the public store receives a daily integer count.
+    """
+    if harness not in {"claude", "codex"}:
+        raise ValueError(f"unsupported task-count harness: {harness}")
+    counts: dict[str, int] = {}
+    if not sessions_dir.is_dir():
+        return {}
+    for path in sessions_dir.rglob("*.jsonl"):
+        first_day: date | None = None
+        try:
+            stream = path.open(encoding="utf-8")
+        except OSError:
+            continue
+        with stream:
+            for line in stream:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(event, dict):
+                    continue
+                payload = event.get("payload")
+                token_bearing = False
+                if harness == "codex" and isinstance(payload, dict):
+                    info = payload.get("info")
+                    usage = info.get("last_token_usage") if isinstance(info, dict) else None
+                    token_bearing = (
+                        payload.get("type") == "token_count"
+                        and isinstance(usage, dict)
+                        and _token_value(usage.get("total_tokens")) > 0
+                    )
+                elif harness == "claude" and event.get("type") == "assistant":
+                    message = event.get("message")
+                    usage = message.get("usage") if isinstance(message, dict) else None
+                    token_bearing = isinstance(usage, dict) and any(
+                        _token_value(usage.get(key)) > 0
+                        for key in (
+                            "input_tokens", "output_tokens",
+                            "cache_creation_input_tokens", "cache_read_input_tokens",
+                        )
+                    )
+                if not token_bearing:
+                    continue
+                observed_day = _event_day(event.get("timestamp"))
+                if observed_day is not None:
+                    first_day = observed_day
+                    break
+        if first_day is not None and first_day >= since:
+            key = first_day.isoformat()
+            counts[key] = counts.get(key, 0) + 1
+    return {day: {"taskCount": count} for day, count in counts.items()}
+
+
 def _attach_telemetry(entries: list[dict], telemetry: dict[str, dict]) -> None:
     """Attach aggregate telemetry, adding non-authoritative stubs when needed."""
     by_day = {entry["date"]: entry for entry in entries}
@@ -971,6 +1031,12 @@ def merge_with_cumulative(
             merged["quota"] = _merge_quota(
                 prev.get("quota", {}), entry.get("quota", {}),
                 replace=reconciling,
+            )
+        if entry.get("taskCount") or prev.get("taskCount"):
+            current_tasks = _token_value(entry.get("taskCount"))
+            previous_tasks = _token_value(prev.get("taskCount"))
+            merged["taskCount"] = (
+                current_tasks if reconciling else max(current_tasks, previous_tasks)
             )
         if not reconciling and merged.get("models"):
             # Historical stores may lack some model detail, so the breakdown can
@@ -1604,7 +1670,14 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
     )
     _attach_telemetry(
+        cc_daily,
+        collect_task_counts_since(EPOCH, CLAUDE_PROJECTS_DIR, harness="claude"),
+    )
+    _attach_telemetry(
         cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
+    )
+    _attach_telemetry(
+        cx_daily, collect_task_counts_since(EPOCH, CODEX_SESSION_DIR, harness="codex")
     )
     # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
     # its failure is isolated: an empty fetch merges [] and keeps the cached store
@@ -1628,6 +1701,12 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     _attach_telemetry(
         tx_daily,
         collect_codex_routing_since(EPOCH, TRAEX_CODEX_HOME / "sessions"),
+    )
+    _attach_telemetry(
+        tx_daily,
+        collect_task_counts_since(
+            EPOCH, TRAEX_CODEX_HOME / "sessions", harness="codex"
+        ),
     )
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.

@@ -229,6 +229,9 @@ def _fold_pod_into(rollups: dict[str, dict], pod_dir: Path) -> None:
             img = entry.get("imageCount", 0)
             if img or "imageCount" in agg:
                 agg["imageCount"] = agg.get("imageCount", 0) + img
+            tasks = entry.get("taskCount", 0)
+            if tasks or "taskCount" in agg:
+                agg["taskCount"] = agg.get("taskCount", 0) + tasks
             for model, payload in entry.get("models", {}).items():
                 if not isinstance(payload, dict):
                     continue

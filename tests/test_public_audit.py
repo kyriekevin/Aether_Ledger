@@ -97,6 +97,7 @@ class PublicAuditTests(unittest.TestCase):
             {
                 "2026-08-01": {
                     "totalTokens": 10,
+                    "taskCount": 1,
                     "routing": {
                         "efforts": {
                             "low": {

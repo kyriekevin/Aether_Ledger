@@ -16,12 +16,14 @@ from render_dashboard import (  # noqa: E402
     _compact_number,
     aggregate_allocation,
     aggregate_daily,
+    aggregate_tasks,
     aggregate_topology,
     generate,
     generate_allocation,
     generate_allocation_history,
     generate_runtime_history,
     generate_runtime_profile,
+    generate_task_activity,
     generate_topology,
     generate_topology_history,
     render_allocation_svg,
@@ -29,6 +31,7 @@ from render_dashboard import (  # noqa: E402
     render_runtime_history_svg,
     render_runtime_profile_svg,
     render_svg,
+    render_task_activity_svg,
     render_topology_svg,
     render_topology_history_svg,
 )
@@ -124,6 +127,49 @@ class AggregateTopologyTests(unittest.TestCase):
             self.assertEqual(
                 totals.weekly_topology[7][("development", "codex")], 460
             )
+
+
+class TaskActivityTests(unittest.TestCase):
+    def test_uses_only_days_with_task_telemetry_for_depth_metrics(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "personal" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-07-31": {"totalTokens": 900},
+                "2026-08-01": {
+                    "totalTokens": 300, "taskCount": 2,
+                    "routing": {"efforts": {
+                        "medium": {"calls": 6, "totalTokens": 300}
+                    }},
+                },
+            }), encoding="utf-8")
+
+            totals = aggregate_tasks(root, date(2026, 8, 1))
+            svg = render_task_activity_svg(totals)
+
+            self.assertEqual(totals.recent_tasks["codex"], 2)
+            self.assertEqual(totals.recent_tokens["codex"], 300)
+            self.assertEqual(totals.recent_calls["codex"], 6)
+            self.assertIn("3.0", svg)
+            self.assertIn("150", svg)
+            self.assertIn("A task is one distinct token-bearing session log", svg)
+            ET.fromstring(svg)
+
+    def test_generate_is_stable_without_backfill(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "claude.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(
+                json.dumps({"2026-08-01": {"totalTokens": 100}}),
+                encoding="utf-8",
+            )
+            output = root / "assets" / "task-activity.svg"
+
+            self.assertTrue(generate_task_activity(root, output))
+            self.assertIn("next usage sync", output.read_text(encoding="utf-8"))
+            self.assertFalse(generate_task_activity(root, output, check=True))
 
 
 class AggregateAllocationTests(unittest.TestCase):

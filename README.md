@@ -24,6 +24,15 @@ Historical OpenCode-launched usage remains in the ledger as a legacy harness buc
 Tokens are not skill points; they are the compute resources I spend while turning ideas into
 useful work.
 
+## Tasks
+
+![Aether Ledger task activity dashboard](assets/task-activity.svg)
+
+A task is one distinct token-bearing local session log. The 30-day view tracks task volume by
+harness and adds coverage-aligned calls per task and tokens per task, so depth is visible without
+mistaking model invocations for user tasks. Task telemetry begins with the first sync after this
+schema is deployed; earlier token history is intentionally not guessed.
+
 ## Activity
 
 ![Aether Ledger activity dashboard](assets/token-activity.svg)

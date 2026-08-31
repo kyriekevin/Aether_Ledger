@@ -311,7 +311,10 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
 + Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
 
-因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对。运行截面用长度
+因此 README 先展示任务活动与 token 活动，再依次查看拓扑、分配和运行的当前/历史配对。一个 task
+对应一份实际产生 token 的 session 日志，并归到首次观测到用量的日期。任务面板展示最近 30 天总量、
+每周 harness 组合、每任务调用数、每任务 token 与遥测覆盖天数；深度指标只使用已观测 `taskCount`
+的日期，绝不根据模型调用数反推历史任务量。运行截面用长度
 与明确数值展示 effort、Fast 和最近一天的 7 天额度峰值；历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线
 和每周 7 天额度峰值柱。effort 覆盖所有 harness，Fast 和额度只有 Codex 有，因此额度只有一条序列，
 按周居中而不是和一个空位配对。颜色只标识 harness 或 effort 类别，数值大小交给几何位置表达，与其他
@@ -324,7 +327,7 @@ Codex 提供 effort、reasoning、速度与额度。TRAE 是司内提供的 CLI�
 采集器也会在日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示
 为不可用，不会从 token 总量或金额反推。Reasoning 强度只在各 harness 内部解释，不跨厂商比较。
 
-七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+八张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
@@ -370,6 +373,7 @@ Claude 条目包含每日 token、原始 API 等价成本，以及按模型拆�
 {
   "2026-04-07": {
     "totalTokens": 8946720,
+    "taskCount": 3,
     "totalCost": 0.44,
     "costSource": "official",
     "models": {
@@ -428,7 +432,9 @@ TRAE session 事件在确实提供时贡献与 Codex 相同的路由字段：
 }
 ```
 
-`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。`reasoningCalls` 统计
+`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。`taskCount` 统计实际产生
+token 的独立 session 日志，只写入每日聚合值；路径与 session 标识始终停留在内存中。跨日 session
+只在首次产生 token 的日期计数。`reasoningCalls` 统计
 harness 明确给出 reasoning 或 thinking token 字段的调用，包括字段明确为零的情况，避免把
 缺失遥测算成零。Routing token 来自
 session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。

@@ -349,8 +349,12 @@ Work, Personal, and Development, so bar height preserves each environment's tota
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
 each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
-The README therefore reads as activity, then current/history pairs for topology, allocation, and
-runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
+The README therefore leads with task activity, followed by token activity, then current/history
+pairs for topology, allocation, and runtime. A task is one distinct token-bearing session log,
+attributed to its first observed usage day. The task dashboard shows 30-day volume, weekly harness
+mix, calls per task, tokens per task, and telemetry coverage. Depth ratios include only days where
+`taskCount` was observed; historical task counts are never inferred from model calls. The runtime
+snapshot uses lengths and exact values for effort, Fast, and the latest day's
 seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
 seven-day quota peak bars. Effort covers every harness; Fast and quota are Codex-only, so a single
 quota series is centred on each week rather than paired against an empty slot. Color identifies a harness or effort category while geometry shows
@@ -365,7 +369,7 @@ collector also accepts their effort, speed, reasoning, and quota events when pre
 historical telemetry stays explicitly unavailable instead of being inferred from total tokens or
 cost. Reasoning intensity is interpreted only within one harness, never across vendors.
 
-All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All eight dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their
@@ -417,6 +421,7 @@ breakdown:
 {
   "2026-04-07": {
     "totalTokens": 8946720,
+    "taskCount": 3,
     "totalCost": 0.44,
     "costSource": "official",
     "models": {
@@ -478,6 +483,9 @@ contribute the same routing fields as Codex when present:
 ```
 
 `calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+`taskCount` counts distinct token-bearing session logs and stores only the daily aggregate; paths
+and session identifiers never leave memory. A long session is counted once on the day of its first
+token-bearing event.
 `reasoningCalls` counts invocations where the harness exposed a reasoning or thinking-token field,
 including an explicit zero, so per-call trends do not turn missing telemetry into zero.
 Routing token totals come from that session stream and are not coverage estimates for the

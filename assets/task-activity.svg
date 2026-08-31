@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470" role="img" aria-labelledby="title desc">
+  <title id="title">Task activity through 2026-08-23</title>
+  <desc id="desc">Thirty-day task count, task depth, weekly volume, and harness-level task metrics. A task is one distinct token-bearing session log.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="470" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Task activity</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-25–2026-08-23 · privacy-safe session aggregates</text>
+  <rect class="dashboard-panel dashboard-border" x="16" y="84" width="278" height="78" rx="10" stroke-width="1"/>
+  <text class="dashboard-muted" x="32" y="108" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">TASKS · 30D</text>
+  <text class="dashboard-primary" x="32" y="145" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="28" font-weight="600">0</text>
+  <rect class="dashboard-panel dashboard-border" x="303" y="84" width="278" height="78" rx="10" stroke-width="1"/>
+  <text class="dashboard-muted" x="319" y="108" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">ACTIVE HARNESSES</text>
+  <text class="dashboard-primary" x="319" y="145" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="28" font-weight="600">0</text>
+  <rect class="dashboard-panel dashboard-border" x="590" y="84" width="278" height="78" rx="10" stroke-width="1"/>
+  <text class="dashboard-muted" x="606" y="108" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">MODEL CALLS / TASK</text>
+  <text class="dashboard-primary" x="606" y="145" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="28" font-weight="600">—</text>
+  <rect class="dashboard-panel dashboard-border" x="877" y="84" width="278" height="78" rx="10" stroke-width="1"/>
+  <text class="dashboard-muted" x="893" y="108" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">TOKENS / TASK</text>
+  <text class="dashboard-primary" x="893" y="145" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="28" font-weight="600">—</text>
+  <text class="dashboard-muted" x="1146" y="68" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">task telemetry begins with the next usage sync</text>
+  <text class="dashboard-primary" x="34" y="196" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Weekly tasks</text>
+  <line class="dashboard-border" x1="34" y1="206" x2="1146" y2="206" stroke-width="1"/>
+  <text class="dashboard-muted" x="180.0" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jun 29</text>
+  <text class="dashboard-muted" x="311.4" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jul 6</text>
+  <text class="dashboard-muted" x="442.9" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jul 13</text>
+  <text class="dashboard-muted" x="574.3" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jul 20</text>
+  <text class="dashboard-muted" x="705.7" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Jul 27</text>
+  <text class="dashboard-muted" x="837.1" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 3</text>
+  <text class="dashboard-muted" x="968.6" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 10</text>
+  <text class="dashboard-muted" x="1100.0" y="326" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Aug 17</text>
+  <line class="dashboard-border" x1="140.0" y1="310.0" x2="1140.0" y2="310.0" stroke-width="1"/>
+  <circle class="agent-claude" cx="38" cy="230" r="4"/>
+  <text class="dashboard-muted" x="48" y="234" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Claude</text>
+  <circle class="agent-codex" cx="138" cy="230" r="4"/>
+  <text class="dashboard-muted" x="148" y="234" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Codex</text>
+  <circle class="agent-traex" cx="238" cy="230" r="4"/>
+  <text class="dashboard-muted" x="248" y="234" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">TRAE</text>
+  <circle class="agent-legacy" cx="338" cy="230" r="4"/>
+  <text class="dashboard-muted" x="348" y="234" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">Legacy</text>
+  <line class="dashboard-border" x1="34" y1="350" x2="1146" y2="350" stroke-width="1"/>
+  <text class="dashboard-muted" x="160" y="374" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">TASKS</text>
+  <text class="dashboard-muted" x="410" y="374" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">CALLS / TASK</text>
+  <text class="dashboard-muted" x="690" y="374" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">TOKENS / TASK</text>
+  <text class="dashboard-muted" x="1110" y="374" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">OBSERVED DAYS</text>
+  <circle class="agent-claude" cx="42" cy="396" r="4"/>
+  <text class="dashboard-secondary" x="54" y="400" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Claude</text>
+  <text class="dashboard-primary" x="160" y="400" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="410" y="400" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="690" y="400" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-muted" x="1110" y="400" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">0 / 30</text>
+  <circle class="agent-codex" cx="42" cy="414" r="4"/>
+  <text class="dashboard-secondary" x="54" y="418" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Codex</text>
+  <text class="dashboard-primary" x="160" y="418" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="410" y="418" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="690" y="418" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-muted" x="1110" y="418" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">0 / 30</text>
+  <circle class="agent-traex" cx="42" cy="432" r="4"/>
+  <text class="dashboard-secondary" x="54" y="436" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">TRAE</text>
+  <text class="dashboard-primary" x="160" y="436" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="410" y="436" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="690" y="436" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-muted" x="1110" y="436" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">0 / 30</text>
+  <circle class="agent-legacy" cx="42" cy="450" r="4"/>
+  <text class="dashboard-secondary" x="54" y="454" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Legacy</text>
+  <text class="dashboard-primary" x="160" y="454" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="410" y="454" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-primary" x="690" y="454" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">—</text>
+  <text class="dashboard-muted" x="1110" y="454" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">0 / 30</text>
+</svg>

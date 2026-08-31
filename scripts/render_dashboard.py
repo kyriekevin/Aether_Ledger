@@ -27,6 +27,7 @@ DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
 DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
+DEFAULT_TASK_ACTIVITY_OUTPUT = REPO_ROOT / "assets" / "task-activity.svg"
 AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
@@ -231,6 +232,18 @@ class UsageRecord:
 
 
 @dataclass(frozen=True)
+class TaskTotals:
+    as_of: date
+    recent_start: date
+    trend_starts: tuple[date, ...]
+    recent_tasks: dict[str, int]
+    recent_tokens: dict[str, int]
+    recent_calls: dict[str, int]
+    observed_days: dict[str, int]
+    weekly_tasks: tuple[dict[str, int], ...]
+
+
+@dataclass(frozen=True)
 class TopologyTotals:
     as_of: date
     recent_start: date
@@ -383,6 +396,66 @@ def _routing_calls(payload: dict) -> int:
         and not isinstance(value, bool)
     ]
     return max(0, *values)
+
+
+def aggregate_tasks(root: Path, as_of: date) -> TaskTotals:
+    """Aggregate privacy-safe session counts and coverage-aligned depth metrics."""
+    recent_start = as_of - timedelta(days=29)
+    trend_start = as_of - timedelta(days=HISTORY_WEEKS * 7 - 1)
+    trend_starts = tuple(
+        trend_start + timedelta(days=index * 7) for index in range(HISTORY_WEEKS)
+    )
+    recent_tasks = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
+    recent_tokens = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
+    recent_calls = {agent: 0 for agent in ALLOCATION_AGENT_ORDER}
+    observed_dates = {agent: set() for agent in ALLOCATION_AGENT_ORDER}
+    weekly_tasks = tuple(defaultdict(int) for _ in trend_starts)
+    for path in discover_agent_files(root):
+        agent = AGENT_BUCKETS[path.stem]
+        try:
+            store = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"cannot read {path}: {exc}") from exc
+        if not isinstance(store, dict):
+            raise ValueError(f"expected a date-keyed object in {path}")
+        for raw_day, entry in store.items():
+            if not isinstance(entry, dict) or "taskCount" not in entry:
+                continue
+            try:
+                day = date.fromisoformat(raw_day)
+            except (TypeError, ValueError):
+                continue
+            raw_tasks = entry.get("taskCount")
+            if isinstance(raw_tasks, bool) or not isinstance(raw_tasks, int):
+                continue
+            tasks = max(0, raw_tasks)
+            if trend_start <= day <= as_of:
+                weekly_tasks[(day - trend_start).days // 7][agent] += tasks
+            if not recent_start <= day <= as_of:
+                continue
+            recent_tasks[agent] += tasks
+            observed_dates[agent].add(day)
+            tokens = entry.get("totalTokens", 0)
+            if isinstance(tokens, (int, float)) and not isinstance(tokens, bool):
+                recent_tokens[agent] += max(0, int(tokens))
+            routing = entry.get("routing", {})
+            efforts = routing.get("efforts", {}) if isinstance(routing, dict) else {}
+            if isinstance(efforts, dict):
+                recent_calls[agent] += sum(
+                    _routing_calls(payload)
+                    for payload in efforts.values()
+                    if isinstance(payload, dict)
+                )
+    return TaskTotals(
+        as_of=as_of,
+        recent_start=recent_start,
+        trend_starts=trend_starts,
+        recent_tasks=recent_tasks,
+        recent_tokens=recent_tokens,
+        recent_calls=recent_calls,
+        observed_days={agent: len(days) for agent, days in observed_dates.items()},
+        weekly_tasks=tuple(dict(window) for window in weekly_tasks),
+    )
 
 
 def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
@@ -1790,6 +1863,147 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_task_activity_svg(totals: TaskTotals) -> str:
+    """Render task volume and coverage-aligned depth signals."""
+    title = f"Task activity through {totals.as_of.isoformat()}"
+    height = 470
+    agents = ("claude", "codex", "traex", "legacy")
+    task_total = sum(totals.recent_tasks.values())
+    token_total = sum(totals.recent_tokens.values())
+    call_total = sum(totals.recent_calls.values())
+    active_agents = sum(totals.recent_tasks[agent] > 0 for agent in agents)
+
+    def ratio(numerator: int, denominator: int, *, compact: bool = False) -> str:
+        if not denominator:
+            return "—"
+        value = numerator / denominator
+        return _compact_number(round(value)) if compact else f"{value:.1f}"
+
+    cards = (
+        ("TASKS · 30D", str(task_total)),
+        ("ACTIVE HARNESSES", str(active_agents)),
+        ("MODEL CALLS / TASK", ratio(call_total, task_total)),
+        ("TOKENS / TASK", ratio(token_total, task_total, compact=True)),
+    )
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        '  <desc id="desc">Thirty-day task count, task depth, weekly volume, and '
+        'harness-level task metrics. A task is one distinct token-bearing session log.</desc>',
+        *_theme_style_lines(allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Task activity</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{totals.recent_start.isoformat()}–{totals.as_of.isoformat()} · '
+        'privacy-safe session aggregates</text>',
+    ]
+    card_width = 278
+    for index, (label, value) in enumerate(cards):
+        x = 16 + index * 287
+        lines.extend((
+            f'  <rect class="dashboard-panel dashboard-border" x="{x}" y="84" '
+            f'width="{card_width}" height="78" rx="10" stroke-width="1"/>',
+            f'  <text class="dashboard-muted" x="{x + 16}" y="108" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{label}</text>',
+            f'  <text class="dashboard-primary" x="{x + 16}" y="145" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="28" font-weight="600">{escape(value)}</text>',
+        ))
+    if not task_total:
+        lines.append(
+            '  <text class="dashboard-muted" x="1146" y="68" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="11">task telemetry begins with the next usage sync</text>'
+        )
+
+    lines.extend((
+        '  <text class="dashboard-primary" x="34" y="196" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="14" font-weight="600">Weekly tasks</text>',
+        '  <line class="dashboard-border" x1="34" y1="206" x2="1146" y2="206" stroke-width="1"/>',
+    ))
+    plot_left, plot_right, baseline, chart_height = 180.0, 1100.0, 310.0, 82.0
+    step = (plot_right - plot_left) / (HISTORY_WEEKS - 1)
+    weekly_totals = [sum(week.values()) for week in totals.weekly_tasks]
+    maximum = max(weekly_totals, default=0)
+    bar_width = 52
+    for week_index, weekly in enumerate(totals.weekly_tasks):
+        x = plot_left + week_index * step - bar_width / 2
+        cursor_y = baseline
+        for agent in agents:
+            tasks = weekly.get(agent, 0)
+            segment = chart_height * tasks / maximum if maximum else 0
+            if segment <= 0:
+                continue
+            cursor_y -= segment
+            lines.extend((
+                f'  <rect class="agent-{agent}" x="{x:.1f}" y="{cursor_y:.1f}" '
+                f'width="{bar_width}" height="{segment:.1f}" data-agent="{agent}" '
+                f'data-week="{totals.trend_starts[week_index]}">',
+                f'    <title>{totals.trend_starts[week_index].isoformat()} · '
+                f'{escape(AGENT_LABELS[agent])} · {tasks} tasks</title>',
+                '  </rect>',
+            ))
+        lines.extend((
+            f'  <text class="dashboard-muted" x="{plot_left + week_index * step:.1f}" y="326" '
+            'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="9">{totals.trend_starts[week_index].strftime("%b %-d")}</text>',
+        ))
+    lines.append(
+        f'  <line class="dashboard-border" x1="{plot_left - 40}" y1="{baseline}" '
+        f'x2="{plot_right + 40}" y2="{baseline}" stroke-width="1"/>'
+    )
+    legend_x = 34
+    for index, agent in enumerate(agents):
+        x = legend_x + index * 100
+        lines.extend((
+            f'  <circle class="agent-{agent}" cx="{x + 4}" cy="230" r="4"/>',
+            f'  <text class="dashboard-muted" x="{x + 14}" y="234" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="9">{escape(AGENT_LABELS[agent])}</text>',
+        ))
+
+    lines.extend((
+        '  <line class="dashboard-border" x1="34" y1="350" x2="1146" y2="350" stroke-width="1"/>',
+        '  <text class="dashboard-muted" x="160" y="374" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">TASKS</text>',
+        '  <text class="dashboard-muted" x="410" y="374" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">CALLS / TASK</text>',
+        '  <text class="dashboard-muted" x="690" y="374" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">TOKENS / TASK</text>',
+        '  <text class="dashboard-muted" x="1110" y="374" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">OBSERVED DAYS</text>',
+    ))
+    for row, agent in enumerate(agents):
+        y = 400 + row * 18
+        tasks = totals.recent_tasks[agent]
+        lines.extend((
+            f'  <circle class="agent-{agent}" cx="42" cy="{y - 4}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="54" y="{y}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="11">{escape(AGENT_LABELS[agent])}</text>',
+            f'  <text class="dashboard-primary" x="160" y="{y}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="11">{tasks if totals.observed_days[agent] else "—"}</text>',
+            f'  <text class="dashboard-primary" x="410" y="{y}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="11">{ratio(totals.recent_calls[agent], tasks)}</text>',
+            f'  <text class="dashboard-primary" x="690" y="{y}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="11">{ratio(totals.recent_tokens[agent], tasks, compact=True)}</text>',
+            f'  <text class="dashboard-muted" x="1110" y="{y}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10">{totals.observed_days[agent]} / 30</text>',
+        ))
+    lines.append('</svg>')
+    return "\n".join(lines) + "\n"
+
+
 def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
@@ -1915,6 +2129,19 @@ def generate_runtime_history(
     return _update_output(output, expected, check=check)
 
 
+def generate_task_activity(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_task_activity_svg(aggregate_tasks(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -1948,6 +2175,11 @@ def main() -> int:
         "--runtime-history-output",
         type=Path,
         default=DEFAULT_RUNTIME_HISTORY_OUTPUT,
+    )
+    parser.add_argument(
+        "--task-activity-output",
+        type=Path,
+        default=DEFAULT_TASK_ACTIVITY_OUTPUT,
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -2004,6 +2236,15 @@ def main() -> int:
             generate_runtime_history(
                 args.root,
                 args.runtime_history_output,
+                args.as_of,
+                check=args.check,
+            ),
+        ),
+        (
+            args.task_activity_output,
+            generate_task_activity(
+                args.root,
+                args.task_activity_output,
                 args.as_of,
                 check=args.check,
             ),
