@@ -40,6 +40,10 @@ ROUTING_BUCKET_KEYS = frozenset(
     {"calls", "turns", "totalTokens", "reasoningCalls", "reasoningOutputTokens"}
 )
 QUOTA_KEYS = frozenset({"windows", "limitReached"})
+MULTICA_DAY_KEYS = frozenset({"usage", "tasks"})
+MULTICA_TASK_KEYS = frozenset({
+    "total", "completed", "failed", "cancelled", "withUsage", "durationSeconds",
+})
 
 
 def tracked_files(root: Path) -> tuple[Path, ...]:
@@ -187,6 +191,81 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
                     issues.append(f"{path}: {day} quota limitReached must be boolean")
 
 
+def _validate_multica_schema(value: object, path: Path, issues: list[str]) -> None:
+    """Validate the ID-free Multica source aggregate."""
+    if not isinstance(value, dict):
+        issues.append(f"{path}: Multica aggregate must be a date-keyed object")
+        return
+    for day, entry in value.items():
+        try:
+            date.fromisoformat(day)
+        except (TypeError, ValueError):
+            issues.append(f"{path}: invalid date key {day!r}")
+            continue
+        if not isinstance(entry, dict):
+            issues.append(f"{path}: {day} entry must be an object")
+            continue
+        for key in sorted(set(entry).difference(MULTICA_DAY_KEYS)):
+            issues.append(f"{path}: {day} field {key!r} is not in the public schema")
+        for section in ("usage", "tasks"):
+            roles = entry.get(section, {})
+            if not isinstance(roles, dict):
+                issues.append(f"{path}: {day} {section} must be an object")
+                continue
+            for role, agents in roles.items():
+                if role not in DURABLE_NODES or not isinstance(agents, dict):
+                    issues.append(f"{path}: {day} has invalid {section} role {role!r}")
+                    continue
+                for agent, payload in agents.items():
+                    if agent not in {name.removesuffix(".json") for name in AGENT_FILES}:
+                        issues.append(f"{path}: {day} has invalid {section} agent {agent!r}")
+                        continue
+                    if not isinstance(payload, dict):
+                        issues.append(f"{path}: {day} {section}.{role}.{agent} must be an object")
+                        continue
+                    if section == "usage":
+                        _validate_store_schema({day: payload}, path, issues)
+                    else:
+                        for key in sorted(set(payload).difference(MULTICA_TASK_KEYS)):
+                            issues.append(
+                                f"{path}: {day} task field {role}.{agent}.{key} is not public"
+                            )
+                        for key in MULTICA_TASK_KEYS:
+                            metric = payload.get(key)
+                            if metric is not None and (
+                                not isinstance(metric, int)
+                                or isinstance(metric, bool)
+                                or metric < 0
+                            ):
+                                issues.append(
+                                    f"{path}: {day} tasks.{role}.{agent}.{key} "
+                                    "must be a non-negative integer"
+                                )
+                        total = payload.get("total")
+                        outcomes = sum(
+                            payload.get(key, 0)
+                            for key in ("completed", "failed", "cancelled")
+                            if isinstance(payload.get(key, 0), int)
+                            and not isinstance(payload.get(key, 0), bool)
+                        )
+                        if isinstance(total, int) and not isinstance(total, bool):
+                            if total != outcomes:
+                                issues.append(
+                                    f"{path}: {day} tasks.{role}.{agent}.total "
+                                    "must equal terminal outcomes"
+                                )
+                            with_usage = payload.get("withUsage")
+                            if (
+                                isinstance(with_usage, int)
+                                and not isinstance(with_usage, bool)
+                                and with_usage > total
+                            ):
+                                issues.append(
+                                    f"{path}: {day} tasks.{role}.{agent}.withUsage "
+                                    "cannot exceed total"
+                                )
+
+
 def audit_tree(root: Path) -> list[str]:
     issues: list[str] = []
     for path in tracked_files(root):
@@ -221,6 +300,8 @@ def audit_tree(root: Path) -> list[str]:
                 issues.append(f"{relative}: usage store is not under an approved node label")
             if parsed_ok:
                 _validate_store_schema(parsed, relative, issues)
+        elif relative == Path("data/multica.json") and parsed_ok:
+            _validate_multica_schema(parsed, relative, issues)
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):

@@ -10,6 +10,30 @@
 Codex 的 `image_gen` PNG 会按本地文件修改时间单独计数，因为它们不会作为 LLM token
 事件出现。
 
+Multica 是可选的第二数据源。`work` 写入设备上的 `sync_usage.py` 会检查
+`~/.config/token-activity/multica_runtime_roles.json`；文件存在时，它直接在这台 Mac 上通过已认证的
+Multica CLI 拉取所有已映射 runtime 最近 365 天的用量，以及当前可见 issue 的全部终态 run。
+这也覆盖已映射的 Devbox runtime，不需要 SSH，也不需要在 Devbox 再部署采集器。配置文件把
+Multica runtime 的自定义名称映射到仓库允许公开的角色标签：
+
+```json
+{
+  "primary-runtime": "work",
+  "remote-runtime": "devbox"
+}
+```
+
+可用 `multica runtime list` 查看要映射的自定义名称。配置只留在本机。runtime、daemon、task、
+issue、用户和 session ID，主机/设备名，prompt，路径和仓库名都不会写入数据文件。
+`data/multica.json` 只保留按日聚合的“角色 × harness” token/模型总量，以及终态 task 数、结果、
+有用量记录的 task 数和总耗时。task 按 Asia/Shanghai 时区下的开始日期归档；运行中的 task 等进入
+终态后再计入。
+
+看板汇总层会把 Multica 用量与现有 ccusage store 相加。这里依赖明确的数据源边界：定时 ccusage
+只读普通本地 CLI home，Multica 则读取其管理的隔离 runtime（包括远端 Devbox）。不要再让第二个
+ccusage writer 指向已经映射的 Multica runtime home；runtime 聚合接口不提供 session 去重键，采集后
+无法还原精确的跨源排重。task 数始终来自 Multica run，不再由本地 session 文件推算。
+
 TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支，会以相同的
 `rollout-*.jsonl` 会话格式写入
 `~/.trae/cli`（而非 `~/.codex`）。`ccusage` 没有 `trae` agent，但其 `codex` 读取器认
@@ -76,6 +100,7 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
 - Claude Code、Codex 或 OpenCode 的本地用量日志
+- 如需 Multica 采集：已登录对应 workspace 的 Multica 桌面端/CLI
 
 安装命令行依赖：
 

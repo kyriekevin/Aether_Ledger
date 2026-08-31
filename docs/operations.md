@@ -10,6 +10,32 @@ not used to infer the invoking agent: a model reached through a Claude Code rout
 cc-switch therefore remains Claude usage under its real model name. Codex `image_gen` PNGs are
 counted separately by local file mtime because they do not appear as LLM token events.
 
+Multica is an optional second source. On the `work` writer, `sync_usage.py` checks for
+`~/.config/token-activity/multica_runtime_roles.json`. When present, it uses the authenticated
+Multica CLI on that Mac to read every mapped runtime's 365-day usage and the terminal runs of all
+visible issues. This includes mapped Devbox runtimes; no SSH or Devbox-local collector is needed.
+The config maps Multica runtime custom names to the only public role labels accepted by this repo:
+
+```json
+{
+  "primary-runtime": "work",
+  "remote-runtime": "devbox"
+}
+```
+
+Run `multica runtime list` to see the custom names to map. The config remains local. Runtime,
+daemon, task, issue, user and session IDs; host/device names; prompts; paths; and repository names
+never enter the store. `data/multica.json` retains only daily `role × harness` token/model totals
+and terminal-task counts, outcomes, usage coverage, and summed runtime. The task day is the run's
+start day in Asia/Shanghai; in-flight runs are excluded until they become terminal.
+
+The dashboard aggregation adds Multica usage to the existing ccusage stores. This is safe under
+the source boundary used here: scheduled ccusage reads the normal local CLI homes, while Multica
+reads its managed isolated runtimes (including remote Devboxes). Do not point a second ccusage
+writer at a mapped Multica runtime home; aggregate runtime usage does not expose session keys, so
+an exact cross-source dedupe cannot be reconstructed after collection. Task volume always comes
+from Multica runs and is never inferred from local session files.
+
 TRAE CLI (traex) remains a separate collection path. It is a Codex fork that writes the same
 `rollout-*.jsonl` session format under
 `~/.trae/cli` instead of `~/.codex`. `ccusage` has no `trae` agent, but its `codex` reader honours
@@ -90,6 +116,7 @@ A new machine can only recover dates still present in its local logs.
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
 - Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
+- For optional Multica collection: the Multica desktop app/CLI authenticated to the workspace
 
 Install the command-line dependencies:
 

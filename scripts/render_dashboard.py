@@ -280,6 +280,33 @@ def discover_agent_files(root: Path) -> tuple[Path, ...]:
     return tuple(sorted(paths))
 
 
+def iter_multica_usage(root: Path):
+    """Yield public (role, agent, day, entry) rows from the Multica source."""
+    path = Path(root) / "data" / "multica.json"
+    if not path.exists():
+        return
+    try:
+        store = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot read {path}: {exc}") from exc
+    if not isinstance(store, dict):
+        raise ValueError(f"expected a date-keyed object in {path}")
+    for raw_day, day_entry in store.items():
+        try:
+            day = date.fromisoformat(raw_day)
+        except (TypeError, ValueError):
+            continue
+        usage = day_entry.get("usage", {}) if isinstance(day_entry, dict) else {}
+        if not isinstance(usage, dict):
+            continue
+        for role, agents in usage.items():
+            if role not in ROLE_ORDER[:3] or not isinstance(agents, dict):
+                continue
+            for agent, entry in agents.items():
+                if agent in AGENT_ORDER and isinstance(entry, dict):
+                    yield role, agent, day, entry
+
+
 def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
     """Load public role, agent, day, token, and cost dimensions from canonical stores."""
     root = Path(root)
@@ -321,6 +348,24 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
                     cost=max(0.0, float(cost)),
                 )
             )
+    for role, agent, day, entry in iter_multica_usage(root):
+        tokens = entry.get("totalTokens", 0)
+        cost = entry.get("totalCost", 0.0)
+        records.append(UsageRecord(
+            day=day,
+            role=role,
+            agent=agent,
+            tokens=(
+                max(0, int(tokens))
+                if isinstance(tokens, (int, float)) and not isinstance(tokens, bool)
+                else 0
+            ),
+            cost=(
+                max(0.0, float(cost))
+                if isinstance(cost, (int, float)) and not isinstance(cost, bool)
+                else 0.0
+            ),
+        ))
     return tuple(records)
 
 
@@ -605,6 +650,30 @@ def aggregate_allocation(root: Path, as_of: date) -> AllocationTotals:
                     quota_pressure_days[agent].add(day)
                 if quota.get("limitReached") is True:
                     quota_limit_days[agent].add(day)
+    # Multica has model/token usage but no routing or quota telemetry. Add the
+    # dimensions it actually observes without fabricating the missing ones.
+    for _role, raw_agent, day, entry in iter_multica_usage(root):
+        agent = AGENT_BUCKETS[raw_agent]
+        models = entry.get("models", {})
+        if trend_start <= day <= as_of and isinstance(models, dict) and models:
+            index = (day - trend_start).days // 7
+            weekly_model_observed[index].add(agent)
+            for model, payload in models.items():
+                if isinstance(model, str) and isinstance(payload, dict):
+                    weekly_model_tokens[index][(agent, model)] += max(
+                        0, int(payload.get("totalTokens", 0))
+                    )
+        if not recent_start <= day <= as_of:
+            continue
+        tokens = entry.get("totalTokens", 0)
+        if isinstance(tokens, (int, float)) and not isinstance(tokens, bool):
+            agent_tokens[agent] += max(0, int(tokens))
+        if isinstance(models, dict):
+            for model, payload in models.items():
+                if isinstance(model, str) and isinstance(payload, dict):
+                    model_tokens[(agent, model)] += max(
+                        0, int(payload.get("totalTokens", 0))
+                    )
     return AllocationTotals(
         as_of=as_of,
         recent_start=recent_start,

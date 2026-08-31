@@ -16,6 +16,7 @@ from pathlib import Path
 GENERATED_STORE = re.compile(
     r"^data/(?:work|personal|devbox)/(?:claude|codex|opencode|traex)\.json$"
     r"|^data/trail/[^/]+/(?:claude|codex|opencode|traex)\.json$"
+    r"|^data/multica\.json$"
 )
 
 

@@ -49,6 +49,7 @@ from pricing import (
     token_breakdown,
 )
 from render_dashboard import SHANGHAI
+from multica_usage import collect_if_configured
 
 # Data repo root: two levels up from this script (repo/scripts/sync_usage.py)
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
@@ -1489,7 +1490,11 @@ def git_push(machine: str) -> None:
     if _branch_is_ahead():
         _try_push()  # republish stranded commit; continue regardless of result
 
-    add = _git(["add", machine + "/"])
+    paths = [machine + "/"]
+    multica_store = DATA_REPO_DIR / "data" / "multica.json"
+    if multica_store.exists():
+        paths.append("data/multica.json")
+    add = _git(["add", *paths])
     if add.returncode != 0:
         print(f"git add failed: {add.stderr.strip()}", file=sys.stderr)
         return
@@ -1646,6 +1651,22 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(cx_daily, codex_path, reconcile_since=reconcile_since)
     merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
     merge_with_cumulative(tx_daily, traex_path, reconcile_since=reconcile_since)
+
+    # One explicitly configured work writer is the central Multica collector.
+    # Runtime/issue/task identifiers stay in memory; only data/multica.json is
+    # persisted. Other writers never call the workspace-wide API, avoiding
+    # duplicate snapshots and needless issue fan-out.
+    if machine == "data/work":
+        try:
+            collect_if_configured(store_path=DATA_REPO_DIR / "data" / "multica.json")
+        except (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+            json.JSONDecodeError,
+            ValueError,
+        ) as e:
+            print(f"Multica fetch failed, keeping cached aggregate: {e}", file=sys.stderr)
 
     if not no_push:
         git_push(machine)

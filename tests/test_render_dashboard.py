@@ -61,6 +61,25 @@ class AggregateDailyTests(unittest.TestCase):
                 {date(2026, 8, 1): DailyTotals(tokens=350, cost=3.75)},
             )
 
+    def test_adds_multica_source_aggregates(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "data" / "multica.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({
+                "2026-08-01": {
+                    "usage": {
+                        "work": {"codex": {"totalTokens": 400, "totalCost": 1.5}},
+                        "devbox": {"traex": {"totalTokens": 600, "totalCost": 2.0}},
+                    },
+                    "tasks": {},
+                }
+            }))
+            self.assertEqual(
+                aggregate_daily(root),
+                {date(2026, 8, 1): DailyTotals(tokens=1000, cost=3.5)},
+            )
+
     def test_rejects_malformed_store(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "data" / "work" / "claude.json"
@@ -127,6 +146,22 @@ class AggregateTopologyTests(unittest.TestCase):
 
 
 class AggregateAllocationTests(unittest.TestCase):
+    def test_includes_multica_models_without_inventing_routing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "data" / "multica.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({
+                "2026-08-01": {"usage": {"devbox": {"codex": {
+                    "totalTokens": 500,
+                    "models": {"gpt-example": {"totalTokens": 500}},
+                }}}, "tasks": {}}
+            }))
+            totals = aggregate_allocation(root, date(2026, 8, 1))
+            self.assertEqual(totals.agent_tokens["codex"], 500)
+            self.assertEqual(totals.model_tokens[("codex", "gpt-example")], 500)
+            self.assertEqual(totals.efforts["codex"]["medium"]["calls"], 0)
+
     def test_keeps_only_privacy_safe_recent_routing_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

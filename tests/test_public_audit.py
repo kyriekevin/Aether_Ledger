@@ -10,12 +10,48 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from audit_public import _validate_store_schema, _walk_json  # noqa: E402
+from audit_public import (  # noqa: E402
+    _validate_multica_schema,
+    _validate_store_schema,
+    _walk_json,
+)
 import sync_usage  # noqa: E402
 from sync_usage import NODE_ID_RE, _opaque_node_id  # noqa: E402
 
 
 class PublicAuditTests(unittest.TestCase):
+    def test_multica_schema_accepts_only_role_agent_aggregates(self) -> None:
+        issues: list[str] = []
+        _validate_multica_schema({
+            "2026-08-31": {
+                "usage": {"work": {"codex": {
+                    "totalTokens": 10,
+                    "totalCost": 0.1,
+                    "costSource": "official",
+                    "models": {"gpt-example": {"totalTokens": 10}},
+                }}},
+                "tasks": {"work": {"codex": {
+                    "total": 1,
+                    "completed": 1,
+                    "failed": 0,
+                    "cancelled": 0,
+                    "withUsage": 1,
+                    "durationSeconds": 30,
+                }}},
+            }
+        }, Path("data/multica.json"), issues)
+        self.assertEqual(issues, [])
+
+    def test_multica_schema_rejects_identity_fields(self) -> None:
+        issues: list[str] = []
+        _validate_multica_schema({
+            "2026-08-31": {
+                "usage": {},
+                "tasks": {"work": {"codex": {"runtimeId": "private"}}},
+            }
+        }, Path("data/multica.json"), issues)
+        self.assertTrue(any("runtimeId" in issue for issue in issues))
+
     def test_rejects_session_path_keys_at_any_depth(self) -> None:
         issues: list[str] = []
         _walk_json(
