@@ -40,7 +40,9 @@ bucket rather than being folded into `low`.
 
 Session logs are normally Zstandard-compressed, as a concatenation of one independently decodable
 frame per durable batch. The writer decodes them with Python's own `compression.zstd` (3.14+) or,
-failing that, a local `zstd` binary. Whatever decoded is kept, and the run reports how many logs did
+failing that, a local `zstd` binary. Under the pinned 3.11 it is always the `zstd` binary; the
+in-process branch is there for when the pin moves, and both return the same prefix for the same
+artifact. Whatever decoded is kept, and the run reports how many logs did
 not decode to the end. Keeping a partial read is safe: frames are append-only and every run
 recomputes the day from the whole artifact, so a torn read is superseded by the completed one rather
 than added to it.
@@ -156,6 +158,13 @@ Install the command-line dependencies:
 ```sh
 brew install uv ccusage gh
 ```
+
+The scripts are dependency-free single files carrying their own `requires-python = ">=3.11"`, so
+there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
+picks the newest installed version that satisfies it, which differs between a developer machine, CI,
+and the rollover runner, and neither workflow passes a `python-version`. `.python-version` pins all
+of them to 3.11 — the declared floor, so what runs is what the scripts claim to support. Every
+`make` target goes through `uv` so the pin actually covers them.
 
 ## Machine identity
 
