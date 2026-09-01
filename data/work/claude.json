@@ -1459,5 +1459,36 @@
     },
     "totalCost": 6.7700665,
     "totalTokens": 7069641
+  },
+  "2026-08-31": {
+    "costSource": "official",
+    "models": {
+      "claude-fable-5": {
+        "cacheCreationTokens": 215702,
+        "cacheReadTokens": 2243448,
+        "inputTokens": 64,
+        "outputTokens": 41186,
+        "totalTokens": 2500400
+      },
+      "claude-opus-5": {
+        "cacheCreationTokens": 259090,
+        "cacheReadTokens": 8113518,
+        "inputTokens": 186,
+        "outputTokens": 91975,
+        "totalTokens": 8464769
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "calls": 125,
+          "reasoningCalls": 125,
+          "reasoningOutputTokens": 71879,
+          "totalTokens": 10965169
+        }
+      }
+    },
+    "totalCost": 17.565392000000003,
+    "totalTokens": 10965169
   }
 }

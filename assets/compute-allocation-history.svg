@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="370" viewBox="0 0 1180 370" role="img" aria-labelledby="title desc">
-  <title id="title">AI model allocation history through 2026-08-30</title>
+  <title id="title">AI model allocation history through 2026-08-31</title>
   <desc id="desc">Eight weekly absolute model-token stacks within Claude, Codex, and TRAE, split into previous and latest four-week periods, with missing model coverage left blank.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
@@ -65,7 +65,7 @@
   </style>
   <rect class="dashboard-background" width="1180" height="370" rx="22"/>
   <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Model allocation history</text>
-  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-06–2026-08-30 · 8 weekly stacks · previous 4 weeks vs latest 4 weeks · Top 3 models + Other · blank = unavailable</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-07-07–2026-08-31 · 8 weekly stacks · previous 4 weeks vs latest 4 weeks · Top 3 models + Other · blank = unavailable</text>
   <rect class="dashboard-panel" x="16" y="92" width="372" height="250" rx="16"/>
   <circle class="agent-claude" cx="38" cy="117" r="5"/>
   <text class="dashboard-primary" x="51" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Claude</text>
@@ -82,86 +82,86 @@
   <text class="dashboard-muted" x="274.5" y="186" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="34" y1="306" x2="362" y2="306" stroke-width="1"/>
   <line class="dashboard-border" x1="192.5" y1="189" x2="192.5" y2="310" stroke-width="1" stroke-dasharray="2 3"/>
-  <rect class="series-0" x="34" y="214.3" width="30" height="91.7" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-06">
-    <title>Claude · 2026-07-06 · claude-fable-5: 246M of 268M</title>
+  <rect class="series-0" x="34" y="216.3" width="30" height="89.7" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-07">
+    <title>Claude · 2026-07-07 · claude-fable-5: 234M of 246M</title>
   </rect>
-  <rect class="series-2" x="34" y="208.7" width="30" height="5.6" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-06">
-    <title>Claude · 2026-07-06 · claude-sonnet-5: 14.9M of 268M</title>
+  <rect class="series-2" x="34" y="214.9" width="30" height="1.4" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-07">
+    <title>Claude · 2026-07-07 · claude-sonnet-5: 3.8M of 246M</title>
   </rect>
-  <rect class="series-other" x="34" y="206.0" width="30" height="2.8" data-agent="claude" data-model="other" data-week="2026-07-06">
-    <title>Claude · 2026-07-06 · Other: 7.4M of 268M</title>
+  <rect class="series-other" x="34" y="212.0" width="30" height="2.8" data-agent="claude" data-model="other" data-week="2026-07-07">
+    <title>Claude · 2026-07-07 · Other: 7.4M of 246M</title>
   </rect>
-  <rect class="series-0" x="75" y="271.3" width="30" height="34.7" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-13">
-    <title>Claude · 2026-07-13 · claude-fable-5: 93.2M of 93.9M</title>
+  <rect class="series-0" x="75" y="284.8" width="30" height="21.2" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-14">
+    <title>Claude · 2026-07-14 · claude-fable-5: 55.4M of 56.3M</title>
   </rect>
-  <rect class="series-2" x="75" y="271.0" width="30" height="0.3" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-13">
-    <title>Claude · 2026-07-13 · claude-sonnet-5: 679K of 93.9M</title>
+  <rect class="series-2" x="75" y="284.7" width="30" height="0.1" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-14">
+    <title>Claude · 2026-07-14 · claude-sonnet-5: 230K of 56.3M</title>
   </rect>
-  <rect class="series-0" x="116" y="287.6" width="30" height="18.4" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-20">
-    <title>Claude · 2026-07-20 · claude-fable-5: 49.3M of 50.2M</title>
+  <rect class="series-other" x="75" y="284.5" width="30" height="0.2" data-agent="claude" data-model="other" data-week="2026-07-14">
+    <title>Claude · 2026-07-14 · Other: 632K of 56.3M</title>
   </rect>
-  <rect class="series-2" x="116" y="287.5" width="30" height="0.1" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-20">
-    <title>Claude · 2026-07-20 · claude-sonnet-5: 220K of 50.2M</title>
+  <rect class="series-0" x="116" y="278.8" width="30" height="27.2" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-21">
+    <title>Claude · 2026-07-21 · claude-fable-5: 71.2M of 77.4M</title>
   </rect>
-  <rect class="series-other" x="116" y="287.3" width="30" height="0.2" data-agent="claude" data-model="other" data-week="2026-07-20">
-    <title>Claude · 2026-07-20 · Other: 632K of 50.2M</title>
+  <rect class="series-1" x="116" y="276.4" width="30" height="2.3" data-agent="claude" data-model="claude-opus-5" data-week="2026-07-21">
+    <title>Claude · 2026-07-21 · claude-opus-5: 6.1M of 77.4M</title>
   </rect>
-  <rect class="series-0" x="157" y="276.7" width="30" height="29.3" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-27">
-    <title>Claude · 2026-07-27 · claude-fable-5: 78.7M of 143M</title>
+  <rect class="series-2" x="116" y="276.4" width="30" height="0.0" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-21">
+    <title>Claude · 2026-07-21 · claude-sonnet-5: 74.4K of 77.4M</title>
   </rect>
-  <rect class="series-1" x="157" y="252.7" width="30" height="24.0" data-agent="claude" data-model="claude-opus-5" data-week="2026-07-27">
-    <title>Claude · 2026-07-27 · claude-opus-5: 64.4M of 143M</title>
+  <rect class="series-0" x="157" y="286.5" width="30" height="19.5" data-agent="claude" data-model="claude-fable-5" data-week="2026-07-28">
+    <title>Claude · 2026-07-28 · claude-fable-5: 50.8M of 109M</title>
   </rect>
-  <rect class="series-2" x="157" y="252.6" width="30" height="0.0" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-27">
-    <title>Claude · 2026-07-27 · claude-sonnet-5: 35.8K of 143M</title>
+  <rect class="series-1" x="157" y="264.2" width="30" height="22.3" data-agent="claude" data-model="claude-opus-5" data-week="2026-07-28">
+    <title>Claude · 2026-07-28 · claude-opus-5: 58.3M of 109M</title>
   </rect>
-  <rect class="series-0" x="198" y="293.4" width="30" height="12.6" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-03">
-    <title>Claude · 2026-08-03 · claude-fable-5: 33.9M of 221M</title>
+  <rect class="series-2" x="157" y="264.2" width="30" height="0.0" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-07-28">
+    <title>Claude · 2026-07-28 · claude-sonnet-5: 35.8K of 109M</title>
   </rect>
-  <rect class="series-1" x="198" y="230.7" width="30" height="62.7" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-03">
-    <title>Claude · 2026-08-03 · claude-opus-5: 168M of 221M</title>
+  <rect class="series-0" x="198" y="284.9" width="30" height="21.1" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-04">
+    <title>Claude · 2026-08-04 · claude-fable-5: 55.2M of 293M</title>
   </rect>
-  <rect class="series-2" x="198" y="224.6" width="30" height="6.1" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-03">
-    <title>Claude · 2026-08-03 · claude-sonnet-5: 16.4M of 221M</title>
+  <rect class="series-1" x="198" y="201.4" width="30" height="83.5" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-04">
+    <title>Claude · 2026-08-04 · claude-opus-5: 218M of 293M</title>
   </rect>
-  <rect class="series-other" x="198" y="223.7" width="30" height="0.9" data-agent="claude" data-model="other" data-week="2026-08-03">
-    <title>Claude · 2026-08-03 · Other: 2.4M of 221M</title>
+  <rect class="series-2" x="198" y="194.9" width="30" height="6.5" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-04">
+    <title>Claude · 2026-08-04 · claude-sonnet-5: 17M of 293M</title>
   </rect>
-  <rect class="series-0" x="239" y="256.0" width="30" height="50.0" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-10">
-    <title>Claude · 2026-08-10 · claude-fable-5: 134M of 300M</title>
+  <rect class="series-other" x="198" y="194.0" width="30" height="0.9" data-agent="claude" data-model="other" data-week="2026-08-04">
+    <title>Claude · 2026-08-04 · Other: 2.4M of 293M</title>
   </rect>
-  <rect class="series-1" x="239" y="207.4" width="30" height="48.5" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-10">
-    <title>Claude · 2026-08-10 · claude-opus-5: 130M of 300M</title>
+  <rect class="series-0" x="239" y="262.8" width="30" height="43.2" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-11">
+    <title>Claude · 2026-08-11 · claude-fable-5: 113M of 250M</title>
   </rect>
-  <rect class="series-2" x="239" y="194.0" width="30" height="13.4" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-10">
-    <title>Claude · 2026-08-10 · claude-sonnet-5: 36M of 300M</title>
+  <rect class="series-1" x="239" y="223.9" width="30" height="38.9" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-11">
+    <title>Claude · 2026-08-11 · claude-opus-5: 102M of 250M</title>
   </rect>
-  <rect class="series-other" x="239" y="194.0" width="30" height="0.0" data-agent="claude" data-model="other" data-week="2026-08-10">
-    <title>Claude · 2026-08-10 · Other: 82.4K of 300M</title>
+  <rect class="series-2" x="239" y="210.4" width="30" height="13.5" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-11">
+    <title>Claude · 2026-08-11 · claude-sonnet-5: 35.3M of 250M</title>
   </rect>
-  <rect class="series-0" x="280" y="296.4" width="30" height="9.6" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-17">
-    <title>Claude · 2026-08-17 · claude-fable-5: 25.7M of 176M</title>
+  <rect class="series-other" x="239" y="210.4" width="30" height="0.0" data-agent="claude" data-model="other" data-week="2026-08-11">
+    <title>Claude · 2026-08-11 · Other: 82.4K of 250M</title>
   </rect>
-  <rect class="series-1" x="280" y="244.1" width="30" height="52.3" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-17">
-    <title>Claude · 2026-08-17 · claude-opus-5: 140M of 176M</title>
+  <rect class="series-0" x="280" y="289.8" width="30" height="16.2" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-18">
+    <title>Claude · 2026-08-18 · claude-fable-5: 42.2M of 192M</title>
   </rect>
-  <rect class="series-2" x="280" y="240.4" width="30" height="3.7" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-17">
-    <title>Claude · 2026-08-17 · claude-sonnet-5: 10M of 176M</title>
+  <rect class="series-1" x="280" y="236.5" width="30" height="53.3" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-18">
+    <title>Claude · 2026-08-18 · claude-opus-5: 139M of 192M</title>
   </rect>
-  <rect class="series-other" x="280" y="240.3" width="30" height="0.1" data-agent="claude" data-model="other" data-week="2026-08-17">
-    <title>Claude · 2026-08-17 · Other: 176K of 176M</title>
+  <rect class="series-2" x="280" y="232.7" width="30" height="3.9" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-18">
+    <title>Claude · 2026-08-18 · claude-sonnet-5: 10.1M of 192M</title>
   </rect>
-  <rect class="series-0" x="321" y="280.5" width="30" height="25.5" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-24">
-    <title>Claude · 2026-08-24 · claude-fable-5: 68.4M of 97M</title>
+  <rect class="series-other" x="280" y="232.6" width="30" height="0.1" data-agent="claude" data-model="other" data-week="2026-08-18">
+    <title>Claude · 2026-08-18 · Other: 176K of 192M</title>
   </rect>
-  <rect class="series-1" x="321" y="269.9" width="30" height="10.6" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-24">
-    <title>Claude · 2026-08-24 · claude-opus-5: 28.5M of 97M</title>
+  <rect class="series-0" x="321" y="285.8" width="30" height="20.2" data-agent="claude" data-model="claude-fable-5" data-week="2026-08-25">
+    <title>Claude · 2026-08-25 · claude-fable-5: 52.8M of 69.5M</title>
   </rect>
-  <rect class="series-2" x="321" y="269.8" width="30" height="0.0" data-agent="claude" data-model="claude-sonnet-5" data-week="2026-08-24">
-    <title>Claude · 2026-08-24 · claude-sonnet-5: 74.1K of 97M</title>
+  <rect class="series-1" x="321" y="279.4" width="30" height="6.4" data-agent="claude" data-model="claude-opus-5" data-week="2026-08-25">
+    <title>Claude · 2026-08-25 · claude-opus-5: 16.7M of 69.5M</title>
   </rect>
-  <text class="dashboard-muted" x="34" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 6</text>
-  <text class="dashboard-muted" x="362" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 24</text>
+  <text class="dashboard-muted" x="34" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 7</text>
+  <text class="dashboard-muted" x="362" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 25</text>
   <rect class="dashboard-panel" x="404" y="92" width="372" height="250" rx="16"/>
   <circle class="agent-codex" cx="426" cy="117" r="5"/>
   <text class="dashboard-primary" x="439" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">Codex</text>
@@ -178,74 +178,74 @@
   <text class="dashboard-muted" x="662.5" y="186" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="422" y1="306" x2="750" y2="306" stroke-width="1"/>
   <line class="dashboard-border" x1="580.5" y1="189" x2="580.5" y2="310" stroke-width="1" stroke-dasharray="2 3"/>
-  <rect class="series-0" x="422" y="302.9" width="30" height="3.1" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-06">
-    <title>Codex · 2026-07-06 · gpt-5.6-sol: 44.7M of 448M</title>
+  <rect class="series-0" x="422" y="298.0" width="30" height="8.0" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-07">
+    <title>Codex · 2026-07-07 · gpt-5.6-sol: 119M of 503M</title>
   </rect>
-  <rect class="series-1" x="422" y="274.8" width="30" height="28.1" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-06">
-    <title>Codex · 2026-07-06 · gpt-5.5: 402M of 448M</title>
+  <rect class="series-1" x="422" y="272.5" width="30" height="25.6" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-07">
+    <title>Codex · 2026-07-07 · gpt-5.5: 383M of 503M</title>
   </rect>
-  <rect class="series-other" x="422" y="274.8" width="30" height="0.0" data-agent="codex" data-model="other" data-week="2026-07-06">
-    <title>Codex · 2026-07-06 · Other: 432K of 448M</title>
+  <rect class="series-other" x="422" y="272.4" width="30" height="0.0" data-agent="codex" data-model="other" data-week="2026-07-07">
+    <title>Codex · 2026-07-07 · Other: 432K of 503M</title>
   </rect>
-  <rect class="series-0" x="463" y="262.4" width="30" height="43.6" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-13">
-    <title>Codex · 2026-07-13 · gpt-5.6-sol: 625M of 719M</title>
+  <rect class="series-0" x="463" y="259.1" width="30" height="46.9" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-14">
+    <title>Codex · 2026-07-14 · gpt-5.6-sol: 702M of 813M</title>
   </rect>
-  <rect class="series-1" x="463" y="255.8" width="30" height="6.6" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-13">
-    <title>Codex · 2026-07-13 · gpt-5.5: 94.9M of 719M</title>
+  <rect class="series-1" x="463" y="251.7" width="30" height="7.4" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-14">
+    <title>Codex · 2026-07-14 · gpt-5.5: 111M of 813M</title>
   </rect>
-  <rect class="series-0" x="504" y="225.2" width="30" height="80.8" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-20">
-    <title>Codex · 2026-07-20 · gpt-5.6-sol: 1.2B of 1.4B</title>
+  <rect class="series-0" x="504" y="232.2" width="30" height="73.8" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-21">
+    <title>Codex · 2026-07-21 · gpt-5.6-sol: 1.1B of 1.3B</title>
   </rect>
-  <rect class="series-1" x="504" y="209.8" width="30" height="15.4" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-20">
-    <title>Codex · 2026-07-20 · gpt-5.5: 221M of 1.4B</title>
+  <rect class="series-1" x="504" y="217.8" width="30" height="14.4" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-21">
+    <title>Codex · 2026-07-21 · gpt-5.5: 216M of 1.3B</title>
   </rect>
-  <rect class="series-0" x="545" y="252.6" width="30" height="53.4" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-27">
-    <title>Codex · 2026-07-27 · gpt-5.6-sol: 766M of 876M</title>
+  <rect class="series-0" x="545" y="260.0" width="30" height="46.0" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-07-28">
+    <title>Codex · 2026-07-28 · gpt-5.6-sol: 689M of 789M</title>
   </rect>
-  <rect class="series-1" x="545" y="244.9" width="30" height="7.7" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-27">
-    <title>Codex · 2026-07-27 · gpt-5.5: 110M of 876M</title>
+  <rect class="series-1" x="545" y="253.3" width="30" height="6.7" data-agent="codex" data-model="gpt-5.5" data-week="2026-07-28">
+    <title>Codex · 2026-07-28 · gpt-5.5: 100M of 789M</title>
   </rect>
-  <rect class="series-0" x="586" y="213.6" width="30" height="92.4" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-03">
-    <title>Codex · 2026-08-03 · gpt-5.6-sol: 1.3B of 1.6B</title>
+  <rect class="series-0" x="586" y="213.6" width="30" height="92.4" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-04">
+    <title>Codex · 2026-08-04 · gpt-5.6-sol: 1.4B of 1.7B</title>
   </rect>
-  <rect class="series-1" x="586" y="194.1" width="30" height="19.6" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-03">
-    <title>Codex · 2026-08-03 · gpt-5.5: 280M of 1.6B</title>
+  <rect class="series-1" x="586" y="194.1" width="30" height="19.6" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-04">
+    <title>Codex · 2026-08-04 · gpt-5.5: 293M of 1.7B</title>
   </rect>
-  <rect class="series-other" x="586" y="194.0" width="30" height="0.1" data-agent="codex" data-model="other" data-week="2026-08-03">
-    <title>Codex · 2026-08-03 · Other: 838K of 1.6B</title>
+  <rect class="series-other" x="586" y="194.0" width="30" height="0.1" data-agent="codex" data-model="other" data-week="2026-08-04">
+    <title>Codex · 2026-08-04 · Other: 838K of 1.7B</title>
   </rect>
-  <rect class="series-0" x="627" y="233.9" width="30" height="72.1" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-10">
-    <title>Codex · 2026-08-10 · gpt-5.6-sol: 1B of 1.1B</title>
+  <rect class="series-0" x="627" y="210.3" width="30" height="95.7" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-11">
+    <title>Codex · 2026-08-11 · gpt-5.6-sol: 1.4B of 1.6B</title>
   </rect>
-  <rect class="series-1" x="627" y="228.9" width="30" height="5.0" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-10">
-    <title>Codex · 2026-08-10 · gpt-5.5: 72M of 1.1B</title>
+  <rect class="series-1" x="627" y="202.7" width="30" height="7.6" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-11">
+    <title>Codex · 2026-08-11 · gpt-5.5: 114M of 1.6B</title>
   </rect>
-  <rect class="series-2" x="627" y="228.1" width="30" height="0.8" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-10">
-    <title>Codex · 2026-08-10 · gpt-5.6-terra: 11.6M of 1.1B</title>
+  <rect class="series-2" x="627" y="201.4" width="30" height="1.3" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-11">
+    <title>Codex · 2026-08-11 · gpt-5.6-terra: 19.1M of 1.6B</title>
   </rect>
-  <rect class="series-other" x="627" y="228.0" width="30" height="0.1" data-agent="codex" data-model="other" data-week="2026-08-10">
-    <title>Codex · 2026-08-10 · Other: 1.2M of 1.1B</title>
+  <rect class="series-other" x="627" y="201.3" width="30" height="0.1" data-agent="codex" data-model="other" data-week="2026-08-11">
+    <title>Codex · 2026-08-11 · Other: 1.2M of 1.6B</title>
   </rect>
-  <rect class="series-0" x="668" y="238.1" width="30" height="67.9" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-17">
-    <title>Codex · 2026-08-17 · gpt-5.6-sol: 973M of 1.1B</title>
+  <rect class="series-0" x="668" y="266.4" width="30" height="39.6" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-18">
+    <title>Codex · 2026-08-18 · gpt-5.6-sol: 594M of 628M</title>
   </rect>
-  <rect class="series-1" x="668" y="232.9" width="30" height="5.1" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-17">
-    <title>Codex · 2026-08-17 · gpt-5.5: 73.8M of 1.1B</title>
+  <rect class="series-1" x="668" y="264.9" width="30" height="1.4" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-18">
+    <title>Codex · 2026-08-18 · gpt-5.5: 21.6M of 628M</title>
   </rect>
-  <rect class="series-2" x="668" y="231.5" width="30" height="1.4" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-17">
-    <title>Codex · 2026-08-17 · gpt-5.6-terra: 20.7M of 1.1B</title>
+  <rect class="series-2" x="668" y="264.0" width="30" height="0.9" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-18">
+    <title>Codex · 2026-08-18 · gpt-5.6-terra: 13.1M of 628M</title>
   </rect>
-  <rect class="series-0" x="709" y="275.9" width="30" height="30.1" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-24">
-    <title>Codex · 2026-08-24 · gpt-5.6-sol: 431M of 453M</title>
+  <rect class="series-0" x="709" y="283.2" width="30" height="22.8" data-agent="codex" data-model="gpt-5.6-sol" data-week="2026-08-25">
+    <title>Codex · 2026-08-25 · gpt-5.6-sol: 342M of 361M</title>
   </rect>
-  <rect class="series-1" x="709" y="274.9" width="30" height="1.0" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-24">
-    <title>Codex · 2026-08-24 · gpt-5.5: 14.6M of 453M</title>
+  <rect class="series-1" x="709" y="282.4" width="30" height="0.7" data-agent="codex" data-model="gpt-5.5" data-week="2026-08-25">
+    <title>Codex · 2026-08-25 · gpt-5.5: 11.2M of 361M</title>
   </rect>
-  <rect class="series-2" x="709" y="274.4" width="30" height="0.5" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-24">
-    <title>Codex · 2026-08-24 · gpt-5.6-terra: 7.5M of 453M</title>
+  <rect class="series-2" x="709" y="281.9" width="30" height="0.5" data-agent="codex" data-model="gpt-5.6-terra" data-week="2026-08-25">
+    <title>Codex · 2026-08-25 · gpt-5.6-terra: 7.5M of 361M</title>
   </rect>
-  <text class="dashboard-muted" x="422" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 6</text>
-  <text class="dashboard-muted" x="750" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 24</text>
+  <text class="dashboard-muted" x="422" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 7</text>
+  <text class="dashboard-muted" x="750" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 25</text>
   <rect class="dashboard-panel" x="792" y="92" width="372" height="250" rx="16"/>
   <circle class="agent-traex" cx="814" cy="117" r="5"/>
   <text class="dashboard-primary" x="827" y="122" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="600">TRAE</text>
@@ -262,60 +262,60 @@
   <text class="dashboard-muted" x="1050.5" y="186" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="9">LATEST 4 WEEKS</text>
   <line class="dashboard-border" x1="810" y1="306" x2="1138" y2="306" stroke-width="1"/>
   <line class="dashboard-border" x1="968.5" y1="189" x2="968.5" y2="310" stroke-width="1" stroke-dasharray="2 3"/>
-  <rect class="series-2" x="810" y="305.9" width="30" height="0.1" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-07-06">
-    <title>TRAE · 2026-07-06 · gemini-3-flash-preview: 971K of 8.7M</title>
+  <rect class="series-2" x="810" y="305.9" width="30" height="0.1" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-07-07">
+    <title>TRAE · 2026-07-07 · gemini-3-flash-preview: 971K of 8.7M</title>
   </rect>
-  <rect class="series-other" x="810" y="304.9" width="30" height="1.0" data-agent="traex" data-model="other" data-week="2026-07-06">
-    <title>TRAE · 2026-07-06 · Other: 7.7M of 8.7M</title>
+  <rect class="series-other" x="810" y="305.0" width="30" height="0.9" data-agent="traex" data-model="other" data-week="2026-07-07">
+    <title>TRAE · 2026-07-07 · Other: 7.7M of 8.7M</title>
   </rect>
-  <rect class="series-0" x="974" y="301.2" width="30" height="4.8" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-03">
-    <title>TRAE · 2026-08-03 · claude-opus-4-8: 38.4M of 73.8M</title>
+  <rect class="series-0" x="974" y="301.5" width="30" height="4.5" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-04">
+    <title>TRAE · 2026-08-04 · claude-opus-4-8: 38.4M of 92.8M</title>
   </rect>
-  <rect class="series-1" x="974" y="300.6" width="30" height="0.7" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-03">
-    <title>TRAE · 2026-08-03 · gpt-5.5: 5.5M of 73.8M</title>
+  <rect class="series-1" x="974" y="300.7" width="30" height="0.8" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-04">
+    <title>TRAE · 2026-08-04 · gpt-5.5: 6.9M of 92.8M</title>
   </rect>
-  <rect class="series-2" x="974" y="299.1" width="30" height="1.5" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-03">
-    <title>TRAE · 2026-08-03 · gemini-3-flash-preview: 12M of 73.8M</title>
+  <rect class="series-2" x="974" y="299.2" width="30" height="1.6" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-04">
+    <title>TRAE · 2026-08-04 · gemini-3-flash-preview: 13.3M of 92.8M</title>
   </rect>
-  <rect class="series-other" x="974" y="296.9" width="30" height="2.2" data-agent="traex" data-model="other" data-week="2026-08-03">
-    <title>TRAE · 2026-08-03 · Other: 17.9M of 73.8M</title>
+  <rect class="series-other" x="974" y="295.2" width="30" height="4.0" data-agent="traex" data-model="other" data-week="2026-08-04">
+    <title>TRAE · 2026-08-04 · Other: 34.2M of 92.8M</title>
   </rect>
-  <rect class="series-0" x="1015" y="248.8" width="30" height="57.2" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-10">
-    <title>TRAE · 2026-08-10 · claude-opus-4-8: 462M of 905M</title>
+  <rect class="series-0" x="1015" y="247.7" width="30" height="58.3" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-11">
+    <title>TRAE · 2026-08-11 · claude-opus-4-8: 500M of 960M</title>
   </rect>
-  <rect class="series-1" x="1015" y="216.3" width="30" height="32.5" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-10">
-    <title>TRAE · 2026-08-10 · gpt-5.5: 263M of 905M</title>
+  <rect class="series-1" x="1015" y="216.5" width="30" height="31.2" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-11">
+    <title>TRAE · 2026-08-11 · gpt-5.5: 268M of 960M</title>
   </rect>
-  <rect class="series-2" x="1015" y="196.2" width="30" height="20.1" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-10">
-    <title>TRAE · 2026-08-10 · gemini-3-flash-preview: 162M of 905M</title>
+  <rect class="series-2" x="1015" y="195.6" width="30" height="20.9" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-11">
+    <title>TRAE · 2026-08-11 · gemini-3-flash-preview: 179M of 960M</title>
   </rect>
-  <rect class="series-other" x="1015" y="194.0" width="30" height="2.2" data-agent="traex" data-model="other" data-week="2026-08-10">
-    <title>TRAE · 2026-08-10 · Other: 18.1M of 905M</title>
+  <rect class="series-other" x="1015" y="194.0" width="30" height="1.6" data-agent="traex" data-model="other" data-week="2026-08-11">
+    <title>TRAE · 2026-08-11 · Other: 13.5M of 960M</title>
   </rect>
-  <rect class="series-0" x="1056" y="297.1" width="30" height="8.9" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-17">
-    <title>TRAE · 2026-08-17 · claude-opus-4-8: 72.3M of 131M</title>
+  <rect class="series-0" x="1056" y="293.9" width="30" height="12.1" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-18">
+    <title>TRAE · 2026-08-18 · claude-opus-4-8: 103M of 140M</title>
   </rect>
-  <rect class="series-1" x="1056" y="295.9" width="30" height="1.1" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-17">
-    <title>TRAE · 2026-08-17 · gpt-5.5: 9.3M of 131M</title>
+  <rect class="series-1" x="1056" y="293.4" width="30" height="0.5" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-18">
+    <title>TRAE · 2026-08-18 · gpt-5.5: 4.3M of 140M</title>
   </rect>
-  <rect class="series-2" x="1056" y="291.3" width="30" height="4.6" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-17">
-    <title>TRAE · 2026-08-17 · gemini-3-flash-preview: 37.1M of 131M</title>
+  <rect class="series-2" x="1056" y="289.7" width="30" height="3.7" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-18">
+    <title>TRAE · 2026-08-18 · gemini-3-flash-preview: 31.9M of 140M</title>
   </rect>
-  <rect class="series-other" x="1056" y="289.8" width="30" height="1.5" data-agent="traex" data-model="other" data-week="2026-08-17">
-    <title>TRAE · 2026-08-17 · Other: 12.5M of 131M</title>
+  <rect class="series-other" x="1056" y="289.6" width="30" height="0.1" data-agent="traex" data-model="other" data-week="2026-08-18">
+    <title>TRAE · 2026-08-18 · Other: 756K of 140M</title>
   </rect>
-  <rect class="series-0" x="1097" y="292.9" width="30" height="13.1" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-24">
-    <title>TRAE · 2026-08-24 · claude-opus-4-8: 106M of 139M</title>
+  <rect class="series-0" x="1097" y="301.7" width="30" height="4.3" data-agent="traex" data-model="claude-opus-4-8" data-week="2026-08-25">
+    <title>TRAE · 2026-08-25 · claude-opus-4-8: 37M of 56.9M</title>
   </rect>
-  <rect class="series-1" x="1097" y="291.4" width="30" height="1.5" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-24">
-    <title>TRAE · 2026-08-24 · gpt-5.5: 12.4M of 139M</title>
+  <rect class="series-1" x="1097" y="300.4" width="30" height="1.3" data-agent="traex" data-model="gpt-5.5" data-week="2026-08-25">
+    <title>TRAE · 2026-08-25 · gpt-5.5: 11M of 56.9M</title>
   </rect>
-  <rect class="series-2" x="1097" y="288.9" width="30" height="2.5" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-24">
-    <title>TRAE · 2026-08-24 · gemini-3-flash-preview: 20.2M of 139M</title>
+  <rect class="series-2" x="1097" y="299.6" width="30" height="0.8" data-agent="traex" data-model="gemini-3-flash-preview" data-week="2026-08-25">
+    <title>TRAE · 2026-08-25 · gemini-3-flash-preview: 7.2M of 56.9M</title>
   </rect>
-  <rect class="series-other" x="1097" y="288.8" width="30" height="0.1" data-agent="traex" data-model="other" data-week="2026-08-24">
-    <title>TRAE · 2026-08-24 · Other: 659K of 139M</title>
+  <rect class="series-other" x="1097" y="299.4" width="30" height="0.2" data-agent="traex" data-model="other" data-week="2026-08-25">
+    <title>TRAE · 2026-08-25 · Other: 1.8M of 56.9M</title>
   </rect>
-  <text class="dashboard-muted" x="810" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 6</text>
-  <text class="dashboard-muted" x="1138" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 24</text>
+  <text class="dashboard-muted" x="810" y="327" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Jul 7</text>
+  <text class="dashboard-muted" x="1138" y="327" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">Aug 25</text>
 </svg>
