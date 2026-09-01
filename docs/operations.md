@@ -49,9 +49,15 @@ A live session's unfinished last frame is the ordinary cause of a partial read, 
 not claim to tell it apart from a damaged frame. It cannot: zstd reports single-byte corruption
 under seven different messages, one of them the same `premature end` a live tail produces, and frame
 boundaries cannot be found by scanning for the frame magic because those four bytes also occur
-inside compressed payloads. Both cases contribute the same decodable prefix, so the distinction
-would change only the wording of a notice. A count that stays positive across runs with no dsh
-session running is the signal that a log is genuinely damaged. On a machine with neither decoder the
+inside compressed payloads. So the count is reported without a claimed cause, and a count that stays
+positive across runs with no dsh session running is the signal that a log is genuinely damaged.
+
+Decoding stops at the first frame that does not decode and does not resume past it. For the ordinary
+cause nothing follows the torn frame to lose. A frame damaged mid-file is the case that costs
+something: the batches after it are not read until the artifact is repaired or rotated away. The
+per-day high-water merge holds the days already recorded steady in the meantime, so the ledger
+stalls rather than drops. That is the accepted price of not guessing at frame boundaries — an
+earlier revision did guess, and the guess was what made valid frames undecodable. On a machine with neither decoder the
 run reports how many logs it could not read at all and leaves the cumulative store intact, exactly
 as a failed ccusage fetch does.
 

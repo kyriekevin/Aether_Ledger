@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import inspect
 import io
 import json
@@ -1648,8 +1649,11 @@ class ZstdFrameDecodingTests(unittest.TestCase):
     zstd reports single-byte corruption under seven different messages, one of
     them the same "premature end" a live tail gives, and frame boundaries cannot
     be found by scanning for the frame magic because those bytes also occur
-    inside compressed payloads. Both cases contribute the same decodable prefix,
-    so the distinction would change only the wording of a notice.
+    inside compressed payloads.
+
+    Decoding therefore stops at the first frame that will not decode and does not
+    resume past it. These tests pin the exact prefix that survives, because the
+    cost of that choice is real and should fail loudly if it ever moves.
     """
 
     @staticmethod
@@ -1683,9 +1687,59 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         text, complete = sync_usage._zstd_frames_text(
             self.a + self.b + self.c[: len(self.c) // 2]
         )
-        self.assertIn("alpha", text)
-        self.assertIn("bravo", text)
+        self.assertEqual(text, "alpha\nbravo\n")
         self.assertFalse(complete)
+
+    def test_a_partial_read_ends_on_a_record_boundary(self) -> None:
+        """`zstd -dc` emits the bytes it decoded, which stop mid-record.
+
+        Trimming to the last newline keeps a partial read to whole records, and
+        keeps the in-process and subprocess decoders returning the same prefix
+        for the same artifact.
+        """
+        torn = self.frame(b'{"n":"charlie"}\n')
+        text, complete = sync_usage._zstd_frames_text(
+            self.frame(b'{"n":"alpha"}\n') + torn[: len(torn) // 2]
+        )
+        self.assertEqual(text, '{"n":"alpha"}\n')
+        self.assertFalse(complete)
+
+    def test_a_frame_damaged_mid_file_costs_the_frames_after_it(self) -> None:
+        """The accepted price of not guessing at frame boundaries.
+
+        Recovering `charlie` would mean locating the frame that follows the
+        damage, and the only cheap way to do that — scanning for the frame magic
+        — splits valid frames, because those four bytes occur inside compressed
+        payloads too. Stalling is preferred to corrupting; the per-day high-water
+        merge keeps the days already recorded from dropping while it stalls.
+        """
+        damaged = bytearray(self.b)
+        damaged[len(damaged) // 2 : len(damaged) // 2 + 4] = b"\xff\xff\xff\xff"
+        text, complete = sync_usage._zstd_frames_text(
+            self.a + bytes(damaged) + self.c
+        )
+        self.assertEqual(text, "alpha\n")
+        self.assertNotIn("charlie", text)
+        self.assertFalse(complete)
+
+    def test_both_decoder_backends_agree(self) -> None:
+        """The in-process path (3.14+) and the `zstd -dc` fallback are one contract.
+
+        Only one of them runs on any given interpreter, so a divergence would
+        surface as a machine-dependent total rather than as a failure here.
+        """
+        try:
+            importlib.import_module("compression.zstd")
+        except ImportError:
+            self.skipTest("no in-process zstd decoder to compare against")
+        torn = self.a + self.b + self.c[: len(self.c) // 2]
+        cases = (b"", self.a, self.a + self.b, torn, b"not a zstd artifact")
+        for raw in cases:
+            with self.subTest(raw=raw[:16]):
+                in_process = sync_usage._zstd_frames_text(raw)
+                with patch.dict(sys.modules, {"compression.zstd": None}):
+                    subprocess_path = sync_usage._zstd_frames_text(raw)
+                self.assertEqual(in_process, subprocess_path)
 
     def test_bytes_that_are_not_zstd_report_unreadable_rather_than_empty(
         self,

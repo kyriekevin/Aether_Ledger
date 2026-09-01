@@ -611,6 +611,19 @@ def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
     return (default,) if default.is_dir() else ()
 
 
+def _whole_lines(text: str) -> str:
+    """Drop a trailing line the decoder stopped in the middle of.
+
+    A frame that did not decode to its end leaves the bytes it did produce, which
+    normally stop partway through a record. Both decoders are trimmed to the last
+    newline so that a partial read is always whole records, and so that the two
+    of them return the same prefix for the same artifact. The dropped fragment
+    would not have parsed as JSON anyway; this only keeps the contract statable.
+    """
+    cut = text.rfind("\n")
+    return text[: cut + 1] if cut >= 0 else ""
+
+
 def _zstd_frames_text(raw: bytes) -> tuple[str | None, bool]:
     """Decode a dsh session artifact, with whether it decoded to the end.
 
@@ -630,9 +643,15 @@ def _zstd_frames_text(raw: bytes) -> tuple[str | None, bool]:
     single-byte corruption as seven different messages, one of which is the same
     "premature end" a live tail produces, and frame boundaries cannot be found by
     scanning for the frame magic because those bytes also occur inside compressed
-    payloads. Nor would it change what is collected — both cases contribute the
-    same decodable prefix. So the count is reported without a claimed cause; a
-    count that stays positive across runs with no live session is the tell.
+    payloads. So the count is reported without a claimed cause; a count that stays
+    positive across runs with no live session is the tell.
+
+    Decoding stops at the first frame that does not decode, and does not resume
+    past it. For the ordinary cause — a live session's unfinished last frame —
+    nothing follows it to lose. A frame damaged mid-file does cost the batches
+    after it until the artifact is repaired or rotated; the per-day high-water
+    merge keeps the days already recorded from dropping in the meantime. This is
+    the deliberate price of not guessing at frame boundaries.
 
     Nothing is added to this script's (empty) dependency list for any of it.
     """
@@ -661,7 +680,8 @@ def _zstd_frames_text(raw: bytes) -> tuple[str | None, bool]:
             remaining = decompressor.unused_data
         if not decoded and not complete:
             return None, False
-        return decoded.decode("utf-8", "replace"), complete
+        text = decoded.decode("utf-8", "replace")
+        return (text if complete else _whole_lines(text)), complete
 
     zstd = shutil.which("zstd")
     if zstd is None:
@@ -680,7 +700,7 @@ def _zstd_frames_text(raw: bytes) -> tuple[str | None, bool]:
         return out.stdout.decode("utf-8", "replace"), True
     if not out.stdout:
         return None, False
-    return out.stdout.decode("utf-8", "replace"), False
+    return _whole_lines(out.stdout.decode("utf-8", "replace")), False
 
 
 def _read_dsh_session_log(path: Path) -> tuple[str | None, bool]:
