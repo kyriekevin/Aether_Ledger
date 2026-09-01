@@ -44,6 +44,24 @@ ROUTING_BUCKET_KEYS = frozenset(
 )
 QUOTA_KEYS = frozenset({"windows", "limitReached"})
 
+# data/multica.json records dispatch shape, never tokens or cost — those reach
+# the ledger through the harnesses Multica drives. The audit enforces that: a
+# `usage` section appearing here would mean the same work was counted twice.
+# Repeated as a literal because this script runs standalone under `uv run
+# --script` with no dependencies and so cannot import sync_usage; the tests
+# assert the two definitions agree.
+MULTICA_TASK_STORE = "data/multica.json"
+MULTICA_DAY_KEYS = frozenset({"tasks"})
+# The agents the Multica collector can actually emit. Deliberately NOT derived
+# from AGENT_FILES: that list is the token stores, and it includes `opencode`,
+# which Multica does not dispatch, and `codex-multica`, which is a store name
+# rather than an agent. Validating against it would accept values the collector
+# cannot produce, which is the shape a corrupted or hand-edited file would take.
+MULTICA_TASK_AGENTS = frozenset({"claude", "codex", "dsh", "traex"})
+MULTICA_TASK_KEYS = frozenset(
+    {"total", "completed", "failed", "cancelled", "durationSeconds"}
+)
+
 
 def tracked_files(root: Path) -> tuple[Path, ...]:
     result = subprocess.run(
@@ -190,6 +208,79 @@ def _validate_store_schema(value: object, path: Path, issues: list[str]) -> None
                     issues.append(f"{path}: {day} quota limitReached must be boolean")
 
 
+def _validate_multica_schema(value: object, path: Path, issues: list[str]) -> None:
+    """Validate the identifier-free Multica task aggregate.
+
+    The API this is built from returns names, emails, absolute paths, prompts and
+    raw agent output. None of that may reach the file, so the schema is a strict
+    allow-list: any key the collector did not intend is an issue, not a value to
+    be sanitised.
+    """
+    if not isinstance(value, dict):
+        issues.append(f"{path}: Multica aggregate must be a date-keyed object")
+        return
+    for day, entry in value.items():
+        try:
+            date.fromisoformat(day)
+        except (TypeError, ValueError):
+            issues.append(f"{path}: invalid date key {day!r}")
+            continue
+        if not isinstance(entry, dict):
+            issues.append(f"{path}: {day} entry must be an object")
+            continue
+        for key in sorted(set(entry).difference(MULTICA_DAY_KEYS)):
+            issues.append(f"{path}: {day} field {key!r} is not in the public schema")
+        roles = entry.get("tasks", {})
+        if not isinstance(roles, dict):
+            issues.append(f"{path}: {day} tasks must be an object")
+            continue
+        for role, agents in roles.items():
+            if role not in DURABLE_NODES or not isinstance(agents, dict):
+                issues.append(f"{path}: {day} has invalid tasks role {role!r}")
+                continue
+            for agent, payload in agents.items():
+                if agent not in MULTICA_TASK_AGENTS:
+                    issues.append(f"{path}: {day} has invalid tasks agent {agent!r}")
+                    continue
+                if not isinstance(payload, dict):
+                    issues.append(f"{path}: {day} tasks.{role}.{agent} must be an object")
+                    continue
+                for key in sorted(set(payload).difference(MULTICA_TASK_KEYS)):
+                    issues.append(
+                        f"{path}: {day} task field {role}.{agent}.{key} is not public"
+                    )
+                for key in sorted(MULTICA_TASK_KEYS):
+                    metric = payload.get(key)
+                    # Every counter is required. A bundle missing `total`, or
+                    # carrying outcomes without it, would slip past the
+                    # arithmetic check below by simply not being compared.
+                    if (
+                        not isinstance(metric, int)
+                        or isinstance(metric, bool)
+                        or metric < 0
+                    ):
+                        issues.append(
+                            f"{path}: {day} tasks.{role}.{agent}.{key} "
+                            "must be a non-negative integer"
+                        )
+                total = payload.get("total")
+                outcomes = sum(
+                    payload.get(key, 0)
+                    for key in ("completed", "failed", "cancelled")
+                    if isinstance(payload.get(key, 0), int)
+                    and not isinstance(payload.get(key, 0), bool)
+                )
+                if (
+                    isinstance(total, int)
+                    and not isinstance(total, bool)
+                    and total != outcomes
+                ):
+                    issues.append(
+                        f"{path}: {day} tasks.{role}.{agent}.total "
+                        "must equal terminal outcomes"
+                    )
+
+
 def audit_tree(root: Path) -> list[str]:
     issues: list[str] = []
     for path in tracked_files(root):
@@ -224,6 +315,8 @@ def audit_tree(root: Path) -> list[str]:
                 issues.append(f"{relative}: usage store is not under an approved node label")
             if parsed_ok:
                 _validate_store_schema(parsed, relative, issues)
+        elif relative == Path(MULTICA_TASK_STORE) and parsed_ok:
+            _validate_multica_schema(parsed, relative, issues)
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
