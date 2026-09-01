@@ -26,6 +26,67 @@ Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`). It also collaps
 short Gemini config names (`gemini-3.1-pro`, `gemini-3-flash`) onto the official preview slugs
 recorded in its own model metadata, so old and new sessions share one cumulative model bucket.
 
+DeepSeek Harness (dsh) is read from its own logs, because ccusage has no `dsh` agent to borrow the
+way traex borrows the Codex reader. A dsh harness home holds one append-only JSONL event log per
+session at `<root>/<project>/<session>/session.jsonl[.zstd]`, and the writer reads three of its
+event types: `request/header` and `request/context` name the model serving the calls that follow,
+and `assistant/message` carries one model call's token accounting. dsh reports disjoint counts —
+`inputTokens` excludes cached input, which arrives separately as cache reads and writes — so the
+four components add up to the billed total, the same convention the ccusage-fed stores use. Days
+land in `dsh.json`, priced at the official standard tier; dsh records no priority tier for a
+multiplier to apply to. Effort comes from the header's `reasoningEffort`: dsh's `off` is recorded
+as this repository's `none`, and its `minimal`, which has no counterpart here, records no effort
+bucket rather than being folded into `low`.
+
+Session logs are normally Zstandard-compressed, as a concatenation of one independently decodable
+frame per durable batch. The writer decodes them with Python's own `compression.zstd` (3.14+) or,
+failing that, a local `zstd` binary. Under the pinned 3.11 it is always the `zstd` binary; the
+in-process branch is there for when the pin moves, and both return the same prefix for the same
+artifact. Whatever decoded is kept, and the run reports how many logs did
+not decode to the end. Keeping a partial read is safe: frames are append-only and every run
+recomputes the day from the whole artifact, so a torn read is superseded by the completed one rather
+than added to it.
+
+A live session's unfinished last frame is the ordinary cause of a partial read, and the writer does
+not claim to tell it apart from a damaged frame. It cannot: zstd reports single-byte corruption
+under seven different messages, one of them the same `premature end` a live tail produces, and frame
+boundaries cannot be found by scanning for the frame magic because those four bytes also occur
+inside compressed payloads. So the count is reported without a claimed cause, and a count that stays
+positive across runs with no dsh session running is the signal that a log is genuinely damaged.
+
+Decoding stops at the first frame that does not decode and does not resume past it. For the ordinary
+cause nothing follows the torn frame to lose. A frame damaged mid-file is the case that costs
+something: the batches after it are not read until the artifact is repaired or rotated away. The
+per-day high-water merge holds the days already recorded steady in the meantime, so the ledger
+stalls rather than drops. That is the accepted price of not guessing at frame boundaries — an
+earlier revision did guess, and the guess was what made valid frames undecodable. On a machine with neither decoder the
+run reports how many logs it could not read at all and leaves the cumulative store intact, exactly
+as a failed ccusage fetch does.
+
+Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
+in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
+already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
+special handling. Codex is the exception. Multica gives each task a private `CODEX_HOME` whose
+`sessions` is a symlink into a shared `~/.codex/multica-sessions` tree, which is a sibling of
+`~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
+that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
+writes the result to a store of its own, `codex-multica.json`.
+
+A separate store rather than a bigger Codex day, because the cumulative merge keeps the larger of
+the stored and incoming observations per day. That high-water rule is what protects history from
+session rotation, and it only holds while each stored number describes one fixed source. Add the
+two trees together first and max() is comparing sums whose composition can change: on a day whose
+Multica rollouts have aged out while the standard tree kept growing past the old combined total,
+the larger sum wins and the pruned tree's share is gone, with nothing to signal it and no later run
+able to restore it. One store per tree keeps every high-water mark meaning what it says, and
+`AGENT_BUCKETS` folds `codex-multica` back under `codex` at render time so no chart shows it as a
+harness of its own. It also isolates a failed Multica read: an empty fetch merges nothing, where a
+summed one would have rewritten the Codex day from a partial view under `--reconcile-since`.
+
+Unlike the traex path, this one keeps ccusage's own cost for a row whose every
+model has an unchanged official rate, because ccusage still knows which of those calls ran on the
+priority tier or crossed a long-context threshold and a day's totals cannot say.
+
 Token prices come only from `config/official-pricing.json`. The sync invokes ccusage with
 `--offline` and a generated override file, so neither LiteLLM's live table nor models.dev can alter
 stored amounts. ccusage still supplies its request-level Codex Fast/standard and long-context
@@ -90,13 +151,20 @@ A new machine can only recover dates still present in its local logs.
 - `ccusage` 20.0.19 or newer (`--by-agent`, pricing overrides, and recorded Fast tier support)
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
-- Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
+- Claude Code, Codex, OpenCode, TRAE CLI (traex), or DeepSeek Harness (dsh) local usage logs
 
 Install the command-line dependencies:
 
 ```sh
 brew install uv ccusage gh
 ```
+
+The scripts are dependency-free single files carrying their own `requires-python = ">=3.11"`, so
+there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
+picks the newest installed version that satisfies it, which differs between a developer machine, CI,
+and the rollover runner, and neither workflow passes a `python-version`. `.python-version` pins all
+of them to 3.11 — the declared floor, so what runs is what the scripts claim to support. Every
+`make` target goes through `uv` so the pin actually covers them.
 
 ## Machine identity
 
@@ -327,7 +395,8 @@ pinned to `main` will be up to one day behind by design.
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
-`opencode.json`, or `traex.json`. Files such as `codex_by_repo.json` are deliberately excluded.
+`codex-multica.json`, `opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
+excluded.
 
 The activity SVG contains:
 
@@ -489,6 +558,10 @@ rotate. Legacy entries may retain the former `turns` field with the same model-c
 
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
+
+dsh (`dsh.json`) uses the same date-keyed shape, with `routing.efforts` when the session headers
+named a reasoning level this repository renders. It represents DeepSeek Harness, whether launched
+by hand or by Multica.
 
 traex (`traex.json`) uses the same date-keyed shape as Codex. It represents the internal TRAE CLI,
 while its recorded model names describe the actual capacity supplied behind that harness. Fast

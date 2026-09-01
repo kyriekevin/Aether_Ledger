@@ -12,6 +12,7 @@
     .agent-claude { fill: #fe640b; }
     .agent-codex { fill: #1e66f5; }
     .agent-traex { fill: #8839ef; }
+    .agent-dsh { fill: #ea76cb; }
     .agent-legacy { fill: #6c6f85; }
     .series-0 { fill: #1e66f5; }
     .series-1 { fill: #fe640b; }
@@ -42,6 +43,7 @@
       .agent-claude { fill: #fab387; }
       .agent-codex { fill: #89b4fa; }
       .agent-traex { fill: #cba6f7; }
+      .agent-dsh { fill: #f5c2e7; }
       .agent-legacy { fill: #a6adc8; }
       .series-0 { fill: #89b4fa; }
       .series-1 { fill: #fab387; }

@@ -23,6 +23,55 @@ TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支
 定价。此外还会把 TRAE 的 Gemini 短配置名（`gemini-3.1-pro`、`gemini-3-flash`）合并到其模型
 元数据记录的官方 preview slug，使新旧会话进入同一个累计模型桶。
 
+DeepSeek Harness（dsh）直接读它自己的日志：ccusage 没有 `dsh` agent，无法像 traex 借用 Codex
+读取器那样借用。一个 dsh harness home 下每个会话有一份追加写的 JSONL 事件日志，位于
+`<root>/<project>/<session>/session.jsonl[.zstd]`，采集器只看三类事件：`request/header` 和
+`request/context` 给出后续调用使用的模型，`assistant/message` 携带单次模型调用的 token 计数。
+dsh 的计数彼此不重叠——`inputTokens` 不含命中缓存的输入，缓存读写单独上报——所以四项相加就是
+计费总量，与 ccusage 采集的几个 store 是同一套口径。数据写入 `dsh.json`，按官方 standard 价格
+计算；dsh 不记录优先级 tier，没有可用的乘数。effort 取自 header 的 `reasoningEffort`：dsh 的
+`off` 记为本仓库的 `none`；它的 `minimal` 在本仓库没有对应档位，因此不记 effort 桶，而不是并入
+`low`。
+
+会话日志通常经 Zstandard 压缩，形式是每个持久化批次一个可独立解码的 frame 拼接而成。采集器优先
+用 Python 自带的 `compression.zstd`（3.14+），否则调本地 `zstd` 二进制。在钉死的 3.11 下永远
+是后者；进程内那条分支是留给将来抬高钉子用的，两者对同一份文件返回相同的前缀。能解出来的部分
+照常保留，并报告有多少份日志没有解到结尾。保留半份是安全的：frame 只追加不重写，
+每轮又是拿整个文件重算当天，所以半份读取会被完整读取取代，而不是相加。
+
+没解到结尾最常见的原因就是活跃会话最后一个还没写完的 frame。采集器不声称能把它和损坏的 frame
+区分开——也确实做不到：zstd 对单字节损坏会报出七种不同消息，其中一种和活跃会话一模一样是
+`premature end`；而 frame 边界也无法靠扫描魔数确定，因为那四个字节同样会出现在压缩负载内部。
+所以这个计数不附带原因推断。真正的信号是：没有 dsh 会话在跑，这个计数却一直不归零，那就是
+真的损坏了。两种解码器都没有的机器会报告有多少份日志完全读不了，并保持累计 store 不变——和
+ccusage 抓取失败时的行为一致。
+
+解码在第一个解不开的 frame 处停下，不会跳过它继续往后读。对最常见的那种原因来说，torn frame
+后面本来就没有东西可丢。真正有代价的是文件中间的 frame 损坏：它后面的批次要等到文件被修复或
+轮转掉才会被读到。在那之前，按天的高水位合并会让已记录的那些天保持不动，账本是停住而不是掉
+下去。这就是不去猜 frame 边界所接受的代价——早先的版本猜过，而那次猜测正是让完好 frame 变得
+解不开的原因。
+
+Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Claude Code、Codex、TRAE CLI 和
+dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
+`~/.trae/cli/sessions`，无需额外处理。Codex 是例外：Multica 给每个任务一个私有 `CODEX_HOME`，
+其 `sessions` 是指向共享目录 `~/.codex/multica-sessions` 的软链接，而该目录是 `~/.codex/sessions`
+的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
+以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。
+
+之所以单开一个 store 而不是把数加进当天的 Codex 条目：累计合并按天保留存量与新观测中较大的
+那个，这条高水位规则是用来防止会话轮转导致历史缩水的，而它成立的前提是每个存量数字只描述
+一个固定来源。先把两棵树加起来，max() 比较的就是构成会变的和——某天 Multica 的 rollout 被清理、
+标准树却继续涨过了原来的合计，较大的那个和胜出，被清理那棵树的份额就没了，既没有信号，后续
+也没有任何一次运行能把它找回来。一棵树一个 store，每个高水位标记才名副其实；渲染时
+`AGENT_BUCKETS` 再把 `codex-multica` 归回 `codex`，所以没有任何一张图会把它显示成独立 harness。
+这样也隔离了抓取失败：空结果什么都不合并，而合并成一份时，`--reconcile-since` 会拿只有半棵树
+的观测覆盖掉当天的 Codex。
+
+与 traex 路径不同，如果一行里每个模型都有未变更的官方费率，这条
+路径会保留 ccusage 自己算的金额——ccusage 仍然知道其中哪些调用走了优先级 tier、哪些越过了长上
+下文阈值，而按天汇总的数据说不出这些。
+
 Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时强制使用 `--offline`，并注入
 由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
 逐请求识别 Codex Fast/standard 与长上下文，仓库负责提供费率。未进入表的模型，以及
@@ -76,13 +125,19 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 - `ccusage` 20.0.19 或更高版本（需支持 `--by-agent`、价格 override 与已记录 Fast tier）
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
-- Claude Code、Codex 或 OpenCode 的本地用量日志
+- Claude Code、Codex、OpenCode、TRAE CLI（traex）或 DeepSeek Harness（dsh）的本地用量日志
 
 安装命令行依赖：
 
 ```sh
 brew install uv ccusage gh
 ```
+
+脚本是零依赖单文件，各自带着 `requires-python = ">=3.11"`，所以没有项目文件也没有 lock 文件。
+但只有这个下限并不能确定解释器：`uv` 会挑满足下限的、已装的最新版本，开发机、CI 和 rollover
+运行器挑到的可能各不相同，而两个 workflow 都没传 `python-version`。`.python-version` 把三处
+统一钉在 3.11——就是脚本声明的下限，跑的就是它声称支持的版本。所有 `make` 目标都走 `uv`，
+这个钉子才真正覆盖得到。
 
 ## 设备身份
 
@@ -291,7 +346,7 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 ## 活动面板
 
 `scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、
-`opencode.json` 或 `traex.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
+`codex-multica.json`、`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
 
 活动 SVG 包含：
 
@@ -439,6 +494,9 @@ Message 与 session 标识只在内存中用于去重，绝不写入仓库。历
 
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
+
+dsh（`dsh.json`）使用相同的按日期结构；当会话 header 给出本仓库会渲染的 effort 档位时，还会带
+`routing.efforts`。它代表 DeepSeek Harness，手动启动和 Multica 调度的都算在内。
 
 traex（`traex.json`）使用与 Codex 相同的按日期结构，代表司内的 TRAE CLI；其中记录的模型名
 才描述该 harness 背后实际提供的能力。价格不会假设 Fast tier，已登记模型按官方 standard

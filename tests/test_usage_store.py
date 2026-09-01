@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import ast
+import importlib
+import inspect
 import io
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,13 +16,49 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import audit_public  # noqa: E402
 import compact_trails  # noqa: E402
+import render_dashboard  # noqa: E402
+import squash_usage_branch  # noqa: E402
 import sync_usage  # noqa: E402
+import update_pricing  # noqa: E402
 
 
 class SharedStoreCoverageTests(unittest.TestCase):
     def test_trail_compaction_covers_traex(self) -> None:
         self.assertIn("traex.json", compact_trails.AGENT_FILES)
+
+    def test_every_writable_store_is_registered_everywhere(self) -> None:
+        """A store the writer creates but a consumer ignores is a silent hole.
+
+        `dsh.json` is the one this caught: audit_public would never schema-check
+        it, render_dashboard would drop it from every chart, compact_trails would
+        strand it in expired trail pods, and squash_usage_branch would treat its
+        conflicts as human work. Each of those fails quietly, so they are
+        asserted together against the writer rather than one at a time.
+
+        The expected set is read out of `sync_usage.AGENT_STORES` rather than
+        written out here. A literal would make this test agree with itself: the
+        writer could add a sixth store and every assertion below would still pass
+        against the stale five.
+        """
+        written = set(sync_usage.AGENT_STORES.values())
+        self.assertEqual(
+            set(sync_usage.AGENT_STORES), set(render_dashboard.AGENT_BUCKETS),
+            "every written store needs a dashboard bucket to render under",
+        )
+        self.assertEqual(set(compact_trails.AGENT_FILES), written)
+        self.assertEqual(set(audit_public.AGENT_FILES), written)
+        self.assertEqual(set(render_dashboard.AGENT_FILES), written)
+        self.assertEqual(set(update_pricing.AGENT_FILES), written)
+        for name in written:
+            self.assertRegex(
+                f"data/work/{name}", squash_usage_branch.GENERATED_STORE
+            )
+            self.assertRegex(
+                f"data/trail/node-0123456789ab/{name}",
+                squash_usage_branch.GENERATED_STORE,
+            )
 
     def test_trail_compaction_preserves_allocation_telemetry(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -649,6 +689,57 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.assertEqual(telemetry["quota"]["windows"], {"300": 80.0, "10080": 12.0})
         self.assertTrue(telemetry["quota"]["limitReached"])
         self.assertNotIn("session", json.dumps(telemetry).lower())
+
+    def test_one_tree_per_call_ignores_its_siblings(self) -> None:
+        """Multica's rollouts belong to their own store, not to this tree's.
+
+        Collecting several trees into one result would make the caller responsible
+        for proving they are disjoint — a precondition nothing enforces once a
+        symlink or a nested path is involved. One tree per call removes the
+        question, so a sibling tree must contribute nothing here.
+        """
+        event = {
+            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+            "payload": {
+                "type": "token_count",
+                "info": {"last_token_usage": {"total_tokens": 100}},
+            },
+        }
+        settings = {
+            "type": "event_msg", "timestamp": "2026-08-15T01:00:00Z",
+            "payload": {
+                "type": "thread_settings_applied",
+                "thread_settings": {"reasoning_effort": "high"},
+            },
+        }
+        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [settings, event])
+        self.write_jsonl(
+            "multica-sessions/p_x/w/r/2026/08/15/rollout.jsonl", [settings, event]
+        )
+        daily = sync_usage.collect_codex_routing_since(
+            date(2026, 1, 1), self.root / "sessions"
+        )
+        bucket = daily["2026-08-15"]["routing"]["efforts"]["high"]
+        self.assertEqual(bucket["calls"], 1)
+        self.assertEqual(bucket["totalTokens"], 100)
+
+    def test_a_single_directory_is_still_accepted(self) -> None:
+        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [{
+            "type": "turn_context", "timestamp": "2026-08-15T01:00:00Z",
+            "payload": {"effort": "low"},
+        }, {
+            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+            "payload": {
+                "type": "token_count",
+                "info": {"last_token_usage": {"total_tokens": 7}},
+            },
+        }])
+        daily = sync_usage.collect_codex_routing_since(
+            date(2026, 1, 1), self.root / "sessions"
+        )
+        self.assertEqual(
+            daily["2026-08-15"]["routing"]["efforts"]["low"]["totalTokens"], 7
+        )
 
     def test_claude_stream_updates_are_deduplicated_before_routing_totals(self) -> None:
         self.write_jsonl("project/session.jsonl", [
@@ -1286,6 +1377,626 @@ class ReconcileStubTests(unittest.TestCase):
             reconcile_since=date(2026, 7, 18),
         )
         self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 722_000_000)
+
+
+class DshSessionTests(unittest.TestCase):
+    """collect_dsh_daily_since parses dsh's own append-only session log.
+
+    ccusage has no dsh reader, so nothing here is delegated: the log's
+    `request/header` names the model, `assistant/message` carries one call's
+    TokenUsage, and dsh's counts are disjoint (cached input is reported apart
+    from `inputTokens`), so the four components add up to the billed total.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.home = Path(self._tmp.name)
+        self.root = self.home / "sessions"
+
+    def write_session(
+        self, project: str, session: str, events: list[dict]
+    ) -> Path:
+        path = self.root / project / session / "session.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(json.dumps(event) for event in events) + "\n",
+            encoding="utf-8",
+        )
+        return path
+
+    @staticmethod
+    def header(seq: int, millis: int, model: str, effort: str | None = None) -> dict:
+        config = {"provider": "deepseek-official", "model": model}
+        if effort is not None:
+            config["reasoningEffort"] = effort
+        return {
+            "type": "request/header", "seq": seq, "time": millis,
+            "data": {"header": {"config": config}, "reason": "initial"},
+        }
+
+    @staticmethod
+    def message(seq: int, millis: int, usage: dict) -> dict:
+        return {
+            "type": "assistant/message", "seq": seq, "time": millis,
+            "data": {"turn": 1, "step": 1, "message": {}, "usage": usage},
+        }
+
+    def collect(self, since: date = date(2024, 1, 1)) -> list[dict]:
+        return sync_usage.collect_dsh_daily_since(
+            since, sync_usage.dsh_session_roots(self.home)
+        )
+
+    def test_one_call_becomes_a_priced_day(self) -> None:
+        # 2026-08-20T12:00:00+08:00
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            {"type": "session", "version": 0, "id": "session-a", "createdAt": millis},
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {
+                "inputTokens": 1_000_000, "outputTokens": 1_000_000,
+            }),
+        ])
+        entries = self.collect()
+        self.assertEqual(len(entries), 1)
+        entry = entries[0]
+        self.assertEqual(entry["date"], "2026-08-20")
+        self.assertEqual(entry["totalTokens"], 2_000_000)
+        # 1M input at $0.44 + 1M output at $1.32.
+        self.assertAlmostEqual(entry["totalCost"], 1.76)
+        self.assertEqual(entry["costSource"], "official")
+        self.assertEqual(
+            entry["models"]["deepseek-v4-flash"],
+            {
+                "totalTokens": 2_000_000,
+                "inputTokens": 1_000_000,
+                "outputTokens": 1_000_000,
+                "cacheCreationTokens": 0,
+                "cacheReadTokens": 0,
+            },
+        )
+
+    def test_cached_input_is_counted_and_priced_apart_from_input(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-pro"),
+            self.message(2, millis, {
+                "inputTokens": 1_000_000,
+                "outputTokens": 0,
+                "cacheReadTokens": 1_000_000,
+                "cacheWriteTokens": 1_000_000,
+            }),
+        ])
+        entry = self.collect()[0]
+        # dsh's counts are disjoint, so all three input kinds are billed.
+        self.assertEqual(entry["totalTokens"], 3_000_000)
+        self.assertAlmostEqual(entry["totalCost"], 1.32 + 1.32 + 0.044)
+        model = entry["models"]["deepseek-v4-pro"]
+        self.assertEqual(model["cacheReadTokens"], 1_000_000)
+        self.assertEqual(model["cacheCreationTokens"], 1_000_000)
+
+    def test_calls_accumulate_across_steps_and_sessions(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
+            self.message(3, millis + 1000, {"inputTokens": 20, "outputTokens": 2}),
+        ])
+        self.write_session("other", "session-b", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 5, "outputTokens": 0}),
+        ])
+        entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 10 + 1 + 20 + 2 + 5)
+
+    def test_a_tree_beside_the_default_one_is_not_collected(self) -> None:
+        """One root per store, for the reason codex-multica.json exists.
+
+        Summing several trees into one day puts that day's high-water mark back
+        under a sum whose composition can change: remove the relocated tree and
+        max() cannot tell the loss from ordinary growth. A second tree that
+        genuinely appears needs its own store, not a bigger dsh.json.
+        """
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        relocated = self.home / "dsh-sessions" / "proj" / "session-c"
+        relocated.mkdir(parents=True)
+        (relocated / "session.jsonl").write_text(
+            "\n".join(json.dumps(event) for event in (
+                self.header(1, millis, "deepseek-v4-flash"),
+                self.message(2, millis, {"inputTokens": 100, "outputTokens": 0}),
+            )) + "\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(sync_usage.dsh_session_roots(self.home), (self.root,))
+        self.assertEqual(self.collect()[0]["totalTokens"], 10)
+
+    def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+            {
+                "type": "request/context", "seq": 3, "time": millis,
+                "data": {"provider": "opencode-go", "model": "deepseek-v4-pro"},
+            },
+            self.message(4, millis, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        models = self.collect()[0]["models"]
+        self.assertEqual(models["deepseek-v4-flash"]["totalTokens"], 10)
+        self.assertEqual(models["deepseek-v4-pro"]["totalTokens"], 20)
+
+    def test_a_model_with_no_official_rate_keeps_its_tokens_at_zero_cost(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "glm-5.1"),
+            self.message(2, millis, {"inputTokens": 1_000_000, "outputTokens": 0}),
+        ])
+        with patch.object(sync_usage.sys, "stderr", io.StringIO()) as err:
+            entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 1_000_000)
+        self.assertEqual(entry["totalCost"], 0.0)
+        self.assertEqual(entry["costSource"], "unpriced")
+        self.assertIn("glm-5.1", err.getvalue())
+
+    def test_effort_is_recorded_only_for_levels_this_repository_renders(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "off", [
+            self.header(1, millis, "deepseek-v4-flash", effort="off"),
+            self.message(2, millis, {
+                "inputTokens": 10, "outputTokens": 0, "reasoningTokens": 4,
+            }),
+        ])
+        self.write_session("proj", "high", [
+            self.header(1, millis, "deepseek-v4-flash", effort="high"),
+            self.message(2, millis, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        # `minimal` has no counterpart in EFFORT_LEVELS, so it records no bucket
+        # rather than being folded into a neighbouring level.
+        self.write_session("proj", "minimal", [
+            self.header(1, millis, "deepseek-v4-flash", effort="minimal"),
+            self.message(2, millis, {"inputTokens": 30, "outputTokens": 0}),
+        ])
+        efforts = self.collect()[0]["routing"]["efforts"]
+        self.assertEqual(set(efforts), {"none", "high"})
+        self.assertEqual(efforts["none"]["calls"], 1)
+        self.assertEqual(efforts["none"]["reasoningOutputTokens"], 4)
+        self.assertEqual(efforts["high"]["totalTokens"], 20)
+        # The unrecorded level's tokens still reach the day's total.
+        self.assertEqual(self.collect()[0]["totalTokens"], 60)
+
+    def test_days_split_on_the_shanghai_calendar(self) -> None:
+        # 2026-08-20T23:30 and 2026-08-21T00:30, Asia/Shanghai.
+        self.write_session("proj", "session-a", [
+            self.header(1, 1787239800000, "deepseek-v4-flash"),
+            self.message(2, 1787239800000, {"inputTokens": 10, "outputTokens": 0}),
+            self.message(3, 1787243400000, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        entries = self.collect()
+        self.assertEqual([entry["date"] for entry in entries],
+                         ["2026-08-20", "2026-08-21"])
+
+    def test_calls_before_the_since_date_are_dropped(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        self.assertEqual(self.collect(since=date(2026, 8, 21)), [])
+
+    def test_a_torn_final_line_does_not_lose_the_calls_before_it(self) -> None:
+        millis = 1787198400000
+        path = self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write('{"type":"assistant/message","seq":3,"time":')
+        self.assertEqual(self.collect()[0]["totalTokens"], 10)
+
+    def test_a_message_with_no_usage_or_no_route_contributes_nothing(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "no-usage", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            {
+                "type": "assistant/message", "seq": 2, "time": millis,
+                "data": {"turn": 1, "step": 1, "message": {}},
+            },
+        ])
+        self.write_session("proj", "no-header", [
+            self.message(1, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        self.assertEqual(self.collect(), [])
+
+    def test_a_home_with_no_sessions_yields_nothing(self) -> None:
+        self.assertEqual(sync_usage.dsh_session_roots(self.home), ())
+        self.assertEqual(self.collect(), [])
+
+    @unittest.skipUnless(
+        shutil.which("zstd") is not None,
+        "no zstd decoder available to build the fixture",
+    )
+    def test_a_compressed_log_reads_the_same_as_a_plain_one(self) -> None:
+        millis = 1787198400000
+        plain = self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
+        ])
+        # dsh appends one independently decodable frame per durable batch, so the
+        # artifact is a concatenation of frames rather than one stream.
+        raw = plain.read_bytes()
+        frames = b"".join(
+            subprocess.run(
+                ["zstd", "-q", "-c", "-"], input=line + b"\n",
+                capture_output=True, check=True,
+            ).stdout
+            for line in raw.splitlines()
+        )
+        plain.unlink()
+        (plain.parent / "session.jsonl.zstd").write_bytes(frames)
+        entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 11)
+
+
+class ZstdFrameDecodingTests(unittest.TestCase):
+    """A dsh artifact is concatenated frames, one per durable batch.
+
+    The decoder returns whatever decoded plus whether it reached the end. It does
+    not try to tell a live session's unfinished last frame from a damaged one:
+    zstd reports single-byte corruption under seven different messages, one of
+    them the same "premature end" a live tail gives, and frame boundaries cannot
+    be found by scanning for the frame magic because those bytes also occur
+    inside compressed payloads.
+
+    Decoding therefore stops at the first frame that will not decode and does not
+    resume past it. These tests pin the exact prefix that survives, because the
+    cost of that choice is real and should fail loudly if it ever moves.
+    """
+
+    @staticmethod
+    def frame(payload: bytes) -> bytes:
+        return subprocess.run(
+            ["zstd", "-q", "-c", "-"], input=payload,
+            capture_output=True, check=True,
+        ).stdout
+
+    def setUp(self) -> None:
+        if shutil.which("zstd") is None:
+            self.skipTest("no zstd decoder available to build the fixture")
+        self.a = self.frame(b"alpha\n")
+        self.b = self.frame(b"bravo\n")
+        self.c = self.frame(b"charlie\n")
+
+    def test_whole_frames_decode_completely(self) -> None:
+        text, complete = sync_usage._zstd_frames_text(self.a + self.b + self.c)
+        self.assertEqual(text, "alpha\nbravo\ncharlie\n")
+        self.assertTrue(complete)
+
+    def test_an_unfinished_last_frame_keeps_what_decoded_and_reports_partial(
+        self,
+    ) -> None:
+        """A live session always ends mid-frame.
+
+        The prefix is real and safe to keep: frames are append-only and every run
+        recomputes the day from the whole artifact, so an early partial read is
+        superseded by the completed one rather than added to it.
+        """
+        text, complete = sync_usage._zstd_frames_text(
+            self.a + self.b + self.c[: len(self.c) // 2]
+        )
+        self.assertEqual(text, "alpha\nbravo\n")
+        self.assertFalse(complete)
+
+    def test_a_partial_read_ends_on_a_record_boundary(self) -> None:
+        """`zstd -dc` emits the bytes it decoded, which stop mid-record.
+
+        Trimming to the last newline keeps a partial read to whole records, and
+        keeps the in-process and subprocess decoders returning the same prefix
+        for the same artifact.
+        """
+        torn = self.frame(b'{"n":"charlie"}\n')
+        text, complete = sync_usage._zstd_frames_text(
+            self.frame(b'{"n":"alpha"}\n') + torn[: len(torn) // 2]
+        )
+        self.assertEqual(text, '{"n":"alpha"}\n')
+        self.assertFalse(complete)
+
+    def test_a_frame_damaged_mid_file_costs_the_frames_after_it(self) -> None:
+        """The accepted price of not guessing at frame boundaries.
+
+        Recovering `charlie` would mean locating the frame that follows the
+        damage, and the only cheap way to do that — scanning for the frame magic
+        — splits valid frames, because those four bytes occur inside compressed
+        payloads too. Stalling is preferred to corrupting; the per-day high-water
+        merge keeps the days already recorded from dropping while it stalls.
+        """
+        damaged = bytearray(self.b)
+        damaged[len(damaged) // 2 : len(damaged) // 2 + 4] = b"\xff\xff\xff\xff"
+        text, complete = sync_usage._zstd_frames_text(
+            self.a + bytes(damaged) + self.c
+        )
+        self.assertEqual(text, "alpha\n")
+        self.assertNotIn("charlie", text)
+        self.assertFalse(complete)
+
+    def test_both_decoder_backends_agree(self) -> None:
+        """The in-process path (3.14+) and the `zstd -dc` fallback are one contract.
+
+        Only one of them runs on any given interpreter, so a divergence would
+        surface as a machine-dependent total rather than as a failure here.
+        """
+        try:
+            importlib.import_module("compression.zstd")
+        except ImportError:
+            self.skipTest("no in-process zstd decoder to compare against")
+        torn = self.a + self.b + self.c[: len(self.c) // 2]
+        cases = (b"", self.a, self.a + self.b, torn, b"not a zstd artifact")
+        for raw in cases:
+            with self.subTest(raw=raw[:16]):
+                in_process = sync_usage._zstd_frames_text(raw)
+                with patch.dict(sys.modules, {"compression.zstd": None}):
+                    subprocess_path = sync_usage._zstd_frames_text(raw)
+                self.assertEqual(in_process, subprocess_path)
+
+    def test_bytes_that_are_not_zstd_report_unreadable_rather_than_empty(
+        self,
+    ) -> None:
+        """An unreadable log and an empty one need different reports.
+
+        Returning "" for an artifact nothing can read would let it pass as a
+        session that genuinely recorded nothing, and the operator would never
+        learn a log had stopped being readable.
+        """
+        text, complete = sync_usage._zstd_frames_text(b"this is not a zstd artifact")
+        self.assertIsNone(text)
+        self.assertFalse(complete)
+
+    def test_an_empty_artifact_is_an_empty_session_not_a_failure(self) -> None:
+        self.assertEqual(sync_usage._zstd_frames_text(b""), ("", True))
+
+    def test_a_damaged_frame_keeps_the_prefix_and_reports_partial(self) -> None:
+        damaged = bytearray(self.b)
+        damaged[len(damaged) // 2] ^= 0xFF
+        text, complete = sync_usage._zstd_frames_text(
+            self.a + bytes(damaged) + self.c
+        )
+        self.assertIn("alpha", text)
+        self.assertFalse(complete)
+
+
+class MulticaCodexTests(unittest.TestCase):
+    """Multica's Codex rollouts are the same agent read from another tree.
+
+    Multica gives each Codex task a private CODEX_HOME whose `sessions` symlinks
+    into ~/.codex/multica-sessions, so ccusage's default scan never sees them.
+    They are read with the same Codex reader, into a store of their own.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.sessions = Path(self._tmp.name) / "multica-sessions"
+
+    def test_the_temporary_home_points_ccusage_at_the_relocated_tree(self) -> None:
+        self.sessions.mkdir(parents=True)
+        (self.sessions / "rollout.jsonl").write_text("{}\n", encoding="utf-8")
+        with sync_usage._codex_home_over(self.sessions) as home:
+            linked = home / "sessions"
+            self.assertTrue(linked.is_dir())
+            self.assertEqual(linked.resolve(), self.sessions.resolve())
+            self.assertTrue((linked / "rollout.jsonl").exists())
+        # Nothing was copied and the real tree survives the temporary home.
+        self.assertTrue((self.sessions / "rollout.jsonl").exists())
+
+    def test_a_missing_tree_is_skipped_without_running_ccusage(self) -> None:
+        with patch.object(sync_usage.subprocess, "run") as run:
+            self.assertEqual(
+                sync_usage.fetch_multica_codex_daily(date(2026, 1, 1), self.sessions),
+                [],
+            )
+        run.assert_not_called()
+
+    def fetch(self, daily: list[dict], **kwargs) -> list[dict]:
+        payload = json.dumps({"daily": daily})
+        completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
+        with patch.object(sync_usage.subprocess, "run", return_value=completed):
+            return sync_usage.fetch_codex_home_daily(
+                date(2026, 1, 1), Path("/some/home"), **kwargs
+            )
+
+    def test_a_fully_priced_row_keeps_ccusages_request_aware_cost(self) -> None:
+        # ccusage priced this row against the same table and can see which calls
+        # ran Fast or crossed a long-context threshold; a day's totals cannot.
+        out = self.fetch(
+            [{
+                "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 12.5,
+                "models": {"gpt-5.5": {
+                    "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                }},
+            }],
+            trust_row_cost=True,
+        )
+        self.assertEqual(out[0]["totalCost"], 12.5)
+        self.assertEqual(out[0]["costSource"], "official")
+
+    def test_the_standard_sum_still_wins_when_it_is_larger(self) -> None:
+        out = self.fetch(
+            [{
+                "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 0.0,
+                "models": {"gpt-5.5": {
+                    "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                }},
+            }],
+            trust_row_cost=True,
+        )
+        self.assertEqual(out[0]["totalCost"], 5.0)
+
+    def test_a_row_holding_an_unpriced_model_ignores_ccusages_cost(self) -> None:
+        # ccusage would price the unknown model from its own table, which is not
+        # this repository's, so the mixed row falls back to component pricing.
+        with patch.object(sync_usage.sys, "stderr", io.StringIO()):
+            out = self.fetch(
+                [{
+                    "date": "2026-08-31", "totalTokens": 2_000_000, "costUSD": 99.0,
+                    "models": {
+                        "gpt-5.5": {
+                            "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                        },
+                        "seed-1.6": {"totalTokens": 1_000_000},
+                    },
+                }],
+                trust_row_cost=True,
+            )
+        self.assertEqual(out[0]["totalCost"], 5.0)
+        self.assertEqual(out[0]["costSource"], "unpriced")
+
+    def test_traex_still_ignores_the_row_cost_by_default(self) -> None:
+        out = self.fetch([{
+            "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 12.5,
+            "models": {"gpt-5.5": {
+                "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+            }},
+        }])
+        self.assertEqual(out[0]["totalCost"], 5.0)
+
+
+class SeparateStorePerTreeTests(unittest.TestCase):
+    """Each session tree keeps its own high-water mark.
+
+    Adding two trees together before the store would hand merge_with_cumulative a
+    sum whose composition can change underneath it. max() cannot tell "this day
+    grew" from "this day lost a contributor and the other one grew past the old
+    sum", so the pruned tree's share would vanish with no way to notice or
+    recover it. One store per tree is what makes the high-water rule sound.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.codex = self.root / "codex.json"
+        self.multica = self.root / "codex-multica.json"
+
+    @staticmethod
+    def day(tokens: int, model: str = "gpt-5.5") -> list[dict]:
+        return [{
+            "date": "2026-08-31", "totalTokens": tokens, "totalCost": 0.0,
+            "models": {model: {"totalTokens": tokens, "inputTokens": tokens}},
+            "costSource": "official",
+        }]
+
+    def stored(self, path: Path) -> int:
+        return json.loads(path.read_text())["2026-08-31"]["totalTokens"]
+
+    def test_a_pruned_tree_keeps_its_share_while_the_other_grows(self) -> None:
+        sync_usage.merge_with_cumulative(self.day(100), self.codex)
+        sync_usage.merge_with_cumulative(self.day(100), self.multica)
+
+        # Multica's rollouts age out of ~/.codex/multica-sessions while the
+        # standard tree keeps growing past what the two used to total.
+        sync_usage.merge_with_cumulative(self.day(250), self.codex)
+        sync_usage.merge_with_cumulative([], self.multica)
+
+        self.assertEqual(self.stored(self.codex), 250)
+        self.assertEqual(
+            self.stored(self.multica), 100,
+            "the pruned tree's high-water mark was overwritten",
+        )
+        self.assertEqual(
+            self.stored(self.codex) + self.stored(self.multica), 350,
+            "summing before the store would have settled on 250",
+        )
+
+    def test_the_same_model_in_both_trees_stays_separable(self) -> None:
+        """Both trees run gpt-5.5, so a shared store could not tell them apart."""
+        sync_usage.merge_with_cumulative(self.day(100), self.codex)
+        sync_usage.merge_with_cumulative(self.day(80), self.multica)
+        for path, expected in ((self.codex, 100), (self.multica, 80)):
+            models = json.loads(path.read_text())["2026-08-31"]["models"]
+            self.assertEqual(models["gpt-5.5"]["totalTokens"], expected)
+
+    def test_the_writer_sends_each_reader_to_its_own_store(self) -> None:
+        """The tests above drive merge_with_cumulative directly, so on their own
+        they would still pass if _sync merged two observations into one path.
+
+        Distinct names are not enough either: swapping two of them would keep
+        every pair unique while sending Multica's rollouts to `codex.json`. So
+        read the writer and follow each observation list back to the reader that
+        produced it, then assert which store that reader's output lands in.
+        """
+        tree = ast.parse(inspect.getsource(sync_usage._sync))
+        produced_by: dict[str, str] = {}
+        store_of: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign):
+                continue
+            call = node.value if isinstance(node.value, ast.Call) else None
+            for target in node.targets:
+                names = (
+                    target.elts if isinstance(target, ast.Tuple) else [target]
+                )
+                for name in names:
+                    if not isinstance(name, ast.Name):
+                        continue
+                    if call is not None and isinstance(call.func, ast.Name):
+                        produced_by[name.id] = call.func.id
+                    for sub in ast.walk(node.value):
+                        if (
+                            isinstance(sub, ast.Subscript)
+                            and isinstance(sub.value, ast.Name)
+                            and sub.value.id == "AGENT_STORES"
+                            and isinstance(sub.slice, ast.Constant)
+                        ):
+                            store_of[name.id] = sub.slice.value
+
+        wiring = {}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "merge_with_cumulative"
+            ):
+                source = ast.unparse(node.args[0])
+                target = ast.unparse(node.args[1])
+                self.assertIn(target, store_of, f"{target} is not an AGENT_STORES path")
+                self.assertNotIn(
+                    store_of[target], wiring, f"{target} is written twice"
+                )
+                wiring[store_of[target]] = produced_by.get(source, source)
+
+        self.assertEqual(
+            set(wiring), set(sync_usage.AGENT_STORES),
+            "every store the writer declares must be written exactly once",
+        )
+        self.assertEqual(
+            wiring["codex-multica"], "fetch_multica_codex_daily",
+            "the Multica tree must land in its own store",
+        )
+        self.assertEqual(
+            wiring["codex"], "fetch_daily_since",
+            "codex.json must hold the standard tree, not the Multica one",
+        )
+        self.assertEqual(wiring["dsh"], "collect_dsh_daily_since")
+        self.assertEqual(wiring["traex"], "fetch_codex_home_daily")
+
+    def test_a_failed_multica_read_cannot_reconcile_the_codex_day_away(
+        self,
+    ) -> None:
+        """--reconcile-since lifts the high-water rule, so an empty read is armed.
+
+        The fetch failure arrives as [], which reconciles nothing because there is
+        no entry for that day to make authoritative. Before the split, the same
+        failure reached the Codex store as a standard-tree-only total and the
+        Multica half was rewritten out of history.
+        """
+        sync_usage.merge_with_cumulative(self.day(100), self.multica)
+        sync_usage.merge_with_cumulative(
+            [], self.multica, reconcile_since=date(2026, 8, 1)
+        )
+        self.assertEqual(self.stored(self.multica), 100)
 
 
 if __name__ == "__main__":

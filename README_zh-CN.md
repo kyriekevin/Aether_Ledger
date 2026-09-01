@@ -19,7 +19,8 @@
 > 本仓库以公开为前提设计。账本只保存匿名化聚合数据——绝不记录提示词、会话、仓库名称、
 > 主机名、用户名或工作目录。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex 与 TRAE CLI，并让这些活动清晰可见。
+Aether Ledger 记录我如何使用 Claude Code、Codex、TRAE CLI 与 DSH，自己开的和 Multica 派出去跑的
+都算，并让这些活动清晰可见。
 历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
 Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
 
@@ -55,7 +56,7 @@ token 总量大于零的自然日累计。
 
 ![Aether Ledger 运行历史](assets/runtime-history.svg)
 
-当前图展示三个 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
+当前图展示各 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
 峰值。历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、
 高度和位置表达，不再依赖颜色深浅。effort 从各 harness 自己的 session 日志读取；Fast 和额度是
 Codex 的字段，Claude 的日志里没有对应物。
@@ -68,8 +69,8 @@ Codex 的字段，Claude 的日志里没有对应物。
 ## 工作原理
 
 ```text
-Claude Code · Codex · TRAE CLI
-        │  定时同步
+Claude Code · Codex · TRAE CLI · DSH
+        │  定时同步，自己开的和 Multica 派出去跑的都采
         ▼
 usage/YYYY-MM-DD ── 当天聚合提交持续写入
         │  Asia/Shanghai 跨日后触发 rollover
