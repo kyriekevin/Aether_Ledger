@@ -59,7 +59,10 @@ from sync_usage import (
 DATA_REPO_DIR = Path(__file__).resolve().parents[1]
 TRAIL_DIR = DATA_REPO_DIR / "data" / "trail"
 ROLLUP_DIR = TRAIL_DIR / "rollup"
-AGENT_FILES = ("claude.json", "codex.json", "opencode.json", "traex.json", "dsh.json")
+AGENT_FILES = (
+    "claude.json", "codex.json", "codex-multica.json", "opencode.json",
+    "traex.json", "dsh.json",
+)
 
 # A pod with no data newer than this many days is "dead" (its k8s box is gone).
 TRAIL_TTL_DAYS = 7

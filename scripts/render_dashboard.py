@@ -28,14 +28,15 @@ DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-h
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
 DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
 AGENT_FILES = frozenset({
-    "claude.json", "codex.json", "opencode.json", "traex.json", "dsh.json",
+    "claude.json", "codex.json", "codex-multica.json", "opencode.json",
+    "traex.json", "dsh.json",
 })
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 ROLE_ORDER = ("work", "personal", "devbox", "trail")
 TOPOLOGY_ROLE_ORDER = ("work", "personal", "development")
-AGENT_ORDER = ("claude", "codex", "opencode", "traex", "dsh")
+AGENT_ORDER = ("claude", "codex", "codex-multica", "opencode", "traex", "dsh")
 TOPOLOGY_AGENT_ORDER = ("claude", "codex", "traex", "dsh", "legacy")
 ROLE_LABELS = {"work": "Work", "personal": "Personal", "development": "Development"}
 ROLE_BUCKETS = {
@@ -48,9 +49,12 @@ AGENT_LABELS = {
     "claude": "Claude", "codex": "Codex", "traex": "TRAE", "dsh": "DSH",
     "legacy": "Legacy",
 }
+# `codex-multica` is the same harness read from the separate session tree
+# Multica hands its Codex tasks; it is stored apart so each tree keeps its own
+# high-water mark, and rejoins Codex here so no chart shows it as its own agent.
 AGENT_BUCKETS = {
-    "claude": "claude", "codex": "codex", "opencode": "legacy",
-    "traex": "traex", "dsh": "dsh",
+    "claude": "claude", "codex": "codex", "codex-multica": "codex",
+    "opencode": "legacy", "traex": "traex", "dsh": "dsh",
 }
 ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "dsh", "legacy")
 # The harnesses that get a panel of their own in the allocation and runtime

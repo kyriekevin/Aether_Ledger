@@ -40,9 +40,14 @@ bucket rather than being folded into `low`.
 
 Session logs are normally Zstandard-compressed, as a concatenation of one independently decodable
 frame per durable batch. The writer decodes them with Python's own `compression.zstd` (3.14+) or,
-failing that, a local `zstd` binary; a torn final frame from a live session is dropped and the rest
-is kept. On a machine with neither decoder the run reports how many logs it skipped and leaves the
-cumulative store intact, exactly as a failed ccusage fetch does.
+failing that, a local `zstd` binary. A torn final frame from a live session is dropped whole rather
+than mined for its decodable prefix: the next scheduled run reads it once finished. A *damaged*
+frame is treated differently, because it never finishes — both decoders resynchronise on the next
+frame header and keep going, and report the bytes they stepped over. Stopping at the damage would
+drop every good frame after it, and since the cumulative store merges by max(), that undercount
+would be permanent and invisible: no later run would read those frames either. On a machine with
+neither decoder the run reports how many logs it skipped and leaves the cumulative store intact,
+exactly as a failed ccusage fetch does.
 
 Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
@@ -50,11 +55,21 @@ already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are co
 special handling. Codex is the exception. Multica gives each task a private `CODEX_HOME` whose
 `sessions` is a symlink into a shared `~/.codex/multica-sessions` tree, which is a sibling of
 `~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
-that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, then
-**adds** the result to the same day's Codex entry before the cumulative merge sees it. Adding is
-load-bearing: the merge keeps the larger of the stored and incoming observations, which is what
-protects history from session rotation and exactly the wrong operator for two trees that each hold
-part of one day. Unlike the traex path, this one keeps ccusage's own cost for a row whose every
+that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
+writes the result to a store of its own, `codex-multica.json`.
+
+A separate store rather than a bigger Codex day, because the cumulative merge keeps the larger of
+the stored and incoming observations per day. That high-water rule is what protects history from
+session rotation, and it only holds while each stored number describes one fixed source. Add the
+two trees together first and max() is comparing sums whose composition can change: on a day whose
+Multica rollouts have aged out while the standard tree kept growing past the old combined total,
+the larger sum wins and the pruned tree's share is gone, with nothing to signal it and no later run
+able to restore it. One store per tree keeps every high-water mark meaning what it says, and
+`AGENT_BUCKETS` folds `codex-multica` back under `codex` at render time so no chart shows it as a
+harness of its own. It also isolates a failed Multica read: an empty fetch merges nothing, where a
+summed one would have rewritten the Codex day from a partial view under `--reconcile-since`.
+
+Unlike the traex path, this one keeps ccusage's own cost for a row whose every
 model has an unchanged official rate, because ccusage still knows which of those calls ran on the
 priority tier or crossed a long-context threshold and a day's totals cannot say.
 
@@ -359,7 +374,7 @@ pinned to `main` will be up to one day behind by design.
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
-`opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
+`codex-multica.json`, `opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
 excluded.
 
 The activity SVG contains:

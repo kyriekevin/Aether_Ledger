@@ -16,7 +16,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AGENT_FILES = frozenset({
-    "claude.json", "codex.json", "opencode.json", "traex.json", "dsh.json",
+    "claude.json", "codex.json", "codex-multica.json", "opencode.json",
+    "traex.json", "dsh.json",
 })
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 OPAQUE_NODE = re.compile(r"node-[0-9a-f]{12}")

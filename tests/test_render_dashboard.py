@@ -127,6 +127,56 @@ class AggregateTopologyTests(unittest.TestCase):
             )
 
 
+class MulticaCodexBucketTests(unittest.TestCase):
+    """The two Codex trees are stored apart and rendered as one harness.
+
+    Splitting the stores is what keeps each tree's high-water mark sound, but no
+    chart should show `codex-multica` as a harness of its own: it is Codex, run
+    from the session tree Multica hands its tasks. The rejoin happens here, so a
+    missing bucket entry would quietly drop a whole tree from every view.
+    """
+
+    def _root(self, directory: str) -> Path:
+        root = Path(directory)
+        node = root / "data" / "work"
+        node.mkdir(parents=True)
+        day = {
+            "totalTokens": 100,
+            "totalCost": 1.0,
+            "models": {"gpt-example": {
+                "totalTokens": 100, "inputTokens": 100, "outputTokens": 0,
+                "cacheCreationTokens": 0, "cacheReadTokens": 0,
+            }},
+            "routing": {"efforts": {"high": {"turns": 2, "totalTokens": 100}}},
+        }
+        (node / "codex.json").write_text(json.dumps({"2026-08-30": day}))
+        (node / "codex-multica.json").write_text(json.dumps({"2026-08-30": day}))
+        return root
+
+    def test_both_trees_land_in_the_codex_bucket(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._root(directory)
+            allocation = aggregate_allocation(
+                root, date(2026, 8, 30)
+            )
+            self.assertEqual(allocation.agent_tokens["codex"], 200)
+            self.assertNotIn("codex-multica", allocation.agent_tokens)
+            self.assertEqual(allocation.model_tokens[("codex", "gpt-example")], 200)
+            self.assertEqual(
+                allocation.efforts["codex"]["high"],
+                {
+                    "calls": 4, "totalTokens": 200,
+                    "reasoningCalls": 0, "reasoningOutputTokens": 0,
+                },
+            )
+
+    def test_the_topology_counts_the_multica_tree_under_codex(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._root(directory)
+            topology = aggregate_topology(root, date(2026, 8, 30))
+            self.assertEqual(topology.recent_agents["codex"], 200)
+
+
 class AggregateAllocationTests(unittest.TestCase):
     def test_keeps_only_privacy_safe_recent_routing_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

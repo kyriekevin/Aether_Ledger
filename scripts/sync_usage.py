@@ -7,18 +7,21 @@
 
 Reads this machine's local ccusage usage data, persists daily totals into
 `data/<machine>/claude.json`, `data/<machine>/codex.json`,
-`data/<machine>/opencode.json`, `data/<machine>/traex.json`, and
-`data/<machine>/dsh.json` under this repo, and commits + pushes the result.
+`data/<machine>/opencode.json`, `data/<machine>/traex.json`,
+`data/<machine>/dsh.json`, and `data/<machine>/codex-multica.json` under this
+repo, and commits + pushes the result. AGENT_STORES is the list.
 
 Two harnesses do not come from ccusage's default scan:
   - DeepSeek Harness (dsh) has no ccusage reader at all, so its own session log
     is parsed here (collect_dsh_daily_since).
   - Multica, an orchestrator that drives these same CLIs, gives each Codex task
     a private CODEX_HOME whose sessions live outside ~/.codex/sessions. Those
-    rollouts are read separately and summed into the same Codex store, because
-    Multica is not a harness: the work is Codex's, on the same account and the
-    same models. Its Claude and TRAE runs already land in those CLIs' standard
-    log directories and need nothing extra.
+    rollouts are read separately into codex-multica.json. Multica is not a
+    harness — the work is Codex's, on the same account and the same models, and
+    the dashboards render both stores as one Codex — but one store per session
+    tree is what keeps each per-day high-water mark sound. Its Claude and TRAE
+    runs already land in those CLIs' standard log directories and need nothing
+    extra.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
 Sync-only machines only need to clone the data repo — they do NOT need the
@@ -220,11 +223,29 @@ CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 # Multica runs Codex with a per-task CODEX_HOME whose `sessions` is a symlink
 # into this shared tree, so those rollouts are siblings of ~/.codex/sessions
 # rather than children of it and ccusage's default scan never sees them. They
-# are real Codex usage on the same account, so they are read from here and summed
-# into the Codex store rather than given one of their own. Multica's Claude and
+# are real Codex usage on the same account, so they are read from here into
+# codex-multica.json and rendered under the Codex bucket; see _sync for why the
+# two trees keep separate stores instead of one summed day. Multica's Claude and
 # TRAE runs need no equivalent: those CLIs keep writing to ~/.claude/projects and
 # ~/.trae/cli/sessions, which are already scanned.
 MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
+
+# Every store this script writes, by the canonical agent name the dashboards
+# bucket it under. Consumers (audit_public, render_dashboard, update_pricing,
+# compact_trails, squash_usage_branch) must each cover all of them; a store one
+# of them has never heard of fails silently rather than loudly, so the tests
+# assert their registries against THIS mapping rather than a repeated literal.
+# `codex-multica` is not a fifth harness: it is Codex read from the separate
+# session tree Multica gives it, kept apart only so each tree gets its own
+# high-water mark, and folded back into the Codex bucket at render time.
+AGENT_STORES = {
+    "claude": "claude.json",
+    "codex": "codex.json",
+    "codex-multica": "codex-multica.json",
+    "opencode": "opencode.json",
+    "traex": "traex.json",
+    "dsh": "dsh.json",
+}
 
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 SPEED_LEVELS = frozenset({"standard", "fast"})
@@ -288,13 +309,16 @@ _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
 # is parsed directly (collect_dsh_daily_since).
 #
 # One harness home holds every session tree. `sessions` is the default one, and a
-# run's tree can be relocated — dsh's `session-persistence-jsonl` plugin takes a
-# `root`, and Multica points that at a per-task location the same way it gives a
-# Codex task its own CODEX_HOME. Those relocated trees sit beside the default one
-# under a `*-sessions` name, so they are found by shape rather than by a list of
-# orchestrator names this repository would have to keep chasing.
+# run's tree can in principle be relocated: dsh's `session-persistence-jsonl`
+# plugin takes a `root`. Nothing observed does relocate it — no installed dsh or
+# Multica build names an override, and every session on this machine lands in the
+# one default tree — so exactly one root is read. Collecting several would put
+# this store back where the Codex one was before AGENT_STORES split it: their sum
+# under a per-day max() cannot tell growth from a source disappearing, and a
+# relocated tree that is removed would take its share with it silently. Point
+# DSH_HOME at another harness home to read one; a second tree that genuinely
+# appears should get its own store, the way `codex-multica.json` did.
 DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
-DSH_SESSION_ROOT_SUFFIX = "-sessions"
 # `logSuffix()` in dsh's JSONL backend: `.jsonl.zstd` when the artifact is
 # compressed (the default every observed build writes) and `.jsonl` when it is not.
 DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
@@ -302,6 +326,15 @@ DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
 # process, but it runs under the checkout-wide Git lock like everything else in a
 # sync run, so a wedged one must not strand that lock.
 DSH_DECODE_TIMEOUT_SECONDS = 30
+# Every Zstandard frame opens with this magic number (RFC 8878 §3.1.1). Knowing
+# where the next frame starts is what lets a damaged one be stepped over instead
+# of truncating the rest of the log; see _zstd_frames_text.
+ZSTD_FRAME_MAGIC = b"\x28\xb5\x2f\xfd"
+# How many candidate frame boundaries the corrupt-log salvage path will merge
+# while looking for one that decodes. Those four magic bytes also occur inside
+# compressed payloads, so a real frame can look like several; this bounds the
+# subprocess count on a path that already only runs on a damaged artifact.
+_ZSTD_SALVAGE_SPAN_REACH = 8
 
 # dsh's own thinking vocabulary against this repository's EFFORT_LEVELS. `off` is
 # exactly `none` under a different spelling. dsh also offers `minimal`, which has
@@ -405,34 +438,21 @@ def _add_routing_bucket(
 
 
 def collect_codex_routing_since(
-    since: date, sessions_dir: Path | Iterable[Path] = CODEX_SESSION_DIR
+    since: date, sessions_dir: Path = CODEX_SESSION_DIR
 ) -> dict[str, dict]:
-    """Aggregate privacy-safe Codex routing and quota telemetry.
+    """Aggregate privacy-safe Codex routing and quota telemetry from one tree.
 
     Session files expose model effort, service tier, per-call token usage, and
     rate-limit snapshots. Only enum buckets, counters, and window percentages
     leave this function; paths, prompts, turn IDs, and session IDs never do.
 
-    Several session trees may be given — Multica keeps its Codex rollouts outside
-    ~/.codex/sessions — and they accumulate into one result. Summing is right
-    because the trees are disjoint: each session file is read exactly once, and a
-    bucket's calls and tokens are counts of those files' events.
+    One tree per call, deliberately. Multica keeps its Codex rollouts in a tree
+    of their own and they are collected into a store of their own, so nothing
+    here has to establish that two trees are disjoint before adding them up.
     """
-    directories = (
-        (sessions_dir,) if isinstance(sessions_dir, Path) else tuple(sessions_dir)
-    )
     daily: dict[str, dict] = {}
-    for directory in directories:
-        _collect_codex_routing_tree(since, directory, daily)
-    return daily
-
-
-def _collect_codex_routing_tree(
-    since: date, sessions_dir: Path, daily: dict[str, dict]
-) -> None:
-    """Fold one Codex session tree's telemetry into *daily* in place."""
     if not sessions_dir.is_dir():
-        return
+        return daily
     for path in sessions_dir.rglob("*.jsonl"):
         effort: str | None = None
         speed: str | None = None
@@ -517,6 +537,7 @@ def _collect_codex_routing_tree(
                     or rate_limits.get("rate_limit_reached_type")
                     or rate_limits.get("spend_control_reached")
                 )
+    return daily
 
 
 def collect_claude_routing_since(
@@ -590,83 +611,165 @@ def collect_claude_routing_since(
 
 
 def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
-    """Every session tree under one dsh harness home, default one first.
+    """The session tree under one dsh harness home, or nothing when absent.
 
-    See DSH_SESSION_ROOT_SUFFIX for why a relocated tree is recognised by its
-    name rather than by which orchestrator created it.
+    A tuple rather than a single path so a caller reads the same shape whether or
+    not the home exists. See DSH_HOME for why only the default tree is read.
     """
-    roots: list[Path] = []
     default = home / "sessions"
-    if default.is_dir():
-        roots.append(default)
-    try:
-        siblings = sorted(home.iterdir())
-    except OSError:
-        return tuple(roots)
-    roots.extend(
-        path for path in siblings
-        if path.name.endswith(DSH_SESSION_ROOT_SUFFIX) and path.is_dir()
-    )
-    return tuple(roots)
+    return (default,) if default.is_dir() else ()
 
 
-def _zstd_frames_text(raw: bytes) -> str | None:
-    """Decode as many complete Zstandard frames of *raw* as any decoder here can.
+def _zstd_frame_spans(raw: bytes) -> tuple[tuple[int, int], ...]:
+    """Byte ranges of *raw* between successive frame headers."""
+    starts: list[int] = []
+    offset = raw.find(ZSTD_FRAME_MAGIC)
+    while offset != -1:
+        starts.append(offset)
+        offset = raw.find(ZSTD_FRAME_MAGIC, offset + len(ZSTD_FRAME_MAGIC))
+    return tuple(zip(starts, (*starts[1:], len(raw))))
 
-    dsh appends one independently decodable frame per durable batch, so a log read
-    while a session is live can end mid-frame. Every decoder below is therefore
-    asked for a best-effort prefix and the torn tail is dropped: this runs on a
-    schedule, and the next run reads the finished frame.
 
-    Nothing is added to this script's (empty) dependency list for it. A missing
-    decoder returns None, which the caller reports and counts rather than turning
-    into a fetch failure — the cumulative store still keeps every earlier day.
+def _zstd_frames_text(raw: bytes) -> tuple[str | None, int]:
+    """Decode the complete Zstandard frames of *raw*.
+
+    Returns the decoded text and how many bytes were lost to damage. Text of
+    None means the bytes could not be read as zstd at all (or no decoder was
+    available) — a different report from a log that legitimately decoded to
+    nothing, which the caller needs in order to name the right cause.
+
+    dsh appends one independently decodable frame per durable batch, so a log
+    read while a session is live ends mid-frame. That torn tail is dropped whole
+    rather than mined for its decodable prefix: this runs on a schedule, and the
+    next run reads the frame once it is finished. It is not counted as damage.
+
+    A *damaged* frame is a different thing — it never completes — so the decoders
+    below resynchronise on the next frame header and carry on rather than
+    stopping. Stopping would drop every good frame after the damage, and because
+    the cumulative store merges by max(), that undercount would be invisible and
+    permanent: no later run would ever read those frames either.
+
+    Nothing is added to this script's (empty) dependency list for any of it.
     """
+    if not raw:
+        # dsh creates the artifact before it writes the first frame, so an empty
+        # file is a session that has recorded nothing yet — not a broken one.
+        return "", 0
+    if ZSTD_FRAME_MAGIC not in raw:
+        # Not one frame header anywhere: this is not a zstd artifact, so there is
+        # nothing to resynchronise on and nothing to salvage.
+        return None, len(raw)
     try:
         from compression.zstd import ZstdDecompressor  # Python 3.14+
     except ImportError:
         pass
     else:
         decoded = bytearray()
+        damaged = 0
         remaining = raw
         while remaining:
             decompressor = ZstdDecompressor()
             try:
-                decoded += decompressor.decompress(remaining)
+                chunk = decompressor.decompress(remaining)
             except Exception:
-                # Any decode failure ends the usable prefix, whatever it was
-                # named: a damaged frame is as final as a half-written one, and
-                # the frames already decoded stay valid either way.
+                complete = False
+            else:
+                complete = decompressor.eof
+            if complete:
+                decoded += chunk
+                remaining = decompressor.unused_data
+                continue
+            offset = len(raw) - len(remaining)
+            # Step over this frame's own header before looking for the next one,
+            # but only when there is one here: a resync that landed on garbage
+            # must not skip a real header sitting in the next three bytes.
+            step = (
+                len(ZSTD_FRAME_MAGIC)
+                if remaining.startswith(ZSTD_FRAME_MAGIC)
+                else 1
+            )
+            following = raw.find(ZSTD_FRAME_MAGIC, offset + step)
+            if following == -1:
+                # Nothing follows, so this is the live session's unfinished tail
+                # rather than damage. Leave it for the next run.
                 break
-            if not decompressor.eof:
-                break  # the final frame is still being written
-            remaining = decompressor.unused_data
-        return decoded.decode("utf-8", "replace")
+            damaged += following - offset
+            remaining = raw[following:]
+        if not decoded and damaged:
+            return None, damaged
+        return decoded.decode("utf-8", "replace"), damaged
+
     zstd = shutil.which("zstd")
     if zstd is None:
-        return None
-    # A torn final frame makes `zstd -dc` exit non-zero *after* writing every
-    # frame it did decode, which is exactly the prefix we want, so stdout is read
-    # regardless of the status.
-    try:
-        out = subprocess.run(
-            [zstd, "-dc", "-"], input=raw, capture_output=True,
-            timeout=DSH_DECODE_TIMEOUT_SECONDS,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    return out.stdout.decode("utf-8", "replace")
+        return None, 0
+
+    def decode(chunk: bytes) -> bytes | None:
+        """Decoded bytes, or None when zstd rejected the input outright."""
+        try:
+            out = subprocess.run(
+                [zstd, "-dc", "-"], input=chunk, capture_output=True,
+                timeout=DSH_DECODE_TIMEOUT_SECONDS,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        return out.stdout if out.returncode == 0 else None
+
+    whole = decode(raw)
+    if whole is not None:
+        return whole.decode("utf-8", "replace"), 0
+    # A non-zero exit means the run stopped somewhere, and the ordinary cause is
+    # the live session's unfinished last frame. Retrying without it settles that
+    # common case in one extra call and keeps the salvage loop off the hot path.
+    spans = _zstd_frame_spans(raw)
+    # Bytes ahead of the first header belong to no frame the loop below can
+    # reach, so they are lost however the rest turns out.
+    leading = spans[0][0]
+    if len(spans) > 1:
+        body = decode(raw[: spans[-1][0]])
+        if body is not None:
+            return body.decode("utf-8", "replace"), leading
+    # Something earlier is damaged. Decode frame by frame so the good frames
+    # after it survive. This costs one call per frame, but only ever runs on a
+    # log that is already corrupt.
+    decoded = bytearray()
+    damaged = leading
+    index = 0
+    while index < len(spans):
+        start = spans[index][0]
+        # The four magic bytes also occur inside compressed payloads, which
+        # splits one real frame into halves that each fail on their own. Try the
+        # longest run of spans first so a false header is absorbed rather than
+        # counted as damage. A genuinely damaged frame fails at every length, so
+        # trying long first cannot swallow good frames.
+        limit = min(index + _ZSTD_SALVAGE_SPAN_REACH, len(spans) - 1)
+        for reach in range(limit, index - 1, -1):
+            chunk = decode(raw[start : spans[reach][1]])
+            if chunk is not None:
+                decoded += chunk
+                index = reach + 1
+                break
+        else:
+            # The last span alone is the torn tail, which is not damage.
+            if index < len(spans) - 1:
+                damaged += spans[index][1] - start
+            index += 1
+    if not decoded and damaged:
+        return None, damaged
+    return decoded.decode("utf-8", "replace"), damaged
 
 
-def _read_dsh_session_log(path: Path) -> str | None:
-    """One session log as text, or None when it cannot be read or decoded."""
+def _read_dsh_session_log(path: Path) -> tuple[str | None, int]:
+    """One session log as text, plus the byte count lost to damaged frames.
+
+    Text of None means the log could not be read or decoded at all.
+    """
     try:
         raw = path.read_bytes()
     except OSError:
-        return None
+        return None, 0
     if path.name.endswith(".zstd"):
         return _zstd_frames_text(raw)
-    return raw.decode("utf-8", "replace")
+    return raw.decode("utf-8", "replace"), 0
 
 
 def _event_day_from_millis(raw: object) -> date | None:
@@ -714,11 +817,20 @@ def collect_dsh_daily_since(
     """
     session_roots = dsh_session_roots() if roots is None else tuple(roots)
     daily: dict[str, dict] = {}
-    undecodable = 0
+    unreadable = 0
+    damaged_logs = 0
+    damaged_bytes = 0
     for path in _dsh_session_logs(session_roots):
-        text = _read_dsh_session_log(path)
+        text, damaged = _read_dsh_session_log(path)
+        if damaged:
+            damaged_logs += 1
+            damaged_bytes += damaged
         if text is None:
-            undecodable += 1
+            # A log that reported damage was read by a working decoder and lost
+            # frames to corruption. Counting it as unreadable too would tell the
+            # operator to install a decoder they already have.
+            if not damaged:
+                unreadable += 1
             continue
         model: str | None = None
         effort: str | None = None
@@ -780,11 +892,20 @@ def collect_dsh_daily_since(
                         and not isinstance(raw_reasoning, bool)
                     ),
                 )
-    if undecodable:
+    if unreadable:
         print(
-            f"dsh: {undecodable} session log(s) could not be decoded and were "
+            f"dsh: {unreadable} session log(s) could not be read at all and were "
             f"skipped; install `zstd` (or run on Python 3.14+) so compressed "
             f"session logs can be read",
+            file=sys.stderr,
+        )
+    if damaged_logs:
+        # Damage is permanent: the frames were stepped over, and because the
+        # cumulative store merges by max() no later run can restore what they
+        # held. Say so rather than let the day quietly settle low.
+        print(
+            f"dsh: skipped {damaged_bytes} damaged byte(s) across {damaged_logs} "
+            f"session log(s); those frames are lost and their days may undercount",
             file=sys.stderr,
         )
     return _dsh_entries(daily)
@@ -1031,8 +1152,9 @@ def fetch_multica_codex_daily(
     """Multica-orchestrated Codex usage, read from its relocated rollout tree.
 
     The rollouts are byte-identical to the ones under ~/.codex/sessions — same CLI,
-    same account, same models — so they are read with the same Codex reader and
-    summed into the same store. See MULTICA_CODEX_SESSION_DIR.
+    same account, same models — so they are read with the same Codex reader, into
+    a store of their own. See MULTICA_CODEX_SESSION_DIR for the tree, and _sync
+    for why each tree keeps a separate high-water mark.
     """
     if not sessions_dir.is_dir():
         return []
@@ -1164,52 +1286,6 @@ def fetch_codex_home_daily(
 # ---------------------------------------------------------------------------
 # Persistence helpers
 # ---------------------------------------------------------------------------
-
-def sum_daily_entries(*sources: list[dict]) -> list[dict]:
-    """Add per-day observations from disjoint session trees into one list.
-
-    The cumulative store merges each incoming day against the stored one with
-    max(), which is what keeps a rotated-away session from shrinking history — and
-    exactly the wrong operator for two trees that each hold part of the same day,
-    where it would silently discard the smaller half. They are added here instead,
-    before the store ever sees them, so merge_with_cumulative still receives one
-    observation per day and its high-water rule keeps meaning what it says.
-
-    A day is priced `official` only while every contributing source said so: one
-    unpriced model anywhere in the sum makes the total a lower bound.
-    """
-    merged: dict[str, dict] = {}
-    for source in sources:
-        for entry in source:
-            day = entry["date"]
-            into = merged.get(day)
-            if into is None:
-                merged[day] = {
-                    **entry,
-                    "models": _canonical_model_totals(entry.get("models", {})),
-                }
-                continue
-            into["totalTokens"] = entry.get("totalTokens", 0) + into.get("totalTokens", 0)
-            into["totalCost"] = entry.get("totalCost", 0.0) + into.get("totalCost", 0.0)
-            for model, values in _canonical_model_totals(entry.get("models", {})).items():
-                bucket = into["models"].setdefault(model, {})
-                for key, value in values.items():
-                    bucket[key] = bucket.get(key, 0) + value
-            if entry.get("costSource") != into.get("costSource"):
-                into["costSource"] = "unpriced"
-            # imageCount is a count of files in one machine-wide directory, so it
-            # belongs to the machine rather than to either tree; adding it would
-            # count the same PNGs once per source.
-            images = max(entry.get("imageCount", 0), into.get("imageCount", 0))
-            if images:
-                into["imageCount"] = images
-            # False here means "this source saw no usage for the day", not "the day
-            # was empty" — one source that did observe tokens settles it.
-            into["tokensObserved"] = (
-                into.get("tokensObserved", True) or entry.get("tokensObserved", True)
-            )
-    return [merged[day] for day in sorted(merged)]
-
 
 def _canonical_model_totals(models: dict) -> dict[str, dict]:
     """Canonicalize one observation without discarding its token components."""
@@ -2006,11 +2082,12 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
             return 0
 
     machine_dir = DATA_REPO_DIR / machine
-    cc_path = machine_dir / "claude.json"
-    codex_path = machine_dir / "codex.json"
-    opencode_path = machine_dir / "opencode.json"
-    traex_path = machine_dir / "traex.json"
-    dsh_path = machine_dir / "dsh.json"
+    cc_path = machine_dir / AGENT_STORES["claude"]
+    codex_path = machine_dir / AGENT_STORES["codex"]
+    opencode_path = machine_dir / AGENT_STORES["opencode"]
+    traex_path = machine_dir / AGENT_STORES["traex"]
+    dsh_path = machine_dir / AGENT_STORES["dsh"]
+    multica_codex_path = machine_dir / AGENT_STORES["codex-multica"]
     machine_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebase onto the other machines' commits before writing, so the push at the
@@ -2037,9 +2114,14 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
-    # Multica's Codex rollouts are a second read of the same agent, so they are
-    # summed into the Codex day rather than merged against it. Its failure is
-    # isolated: an empty read leaves the standard-tree observation untouched.
+    # Multica's Codex rollouts are the same agent read from a second tree, and
+    # they get a store of their own rather than being added into the Codex day.
+    # Summing before the store would break merge_with_cumulative's high-water
+    # rule: max() would then be comparing sums whose composition can change, so a
+    # day whose Multica half is pruned while its standard half grows would settle
+    # on the larger *sum* and silently drop what the pruned tree had contributed.
+    # One store per tree keeps each high-water mark meaning what it says, and the
+    # dashboards add the two back together under the same Codex bucket.
     try:
         mx_daily = fetch_multica_codex_daily(EPOCH)
     except (
@@ -2050,15 +2132,14 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     ) as e:
         print(f"multica codex fetch failed, keeping cached store: {e}", file=sys.stderr)
         mx_daily = []
-    cx_daily = sum_daily_entries(cx_daily, mx_daily)
     _attach_telemetry(
         cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
     )
     _attach_telemetry(
-        cx_daily,
-        collect_codex_routing_since(
-            EPOCH, (CODEX_SESSION_DIR, MULTICA_CODEX_SESSION_DIR)
-        ),
+        cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
+    )
+    _attach_telemetry(
+        mx_daily, collect_codex_routing_since(EPOCH, MULTICA_CODEX_SESSION_DIR)
     )
     # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
     # its failure is isolated: an empty fetch merges [] and keeps the cached store
@@ -2096,7 +2177,8 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     if reconcile_since is not None:
         # Entries that never observed tokens do not count as a read: a fetch made
         # only of image stubs looks non-empty and knows nothing about usage.
-        if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily, *dsh_daily)
+        if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily, *dsh_daily,
+                            *mx_daily)
                 if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
                   file=sys.stderr)
@@ -2109,6 +2191,12 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
     merge_with_cumulative(tx_daily, traex_path, reconcile_since=reconcile_since)
     merge_with_cumulative(dsh_daily, dsh_path, reconcile_since=reconcile_since)
+    # A failed Multica read arrives as [], which reconciles nothing and merges
+    # nothing, so this store keeps what it already held instead of being rewritten
+    # from a partial view of the day.
+    merge_with_cumulative(
+        mx_daily, multica_codex_path, reconcile_since=reconcile_since
+    )
 
     if not no_push:
         git_push(machine)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import ast
+import inspect
 import io
 import json
 import shutil
@@ -33,9 +35,17 @@ class SharedStoreCoverageTests(unittest.TestCase):
         strand it in expired trail pods, and squash_usage_branch would treat its
         conflicts as human work. Each of those fails quietly, so they are
         asserted together against the writer rather than one at a time.
+
+        The expected set is read out of `sync_usage.AGENT_STORES` rather than
+        written out here. A literal would make this test agree with itself: the
+        writer could add a sixth store and every assertion below would still pass
+        against the stale five.
         """
-        written = {"claude.json", "codex.json", "opencode.json", "traex.json",
-                   "dsh.json"}
+        written = set(sync_usage.AGENT_STORES.values())
+        self.assertEqual(
+            set(sync_usage.AGENT_STORES), set(render_dashboard.AGENT_BUCKETS),
+            "every written store needs a dashboard bucket to render under",
+        )
         self.assertEqual(set(compact_trails.AGENT_FILES), written)
         self.assertEqual(set(audit_public.AGENT_FILES), written)
         self.assertEqual(set(render_dashboard.AGENT_FILES), written)
@@ -679,11 +689,13 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.assertTrue(telemetry["quota"]["limitReached"])
         self.assertNotIn("session", json.dumps(telemetry).lower())
 
-    def test_several_session_trees_accumulate_into_one_result(self) -> None:
-        """Multica keeps its Codex rollouts outside ~/.codex/sessions.
+    def test_one_tree_per_call_ignores_its_siblings(self) -> None:
+        """Multica's rollouts belong to their own store, not to this tree's.
 
-        The trees are disjoint, so a bucket's calls and tokens add: reading them
-        as one tree each and max()ing would drop whichever saw less.
+        Collecting several trees into one result would make the caller responsible
+        for proving they are disjoint — a precondition nothing enforces once a
+        symlink or a nested path is involved. One tree per call removes the
+        question, so a sibling tree must contribute nothing here.
         """
         event = {
             "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
@@ -704,12 +716,11 @@ class RoutingTelemetryTests(unittest.TestCase):
             "multica-sessions/p_x/w/r/2026/08/15/rollout.jsonl", [settings, event]
         )
         daily = sync_usage.collect_codex_routing_since(
-            date(2026, 1, 1),
-            (self.root / "sessions", self.root / "multica-sessions"),
+            date(2026, 1, 1), self.root / "sessions"
         )
         bucket = daily["2026-08-15"]["routing"]["efforts"]["high"]
-        self.assertEqual(bucket["calls"], 2)
-        self.assertEqual(bucket["totalTokens"], 200)
+        self.assertEqual(bucket["calls"], 1)
+        self.assertEqual(bucket["totalTokens"], 100)
 
     def test_a_single_directory_is_still_accepted(self) -> None:
         self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [{
@@ -1474,8 +1485,22 @@ class DshSessionTests(unittest.TestCase):
             self.header(1, millis, "deepseek-v4-flash"),
             self.message(2, millis, {"inputTokens": 5, "outputTokens": 0}),
         ])
-        # A relocated tree beside the default one, the shape an orchestrator
-        # creates when it points a run's session root somewhere else.
+        entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 10 + 1 + 20 + 2 + 5)
+
+    def test_a_tree_beside_the_default_one_is_not_collected(self) -> None:
+        """One root per store, for the reason codex-multica.json exists.
+
+        Summing several trees into one day puts that day's high-water mark back
+        under a sum whose composition can change: remove the relocated tree and
+        max() cannot tell the loss from ordinary growth. A second tree that
+        genuinely appears needs its own store, not a bigger dsh.json.
+        """
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
         relocated = self.home / "dsh-sessions" / "proj" / "session-c"
         relocated.mkdir(parents=True)
         (relocated / "session.jsonl").write_text(
@@ -1485,8 +1510,8 @@ class DshSessionTests(unittest.TestCase):
             )) + "\n",
             encoding="utf-8",
         )
-        entry = self.collect()[0]
-        self.assertEqual(entry["totalTokens"], 10 + 1 + 20 + 2 + 5 + 100)
+        self.assertEqual(sync_usage.dsh_session_roots(self.home), (self.root,))
+        self.assertEqual(self.collect()[0]["totalTokens"], 10)
 
     def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
         millis = 1787198400000
@@ -1615,12 +1640,111 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(entry["totalTokens"], 11)
 
 
+class ZstdFrameDecodingTests(unittest.TestCase):
+    """A damaged frame must not take the frames after it down with it.
+
+    dsh's artifact is a concatenation of independently decodable frames. Stopping
+    at the first bad one loses every good frame that follows, and because the
+    cumulative store merges by max() that undercount is permanent: no later run
+    reads those frames either, so nothing ever corrects it.
+    """
+
+    @staticmethod
+    def frame(payload: bytes) -> bytes:
+        return subprocess.run(
+            ["zstd", "-q", "-c", "-"], input=payload,
+            capture_output=True, check=True,
+        ).stdout
+
+    def setUp(self) -> None:
+        if shutil.which("zstd") is None:
+            self.skipTest("no zstd decoder available to build the fixture")
+        self.a = self.frame(b"alpha\n")
+        self.b = self.frame(b"bravo\n")
+        self.c = self.frame(b"charlie\n")
+
+    def test_a_damaged_middle_frame_does_not_hide_the_frames_after_it(self) -> None:
+        damaged = bytearray(self.b)
+        damaged[len(damaged) // 2] ^= 0xFF
+        text, lost = sync_usage._zstd_frames_text(
+            self.a + bytes(damaged) + self.c
+        )
+        self.assertIn("alpha", text)
+        self.assertIn("charlie", text, "the frame after the damage was dropped")
+        self.assertEqual(lost, len(damaged))
+
+    def test_an_unfinished_last_frame_is_dropped_whole_and_not_counted_lost(
+        self,
+    ) -> None:
+        """A live session always ends mid-frame; that is not damage.
+
+        The partial frame is left entirely alone rather than mined for a
+        decodable prefix, so the next scheduled run reads it once complete.
+        """
+        text, lost = sync_usage._zstd_frames_text(
+            self.a + self.b + self.c[: len(self.c) // 2]
+        )
+        self.assertIn("alpha", text)
+        self.assertIn("bravo", text)
+        self.assertNotIn("charlie", text)
+        self.assertEqual(lost, 0)
+
+    def test_bytes_that_are_not_zstd_report_undecodable_rather_than_empty(
+        self,
+    ) -> None:
+        """An unreadable log and an empty one need different reports.
+
+        Returning "" for a corrupt artifact would let it pass as a session that
+        genuinely recorded nothing, and the operator would never learn a log had
+        stopped being readable.
+        """
+        text, lost = sync_usage._zstd_frames_text(b"this is not a zstd artifact")
+        self.assertIsNone(text)
+        self.assertEqual(lost, len(b"this is not a zstd artifact"))
+
+    def test_an_empty_artifact_is_an_empty_session_not_a_failure(self) -> None:
+        self.assertEqual(sync_usage._zstd_frames_text(b""), ("", 0))
+
+    def test_a_frame_whose_payload_contains_the_magic_is_not_split(self) -> None:
+        """The four magic bytes also occur inside compressed payloads.
+
+        Salvage walks frame headers, so a false one inside a valid frame makes it
+        look like two halves that each fail to decode. Splitting there would
+        discard a frame that is perfectly readable as a whole and report it as
+        damage that never happened.
+        """
+        inner = self.frame(b"line-0 " + sync_usage.ZSTD_FRAME_MAGIC * 3 + b" tail\n")
+        self.assertIn(
+            sync_usage.ZSTD_FRAME_MAGIC, inner[len(sync_usage.ZSTD_FRAME_MAGIC):],
+            "fixture no longer contains a false frame header",
+        )
+        damaged = bytearray(self.a)
+        damaged[len(damaged) // 2] ^= 0xFF
+        text, lost = sync_usage._zstd_frames_text(
+            bytes(damaged) + inner + self.c
+        )
+        self.assertIn("line-0", text, "the frame with the false header was lost")
+        self.assertIn("charlie", text)
+        self.assertEqual(lost, len(damaged))
+
+    def test_damage_before_the_first_frame_header_is_still_reported(self) -> None:
+        """Corruption can land on the first header itself.
+
+        Frame walking then starts at the second frame, and the bytes ahead of it
+        belong to no span the salvage loop visits. Reporting zero damage there
+        would let a whole lost frame pass as a clean read.
+        """
+        text, lost = sync_usage._zstd_frames_text(b"BROKEN" + self.b)
+        self.assertIn("bravo", text)
+        self.assertEqual(lost, len(b"BROKEN"))
+
+
 class MulticaCodexTests(unittest.TestCase):
     """Multica's Codex rollouts are the same agent read from another tree.
 
     Multica gives each Codex task a private CODEX_HOME whose `sessions` symlinks
     into ~/.codex/multica-sessions, so ccusage's default scan never sees them.
-    They are read with the same Codex reader and added to the Codex day.
+    They are read with the same Codex reader, into a store of their own.
     """
 
     def setUp(self) -> None:
@@ -1711,85 +1835,102 @@ class MulticaCodexTests(unittest.TestCase):
         self.assertEqual(out[0]["totalCost"], 5.0)
 
 
-class SumDailyEntriesTests(unittest.TestCase):
-    """Two reads of the same agent are added, never max()'d against each other."""
+class SeparateStorePerTreeTests(unittest.TestCase):
+    """Each session tree keeps its own high-water mark.
 
-    def test_a_shared_day_adds_totals_costs_and_model_components(self) -> None:
-        merged = sync_usage.sum_daily_entries(
-            [{
-                "date": "2026-08-31", "totalTokens": 100, "totalCost": 1.0,
-                "models": {"gpt-5.5": {"totalTokens": 100, "inputTokens": 100}},
-                "costSource": "official",
-            }],
-            [{
-                "date": "2026-08-31", "totalTokens": 40, "totalCost": 0.5,
-                "models": {"gpt-5.5": {"totalTokens": 40, "inputTokens": 40}},
-                "costSource": "official",
-            }],
-        )
-        self.assertEqual(len(merged), 1)
-        self.assertEqual(merged[0]["totalTokens"], 140)
-        self.assertEqual(merged[0]["totalCost"], 1.5)
-        self.assertEqual(merged[0]["models"]["gpt-5.5"]["totalTokens"], 140)
-        self.assertEqual(merged[0]["models"]["gpt-5.5"]["inputTokens"], 140)
-        self.assertEqual(merged[0]["costSource"], "official")
+    Adding two trees together before the store would hand merge_with_cumulative a
+    sum whose composition can change underneath it. max() cannot tell "this day
+    grew" from "this day lost a contributor and the other one grew past the old
+    sum", so the pruned tree's share would vanish with no way to notice or
+    recover it. One store per tree is what makes the high-water rule sound.
+    """
 
-    def test_days_only_one_source_saw_are_kept_and_sorted(self) -> None:
-        merged = sync_usage.sum_daily_entries(
-            [{"date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0, "models": {}}],
-            [{"date": "2026-08-30", "totalTokens": 20, "totalCost": 0.0, "models": {}}],
-        )
-        self.assertEqual([entry["date"] for entry in merged],
-                         ["2026-08-30", "2026-08-31"])
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        self.codex = self.root / "codex.json"
+        self.multica = self.root / "codex-multica.json"
 
-    def test_one_unpriced_source_makes_the_summed_day_unpriced(self) -> None:
-        merged = sync_usage.sum_daily_entries(
-            [{
-                "date": "2026-08-31", "totalTokens": 10, "totalCost": 1.0,
-                "models": {}, "costSource": "official",
-            }],
-            [{
-                "date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0,
-                "models": {}, "costSource": "unpriced",
-            }],
-        )
-        self.assertEqual(merged[0]["costSource"], "unpriced")
+    @staticmethod
+    def day(tokens: int, model: str = "gpt-5.5") -> list[dict]:
+        return [{
+            "date": "2026-08-31", "totalTokens": tokens, "totalCost": 0.0,
+            "models": {model: {"totalTokens": tokens, "inputTokens": tokens}},
+            "costSource": "official",
+        }]
 
-    def test_image_counts_describe_the_machine_and_are_not_added(self) -> None:
-        # imageCount counts files in one machine-wide directory, so both reads
-        # see the same PNGs.
-        merged = sync_usage.sum_daily_entries(
-            [{
-                "date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0,
-                "models": {}, "imageCount": 3,
-            }],
-            [{"date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0, "models": {}}],
-        )
-        self.assertEqual(merged[0]["imageCount"], 3)
+    def stored(self, path: Path) -> int:
+        return json.loads(path.read_text())["2026-08-31"]["totalTokens"]
 
-    def test_an_unobserved_stub_becomes_observed_when_a_source_saw_tokens(self) -> None:
-        merged = sync_usage.sum_daily_entries(
-            [{
-                "date": "2026-08-31", "totalTokens": 0, "totalCost": 0.0,
-                "models": {}, "imageCount": 2, "tokensObserved": False,
-            }],
-            [{
-                "date": "2026-08-31", "totalTokens": 500, "totalCost": 0.0,
-                "models": {},
-            }],
-        )
-        self.assertTrue(merged[0]["tokensObserved"])
-        self.assertEqual(merged[0]["totalTokens"], 500)
+    def test_a_pruned_tree_keeps_its_share_while_the_other_grows(self) -> None:
+        sync_usage.merge_with_cumulative(self.day(100), self.codex)
+        sync_usage.merge_with_cumulative(self.day(100), self.multica)
 
-    def test_a_day_no_source_observed_stays_unobserved(self) -> None:
-        merged = sync_usage.sum_daily_entries(
-            [{
-                "date": "2026-08-31", "totalTokens": 0, "totalCost": 0.0,
-                "models": {}, "imageCount": 2, "tokensObserved": False,
-            }],
-            [],
+        # Multica's rollouts age out of ~/.codex/multica-sessions while the
+        # standard tree keeps growing past what the two used to total.
+        sync_usage.merge_with_cumulative(self.day(250), self.codex)
+        sync_usage.merge_with_cumulative([], self.multica)
+
+        self.assertEqual(self.stored(self.codex), 250)
+        self.assertEqual(
+            self.stored(self.multica), 100,
+            "the pruned tree's high-water mark was overwritten",
         )
-        self.assertFalse(merged[0]["tokensObserved"])
+        self.assertEqual(
+            self.stored(self.codex) + self.stored(self.multica), 350,
+            "summing before the store would have settled on 250",
+        )
+
+    def test_the_same_model_in_both_trees_stays_separable(self) -> None:
+        """Both trees run gpt-5.5, so a shared store could not tell them apart."""
+        sync_usage.merge_with_cumulative(self.day(100), self.codex)
+        sync_usage.merge_with_cumulative(self.day(80), self.multica)
+        for path, expected in ((self.codex, 100), (self.multica, 80)):
+            models = json.loads(path.read_text())["2026-08-31"]["models"]
+            self.assertEqual(models["gpt-5.5"]["totalTokens"], expected)
+
+    def test_the_writer_merges_one_distinct_source_into_each_store(self) -> None:
+        """The tests above drive merge_with_cumulative directly, so on their own
+        they would still pass if _sync went back to merging two observations into
+        one path. Read the writer itself: every store must be written exactly
+        once, from an observation list nothing else writes.
+        """
+        tree = ast.parse(inspect.getsource(sync_usage._sync))
+        merges = [
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "merge_with_cumulative"
+        ]
+        pairs = [
+            (ast.unparse(call.args[0]), ast.unparse(call.args[1]))
+            for call in merges
+        ]
+        self.assertEqual(
+            len(pairs), len(sync_usage.AGENT_STORES),
+            "one merge per store, no more and no fewer",
+        )
+        sources = [source for source, _ in pairs]
+        targets = [target for _, target in pairs]
+        self.assertEqual(len(set(sources)), len(sources), f"a source is reused: {sources}")
+        self.assertEqual(len(set(targets)), len(targets), f"a store is written twice: {targets}")
+
+    def test_a_failed_multica_read_cannot_reconcile_the_codex_day_away(
+        self,
+    ) -> None:
+        """--reconcile-since lifts the high-water rule, so an empty read is armed.
+
+        The fetch failure arrives as [], which reconciles nothing because there is
+        no entry for that day to make authoritative. Before the split, the same
+        failure reached the Codex store as a standard-tree-only total and the
+        Multica half was rewritten out of history.
+        """
+        sync_usage.merge_with_cumulative(self.day(100), self.multica)
+        sync_usage.merge_with_cumulative(
+            [], self.multica, reconcile_since=date(2026, 8, 1)
+        )
+        self.assertEqual(self.stored(self.multica), 100)
 
 
 if __name__ == "__main__":

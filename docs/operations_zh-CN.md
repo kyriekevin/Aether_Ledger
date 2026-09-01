@@ -35,17 +35,29 @@ dsh 的计数彼此不重叠——`inputTokens` 不含命中缓存的输入，�
 
 会话日志通常经 Zstandard 压缩，形式是每个持久化批次一个可独立解码的 frame 拼接而成。采集器优先
 用 Python 自带的 `compression.zstd`（3.14+），否则调本地 `zstd` 二进制；活跃会话末尾写了一半的
-frame 会被丢弃，前面的照常保留。两种解码器都没有的机器会报告跳过了多少份日志，并保持累计
-store 不变——和 ccusage 抓取失败时的行为一致。
+frame 整个丢掉，不去取其中能解出来的前缀——下一轮定时任务会在它写完后读到。**损坏**的 frame 则
+另作处理，因为它永远不会写完：两种解码器都会跳到下一个 frame 头继续解，并报告跳过了多少字节。
+在损坏处停下会连带丢掉它后面所有完好的 frame，而累计 store 按 max() 合并，这个少计既不可见也
+无法挽回——后续任何一轮同样读不到那些 frame。两种解码器都没有的机器会报告跳过了多少份日志，
+并保持累计 store 不变——和 ccusage 抓取失败时的行为一致。
 
 Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Claude Code、Codex、TRAE CLI 和
 dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
 `~/.trae/cli/sessions`，无需额外处理。Codex 是例外：Multica 给每个任务一个私有 `CODEX_HOME`，
 其 `sessions` 是指向共享目录 `~/.codex/multica-sessions` 的软链接，而该目录是 `~/.codex/sessions`
 的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
-以同一个 Codex 读取器读下来，然后在进入累计合并之前把结果**加**到当天的 Codex 条目上。这里必须
-是相加：合并保留存量与新观测中较大的一个，这条规则是用来防止会话轮转导致历史缩水的，对于各持
-一天一部分的两棵树恰恰是错的。与 traex 路径不同，如果一行里每个模型都有未变更的官方费率，这条
+以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。
+
+之所以单开一个 store 而不是把数加进当天的 Codex 条目：累计合并按天保留存量与新观测中较大的
+那个，这条高水位规则是用来防止会话轮转导致历史缩水的，而它成立的前提是每个存量数字只描述
+一个固定来源。先把两棵树加起来，max() 比较的就是构成会变的和——某天 Multica 的 rollout 被清理、
+标准树却继续涨过了原来的合计，较大的那个和胜出，被清理那棵树的份额就没了，既没有信号，后续
+也没有任何一次运行能把它找回来。一棵树一个 store，每个高水位标记才名副其实；渲染时
+`AGENT_BUCKETS` 再把 `codex-multica` 归回 `codex`，所以没有任何一张图会把它显示成独立 harness。
+这样也隔离了抓取失败：空结果什么都不合并，而合并成一份时，`--reconcile-since` 会拿只有半棵树
+的观测覆盖掉当天的 Codex。
+
+与 traex 路径不同，如果一行里每个模型都有未变更的官方费率，这条
 路径会保留 ccusage 自己算的金额——ccusage 仍然知道其中哪些调用走了优先级 tier、哪些越过了长上
 下文阈值，而按天汇总的数据说不出这些。
 
@@ -317,7 +329,7 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 ## 活动面板
 
 `scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、
-`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
+`codex-multica.json`、`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
 
 活动 SVG 包含：
 
