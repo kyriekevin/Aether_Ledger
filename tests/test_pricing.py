@@ -20,6 +20,24 @@ class PricingTableTests(unittest.TestCase):
         self.assertEqual((before["input"], before["output"]), (2.0, 10.0))
         self.assertEqual((after["input"], after["output"]), (2.0, 10.0))
 
+    def test_september_price_refresh_uses_effective_date(self) -> None:
+        before = date(2026, 8, 31)
+        after = date(2026, 9, 1)
+        expected = {
+            "deepseek-v4-flash": ((0.14, 0.28), (0.22, 0.66)),
+            "deepseek-v4-pro": ((0.435, 0.87), (0.66, 1.98)),
+            "gpt-5.6-sol": ((5.0, 30.0), (4.0, 20.0)),
+        }
+        for model, (old, new) in expected.items():
+            with self.subTest(model=model):
+                old_rate = pricing.active_rate(model, before)
+                new_rate = pricing.active_rate(model, after)
+                self.assertEqual((old_rate["input"], old_rate["output"]), old)
+                self.assertEqual((new_rate["input"], new_rate["output"]), new)
+        self.assertIsNone(pricing.active_rate("gpt-5.6-terra", before))
+        terra = pricing.active_rate("gpt-5.6-terra", after)
+        self.assertEqual((terra["input"], terra["output"]), (2.0, 12.0))
+
     def test_unknown_and_explicitly_unpriced_models_cost_zero(self) -> None:
         tokens = {"inputTokens": 1_000_000}
         self.assertEqual(
