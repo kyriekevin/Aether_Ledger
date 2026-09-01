@@ -1474,7 +1474,7 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(model["cacheReadTokens"], 1_000_000)
         self.assertEqual(model["cacheCreationTokens"], 1_000_000)
 
-    def test_calls_accumulate_across_steps_sessions_and_roots(self) -> None:
+    def test_calls_accumulate_across_steps_and_sessions(self) -> None:
         millis = 1787198400000
         self.write_session("proj", "session-a", [
             self.header(1, millis, "deepseek-v4-flash"),
@@ -1641,12 +1641,15 @@ class DshSessionTests(unittest.TestCase):
 
 
 class ZstdFrameDecodingTests(unittest.TestCase):
-    """A damaged frame must not take the frames after it down with it.
+    """A dsh artifact is concatenated frames, one per durable batch.
 
-    dsh's artifact is a concatenation of independently decodable frames. Stopping
-    at the first bad one loses every good frame that follows, and because the
-    cumulative store merges by max() that undercount is permanent: no later run
-    reads those frames either, so nothing ever corrects it.
+    The decoder returns whatever decoded plus whether it reached the end. It does
+    not try to tell a live session's unfinished last frame from a damaged one:
+    zstd reports single-byte corruption under seven different messages, one of
+    them the same "premature end" a live tail gives, and frame boundaries cannot
+    be found by scanning for the frame magic because those bytes also occur
+    inside compressed payloads. Both cases contribute the same decodable prefix,
+    so the distinction would change only the wording of a notice.
     """
 
     @staticmethod
@@ -1663,80 +1666,51 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         self.b = self.frame(b"bravo\n")
         self.c = self.frame(b"charlie\n")
 
-    def test_a_damaged_middle_frame_does_not_hide_the_frames_after_it(self) -> None:
-        damaged = bytearray(self.b)
-        damaged[len(damaged) // 2] ^= 0xFF
-        text, lost = sync_usage._zstd_frames_text(
-            self.a + bytes(damaged) + self.c
-        )
-        self.assertIn("alpha", text)
-        self.assertIn("charlie", text, "the frame after the damage was dropped")
-        self.assertEqual(lost, len(damaged))
+    def test_whole_frames_decode_completely(self) -> None:
+        text, complete = sync_usage._zstd_frames_text(self.a + self.b + self.c)
+        self.assertEqual(text, "alpha\nbravo\ncharlie\n")
+        self.assertTrue(complete)
 
-    def test_an_unfinished_last_frame_is_dropped_whole_and_not_counted_lost(
+    def test_an_unfinished_last_frame_keeps_what_decoded_and_reports_partial(
         self,
     ) -> None:
-        """A live session always ends mid-frame; that is not damage.
+        """A live session always ends mid-frame.
 
-        The partial frame is left entirely alone rather than mined for a
-        decodable prefix, so the next scheduled run reads it once complete.
+        The prefix is real and safe to keep: frames are append-only and every run
+        recomputes the day from the whole artifact, so an early partial read is
+        superseded by the completed one rather than added to it.
         """
-        text, lost = sync_usage._zstd_frames_text(
+        text, complete = sync_usage._zstd_frames_text(
             self.a + self.b + self.c[: len(self.c) // 2]
         )
         self.assertIn("alpha", text)
         self.assertIn("bravo", text)
-        self.assertNotIn("charlie", text)
-        self.assertEqual(lost, 0)
+        self.assertFalse(complete)
 
-    def test_bytes_that_are_not_zstd_report_undecodable_rather_than_empty(
+    def test_bytes_that_are_not_zstd_report_unreadable_rather_than_empty(
         self,
     ) -> None:
         """An unreadable log and an empty one need different reports.
 
-        Returning "" for a corrupt artifact would let it pass as a session that
-        genuinely recorded nothing, and the operator would never learn a log had
-        stopped being readable.
+        Returning "" for an artifact nothing can read would let it pass as a
+        session that genuinely recorded nothing, and the operator would never
+        learn a log had stopped being readable.
         """
-        text, lost = sync_usage._zstd_frames_text(b"this is not a zstd artifact")
+        text, complete = sync_usage._zstd_frames_text(b"this is not a zstd artifact")
         self.assertIsNone(text)
-        self.assertEqual(lost, len(b"this is not a zstd artifact"))
+        self.assertFalse(complete)
 
     def test_an_empty_artifact_is_an_empty_session_not_a_failure(self) -> None:
-        self.assertEqual(sync_usage._zstd_frames_text(b""), ("", 0))
+        self.assertEqual(sync_usage._zstd_frames_text(b""), ("", True))
 
-    def test_a_frame_whose_payload_contains_the_magic_is_not_split(self) -> None:
-        """The four magic bytes also occur inside compressed payloads.
-
-        Salvage walks frame headers, so a false one inside a valid frame makes it
-        look like two halves that each fail to decode. Splitting there would
-        discard a frame that is perfectly readable as a whole and report it as
-        damage that never happened.
-        """
-        inner = self.frame(b"line-0 " + sync_usage.ZSTD_FRAME_MAGIC * 3 + b" tail\n")
-        self.assertIn(
-            sync_usage.ZSTD_FRAME_MAGIC, inner[len(sync_usage.ZSTD_FRAME_MAGIC):],
-            "fixture no longer contains a false frame header",
-        )
-        damaged = bytearray(self.a)
+    def test_a_damaged_frame_keeps_the_prefix_and_reports_partial(self) -> None:
+        damaged = bytearray(self.b)
         damaged[len(damaged) // 2] ^= 0xFF
-        text, lost = sync_usage._zstd_frames_text(
-            bytes(damaged) + inner + self.c
+        text, complete = sync_usage._zstd_frames_text(
+            self.a + bytes(damaged) + self.c
         )
-        self.assertIn("line-0", text, "the frame with the false header was lost")
-        self.assertIn("charlie", text)
-        self.assertEqual(lost, len(damaged))
-
-    def test_damage_before_the_first_frame_header_is_still_reported(self) -> None:
-        """Corruption can land on the first header itself.
-
-        Frame walking then starts at the second frame, and the bytes ahead of it
-        belong to no span the salvage loop visits. Reporting zero damage there
-        would let a whole lost frame pass as a clean read.
-        """
-        text, lost = sync_usage._zstd_frames_text(b"BROKEN" + self.b)
-        self.assertIn("bravo", text)
-        self.assertEqual(lost, len(b"BROKEN"))
+        self.assertIn("alpha", text)
+        self.assertFalse(complete)
 
 
 class MulticaCodexTests(unittest.TestCase):
@@ -1890,31 +1864,69 @@ class SeparateStorePerTreeTests(unittest.TestCase):
             models = json.loads(path.read_text())["2026-08-31"]["models"]
             self.assertEqual(models["gpt-5.5"]["totalTokens"], expected)
 
-    def test_the_writer_merges_one_distinct_source_into_each_store(self) -> None:
+    def test_the_writer_sends_each_reader_to_its_own_store(self) -> None:
         """The tests above drive merge_with_cumulative directly, so on their own
-        they would still pass if _sync went back to merging two observations into
-        one path. Read the writer itself: every store must be written exactly
-        once, from an observation list nothing else writes.
+        they would still pass if _sync merged two observations into one path.
+
+        Distinct names are not enough either: swapping two of them would keep
+        every pair unique while sending Multica's rollouts to `codex.json`. So
+        read the writer and follow each observation list back to the reader that
+        produced it, then assert which store that reader's output lands in.
         """
         tree = ast.parse(inspect.getsource(sync_usage._sync))
-        merges = [
-            node for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "merge_with_cumulative"
-        ]
-        pairs = [
-            (ast.unparse(call.args[0]), ast.unparse(call.args[1]))
-            for call in merges
-        ]
+        produced_by: dict[str, str] = {}
+        store_of: dict[str, str] = {}
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign):
+                continue
+            call = node.value if isinstance(node.value, ast.Call) else None
+            for target in node.targets:
+                names = (
+                    target.elts if isinstance(target, ast.Tuple) else [target]
+                )
+                for name in names:
+                    if not isinstance(name, ast.Name):
+                        continue
+                    if call is not None and isinstance(call.func, ast.Name):
+                        produced_by[name.id] = call.func.id
+                    for sub in ast.walk(node.value):
+                        if (
+                            isinstance(sub, ast.Subscript)
+                            and isinstance(sub.value, ast.Name)
+                            and sub.value.id == "AGENT_STORES"
+                            and isinstance(sub.slice, ast.Constant)
+                        ):
+                            store_of[name.id] = sub.slice.value
+
+        wiring = {}
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "merge_with_cumulative"
+            ):
+                source = ast.unparse(node.args[0])
+                target = ast.unparse(node.args[1])
+                self.assertIn(target, store_of, f"{target} is not an AGENT_STORES path")
+                self.assertNotIn(
+                    store_of[target], wiring, f"{target} is written twice"
+                )
+                wiring[store_of[target]] = produced_by.get(source, source)
+
         self.assertEqual(
-            len(pairs), len(sync_usage.AGENT_STORES),
-            "one merge per store, no more and no fewer",
+            set(wiring), set(sync_usage.AGENT_STORES),
+            "every store the writer declares must be written exactly once",
         )
-        sources = [source for source, _ in pairs]
-        targets = [target for _, target in pairs]
-        self.assertEqual(len(set(sources)), len(sources), f"a source is reused: {sources}")
-        self.assertEqual(len(set(targets)), len(targets), f"a store is written twice: {targets}")
+        self.assertEqual(
+            wiring["codex-multica"], "fetch_multica_codex_daily",
+            "the Multica tree must land in its own store",
+        )
+        self.assertEqual(
+            wiring["codex"], "fetch_daily_since",
+            "codex.json must hold the standard tree, not the Multica one",
+        )
+        self.assertEqual(wiring["dsh"], "collect_dsh_daily_since")
+        self.assertEqual(wiring["traex"], "fetch_codex_home_daily")
 
     def test_a_failed_multica_read_cannot_reconcile_the_codex_day_away(
         self,

@@ -326,15 +326,6 @@ DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
 # process, but it runs under the checkout-wide Git lock like everything else in a
 # sync run, so a wedged one must not strand that lock.
 DSH_DECODE_TIMEOUT_SECONDS = 30
-# Every Zstandard frame opens with this magic number (RFC 8878 §3.1.1). Knowing
-# where the next frame starts is what lets a damaged one be stepped over instead
-# of truncating the rest of the log; see _zstd_frames_text.
-ZSTD_FRAME_MAGIC = b"\x28\xb5\x2f\xfd"
-# How many candidate frame boundaries the corrupt-log salvage path will merge
-# while looking for one that decodes. Those four magic bytes also occur inside
-# compressed payloads, so a real frame can look like several; this bounds the
-# subprocess count on a path that already only runs on a damaged artifact.
-_ZSTD_SALVAGE_SPAN_REACH = 8
 
 # dsh's own thinking vocabulary against this repository's EFFORT_LEVELS. `off` is
 # exactly `none` under a different spelling. dsh also offers `minimal`, which has
@@ -620,156 +611,90 @@ def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
     return (default,) if default.is_dir() else ()
 
 
-def _zstd_frame_spans(raw: bytes) -> tuple[tuple[int, int], ...]:
-    """Byte ranges of *raw* between successive frame headers."""
-    starts: list[int] = []
-    offset = raw.find(ZSTD_FRAME_MAGIC)
-    while offset != -1:
-        starts.append(offset)
-        offset = raw.find(ZSTD_FRAME_MAGIC, offset + len(ZSTD_FRAME_MAGIC))
-    return tuple(zip(starts, (*starts[1:], len(raw))))
+def _zstd_frames_text(raw: bytes) -> tuple[str | None, bool]:
+    """Decode a dsh session artifact, with whether it decoded to the end.
 
-
-def _zstd_frames_text(raw: bytes) -> tuple[str | None, int]:
-    """Decode the complete Zstandard frames of *raw*.
-
-    Returns the decoded text and how many bytes were lost to damage. Text of
-    None means the bytes could not be read as zstd at all (or no decoder was
-    available) — a different report from a log that legitimately decoded to
-    nothing, which the caller needs in order to name the right cause.
+    Returns (text, complete). Text of None means nothing could be read at all —
+    no decoder, or bytes that are not zstd — which the caller must not confuse
+    with a session that legitimately recorded nothing.
 
     dsh appends one independently decodable frame per durable batch, so a log
-    read while a session is live ends mid-frame. That torn tail is dropped whole
-    rather than mined for its decodable prefix: this runs on a schedule, and the
-    next run reads the frame once it is finished. It is not counted as damage.
+    read while a session is live ends mid-frame and `complete` is False. That is
+    the ordinary case, not an error: whatever decoded is real, the rest arrives
+    next run, and re-reading the whole artifact every run means an early partial
+    read can never inflate a day. Frames are append-only, and each run recomputes
+    the day from scratch, so the completed read always supersedes the torn one.
 
-    A *damaged* frame is a different thing — it never completes — so the decoders
-    below resynchronise on the next frame header and carry on rather than
-    stopping. Stopping would drop every good frame after the damage, and because
-    the cumulative store merges by max(), that undercount would be invisible and
-    permanent: no later run would ever read those frames either.
+    A damaged frame also reports False, and deliberately is not distinguished
+    from a torn tail. Telling them apart is not reliably possible: zstd reports
+    single-byte corruption as seven different messages, one of which is the same
+    "premature end" a live tail produces, and frame boundaries cannot be found by
+    scanning for the frame magic because those bytes also occur inside compressed
+    payloads. Nor would it change what is collected — both cases contribute the
+    same decodable prefix. So the count is reported without a claimed cause; a
+    count that stays positive across runs with no live session is the tell.
 
     Nothing is added to this script's (empty) dependency list for any of it.
     """
     if not raw:
         # dsh creates the artifact before it writes the first frame, so an empty
         # file is a session that has recorded nothing yet — not a broken one.
-        return "", 0
-    if ZSTD_FRAME_MAGIC not in raw:
-        # Not one frame header anywhere: this is not a zstd artifact, so there is
-        # nothing to resynchronise on and nothing to salvage.
-        return None, len(raw)
+        return "", True
     try:
         from compression.zstd import ZstdDecompressor  # Python 3.14+
     except ImportError:
         pass
     else:
         decoded = bytearray()
-        damaged = 0
         remaining = raw
+        complete = True
         while remaining:
             decompressor = ZstdDecompressor()
             try:
-                chunk = decompressor.decompress(remaining)
+                decoded += decompressor.decompress(remaining)
             except Exception:
                 complete = False
-            else:
-                complete = decompressor.eof
-            if complete:
-                decoded += chunk
-                remaining = decompressor.unused_data
-                continue
-            offset = len(raw) - len(remaining)
-            # Step over this frame's own header before looking for the next one,
-            # but only when there is one here: a resync that landed on garbage
-            # must not skip a real header sitting in the next three bytes.
-            step = (
-                len(ZSTD_FRAME_MAGIC)
-                if remaining.startswith(ZSTD_FRAME_MAGIC)
-                else 1
-            )
-            following = raw.find(ZSTD_FRAME_MAGIC, offset + step)
-            if following == -1:
-                # Nothing follows, so this is the live session's unfinished tail
-                # rather than damage. Leave it for the next run.
                 break
-            damaged += following - offset
-            remaining = raw[following:]
-        if not decoded and damaged:
-            return None, damaged
-        return decoded.decode("utf-8", "replace"), damaged
+            if not decompressor.eof:
+                complete = False
+                break
+            remaining = decompressor.unused_data
+        if not decoded and not complete:
+            return None, False
+        return decoded.decode("utf-8", "replace"), complete
 
     zstd = shutil.which("zstd")
     if zstd is None:
-        return None, 0
-
-    def decode(chunk: bytes) -> bytes | None:
-        """Decoded bytes, or None when zstd rejected the input outright."""
-        try:
-            out = subprocess.run(
-                [zstd, "-dc", "-"], input=chunk, capture_output=True,
-                timeout=DSH_DECODE_TIMEOUT_SECONDS,
-            )
-        except (OSError, subprocess.TimeoutExpired):
-            return None
-        return out.stdout if out.returncode == 0 else None
-
-    whole = decode(raw)
-    if whole is not None:
-        return whole.decode("utf-8", "replace"), 0
-    # A non-zero exit means the run stopped somewhere, and the ordinary cause is
-    # the live session's unfinished last frame. Retrying without it settles that
-    # common case in one extra call and keeps the salvage loop off the hot path.
-    spans = _zstd_frame_spans(raw)
-    # Bytes ahead of the first header belong to no frame the loop below can
-    # reach, so they are lost however the rest turns out.
-    leading = spans[0][0]
-    if len(spans) > 1:
-        body = decode(raw[: spans[-1][0]])
-        if body is not None:
-            return body.decode("utf-8", "replace"), leading
-    # Something earlier is damaged. Decode frame by frame so the good frames
-    # after it survive. This costs one call per frame, but only ever runs on a
-    # log that is already corrupt.
-    decoded = bytearray()
-    damaged = leading
-    index = 0
-    while index < len(spans):
-        start = spans[index][0]
-        # The four magic bytes also occur inside compressed payloads, which
-        # splits one real frame into halves that each fail on their own. Try the
-        # longest run of spans first so a false header is absorbed rather than
-        # counted as damage. A genuinely damaged frame fails at every length, so
-        # trying long first cannot swallow good frames.
-        limit = min(index + _ZSTD_SALVAGE_SPAN_REACH, len(spans) - 1)
-        for reach in range(limit, index - 1, -1):
-            chunk = decode(raw[start : spans[reach][1]])
-            if chunk is not None:
-                decoded += chunk
-                index = reach + 1
-                break
-        else:
-            # The last span alone is the torn tail, which is not damage.
-            if index < len(spans) - 1:
-                damaged += spans[index][1] - start
-            index += 1
-    if not decoded and damaged:
-        return None, damaged
-    return decoded.decode("utf-8", "replace"), damaged
+        return None, False
+    # A partial or damaged frame makes `zstd -dc` exit non-zero *after* writing
+    # every frame it did decode, so stdout is read regardless of the status. Only
+    # an empty stdout means the artifact could not be read at all.
+    try:
+        out = subprocess.run(
+            [zstd, "-dc", "-"], input=raw, capture_output=True,
+            timeout=DSH_DECODE_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None, False
+    if out.returncode == 0:
+        return out.stdout.decode("utf-8", "replace"), True
+    if not out.stdout:
+        return None, False
+    return out.stdout.decode("utf-8", "replace"), False
 
 
-def _read_dsh_session_log(path: Path) -> tuple[str | None, int]:
-    """One session log as text, plus the byte count lost to damaged frames.
+def _read_dsh_session_log(path: Path) -> tuple[str | None, bool]:
+    """One session log as text, plus whether it decoded to the end.
 
-    Text of None means the log could not be read or decoded at all.
+    Text of None means the log could not be read at all.
     """
     try:
         raw = path.read_bytes()
     except OSError:
-        return None, 0
+        return None, False
     if path.name.endswith(".zstd"):
         return _zstd_frames_text(raw)
-    return raw.decode("utf-8", "replace"), 0
+    return raw.decode("utf-8", "replace"), True
 
 
 def _event_day_from_millis(raw: object) -> date | None:
@@ -818,20 +743,14 @@ def collect_dsh_daily_since(
     session_roots = dsh_session_roots() if roots is None else tuple(roots)
     daily: dict[str, dict] = {}
     unreadable = 0
-    damaged_logs = 0
-    damaged_bytes = 0
+    partial = 0
     for path in _dsh_session_logs(session_roots):
-        text, damaged = _read_dsh_session_log(path)
-        if damaged:
-            damaged_logs += 1
-            damaged_bytes += damaged
+        text, complete = _read_dsh_session_log(path)
         if text is None:
-            # A log that reported damage was read by a working decoder and lost
-            # frames to corruption. Counting it as unreadable too would tell the
-            # operator to install a decoder they already have.
-            if not damaged:
-                unreadable += 1
+            unreadable += 1
             continue
+        if not complete:
+            partial += 1
         model: str | None = None
         effort: str | None = None
         for line in text.splitlines():
@@ -899,13 +818,13 @@ def collect_dsh_daily_since(
             f"session logs can be read",
             file=sys.stderr,
         )
-    if damaged_logs:
-        # Damage is permanent: the frames were stepped over, and because the
-        # cumulative store merges by max() no later run can restore what they
-        # held. Say so rather than let the day quietly settle low.
+    if partial:
+        # Usually one live session whose last frame is still being written, which
+        # the next run picks up. A count that stays positive with no session
+        # running means real damage, and those frames are not coming back.
         print(
-            f"dsh: skipped {damaged_bytes} damaged byte(s) across {damaged_logs} "
-            f"session log(s); those frames are lost and their days may undercount",
+            f"dsh: {partial} session log(s) did not decode to the end; a live "
+            f"session's unfinished last frame is the usual cause",
             file=sys.stderr,
         )
     return _dsh_entries(daily)

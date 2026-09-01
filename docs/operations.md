@@ -40,14 +40,20 @@ bucket rather than being folded into `low`.
 
 Session logs are normally Zstandard-compressed, as a concatenation of one independently decodable
 frame per durable batch. The writer decodes them with Python's own `compression.zstd` (3.14+) or,
-failing that, a local `zstd` binary. A torn final frame from a live session is dropped whole rather
-than mined for its decodable prefix: the next scheduled run reads it once finished. A *damaged*
-frame is treated differently, because it never finishes — both decoders resynchronise on the next
-frame header and keep going, and report the bytes they stepped over. Stopping at the damage would
-drop every good frame after it, and since the cumulative store merges by max(), that undercount
-would be permanent and invisible: no later run would read those frames either. On a machine with
-neither decoder the run reports how many logs it skipped and leaves the cumulative store intact,
-exactly as a failed ccusage fetch does.
+failing that, a local `zstd` binary. Whatever decoded is kept, and the run reports how many logs did
+not decode to the end. Keeping a partial read is safe: frames are append-only and every run
+recomputes the day from the whole artifact, so a torn read is superseded by the completed one rather
+than added to it.
+
+A live session's unfinished last frame is the ordinary cause of a partial read, and the writer does
+not claim to tell it apart from a damaged frame. It cannot: zstd reports single-byte corruption
+under seven different messages, one of them the same `premature end` a live tail produces, and frame
+boundaries cannot be found by scanning for the frame magic because those four bytes also occur
+inside compressed payloads. Both cases contribute the same decodable prefix, so the distinction
+would change only the wording of a notice. A count that stays positive across runs with no dsh
+session running is the signal that a log is genuinely damaged. On a machine with neither decoder the
+run reports how many logs it could not read at all and leaves the cumulative store intact, exactly
+as a failed ccusage fetch does.
 
 Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
