@@ -26,6 +26,38 @@ Anthropic Opus slugs they front (`claude-opus-4-6`/`4-7`/`4-8`). It also collaps
 short Gemini config names (`gemini-3.1-pro`, `gemini-3-flash`) onto the official preview slugs
 recorded in its own model metadata, so old and new sessions share one cumulative model bucket.
 
+DeepSeek Harness (dsh) is read from its own logs, because ccusage has no `dsh` agent to borrow the
+way traex borrows the Codex reader. A dsh harness home holds one append-only JSONL event log per
+session at `<root>/<project>/<session>/session.jsonl[.zstd]`, and the writer reads three of its
+event types: `request/header` and `request/context` name the model serving the calls that follow,
+and `assistant/message` carries one model call's token accounting. dsh reports disjoint counts —
+`inputTokens` excludes cached input, which arrives separately as cache reads and writes — so the
+four components add up to the billed total, the same convention the ccusage-fed stores use. Days
+land in `dsh.json`, priced at the official standard tier; dsh records no priority tier for a
+multiplier to apply to. Effort comes from the header's `reasoningEffort`: dsh's `off` is recorded
+as this repository's `none`, and its `minimal`, which has no counterpart here, records no effort
+bucket rather than being folded into `low`.
+
+Session logs are normally Zstandard-compressed, as a concatenation of one independently decodable
+frame per durable batch. The writer decodes them with Python's own `compression.zstd` (3.14+) or,
+failing that, a local `zstd` binary; a torn final frame from a live session is dropped and the rest
+is kept. On a machine with neither decoder the run reports how many logs it skipped and leaves the
+cumulative store intact, exactly as a failed ccusage fetch does.
+
+Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
+in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
+already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
+special handling. Codex is the exception. Multica gives each task a private `CODEX_HOME` whose
+`sessions` is a symlink into a shared `~/.codex/multica-sessions` tree, which is a sibling of
+`~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
+that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, then
+**adds** the result to the same day's Codex entry before the cumulative merge sees it. Adding is
+load-bearing: the merge keeps the larger of the stored and incoming observations, which is what
+protects history from session rotation and exactly the wrong operator for two trees that each hold
+part of one day. Unlike the traex path, this one keeps ccusage's own cost for a row whose every
+model has an unchanged official rate, because ccusage still knows which of those calls ran on the
+priority tier or crossed a long-context threshold and a day's totals cannot say.
+
 Token prices come only from `config/official-pricing.json`. The sync invokes ccusage with
 `--offline` and a generated override file, so neither LiteLLM's live table nor models.dev can alter
 stored amounts. ccusage still supplies its request-level Codex Fast/standard and long-context
@@ -90,7 +122,7 @@ A new machine can only recover dates still present in its local logs.
 - `ccusage` 20.0.19 or newer (`--by-agent`, pricing overrides, and recorded Fast tier support)
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
-- Claude Code, Codex, OpenCode, or TRAE CLI (traex) local usage logs
+- Claude Code, Codex, OpenCode, TRAE CLI (traex), or DeepSeek Harness (dsh) local usage logs
 
 Install the command-line dependencies:
 
@@ -327,7 +359,8 @@ pinned to `main` will be up to one day behind by design.
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
-`opencode.json`, or `traex.json`. Files such as `codex_by_repo.json` are deliberately excluded.
+`opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
+excluded.
 
 The activity SVG contains:
 
@@ -489,6 +522,10 @@ rotate. Legacy entries may retain the former `turns` field with the same model-c
 
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
+
+dsh (`dsh.json`) uses the same date-keyed shape, with `routing.efforts` when the session headers
+named a reasoning level this repository renders. It represents DeepSeek Harness, whether launched
+by hand or by Multica.
 
 traex (`traex.json`) uses the same date-keyed shape as Codex. It represents the internal TRAE CLI,
 while its recorded model names describe the actual capacity supplied behind that harness. Fast
