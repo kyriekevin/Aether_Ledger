@@ -85,8 +85,7 @@
       "provider": "anthropic",
       "officialName": "Claude Sonnet 5",
       "rates": [
-        {"effectiveFrom": "2026-07-06", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.2},
-        {"effectiveFrom": "2026-09-01", "input": 3.0, "output": 15.0, "cacheWrite": 3.75, "cacheRead": 0.3}
+        {"effectiveFrom": "2026-07-06", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.2}
       ]
     },
     "deepseek-v4-flash": {

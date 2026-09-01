@@ -14,11 +14,11 @@ import update_pricing  # noqa: E402
 
 
 class PricingTableTests(unittest.TestCase):
-    def test_sonnet_introductory_rate_changes_on_its_effective_date(self) -> None:
+    def test_sonnet_introductory_rate_remains_active_after_august(self) -> None:
         before = pricing.active_rate("claude-sonnet-5", date(2026, 8, 31))
         after = pricing.active_rate("claude-sonnet-5", date(2026, 9, 1))
         self.assertEqual((before["input"], before["output"]), (2.0, 10.0))
-        self.assertEqual((after["input"], after["output"]), (3.0, 15.0))
+        self.assertEqual((after["input"], after["output"]), (2.0, 10.0))
 
     def test_unknown_and_explicitly_unpriced_models_cost_zero(self) -> None:
         tokens = {"inputTokens": 1_000_000}
@@ -105,17 +105,17 @@ class OfficialPageParserTests(unittest.TestCase):
             "Claude Opus 5",
         )
 
-    def test_anthropic_parser_selects_date_effective_sonnet_rate(self) -> None:
+    def test_anthropic_parser_ignores_cancelled_sonnet_rate(self) -> None:
         source = """
 | Model | Base Input Tokens | 5m Cache Writes | 1h Cache Writes | Cache Hits & Refreshes | Output Tokens |
 | --- | --- | --- | --- | --- | --- |
-| Claude Sonnet 5 [through August 31, 2026](x) | $2 / MTok | $2.50 / MTok | $4 / MTok | $0.20 / MTok | $10 / MTok |
+| Claude Sonnet 5 | $2 / MTok | $2.50 / MTok | $4 / MTok | $0.20 / MTok | $10 / MTok |
 | Claude Sonnet 5 starting September 1, 2026 | $3 / MTok | $3.75 / MTok | $6 / MTok | $0.30 / MTok | $15 / MTok |
 """
         august = update_pricing.parse_anthropic(source, date(2026, 8, 10))
         september = update_pricing.parse_anthropic(source, date(2026, 9, 1))
         self.assertEqual(august["Claude Sonnet 5"]["input"], 2.0)
-        self.assertEqual(september["Claude Sonnet 5"]["input"], 3.0)
+        self.assertEqual(september["Claude Sonnet 5"]["input"], 2.0)
 
     def test_openai_parser_reads_standard_long_and_fast_rates(self) -> None:
         source = """

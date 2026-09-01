@@ -57,10 +57,8 @@ def parse_anthropic(markdown: str, as_of: date) -> dict[str, dict]:
             continue
         display = re.sub(r"\s*\[.*", "", row[0]).strip()
         if display == "Claude Sonnet 5 starting September 1, 2026":
-            display = "Claude Sonnet 5"
-            if as_of < date(2026, 9, 1):
-                continue
-        elif display == "Claude Sonnet 5" and as_of >= date(2026, 9, 1):
+            # Anthropic cancelled this scheduled rate on August 10 and made the
+            # introductory Sonnet 5 price permanent.
             continue
         values = [_money(cell) for cell in row[1:]]
         if any(value is None for value in values):
