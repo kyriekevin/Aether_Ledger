@@ -43,7 +43,8 @@ uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 各模型在仓库中首次出现的日期。
 DeepSeek、Google Gemini、Kimi 和 MiniMax 均直接读取各自 canonical API 定价页。已登记的 Gemini
 模型在 TRAE 标示的 200K 上下文上限内使用标准文本/图片价格；采集到的 token 桶不包含音频和
-Google 缓存存储时长费用。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
+Google 缓存存储时长费用。DeepSeek 的每日汇总没有保留请求时刻，因此官方价格分峰谷档时，仓库按
+未打折的峰时价格做保守的 API 等价估算。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
 当前固定 ccusage 版本认识该模型的请求级切档阈值时才允许加入；否则输出 `UNSUPPORTED`，不会静默
 套用 ccusage 的通用 200K fallback。
 

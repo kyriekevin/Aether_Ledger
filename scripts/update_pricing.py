@@ -110,9 +110,11 @@ def parse_openai(markdown: str, _as_of: date) -> dict[str, dict]:
                 "cacheWrite": values[0], "output": values[2],
             }
 
-    fast = markdown.split("### Fast pricing data", 1)[-1].split(
-        "## Multimodal models", 1
-    )[0]
+    fast_parts = markdown.split("### Fast pricing data", 1)
+    fast = (
+        re.split(r"\n#{2,3} ", fast_parts[1], maxsplit=1)[0]
+        if len(fast_parts) == 2 else ""
+    )
     fast_input: dict[str, float] = {}
     for row in _rows(fast):
         if len(row) == 9 and row[0].startswith("gpt-"):
@@ -164,11 +166,21 @@ def parse_deepseek(page: str, _as_of: date) -> dict[str, dict]:
     models = model_row[1:]
 
     def prices(label: str) -> list[float] | None:
-        row = next(
-            (row for row in parser.rows if any(label in cell.upper() for cell in row)),
+        match = next(
+            (
+                (index, row) for index, row in enumerate(parser.rows)
+                if any(label in cell.upper() for cell in row)
+            ),
             None,
         )
-        if row is None or len(row) < len(models):
+        if match is None:
+            return None
+        index, row = match
+        if "OFF-PEAK" in row:
+            if index + 1 >= len(parser.rows) or parser.rows[index + 1][0] != "PEAK":
+                return None
+            row = parser.rows[index + 1]
+        if len(row) < len(models):
             return None
         values = [_money(cell) for cell in row[-len(models):]]
         return None if any(value is None for value in values) else values

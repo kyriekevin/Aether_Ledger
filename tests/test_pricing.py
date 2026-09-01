@@ -20,23 +20,24 @@ class PricingTableTests(unittest.TestCase):
         self.assertEqual((before["input"], before["output"]), (2.0, 10.0))
         self.assertEqual((after["input"], after["output"]), (2.0, 10.0))
 
-    def test_september_price_refresh_uses_effective_date(self) -> None:
-        before = date(2026, 8, 31)
-        after = date(2026, 9, 1)
-        expected = {
-            "deepseek-v4-flash": ((0.14, 0.28), (0.22, 0.66)),
-            "deepseek-v4-pro": ((0.435, 0.87), (0.66, 1.98)),
-            "gpt-5.6-sol": ((5.0, 30.0), (4.0, 20.0)),
-        }
-        for model, (old, new) in expected.items():
-            with self.subTest(model=model):
-                old_rate = pricing.active_rate(model, before)
-                new_rate = pricing.active_rate(model, after)
-                self.assertEqual((old_rate["input"], old_rate["output"]), old)
-                self.assertEqual((new_rate["input"], new_rate["output"]), new)
-        self.assertIsNone(pricing.active_rate("gpt-5.6-terra", before))
-        terra = pricing.active_rate("gpt-5.6-terra", after)
+    def test_openai_price_refresh_uses_source_dates(self) -> None:
+        old_sol = pricing.active_rate("gpt-5.6-sol", date(2026, 8, 20))
+        new_sol = pricing.active_rate("gpt-5.6-sol", date(2026, 8, 21))
+        self.assertEqual((old_sol["input"], old_sol["output"]), (5.0, 30.0))
+        self.assertEqual((new_sol["input"], new_sol["output"]), (4.0, 20.0))
+        self.assertEqual(new_sol["fastMultiplier"], 2.0)
+
+        self.assertIsNone(
+            pricing.active_rate("gpt-5.6-terra", date(2026, 8, 14))
+        )
+        terra = pricing.active_rate("gpt-5.6-terra", date(2026, 8, 15))
         self.assertEqual((terra["input"], terra["output"]), (2.0, 12.0))
+
+    def test_deepseek_peak_rates_start_on_the_shanghai_effective_day(self) -> None:
+        old_flash = pricing.active_rate("deepseek-v4-flash", date(2026, 8, 16))
+        new_flash = pricing.active_rate("deepseek-v4-flash", date(2026, 8, 17))
+        self.assertEqual((old_flash["input"], old_flash["output"]), (0.14, 0.28))
+        self.assertEqual((new_flash["input"], new_flash["output"]), (0.44, 1.32))
 
     def test_unknown_and_explicitly_unpriced_models_cost_zero(self) -> None:
         tokens = {"inputTokens": 1_000_000}
@@ -146,8 +147,12 @@ class OfficialPageParserTests(unittest.TestCase):
 | Model | Short context input | Short context cached input | Short context cache writes | Short context output | Long context input | Long context cached input | Long context cache writes | Long context output |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | gpt-5.6-sol | $10.00 | $1.00 | $12.50 | $60.00 | $20.00 | $2.00 | $25.00 | $90.00 |
-## Multimodal models
+### Grouped Pricing Table data
+| Model | Short context input | Short context cached input | Short context cache writes | Short context output | Long context input | Long context cached input | Long context cache writes | Long context output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gpt-5.6-sol | $5.00 | $0.50 | $6.25 | $30.00 | $10.00 | $1.00 | $12.50 | $45.00 |
 Specialized models
+Standard
 Fast mode
 """
         rate = update_pricing.parse_openai(source, date(2026, 8, 10))["gpt-5.6-sol"]
@@ -191,6 +196,22 @@ Fast mode
         ]
         self.assertEqual(rate["input"], 0.435)
         self.assertEqual(rate["cacheRead"], 0.003625)
+
+    def test_deepseek_parser_uses_peak_rate_for_tiered_table(self) -> None:
+        source = """
+<table><tbody>
+<tr><td>MODEL</td><td>deepseek-v4-flash</td><td>deepseek-v4-pro</td></tr>
+<tr><td>1M INPUT TOKENS (CACHE HIT)</td><td>OFF-PEAK</td><td>$0.007</td><td>$0.022</td></tr>
+<tr><td>PEAK</td><td>$0.014</td><td>$0.044</td></tr>
+<tr><td>1M INPUT TOKENS (CACHE MISS)</td><td>OFF-PEAK</td><td>$0.22</td><td>$0.66</td></tr>
+<tr><td>PEAK</td><td>$0.44</td><td>$1.32</td></tr>
+<tr><td>1M OUTPUT TOKENS</td><td>OFF-PEAK</td><td>$0.66</td><td>$1.98</td></tr>
+<tr><td>PEAK</td><td>$1.32</td><td>$3.96</td></tr>
+</tbody></table>
+"""
+        rates = update_pricing.parse_deepseek(source, date(2026, 8, 17))
+        self.assertEqual(rates["deepseek-v4-flash"]["input"], 0.44)
+        self.assertEqual(rates["deepseek-v4-pro"]["output"], 3.96)
 
     def test_kimi_parser_discovers_models_from_the_official_index(self) -> None:
         source = r'''
