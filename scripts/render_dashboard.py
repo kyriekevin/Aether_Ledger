@@ -27,14 +27,16 @@ DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
 DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
-AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
+AGENT_FILES = frozenset({
+    "claude.json", "codex.json", "opencode.json", "traex.json", "dsh.json",
+})
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 
 ROLE_ORDER = ("work", "personal", "devbox", "trail")
 TOPOLOGY_ROLE_ORDER = ("work", "personal", "development")
-AGENT_ORDER = ("claude", "codex", "opencode", "traex")
-TOPOLOGY_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+AGENT_ORDER = ("claude", "codex", "opencode", "traex", "dsh")
+TOPOLOGY_AGENT_ORDER = ("claude", "codex", "traex", "dsh", "legacy")
 ROLE_LABELS = {"work": "Work", "personal": "Personal", "development": "Development"}
 ROLE_BUCKETS = {
     "work": "work",
@@ -42,9 +44,19 @@ ROLE_BUCKETS = {
     "devbox": "development",
     "trail": "development",
 }
-AGENT_LABELS = {"claude": "Claude", "codex": "Codex", "traex": "TRAE", "legacy": "Legacy"}
-AGENT_BUCKETS = {"claude": "claude", "codex": "codex", "opencode": "legacy", "traex": "traex"}
-ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "legacy")
+AGENT_LABELS = {
+    "claude": "Claude", "codex": "Codex", "traex": "TRAE", "dsh": "DSH",
+    "legacy": "Legacy",
+}
+AGENT_BUCKETS = {
+    "claude": "claude", "codex": "codex", "opencode": "legacy",
+    "traex": "traex", "dsh": "dsh",
+}
+ALLOCATION_AGENT_ORDER = ("claude", "codex", "traex", "dsh", "legacy")
+# The harnesses that get a panel of their own in the allocation and runtime
+# charts. `legacy` is deliberately absent: it is a closed bucket for usage that
+# OpenCode launched, with no live session logs behind it to break down.
+PANEL_AGENT_ORDER = ("claude", "codex", "traex", "dsh")
 # Quota is a session-log field. Codex writes it; Claude logs carry no
 # equivalent, so Claude can never appear in a quota chart and is not
 # offered a slot that would sit empty. Compatible TRAE builds use the
@@ -114,6 +126,7 @@ def _theme_style_lines(
         "    .agent-claude { fill: #fe640b; }",
         "    .agent-codex { fill: #1e66f5; }",
         "    .agent-traex { fill: #8839ef; }",
+        "    .agent-dsh { fill: #ea76cb; }",
         "    .agent-legacy { fill: #6c6f85; }",
         *((
         "    .series-0 { fill: #1e66f5; }",
@@ -146,6 +159,7 @@ def _theme_style_lines(
         "      .agent-claude { fill: #fab387; }",
         "      .agent-codex { fill: #89b4fa; }",
         "      .agent-traex { fill: #cba6f7; }",
+        "      .agent-dsh { fill: #f5c2e7; }",
         "      .agent-legacy { fill: #a6adc8; }",
         *((
         "      .series-0 { fill: #89b4fa; }",
@@ -205,6 +219,22 @@ def _theme_style_lines(
 WIDTH = 1180
 CARD_X = 16
 CARD_WIDTH = WIDTH - CARD_X * 2
+
+# One row of equal per-harness panels, sized from how many harnesses there are so
+# adding one re-flows the row instead of overflowing it. Everything drawn inside a
+# panel is placed against PANEL_BAR_W (the panel minus its 18px side padding), and
+# a model name is truncated to PANEL_LABEL_CHARS so it cannot run into the share
+# figure right-aligned on the same line.
+PANEL_X0 = 16
+PANEL_GAP = 16
+PANEL_W = (
+    WIDTH - 2 * PANEL_X0 - PANEL_GAP * (len(PANEL_AGENT_ORDER) - 1)
+) // len(PANEL_AGENT_ORDER)
+PANEL_BAR_W = PANEL_W - 36
+PANEL_LABEL_CHARS = PANEL_BAR_W // 12
+# Legend entries sit two to a row inside a panel, each behind a 14px swatch, at a
+# smaller font than the model rows above.
+PANEL_LEGEND_CHARS = (PANEL_BAR_W // 2 - 14) // 6
 GRID_LEFT = 58
 GRID_TOP = 218
 CELL_SIZE = 16
@@ -1177,9 +1207,9 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
         'current 30-day model mix by harness</text>',
     ]
 
-    panel_y, panel_h, panel_w, panel_gap = 92, 230, 372, 16
-    for column, agent in enumerate(("claude", "codex", "traex")):
-        x = 16 + column * (panel_w + panel_gap)
+    panel_y, panel_h, panel_w, panel_gap = 92, 230, PANEL_W, PANEL_GAP
+    for column, agent in enumerate(PANEL_AGENT_ORDER):
+        x = PANEL_X0 + column * (panel_w + panel_gap)
         agent_total = allocation.agent_tokens[agent]
         current_models = {
             model: tokens
@@ -1220,7 +1250,10 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
             for row, model in enumerate(displayed):
                 y = panel_y + 86 + row * 36
                 tokens = current_models[model]
-                label = model if len(model) <= 27 else model[:26] + "…"
+                label = (
+                    model if len(model) <= PANEL_LABEL_CHARS
+                    else model[:PANEL_LABEL_CHARS - 1] + "…"
+                )
                 share = _share(tokens, current_model_total)
                 lines.extend((
                     f'  <text class="dashboard-secondary" x="{x + 18}" y="{y}" '
@@ -1230,9 +1263,9 @@ def render_allocation_svg(allocation: AllocationTotals) -> str:
                     'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                     f'font-size="11">{escape(_percent(tokens, current_model_total))}</text>',
                     f'  <rect class="dashboard-border" x="{x + 18}" y="{y + 8}" '
-                    'width="336" height="8" rx="4" fill="none" stroke-width="1"/>',
+                    f'width="{PANEL_BAR_W}" height="8" rx="4" fill="none" stroke-width="1"/>',
                     f'  <rect class="agent-{agent}" x="{x + 18}" y="{y + 8}" '
-                    f'width="{336 * share:.1f}" height="8" rx="4" fill-opacity="0.82" '
+                    f'width="{PANEL_BAR_W * share:.1f}" height="8" rx="4" fill-opacity="0.82" '
                     f'data-agent="{agent}" data-model="{escape(model)}" data-tokens="{tokens}">',
                     f'    <title>{escape(model)}: {_compact_number(tokens)} · '
                     f'{escape(_percent(tokens, current_model_total))}</title>',
@@ -1270,10 +1303,15 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
         '8 weekly stacks · previous 4 weeks vs latest 4 weeks · Top 3 models + Other · blank = unavailable</text>',
     ]
 
-    panel_y, panel_w, panel_h, panel_gap = 92, 372, 250, 16
-    plot_h, bar_w, bar_gap = 112, 30, 11
-    for column, agent in enumerate(("claude", "codex", "traex")):
-        x = 16 + column * (panel_w + panel_gap)
+    panel_y, panel_w, panel_h, panel_gap = 92, PANEL_W, 250, PANEL_GAP
+    # Eight weekly bars share the panel's plot width; the gap is fixed and the bar
+    # takes whatever is left, so the stack always ends on the axis it is drawn over.
+    bar_gap = 8
+    plot_h = 112
+    bar_w = (PANEL_BAR_W + bar_gap) // HISTORY_WEEKS - bar_gap
+    plot_span = HISTORY_WEEKS * (bar_w + bar_gap) - bar_gap
+    for column, agent in enumerate(PANEL_AGENT_ORDER):
+        x = PANEL_X0 + column * (panel_w + panel_gap)
         totals_by_model: defaultdict[str, int] = defaultdict(int)
         all_models: set[str] = set()
         for window in allocation.weekly_model_tokens:
@@ -1314,12 +1352,12 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
             f'font-size="11">{coverage}/{HISTORY_WEEKS} weeks observed</text>',
         ))
         for series_index, model in enumerate(series):
-            legend_x = x + 18 + (series_index % 2) * 174
+            legend_x = x + 18 + (series_index % 2) * (PANEL_BAR_W // 2)
             legend_y = panel_y + 56 + (series_index // 2) * 20
             css_class = "series-other" if model == "__other__" else f"series-{series_index}"
             label = "Other" if model == "__other__" else model
-            if len(label) > 20:
-                label = label[:19] + "…"
+            if len(label) > PANEL_LEGEND_CHARS:
+                label = label[:PANEL_LEGEND_CHARS - 1] + "…"
             lines.extend((
                 f'  <rect class="{css_class}" x="{legend_x}" y="{legend_y - 9}" '
                 'width="9" height="9" rx="2"/>',
@@ -1342,7 +1380,7 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
             'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="9">LATEST 4 WEEKS</text>',
             f'  <line class="dashboard-border" x1="{plot_x}" y1="{baseline}" '
-            f'x2="{plot_x + 328}" y2="{baseline}" stroke-width="1"/>',
+            f'x2="{plot_x + plot_span}" y2="{baseline}" stroke-width="1"/>',
             f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="{plot_top - 5}" '
             f'x2="{divider_x:.1f}" y2="{baseline + 4}" stroke-width="1" stroke-dasharray="2 3"/>',
         ))
@@ -1386,7 +1424,7 @@ def render_allocation_history_svg(allocation: AllocationTotals) -> str:
             f'  <text class="dashboard-muted" x="{plot_x}" y="{panel_y + 235}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-            f'  <text class="dashboard-muted" x="{plot_x + 328}" y="{panel_y + 235}" '
+            f'  <text class="dashboard-muted" x="{plot_x + plot_span}" y="{panel_y + 235}" '
             'text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="10">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
         ))
@@ -1443,7 +1481,12 @@ def _trajectory(
 def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
     """Render the current effort, Fast share, and latest seven-day quota."""
     title = f"Runtime profile through {allocation.as_of.isoformat()}"
-    height = 390
+    # One effort row per harness, then a rule and the Fast/quota strip below it.
+    # Both follow the rows rather than sitting at fixed coordinates, so a new
+    # harness lengthens the card instead of overprinting what comes after.
+    effort_top, row_pitch = 132, 48
+    section_y = effort_top + len(PANEL_AGENT_ORDER) * row_pitch + 6
+    height = section_y + 108
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
@@ -1478,8 +1521,8 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         ))
 
     bar_x, bar_w = 140, 880
-    for row, agent in enumerate(("claude", "codex", "traex")):
-        y = 132 + row * 48
+    for row, agent in enumerate(PANEL_AGENT_ORDER):
+        y = effort_top + row * row_pitch
         buckets = allocation.efforts[agent]
         values = {effort: buckets[effort]["calls"] for effort in EFFORT_ORDER}
         total = sum(values.values())
@@ -1521,8 +1564,8 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         ))
 
     lines.append(
-        '  <line class="dashboard-border" x1="34" y1="282" x2="1146" y2="282" '
-        'stroke-width="1"/>'
+        f'  <line class="dashboard-border" x1="34" y1="{section_y}" x2="1146" '
+        f'y2="{section_y}" stroke-width="1"/>'
     )
     codex_speeds = allocation.speeds["codex"]
     speed_total = sum(item["calls"] for item in codex_speeds.values())
@@ -1532,15 +1575,15 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
         for agent in QUOTA_AGENT_ORDER
         if 10080 in allocation.latest_quota_windows[agent]
     ]
-    signal_bar_y = 331
+    signal_bar_y = section_y + 49
     if speed_total:
         fast_share = _share(fast_calls, speed_total)
         lines.extend((
-            '  <text class="dashboard-primary" x="34" y="308" '
+            f'  <text class="dashboard-primary" x="34" y="{section_y + 26}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="14" font-weight="600">Fast</text>',
-            '  <circle class="agent-codex" cx="42" cy="340" r="4"/>',
-            '  <text class="dashboard-secondary" x="54" y="344" '
+            f'  <circle class="agent-codex" cx="42" cy="{section_y + 58}" r="4"/>',
+            f'  <text class="dashboard-secondary" x="54" y="{section_y + 62}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="11">Codex</text>',
             f'  <rect class="heatmap-level-0" x="110" y="{signal_bar_y}" '
@@ -1548,18 +1591,18 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
             f'  <rect class="agent-codex" x="110" y="{signal_bar_y}" '
             f'width="{300 * fast_share:.1f}" '
             'height="14" rx="4"/>',
-            f'  <text class="dashboard-primary" x="430" y="344" '
+            f'  <text class="dashboard-primary" x="430" y="{section_y + 62}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             f'font-size="12" font-weight="600">{escape(_percent(fast_calls, speed_total))} fast</text>',
         ))
     if speed_total and quota_agents:
         lines.append(
-            '  <line class="dashboard-border" x1="570" y1="298" x2="570" '
-            'y2="366" stroke-width="1"/>'
+            f'  <line class="dashboard-border" x1="570" y1="{section_y + 16}" x2="570" '
+            f'y2="{section_y + 84}" stroke-width="1"/>'
         )
     if quota_agents:
         lines.append(
-            '  <text class="dashboard-primary" x="600" y="308" '
+            f'  <text class="dashboard-primary" x="600" y="{section_y + 26}" '
             'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
             'font-size="14" font-weight="600">7-day quota peak</text>'
         )
@@ -1587,7 +1630,11 @@ def render_runtime_profile_svg(allocation: AllocationTotals) -> str:
 def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     """Render weekly effort, Fast share, and seven-day quota history."""
     title = f"Runtime history through {allocation.as_of.isoformat()}"
-    height = 380
+    # Same rule as the runtime profile: the Fast and quota strip follows the
+    # per-harness effort rows rather than sitting at a fixed y.
+    effort_top, row_pitch = 124, 42
+    section_y = effort_top + len(PANEL_AGENT_ORDER) * row_pitch + 4
+    height = section_y + 126
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
         f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
@@ -1615,7 +1662,7 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         'text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">LATEST 4 WEEKS</text>',
         f'  <line class="dashboard-border" x1="{divider_x:.1f}" y1="78" '
-        f'x2="{divider_x:.1f}" y2="242" stroke-width="1" stroke-dasharray="2 3"/>',
+        f'x2="{divider_x:.1f}" y2="{section_y - 12}" stroke-width="1" stroke-dasharray="2 3"/>',
         '  <text class="dashboard-primary" x="34" y="112" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">Effort mix</text>',
@@ -1631,7 +1678,10 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
             f'font-size="9">{escape(EFFORT_SHORT_LABELS[effort])}</text>',
         ))
 
-    effort_rows = {"claude": 124, "codex": 166, "traex": 208}
+    effort_rows = {
+        agent: effort_top + index * row_pitch
+        for index, agent in enumerate(PANEL_AGENT_ORDER)
+    }
     cell_w, bar_h = 44, 24
     for agent, row_y in effort_rows.items():
         lines.extend((
@@ -1664,11 +1714,11 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
                 ))
 
     lines.extend((
-        '  <line class="dashboard-border" x1="34" y1="254" x2="1146" y2="254" '
-        'stroke-width="1"/>',
-        '  <line class="dashboard-border" x1="590" y1="268" x2="590" y2="360" '
-        'stroke-width="1"/>',
-        '  <text class="dashboard-primary" x="34" y="280" '
+        f'  <line class="dashboard-border" x1="34" y1="{section_y}" x2="1146" '
+        f'y2="{section_y}" stroke-width="1"/>',
+        f'  <line class="dashboard-border" x1="590" y1="{section_y + 14}" x2="590" '
+        f'y2="{section_y + 106}" stroke-width="1"/>',
+        f'  <text class="dashboard-primary" x="34" y="{section_y + 26}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">Fast share</text>',
     ))
@@ -1680,7 +1730,7 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         )
     fast_left, fast_right = 150.0, 550.0
     fast_divider = (fast_left + fast_right) / 2
-    signal_top, signal_height, signal_baseline = 296, 34, 330
+    signal_top, signal_height, signal_baseline = section_y + 42, 34, section_y + 76
     path, points, _, _ = _trajectory(
         fast_values,
         fast_left,
@@ -1690,20 +1740,20 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         domain=(0.0, 1.0),
     )
     lines.extend((
-        '  <circle class="agent-codex" cx="42" cy="316" r="4"/>',
-        '  <text class="dashboard-secondary" x="54" y="320" '
+        f'  <circle class="agent-codex" cx="42" cy="{section_y + 62}" r="4"/>',
+        f'  <text class="dashboard-secondary" x="54" y="{section_y + 66}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="11">Codex</text>',
-        '  <text class="dashboard-muted" x="135" y="303" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="135" y="{section_y + 49}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">100%</text>',
-        '  <text class="dashboard-muted" x="135" y="333" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="135" y="{section_y + 79}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">0%</text>',
         f'  <line class="dashboard-border" x1="{fast_left}" y1="{signal_baseline}" '
         f'x2="{fast_right}" y2="{signal_baseline}" stroke-width="1"/>',
-        f'  <line class="dashboard-border" x1="{fast_divider:.1f}" y1="292" '
-        f'x2="{fast_divider:.1f}" y2="334" stroke-width="1" '
+        f'  <line class="dashboard-border" x1="{fast_divider:.1f}" y1="{section_y + 38}" '
+        f'x2="{fast_divider:.1f}" y2="{section_y + 80}" stroke-width="1" '
         'stroke-dasharray="2 3"/>',
     ))
     if path:
@@ -1723,34 +1773,36 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
         ))
 
     lines.extend((
-        '  <text class="dashboard-primary" x="620" y="280" '
+        f'  <text class="dashboard-primary" x="620" y="{section_y + 26}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="14" font-weight="600">7-day quota peak</text>',
         *(
             line
             for slot, agent in enumerate(QUOTA_AGENT_ORDER)
             for line in (
-                f'  <circle class="agent-{agent}" cx="{628 + slot * 76}" cy="316" r="4"/>',
-                f'  <text class="dashboard-secondary" x="{640 + slot * 76}" y="320" '
+                f'  <circle class="agent-{agent}" cx="{628 + slot * 76}" '
+                f'cy="{section_y + 62}" r="4"/>',
+                f'  <text class="dashboard-secondary" x="{640 + slot * 76}" '
+                f'y="{section_y + 66}" '
                 'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
                 f'font-size="10">{escape(AGENT_LABELS[agent])}</text>',
             )
         ),
-        '  <text class="dashboard-muted" x="725" y="303" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="725" y="{section_y + 49}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">100%</text>',
-        '  <text class="dashboard-muted" x="725" y="333" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="725" y="{section_y + 79}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         'font-size="9">0%</text>',
-        '  <line class="dashboard-border" x1="740" y1="330" '
-        'x2="1136" y2="330" stroke-width="1"/>',
+        f'  <line class="dashboard-border" x1="740" y1="{signal_baseline}" '
+        f'x2="1136" y2="{signal_baseline}" stroke-width="1"/>',
     ))
     quota_left, quota_right = 740.0, 1136.0
     quota_divider = (quota_left + quota_right) / 2
     quota_step = (quota_right - quota_left) / (HISTORY_WEEKS - 1)
     lines.append(
-        f'  <line class="dashboard-border" x1="{quota_divider:.1f}" y1="292" '
-        f'x2="{quota_divider:.1f}" y2="334" stroke-width="1" '
+        f'  <line class="dashboard-border" x1="{quota_divider:.1f}" y1="{section_y + 38}" '
+        f'x2="{quota_divider:.1f}" y2="{section_y + 80}" stroke-width="1" '
         'stroke-dasharray="2 3"/>'
     )
     quota_bar_w = 16
@@ -1773,16 +1825,16 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
                 '  </rect>',
             ))
     lines.extend((
-        f'  <text class="dashboard-muted" x="{fast_left}" y="358" '
+        f'  <text class="dashboard-muted" x="{fast_left}" y="{section_y + 104}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-        f'  <text class="dashboard-muted" x="{fast_right}" y="358" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="{fast_right}" y="{section_y + 104}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
-        f'  <text class="dashboard-muted" x="{quota_left}" y="358" '
+        f'  <text class="dashboard-muted" x="{quota_left}" y="{section_y + 104}" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[0].strftime("%b %-d")}</text>',
-        f'  <text class="dashboard-muted" x="{quota_right}" y="358" text-anchor="end" '
+        f'  <text class="dashboard-muted" x="{quota_right}" y="{section_y + 104}" text-anchor="end" '
         'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
         f'font-size="9">{allocation.trend_starts[-1].strftime("%b %-d")}</text>',
         '</svg>',

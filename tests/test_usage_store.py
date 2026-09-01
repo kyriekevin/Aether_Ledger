@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,13 +13,41 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import audit_public  # noqa: E402
 import compact_trails  # noqa: E402
+import render_dashboard  # noqa: E402
+import squash_usage_branch  # noqa: E402
 import sync_usage  # noqa: E402
+import update_pricing  # noqa: E402
 
 
 class SharedStoreCoverageTests(unittest.TestCase):
     def test_trail_compaction_covers_traex(self) -> None:
         self.assertIn("traex.json", compact_trails.AGENT_FILES)
+
+    def test_every_writable_store_is_registered_everywhere(self) -> None:
+        """A store the writer creates but a consumer ignores is a silent hole.
+
+        `dsh.json` is the one this caught: audit_public would never schema-check
+        it, render_dashboard would drop it from every chart, compact_trails would
+        strand it in expired trail pods, and squash_usage_branch would treat its
+        conflicts as human work. Each of those fails quietly, so they are
+        asserted together against the writer rather than one at a time.
+        """
+        written = {"claude.json", "codex.json", "opencode.json", "traex.json",
+                   "dsh.json"}
+        self.assertEqual(set(compact_trails.AGENT_FILES), written)
+        self.assertEqual(set(audit_public.AGENT_FILES), written)
+        self.assertEqual(set(render_dashboard.AGENT_FILES), written)
+        self.assertEqual(set(update_pricing.AGENT_FILES), written)
+        for name in written:
+            self.assertRegex(
+                f"data/work/{name}", squash_usage_branch.GENERATED_STORE
+            )
+            self.assertRegex(
+                f"data/trail/node-0123456789ab/{name}",
+                squash_usage_branch.GENERATED_STORE,
+            )
 
     def test_trail_compaction_preserves_allocation_telemetry(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -649,6 +678,56 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.assertEqual(telemetry["quota"]["windows"], {"300": 80.0, "10080": 12.0})
         self.assertTrue(telemetry["quota"]["limitReached"])
         self.assertNotIn("session", json.dumps(telemetry).lower())
+
+    def test_several_session_trees_accumulate_into_one_result(self) -> None:
+        """Multica keeps its Codex rollouts outside ~/.codex/sessions.
+
+        The trees are disjoint, so a bucket's calls and tokens add: reading them
+        as one tree each and max()ing would drop whichever saw less.
+        """
+        event = {
+            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+            "payload": {
+                "type": "token_count",
+                "info": {"last_token_usage": {"total_tokens": 100}},
+            },
+        }
+        settings = {
+            "type": "event_msg", "timestamp": "2026-08-15T01:00:00Z",
+            "payload": {
+                "type": "thread_settings_applied",
+                "thread_settings": {"reasoning_effort": "high"},
+            },
+        }
+        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [settings, event])
+        self.write_jsonl(
+            "multica-sessions/p_x/w/r/2026/08/15/rollout.jsonl", [settings, event]
+        )
+        daily = sync_usage.collect_codex_routing_since(
+            date(2026, 1, 1),
+            (self.root / "sessions", self.root / "multica-sessions"),
+        )
+        bucket = daily["2026-08-15"]["routing"]["efforts"]["high"]
+        self.assertEqual(bucket["calls"], 2)
+        self.assertEqual(bucket["totalTokens"], 200)
+
+    def test_a_single_directory_is_still_accepted(self) -> None:
+        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [{
+            "type": "turn_context", "timestamp": "2026-08-15T01:00:00Z",
+            "payload": {"effort": "low"},
+        }, {
+            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
+            "payload": {
+                "type": "token_count",
+                "info": {"last_token_usage": {"total_tokens": 7}},
+            },
+        }])
+        daily = sync_usage.collect_codex_routing_since(
+            date(2026, 1, 1), self.root / "sessions"
+        )
+        self.assertEqual(
+            daily["2026-08-15"]["routing"]["efforts"]["low"]["totalTokens"], 7
+        )
 
     def test_claude_stream_updates_are_deduplicated_before_routing_totals(self) -> None:
         self.write_jsonl("project/session.jsonl", [
@@ -1286,6 +1365,431 @@ class ReconcileStubTests(unittest.TestCase):
             reconcile_since=date(2026, 7, 18),
         )
         self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 722_000_000)
+
+
+class DshSessionTests(unittest.TestCase):
+    """collect_dsh_daily_since parses dsh's own append-only session log.
+
+    ccusage has no dsh reader, so nothing here is delegated: the log's
+    `request/header` names the model, `assistant/message` carries one call's
+    TokenUsage, and dsh's counts are disjoint (cached input is reported apart
+    from `inputTokens`), so the four components add up to the billed total.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.home = Path(self._tmp.name)
+        self.root = self.home / "sessions"
+
+    def write_session(
+        self, project: str, session: str, events: list[dict]
+    ) -> Path:
+        path = self.root / project / session / "session.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(json.dumps(event) for event in events) + "\n",
+            encoding="utf-8",
+        )
+        return path
+
+    @staticmethod
+    def header(seq: int, millis: int, model: str, effort: str | None = None) -> dict:
+        config = {"provider": "deepseek-official", "model": model}
+        if effort is not None:
+            config["reasoningEffort"] = effort
+        return {
+            "type": "request/header", "seq": seq, "time": millis,
+            "data": {"header": {"config": config}, "reason": "initial"},
+        }
+
+    @staticmethod
+    def message(seq: int, millis: int, usage: dict) -> dict:
+        return {
+            "type": "assistant/message", "seq": seq, "time": millis,
+            "data": {"turn": 1, "step": 1, "message": {}, "usage": usage},
+        }
+
+    def collect(self, since: date = date(2024, 1, 1)) -> list[dict]:
+        return sync_usage.collect_dsh_daily_since(
+            since, sync_usage.dsh_session_roots(self.home)
+        )
+
+    def test_one_call_becomes_a_priced_day(self) -> None:
+        # 2026-08-20T12:00:00+08:00
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            {"type": "session", "version": 0, "id": "session-a", "createdAt": millis},
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {
+                "inputTokens": 1_000_000, "outputTokens": 1_000_000,
+            }),
+        ])
+        entries = self.collect()
+        self.assertEqual(len(entries), 1)
+        entry = entries[0]
+        self.assertEqual(entry["date"], "2026-08-20")
+        self.assertEqual(entry["totalTokens"], 2_000_000)
+        # 1M input at $0.44 + 1M output at $1.32.
+        self.assertAlmostEqual(entry["totalCost"], 1.76)
+        self.assertEqual(entry["costSource"], "official")
+        self.assertEqual(
+            entry["models"]["deepseek-v4-flash"],
+            {
+                "totalTokens": 2_000_000,
+                "inputTokens": 1_000_000,
+                "outputTokens": 1_000_000,
+                "cacheCreationTokens": 0,
+                "cacheReadTokens": 0,
+            },
+        )
+
+    def test_cached_input_is_counted_and_priced_apart_from_input(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-pro"),
+            self.message(2, millis, {
+                "inputTokens": 1_000_000,
+                "outputTokens": 0,
+                "cacheReadTokens": 1_000_000,
+                "cacheWriteTokens": 1_000_000,
+            }),
+        ])
+        entry = self.collect()[0]
+        # dsh's counts are disjoint, so all three input kinds are billed.
+        self.assertEqual(entry["totalTokens"], 3_000_000)
+        self.assertAlmostEqual(entry["totalCost"], 1.32 + 1.32 + 0.044)
+        model = entry["models"]["deepseek-v4-pro"]
+        self.assertEqual(model["cacheReadTokens"], 1_000_000)
+        self.assertEqual(model["cacheCreationTokens"], 1_000_000)
+
+    def test_calls_accumulate_across_steps_sessions_and_roots(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
+            self.message(3, millis + 1000, {"inputTokens": 20, "outputTokens": 2}),
+        ])
+        self.write_session("other", "session-b", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 5, "outputTokens": 0}),
+        ])
+        # A relocated tree beside the default one, the shape an orchestrator
+        # creates when it points a run's session root somewhere else.
+        relocated = self.home / "dsh-sessions" / "proj" / "session-c"
+        relocated.mkdir(parents=True)
+        (relocated / "session.jsonl").write_text(
+            "\n".join(json.dumps(event) for event in (
+                self.header(1, millis, "deepseek-v4-flash"),
+                self.message(2, millis, {"inputTokens": 100, "outputTokens": 0}),
+            )) + "\n",
+            encoding="utf-8",
+        )
+        entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 10 + 1 + 20 + 2 + 5 + 100)
+
+    def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+            {
+                "type": "request/context", "seq": 3, "time": millis,
+                "data": {"provider": "opencode-go", "model": "deepseek-v4-pro"},
+            },
+            self.message(4, millis, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        models = self.collect()[0]["models"]
+        self.assertEqual(models["deepseek-v4-flash"]["totalTokens"], 10)
+        self.assertEqual(models["deepseek-v4-pro"]["totalTokens"], 20)
+
+    def test_a_model_with_no_official_rate_keeps_its_tokens_at_zero_cost(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "glm-5.1"),
+            self.message(2, millis, {"inputTokens": 1_000_000, "outputTokens": 0}),
+        ])
+        with patch.object(sync_usage.sys, "stderr", io.StringIO()) as err:
+            entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 1_000_000)
+        self.assertEqual(entry["totalCost"], 0.0)
+        self.assertEqual(entry["costSource"], "unpriced")
+        self.assertIn("glm-5.1", err.getvalue())
+
+    def test_effort_is_recorded_only_for_levels_this_repository_renders(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "off", [
+            self.header(1, millis, "deepseek-v4-flash", effort="off"),
+            self.message(2, millis, {
+                "inputTokens": 10, "outputTokens": 0, "reasoningTokens": 4,
+            }),
+        ])
+        self.write_session("proj", "high", [
+            self.header(1, millis, "deepseek-v4-flash", effort="high"),
+            self.message(2, millis, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        # `minimal` has no counterpart in EFFORT_LEVELS, so it records no bucket
+        # rather than being folded into a neighbouring level.
+        self.write_session("proj", "minimal", [
+            self.header(1, millis, "deepseek-v4-flash", effort="minimal"),
+            self.message(2, millis, {"inputTokens": 30, "outputTokens": 0}),
+        ])
+        efforts = self.collect()[0]["routing"]["efforts"]
+        self.assertEqual(set(efforts), {"none", "high"})
+        self.assertEqual(efforts["none"]["calls"], 1)
+        self.assertEqual(efforts["none"]["reasoningOutputTokens"], 4)
+        self.assertEqual(efforts["high"]["totalTokens"], 20)
+        # The unrecorded level's tokens still reach the day's total.
+        self.assertEqual(self.collect()[0]["totalTokens"], 60)
+
+    def test_days_split_on_the_shanghai_calendar(self) -> None:
+        # 2026-08-20T23:30 and 2026-08-21T00:30, Asia/Shanghai.
+        self.write_session("proj", "session-a", [
+            self.header(1, 1787239800000, "deepseek-v4-flash"),
+            self.message(2, 1787239800000, {"inputTokens": 10, "outputTokens": 0}),
+            self.message(3, 1787243400000, {"inputTokens": 20, "outputTokens": 0}),
+        ])
+        entries = self.collect()
+        self.assertEqual([entry["date"] for entry in entries],
+                         ["2026-08-20", "2026-08-21"])
+
+    def test_calls_before_the_since_date_are_dropped(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        self.assertEqual(self.collect(since=date(2026, 8, 21)), [])
+
+    def test_a_torn_final_line_does_not_lose_the_calls_before_it(self) -> None:
+        millis = 1787198400000
+        path = self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        with path.open("a", encoding="utf-8") as stream:
+            stream.write('{"type":"assistant/message","seq":3,"time":')
+        self.assertEqual(self.collect()[0]["totalTokens"], 10)
+
+    def test_a_message_with_no_usage_or_no_route_contributes_nothing(self) -> None:
+        millis = 1787198400000
+        self.write_session("proj", "no-usage", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            {
+                "type": "assistant/message", "seq": 2, "time": millis,
+                "data": {"turn": 1, "step": 1, "message": {}},
+            },
+        ])
+        self.write_session("proj", "no-header", [
+            self.message(1, millis, {"inputTokens": 10, "outputTokens": 0}),
+        ])
+        self.assertEqual(self.collect(), [])
+
+    def test_a_home_with_no_sessions_yields_nothing(self) -> None:
+        self.assertEqual(sync_usage.dsh_session_roots(self.home), ())
+        self.assertEqual(self.collect(), [])
+
+    @unittest.skipUnless(
+        shutil.which("zstd") is not None,
+        "no zstd decoder available to build the fixture",
+    )
+    def test_a_compressed_log_reads_the_same_as_a_plain_one(self) -> None:
+        millis = 1787198400000
+        plain = self.write_session("proj", "session-a", [
+            self.header(1, millis, "deepseek-v4-flash"),
+            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
+        ])
+        # dsh appends one independently decodable frame per durable batch, so the
+        # artifact is a concatenation of frames rather than one stream.
+        raw = plain.read_bytes()
+        frames = b"".join(
+            subprocess.run(
+                ["zstd", "-q", "-c", "-"], input=line + b"\n",
+                capture_output=True, check=True,
+            ).stdout
+            for line in raw.splitlines()
+        )
+        plain.unlink()
+        (plain.parent / "session.jsonl.zstd").write_bytes(frames)
+        entry = self.collect()[0]
+        self.assertEqual(entry["totalTokens"], 11)
+
+
+class MulticaCodexTests(unittest.TestCase):
+    """Multica's Codex rollouts are the same agent read from another tree.
+
+    Multica gives each Codex task a private CODEX_HOME whose `sessions` symlinks
+    into ~/.codex/multica-sessions, so ccusage's default scan never sees them.
+    They are read with the same Codex reader and added to the Codex day.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.sessions = Path(self._tmp.name) / "multica-sessions"
+
+    def test_the_temporary_home_points_ccusage_at_the_relocated_tree(self) -> None:
+        self.sessions.mkdir(parents=True)
+        (self.sessions / "rollout.jsonl").write_text("{}\n", encoding="utf-8")
+        with sync_usage._codex_home_over(self.sessions) as home:
+            linked = home / "sessions"
+            self.assertTrue(linked.is_dir())
+            self.assertEqual(linked.resolve(), self.sessions.resolve())
+            self.assertTrue((linked / "rollout.jsonl").exists())
+        # Nothing was copied and the real tree survives the temporary home.
+        self.assertTrue((self.sessions / "rollout.jsonl").exists())
+
+    def test_a_missing_tree_is_skipped_without_running_ccusage(self) -> None:
+        with patch.object(sync_usage.subprocess, "run") as run:
+            self.assertEqual(
+                sync_usage.fetch_multica_codex_daily(date(2026, 1, 1), self.sessions),
+                [],
+            )
+        run.assert_not_called()
+
+    def fetch(self, daily: list[dict], **kwargs) -> list[dict]:
+        payload = json.dumps({"daily": daily})
+        completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
+        with patch.object(sync_usage.subprocess, "run", return_value=completed):
+            return sync_usage.fetch_codex_home_daily(
+                date(2026, 1, 1), Path("/some/home"), **kwargs
+            )
+
+    def test_a_fully_priced_row_keeps_ccusages_request_aware_cost(self) -> None:
+        # ccusage priced this row against the same table and can see which calls
+        # ran Fast or crossed a long-context threshold; a day's totals cannot.
+        out = self.fetch(
+            [{
+                "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 12.5,
+                "models": {"gpt-5.5": {
+                    "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                }},
+            }],
+            trust_row_cost=True,
+        )
+        self.assertEqual(out[0]["totalCost"], 12.5)
+        self.assertEqual(out[0]["costSource"], "official")
+
+    def test_the_standard_sum_still_wins_when_it_is_larger(self) -> None:
+        out = self.fetch(
+            [{
+                "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 0.0,
+                "models": {"gpt-5.5": {
+                    "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                }},
+            }],
+            trust_row_cost=True,
+        )
+        self.assertEqual(out[0]["totalCost"], 5.0)
+
+    def test_a_row_holding_an_unpriced_model_ignores_ccusages_cost(self) -> None:
+        # ccusage would price the unknown model from its own table, which is not
+        # this repository's, so the mixed row falls back to component pricing.
+        with patch.object(sync_usage.sys, "stderr", io.StringIO()):
+            out = self.fetch(
+                [{
+                    "date": "2026-08-31", "totalTokens": 2_000_000, "costUSD": 99.0,
+                    "models": {
+                        "gpt-5.5": {
+                            "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+                        },
+                        "seed-1.6": {"totalTokens": 1_000_000},
+                    },
+                }],
+                trust_row_cost=True,
+            )
+        self.assertEqual(out[0]["totalCost"], 5.0)
+        self.assertEqual(out[0]["costSource"], "unpriced")
+
+    def test_traex_still_ignores_the_row_cost_by_default(self) -> None:
+        out = self.fetch([{
+            "date": "2026-08-31", "totalTokens": 1_000_000, "costUSD": 12.5,
+            "models": {"gpt-5.5": {
+                "totalTokens": 1_000_000, "inputTokens": 1_000_000,
+            }},
+        }])
+        self.assertEqual(out[0]["totalCost"], 5.0)
+
+
+class SumDailyEntriesTests(unittest.TestCase):
+    """Two reads of the same agent are added, never max()'d against each other."""
+
+    def test_a_shared_day_adds_totals_costs_and_model_components(self) -> None:
+        merged = sync_usage.sum_daily_entries(
+            [{
+                "date": "2026-08-31", "totalTokens": 100, "totalCost": 1.0,
+                "models": {"gpt-5.5": {"totalTokens": 100, "inputTokens": 100}},
+                "costSource": "official",
+            }],
+            [{
+                "date": "2026-08-31", "totalTokens": 40, "totalCost": 0.5,
+                "models": {"gpt-5.5": {"totalTokens": 40, "inputTokens": 40}},
+                "costSource": "official",
+            }],
+        )
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["totalTokens"], 140)
+        self.assertEqual(merged[0]["totalCost"], 1.5)
+        self.assertEqual(merged[0]["models"]["gpt-5.5"]["totalTokens"], 140)
+        self.assertEqual(merged[0]["models"]["gpt-5.5"]["inputTokens"], 140)
+        self.assertEqual(merged[0]["costSource"], "official")
+
+    def test_days_only_one_source_saw_are_kept_and_sorted(self) -> None:
+        merged = sync_usage.sum_daily_entries(
+            [{"date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0, "models": {}}],
+            [{"date": "2026-08-30", "totalTokens": 20, "totalCost": 0.0, "models": {}}],
+        )
+        self.assertEqual([entry["date"] for entry in merged],
+                         ["2026-08-30", "2026-08-31"])
+
+    def test_one_unpriced_source_makes_the_summed_day_unpriced(self) -> None:
+        merged = sync_usage.sum_daily_entries(
+            [{
+                "date": "2026-08-31", "totalTokens": 10, "totalCost": 1.0,
+                "models": {}, "costSource": "official",
+            }],
+            [{
+                "date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0,
+                "models": {}, "costSource": "unpriced",
+            }],
+        )
+        self.assertEqual(merged[0]["costSource"], "unpriced")
+
+    def test_image_counts_describe_the_machine_and_are_not_added(self) -> None:
+        # imageCount counts files in one machine-wide directory, so both reads
+        # see the same PNGs.
+        merged = sync_usage.sum_daily_entries(
+            [{
+                "date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0,
+                "models": {}, "imageCount": 3,
+            }],
+            [{"date": "2026-08-31", "totalTokens": 10, "totalCost": 0.0, "models": {}}],
+        )
+        self.assertEqual(merged[0]["imageCount"], 3)
+
+    def test_an_unobserved_stub_becomes_observed_when_a_source_saw_tokens(self) -> None:
+        merged = sync_usage.sum_daily_entries(
+            [{
+                "date": "2026-08-31", "totalTokens": 0, "totalCost": 0.0,
+                "models": {}, "imageCount": 2, "tokensObserved": False,
+            }],
+            [{
+                "date": "2026-08-31", "totalTokens": 500, "totalCost": 0.0,
+                "models": {},
+            }],
+        )
+        self.assertTrue(merged[0]["tokensObserved"])
+        self.assertEqual(merged[0]["totalTokens"], 500)
+
+    def test_a_day_no_source_observed_stays_unobserved(self) -> None:
+        merged = sync_usage.sum_daily_entries(
+            [{
+                "date": "2026-08-31", "totalTokens": 0, "totalCost": 0.0,
+                "models": {}, "imageCount": 2, "tokensObserved": False,
+            }],
+            [],
+        )
+        self.assertFalse(merged[0]["tokensObserved"])
 
 
 if __name__ == "__main__":

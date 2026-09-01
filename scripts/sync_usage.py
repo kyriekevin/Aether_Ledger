@@ -7,8 +7,18 @@
 
 Reads this machine's local ccusage usage data, persists daily totals into
 `data/<machine>/claude.json`, `data/<machine>/codex.json`,
-`data/<machine>/opencode.json`, and `data/<machine>/traex.json`
-under this repo, and commits + pushes the result.
+`data/<machine>/opencode.json`, `data/<machine>/traex.json`, and
+`data/<machine>/dsh.json` under this repo, and commits + pushes the result.
+
+Two harnesses do not come from ccusage's default scan:
+  - DeepSeek Harness (dsh) has no ccusage reader at all, so its own session log
+    is parsed here (collect_dsh_daily_since).
+  - Multica, an orchestrator that drives these same CLIs, gives each Codex task
+    a private CODEX_HOME whose sessions live outside ~/.codex/sessions. Those
+    rollouts are read separately and summed into the same Codex store, because
+    Multica is not a harness: the work is Codex's, on the same account and the
+    same models. Its Claude and TRAE runs already land in those CLIs' standard
+    log directories and need nothing extra.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
 Sync-only machines only need to clone the data repo — they do NOT need the
@@ -31,6 +41,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -38,7 +49,7 @@ import time
 from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
-from typing import Iterator
+from typing import Iterable, Iterator
 
 from pricing import (
     active_rate,
@@ -206,6 +217,15 @@ CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 
+# Multica runs Codex with a per-task CODEX_HOME whose `sessions` is a symlink
+# into this shared tree, so those rollouts are siblings of ~/.codex/sessions
+# rather than children of it and ccusage's default scan never sees them. They
+# are real Codex usage on the same account, so they are read from here and summed
+# into the Codex store rather than given one of their own. Multica's Claude and
+# TRAE runs need no equivalent: those CLIs keep writing to ~/.claude/projects and
+# ~/.trae/cli/sessions, which are already scanned.
+MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
+
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 SPEED_LEVELS = frozenset({"standard", "fast"})
 
@@ -262,6 +282,33 @@ _MODEL_ALIASES = {
 # pinned. Listed so a new one shows up in the log rather than billing zero unseen.
 # A leftover `openrouter-` here means our alias map missed a variant.
 _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
+
+# DeepSeek Harness (dsh). ccusage has no `dsh` reader, so nothing about it can be
+# delegated the way traex rides the Codex reader: its own append-only session log
+# is parsed directly (collect_dsh_daily_since).
+#
+# One harness home holds every session tree. `sessions` is the default one, and a
+# run's tree can be relocated — dsh's `session-persistence-jsonl` plugin takes a
+# `root`, and Multica points that at a per-task location the same way it gives a
+# Codex task its own CODEX_HOME. Those relocated trees sit beside the default one
+# under a `*-sessions` name, so they are found by shape rather than by a list of
+# orchestrator names this repository would have to keep chasing.
+DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
+DSH_SESSION_ROOT_SUFFIX = "-sessions"
+# `logSuffix()` in dsh's JSONL backend: `.jsonl.zstd` when the artifact is
+# compressed (the default every observed build writes) and `.jsonl` when it is not.
+DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
+# The `zstd` fallback decoder runs once per compressed log. It is a tiny local
+# process, but it runs under the checkout-wide Git lock like everything else in a
+# sync run, so a wedged one must not strand that lock.
+DSH_DECODE_TIMEOUT_SECONDS = 30
+
+# dsh's own thinking vocabulary against this repository's EFFORT_LEVELS. `off` is
+# exactly `none` under a different spelling. dsh also offers `minimal`, which has
+# no counterpart here; it records no effort bucket rather than being folded into
+# `low`, because a level invented at read time would misreport the mix it is
+# supposed to describe.
+_DSH_EFFORT_ALIASES = {"off": "none"}
 
 
 def _normalise_model(name: str) -> str:
@@ -358,17 +405,34 @@ def _add_routing_bucket(
 
 
 def collect_codex_routing_since(
-    since: date, sessions_dir: Path = CODEX_SESSION_DIR
+    since: date, sessions_dir: Path | Iterable[Path] = CODEX_SESSION_DIR
 ) -> dict[str, dict]:
     """Aggregate privacy-safe Codex routing and quota telemetry.
 
     Session files expose model effort, service tier, per-call token usage, and
     rate-limit snapshots. Only enum buckets, counters, and window percentages
     leave this function; paths, prompts, turn IDs, and session IDs never do.
+
+    Several session trees may be given — Multica keeps its Codex rollouts outside
+    ~/.codex/sessions — and they accumulate into one result. Summing is right
+    because the trees are disjoint: each session file is read exactly once, and a
+    bucket's calls and tokens are counts of those files' events.
     """
+    directories = (
+        (sessions_dir,) if isinstance(sessions_dir, Path) else tuple(sessions_dir)
+    )
     daily: dict[str, dict] = {}
+    for directory in directories:
+        _collect_codex_routing_tree(since, directory, daily)
+    return daily
+
+
+def _collect_codex_routing_tree(
+    since: date, sessions_dir: Path, daily: dict[str, dict]
+) -> None:
+    """Fold one Codex session tree's telemetry into *daily* in place."""
     if not sessions_dir.is_dir():
-        return daily
+        return
     for path in sessions_dir.rglob("*.jsonl"):
         effort: str | None = None
         speed: str | None = None
@@ -453,7 +517,6 @@ def collect_codex_routing_since(
                     or rate_limits.get("rate_limit_reached_type")
                     or rate_limits.get("spend_control_reached")
                 )
-    return daily
 
 
 def collect_claude_routing_since(
@@ -524,6 +587,268 @@ def collect_claude_routing_since(
             reasoning_observed=reasoning_observed,
         )
     return daily
+
+
+def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
+    """Every session tree under one dsh harness home, default one first.
+
+    See DSH_SESSION_ROOT_SUFFIX for why a relocated tree is recognised by its
+    name rather than by which orchestrator created it.
+    """
+    roots: list[Path] = []
+    default = home / "sessions"
+    if default.is_dir():
+        roots.append(default)
+    try:
+        siblings = sorted(home.iterdir())
+    except OSError:
+        return tuple(roots)
+    roots.extend(
+        path for path in siblings
+        if path.name.endswith(DSH_SESSION_ROOT_SUFFIX) and path.is_dir()
+    )
+    return tuple(roots)
+
+
+def _zstd_frames_text(raw: bytes) -> str | None:
+    """Decode as many complete Zstandard frames of *raw* as any decoder here can.
+
+    dsh appends one independently decodable frame per durable batch, so a log read
+    while a session is live can end mid-frame. Every decoder below is therefore
+    asked for a best-effort prefix and the torn tail is dropped: this runs on a
+    schedule, and the next run reads the finished frame.
+
+    Nothing is added to this script's (empty) dependency list for it. A missing
+    decoder returns None, which the caller reports and counts rather than turning
+    into a fetch failure — the cumulative store still keeps every earlier day.
+    """
+    try:
+        from compression.zstd import ZstdDecompressor  # Python 3.14+
+    except ImportError:
+        pass
+    else:
+        decoded = bytearray()
+        remaining = raw
+        while remaining:
+            decompressor = ZstdDecompressor()
+            try:
+                decoded += decompressor.decompress(remaining)
+            except Exception:
+                # Any decode failure ends the usable prefix, whatever it was
+                # named: a damaged frame is as final as a half-written one, and
+                # the frames already decoded stay valid either way.
+                break
+            if not decompressor.eof:
+                break  # the final frame is still being written
+            remaining = decompressor.unused_data
+        return decoded.decode("utf-8", "replace")
+    zstd = shutil.which("zstd")
+    if zstd is None:
+        return None
+    # A torn final frame makes `zstd -dc` exit non-zero *after* writing every
+    # frame it did decode, which is exactly the prefix we want, so stdout is read
+    # regardless of the status.
+    try:
+        out = subprocess.run(
+            [zstd, "-dc", "-"], input=raw, capture_output=True,
+            timeout=DSH_DECODE_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout.decode("utf-8", "replace")
+
+
+def _read_dsh_session_log(path: Path) -> str | None:
+    """One session log as text, or None when it cannot be read or decoded."""
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return None
+    if path.name.endswith(".zstd"):
+        return _zstd_frames_text(raw)
+    return raw.decode("utf-8", "replace")
+
+
+def _event_day_from_millis(raw: object) -> date | None:
+    """Convert one dsh event timestamp (epoch milliseconds) to the ledger day."""
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+        return None
+    try:
+        return datetime.fromtimestamp(raw / 1000, tz=SHANGHAI).date()
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
+def _normalise_dsh_effort(raw: object) -> str | None:
+    """One dsh reasoning level as this repository spells it, or None."""
+    if not isinstance(raw, str):
+        return None
+    level = raw.strip().lower()
+    level = _DSH_EFFORT_ALIASES.get(level, level)
+    return level if level in EFFORT_LEVELS else None
+
+
+def collect_dsh_daily_since(
+    since: date, roots: Iterable[Path] | None = None
+) -> list[dict]:
+    """Aggregate DeepSeek Harness usage per day straight from its session logs.
+
+    ccusage has no dsh reader, so this is a first-party parse. Only three event
+    types matter. `request/header` and `request/context` name the model serving
+    the calls that follow — a header is always written before the first one and
+    again whenever the route changes — and `assistant/message` carries one model
+    call's token accounting.
+
+    dsh's counts are disjoint by contract: `inputTokens` is uncached input only,
+    and cached input arrives as cacheRead/cacheWrite, so the four components add
+    up to the billed total. That is the same convention the ccusage-fed paths
+    use, which is what lets one merged store hold both.
+
+    Cost comes from config/official-pricing.json at the standard tier; dsh records
+    no priority tier to apply a multiplier to. Models with no official row (the
+    gateway routes dsh can reach) keep their real token counts and contribute zero,
+    and are named on stderr so a new one is noticed rather than billing zero unseen.
+
+    Nothing identifying is read: the log's cwd, prompts, tool arguments and output,
+    titles, and session ids are all skipped.
+    """
+    session_roots = dsh_session_roots() if roots is None else tuple(roots)
+    daily: dict[str, dict] = {}
+    undecodable = 0
+    for path in _dsh_session_logs(session_roots):
+        text = _read_dsh_session_log(path)
+        if text is None:
+            undecodable += 1
+            continue
+        model: str | None = None
+        effort: str | None = None
+        for line in text.splitlines():
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                # A live log's last record may still be mid-write, and packed
+                # chunk rows are storage encodings this reader has no use for.
+                continue
+            if not isinstance(event, dict):
+                continue
+            kind = event.get("type")
+            data = event.get("data")
+            if not isinstance(data, dict):
+                continue
+            if kind == "request/header":
+                header = data.get("header")
+                config = header.get("config") if isinstance(header, dict) else None
+                if isinstance(config, dict):
+                    model = _dsh_model(config.get("model")) or model
+                    effort = _normalise_dsh_effort(config.get("reasoningEffort"))
+                continue
+            if kind == "request/context":
+                model = _dsh_model(data.get("model")) or model
+                continue
+            if kind != "assistant/message":
+                continue
+            usage = data.get("usage")
+            # `usage` is absent when the adapter reported no accounting, and a
+            # message with no header before it has no model to attribute.
+            if not isinstance(usage, dict) or model is None:
+                continue
+            day = _event_day_from_millis(event.get("time"))
+            if day is None or day < since:
+                continue
+            breakdown = {
+                "inputTokens": _token_value(usage.get("inputTokens")),
+                "outputTokens": _token_value(usage.get("outputTokens")),
+                "cacheCreationTokens": _token_value(usage.get("cacheWriteTokens")),
+                "cacheReadTokens": _token_value(usage.get("cacheReadTokens")),
+            }
+            tokens = sum(breakdown.values())
+            if tokens <= 0:
+                continue
+            bucket = daily.setdefault(day.isoformat(), {}).setdefault(
+                "models", {}
+            ).setdefault(model, {"totalTokens": 0, **{k: 0 for k in breakdown}})
+            bucket["totalTokens"] += tokens
+            for key, value in breakdown.items():
+                bucket[key] += value
+            if effort is not None:
+                raw_reasoning = usage.get("reasoningTokens")
+                _add_routing_bucket(
+                    daily, day, "efforts", effort, tokens,
+                    reasoning_tokens=_token_value(raw_reasoning),
+                    reasoning_observed=(
+                        isinstance(raw_reasoning, (int, float))
+                        and not isinstance(raw_reasoning, bool)
+                    ),
+                )
+    if undecodable:
+        print(
+            f"dsh: {undecodable} session log(s) could not be decoded and were "
+            f"skipped; install `zstd` (or run on Python 3.14+) so compressed "
+            f"session logs can be read",
+            file=sys.stderr,
+        )
+    return _dsh_entries(daily)
+
+
+def _dsh_session_logs(roots: Iterable[Path]) -> Iterator[Path]:
+    """Every session log under the given trees.
+
+    One session directory may hold both names once its harness home's compression
+    setting has changed: dsh derives the artifact name from that setting, so a log
+    written under the other one is a file it no longer opens, and the events in it
+    are as real as the ones beside it. Reading both adds two halves of a session's
+    history rather than counting anything twice.
+    """
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for name in DSH_SESSION_LOG_NAMES:
+            yield from sorted(root.rglob(name))
+
+
+def _dsh_model(raw: object) -> str | None:
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    return _normalise_model(raw.strip())
+
+
+def _dsh_entries(daily: dict[str, dict]) -> list[dict]:
+    """Price each collected dsh day and shape it like every other daily entry."""
+    pricing = load_pricing()
+    unpriced_days: dict[str, int] = {}
+    entries: list[dict] = []
+    for day, payload in sorted(daily.items()):
+        models = payload.get("models", {})
+        if not models:
+            continue
+        usage_day = date.fromisoformat(day)
+        cost = 0.0
+        fully_priced = True
+        for name, breakdown in models.items():
+            if active_rate(name, usage_day, pricing) is None:
+                fully_priced = False
+                unpriced_days[name] = unpriced_days.get(name, 0) + 1
+            cost += standard_cost(name, usage_day, breakdown, pricing)
+        entry = {
+            "date": day,
+            "totalTokens": sum(m["totalTokens"] for m in models.values()),
+            "totalCost": cost,
+            "models": models,
+            "costTrusted": True,
+            "costSource": "official" if fully_priced else "unpriced",
+        }
+        if payload.get("routing"):
+            entry["routing"] = payload["routing"]
+        entries.append(entry)
+    if unpriced_days:
+        print(
+            "dsh left unpriced (no official price entry, counted at zero): "
+            + ", ".join(
+                f"{name} ({days}d)" for name, days in sorted(unpriced_days.items())
+            ),
+            file=sys.stderr,
+        )
+    return entries
 
 
 def _attach_telemetry(entries: list[dict], telemetry: dict[str, dict]) -> None:
@@ -680,14 +1005,58 @@ def _lowercased_codex_home(source: Path) -> Iterator[Path]:
         yield mirror_root
 
 
+@contextmanager
+def _codex_home_over(sessions_dir: Path) -> Iterator[Path]:
+    """Yield a throwaway CODEX_HOME whose `sessions` is *sessions_dir*.
+
+    ccusage's Codex reader only ever looks at `$CODEX_HOME/sessions`, and Multica's
+    rollouts live at ~/.codex/multica-sessions — a sibling of that directory, not a
+    child. One symlink in a temp directory is the whole adapter: nothing is copied,
+    and the real tree is only ever read (this is the cheap counterpart to
+    _lowercased_codex_home, which has to rewrite bytes because it changes them).
+
+    A sessions_dir that does not exist yields a home with no `sessions` at all,
+    which ccusage reports as no usage — the same answer, without a dangling link.
+    """
+    with tempfile.TemporaryDirectory(prefix="codex-alt-") as tmp:
+        root = Path(tmp)
+        if sessions_dir.is_dir():
+            (root / "sessions").symlink_to(sessions_dir, target_is_directory=True)
+        yield root
+
+
+def fetch_multica_codex_daily(
+    since: date, sessions_dir: Path = MULTICA_CODEX_SESSION_DIR
+) -> list[dict]:
+    """Multica-orchestrated Codex usage, read from its relocated rollout tree.
+
+    The rollouts are byte-identical to the ones under ~/.codex/sessions — same CLI,
+    same account, same models — so they are read with the same Codex reader and
+    summed into the same store. See MULTICA_CODEX_SESSION_DIR.
+    """
+    if not sessions_dir.is_dir():
+        return []
+    with _codex_home_over(sessions_dir) as home:
+        return fetch_codex_home_daily(
+            since, home, trust_row_cost=True, label="multica codex"
+        )
+
+
 def fetch_codex_home_daily(
-    since: date, codex_home: Path, *, lowercase_models: bool = False
+    since: date,
+    codex_home: Path,
+    *,
+    lowercase_models: bool = False,
+    trust_row_cost: bool = False,
+    label: str = "traex",
 ) -> list[dict]:
     """`ccusage codex daily` against an alternate CODEX_HOME → per-day entries.
 
     Used for traex, whose sessions live under ~/.trae/cli in the very format the
-    Codex reader expects. The invocation is read-only and touches nothing under
-    the real ~/.codex; we only override CODEX_HOME for this one child process.
+    Codex reader expects, and for Multica's relocated Codex rollouts. The
+    invocation is read-only and touches nothing under the real ~/.codex; we only
+    override CODEX_HOME for this one child process. `label` names the caller in
+    the unpriced-model notice below.
 
     `lowercase_models` runs ccusage against a normalised mirror of the sessions
     (see _lowercased_codex_home) so TRAE CLI's capitalised model names match
@@ -701,15 +1070,27 @@ def fetch_codex_home_daily(
     cost), and every model here is already a Codex-family model, so no agent
     classification is needed — the whole row is one bucket.
 
-    ccusage's row-level costUSD is ignored here because it cannot separate known
-    official models from unknown aliases on mixed days. The per-model token buckets
-    are priced directly from config/official-pricing.json; traex currently records
-    no Fast tier, so this path uses the official standard rate. Unknown models are
+    ccusage's row-level costUSD is ignored by default because it cannot separate
+    known official models from unknown aliases on mixed days. The per-model token
+    buckets are priced directly from config/official-pricing.json; traex records no
+    Fast tier, so that path uses the official standard rate. Unknown models are
     deliberately zero and logged when they match a known internal-slug family.
+
+    `trust_row_cost` opts a caller back into ccusage's number on rows where the
+    objection above does not apply: every model on the row has an official rate,
+    and that rate did not change between the usage day and the day ccusage was
+    handed our table. Real Codex sessions need it. ccusage keeps the per-request
+    detail this aggregate drops — which calls ran on the priority tier, which ones
+    crossed a model's long-context threshold — and neither can be reconstructed
+    from a day's totals, so the standard-rate sum silently under-bills them. The
+    larger of the two is taken, exactly as official_cost_from_ccusage does for the
+    unified fetch.
     """
     if lowercase_models:
         with _lowercased_codex_home(codex_home) as mirror:
-            return fetch_codex_home_daily(since, mirror)
+            return fetch_codex_home_daily(
+                since, mirror, trust_row_cost=trust_row_cost, label=label
+            )
 
     env = os.environ.copy()
     env["CODEX_HOME"] = str(codex_home)
@@ -732,6 +1113,7 @@ def fetch_codex_home_daily(
         cost = 0.0
         models = {}
         fully_priced = True
+        repriced = False
         usage_day = date.fromisoformat(d)
         for name, raw_model in row.get("models", {}).items():
             breakdown = token_breakdown(raw_model)
@@ -744,6 +1126,14 @@ def fetch_codex_home_daily(
             ):
                 fully_priced = False
             cost += standard_cost(canonical, usage_day, breakdown, pricing)
+            if active_rate(canonical, usage_day, pricing) != active_rate(
+                canonical, config_day, pricing
+            ):
+                # ccusage priced this row against config_day's table, so its
+                # number does not describe usage_day's rates.
+                repriced = True
+        if trust_row_cost and fully_priced and not repriced:
+            cost = max(float(row.get("costUSD", 0.0) or 0.0), cost)
         # Tokens are accurate regardless of whether the official table knows the
         # model. Unknown shares remain visible in models and contribute zero cost.
         if tokens or models:
@@ -764,7 +1154,7 @@ def fetch_codex_home_daily(
                 unpriced_days[name] = unpriced_days.get(name, 0) + 1
     if unpriced_days:
         print(
-            "traex left unpriced (no official price entry, counted at zero): "
+            f"{label} left unpriced (no official price entry, counted at zero): "
             + ", ".join(f"{name} ({days}d)" for name, days in sorted(unpriced_days.items())),
             file=sys.stderr,
         )
@@ -774,6 +1164,52 @@ def fetch_codex_home_daily(
 # ---------------------------------------------------------------------------
 # Persistence helpers
 # ---------------------------------------------------------------------------
+
+def sum_daily_entries(*sources: list[dict]) -> list[dict]:
+    """Add per-day observations from disjoint session trees into one list.
+
+    The cumulative store merges each incoming day against the stored one with
+    max(), which is what keeps a rotated-away session from shrinking history — and
+    exactly the wrong operator for two trees that each hold part of the same day,
+    where it would silently discard the smaller half. They are added here instead,
+    before the store ever sees them, so merge_with_cumulative still receives one
+    observation per day and its high-water rule keeps meaning what it says.
+
+    A day is priced `official` only while every contributing source said so: one
+    unpriced model anywhere in the sum makes the total a lower bound.
+    """
+    merged: dict[str, dict] = {}
+    for source in sources:
+        for entry in source:
+            day = entry["date"]
+            into = merged.get(day)
+            if into is None:
+                merged[day] = {
+                    **entry,
+                    "models": _canonical_model_totals(entry.get("models", {})),
+                }
+                continue
+            into["totalTokens"] = entry.get("totalTokens", 0) + into.get("totalTokens", 0)
+            into["totalCost"] = entry.get("totalCost", 0.0) + into.get("totalCost", 0.0)
+            for model, values in _canonical_model_totals(entry.get("models", {})).items():
+                bucket = into["models"].setdefault(model, {})
+                for key, value in values.items():
+                    bucket[key] = bucket.get(key, 0) + value
+            if entry.get("costSource") != into.get("costSource"):
+                into["costSource"] = "unpriced"
+            # imageCount is a count of files in one machine-wide directory, so it
+            # belongs to the machine rather than to either tree; adding it would
+            # count the same PNGs once per source.
+            images = max(entry.get("imageCount", 0), into.get("imageCount", 0))
+            if images:
+                into["imageCount"] = images
+            # False here means "this source saw no usage for the day", not "the day
+            # was empty" — one source that did observe tokens settles it.
+            into["tokensObserved"] = (
+                into.get("tokensObserved", True) or entry.get("tokensObserved", True)
+            )
+    return [merged[day] for day in sorted(merged)]
+
 
 def _canonical_model_totals(models: dict) -> dict[str, dict]:
     """Canonicalize one observation without discarding its token components."""
@@ -1574,6 +2010,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     codex_path = machine_dir / "codex.json"
     opencode_path = machine_dir / "opencode.json"
     traex_path = machine_dir / "traex.json"
+    dsh_path = machine_dir / "dsh.json"
     machine_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebase onto the other machines' commits before writing, so the push at the
@@ -1600,11 +2037,28 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         # not blank out either store — merging [] keeps existing rows via max().
         print(f"ccusage fetch failed, keeping cached stores: {e}", file=sys.stderr)
         cc_daily, cx_daily, op_daily = [], [], []
+    # Multica's Codex rollouts are a second read of the same agent, so they are
+    # summed into the Codex day rather than merged against it. Its failure is
+    # isolated: an empty read leaves the standard-tree observation untouched.
+    try:
+        mx_daily = fetch_multica_codex_daily(EPOCH)
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+        json.JSONDecodeError,
+    ) as e:
+        print(f"multica codex fetch failed, keeping cached store: {e}", file=sys.stderr)
+        mx_daily = []
+    cx_daily = sum_daily_entries(cx_daily, mx_daily)
     _attach_telemetry(
         cc_daily, collect_claude_routing_since(EPOCH, CLAUDE_PROJECTS_DIR)
     )
     _attach_telemetry(
-        cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
+        cx_daily,
+        collect_codex_routing_since(
+            EPOCH, (CODEX_SESSION_DIR, MULTICA_CODEX_SESSION_DIR)
+        ),
     )
     # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
     # its failure is isolated: an empty fetch merges [] and keeps the cached store
@@ -1629,12 +2083,20 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         tx_daily,
         collect_codex_routing_since(EPOCH, TRAEX_CODEX_HOME / "sessions"),
     )
+    # dsh has no ccusage reader, so this one parses the session logs itself and
+    # cannot fail the way a missing binary does. A machine that never ran dsh has
+    # no harness home and gets an empty list.
+    try:
+        dsh_daily = collect_dsh_daily_since(EPOCH)
+    except OSError as e:
+        print(f"dsh session read failed, keeping cached store: {e}", file=sys.stderr)
+        dsh_daily = []
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:
         # Entries that never observed tokens do not count as a read: a fetch made
         # only of image stubs looks non-empty and knows nothing about usage.
-        if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily)
+        if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily, *dsh_daily)
                 if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
                   file=sys.stderr)
@@ -1646,6 +2108,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(cx_daily, codex_path, reconcile_since=reconcile_since)
     merge_with_cumulative(op_daily, opencode_path, reconcile_since=reconcile_since)
     merge_with_cumulative(tx_daily, traex_path, reconcile_since=reconcile_since)
+    merge_with_cumulative(dsh_daily, dsh_path, reconcile_since=reconcile_since)
 
     if not no_push:
         git_push(machine)

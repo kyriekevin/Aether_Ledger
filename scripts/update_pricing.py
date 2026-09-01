@@ -34,7 +34,9 @@ from pricing import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
-AGENT_FILES = frozenset({"claude.json", "codex.json", "opencode.json", "traex.json"})
+AGENT_FILES = frozenset({
+    "claude.json", "codex.json", "opencode.json", "traex.json", "dsh.json",
+})
 
 
 def _money(value: str) -> float | None:

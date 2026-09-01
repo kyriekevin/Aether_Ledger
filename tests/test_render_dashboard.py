@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from render_dashboard import (  # noqa: E402
+    PANEL_AGENT_ORDER,
     AllocationTotals,
     DailyTotals,
     _compact_number,
@@ -425,7 +426,7 @@ class DashboardTests(unittest.TestCase):
             as_of=date(2026, 8, 1),
             recent_start=date(2026, 7, 3),
             agent_tokens={
-                "claude": 100, "codex": 200, "traex": 50, "legacy": 0,
+                "claude": 100, "codex": 200, "traex": 50, "dsh": 0, "legacy": 0,
             },
             model_tokens={
                 ("claude", "claude-opus-example"): 100,
@@ -507,32 +508,32 @@ class DashboardTests(unittest.TestCase):
                     }
                     for effort in ("none", "low", "medium", "high", "xhigh", "max")
                 }
-                for agent in ("claude", "codex", "traex", "legacy")
+                for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             speeds={
                 agent: {
                     speed: {"calls": 0, "totalTokens": 0}
                     for speed in ("standard", "fast")
                 }
-                for agent in ("claude", "codex", "traex", "legacy")
+                for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             quota_windows={
-                agent: {} for agent in ("claude", "codex", "traex", "legacy")
+                agent: {} for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             latest_quota_day={
-                agent: None for agent in ("claude", "codex", "traex", "legacy")
+                agent: None for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             latest_quota_windows={
-                agent: {} for agent in ("claude", "codex", "traex", "legacy")
+                agent: {} for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             quota_observed_days={
-                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+                agent: 0 for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             quota_pressure_days={
-                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+                agent: 0 for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
             quota_limit_days={
-                agent: 0 for agent in ("claude", "codex", "traex", "legacy")
+                agent: 0 for agent in ("claude", "codex", "traex", "dsh", "legacy")
             },
         )
         allocation.efforts["claude"]["xhigh"].update(
@@ -597,7 +598,25 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('data-model="gpt-example"', allocation_history_svg)
         self.assertIn('data-week="2026-07-26"', allocation_history_svg)
         self.assertIn("Runtime profile", profile_svg)
-        self.assertEqual(profile_root.get("height"), "390")
+        # The card is sized from the harness rows it has to hold. Asserting the
+        # relationship rather than today's number is what makes adding a harness
+        # a re-flow instead of a silent overprint of the strip underneath.
+        self.assertEqual(
+            profile_root.get("height"),
+            str(132 + len(PANEL_AGENT_ORDER) * 48 + 6 + 108),
+        )
+        fast_heading_y = next(
+            float(node.get("y", "0"))
+            for node in profile_root.findall("{*}text")
+            if (node.text or "") == "Fast"
+        )
+        last_row_y = max(
+            float(node.get("y", "0")) + float(node.get("height", "0"))
+            for node in profile_root.findall("{*}rect")
+            if node.get("data-effort") is not None
+        )
+        self.assertLess(last_row_y, fast_heading_y)
+        self.assertLess(fast_heading_y, float(profile_root.get("height")))
         self.assertIn("low 75.0%", profile_svg)
         self.assertIn("50.0% fast", profile_svg)
         self.assertIn("7-day quota peak", profile_svg)
@@ -640,7 +659,10 @@ class DashboardTests(unittest.TestCase):
         self.assertNotIn("Thinking", profile_svg)
         self.assertNotIn("8-WEEK", profile_svg)
         self.assertIn("Runtime history", history_svg)
-        self.assertEqual(history_root.get("height"), "380")
+        self.assertEqual(
+            history_root.get("height"),
+            str(124 + len(PANEL_AGENT_ORDER) * 42 + 4 + 126),
+        )
         self.assertIn("PREVIOUS 4 WEEKS", history_svg)
         self.assertIn('class="line-codex"', history_svg)
         self.assertIn("7-day quota peak", history_svg)
@@ -649,17 +671,25 @@ class DashboardTests(unittest.TestCase):
         # claims no legend slot -- and the single Codex bar sits on the week's
         # centre instead of hanging off the side of an empty pair.
         self.assertNotIn("7d peak 10%", history_svg)
-        self.assertNotIn('<circle class="agent-claude" cx="628" cy="316"', history_svg)
-        self.assertIn('<circle class="agent-codex" cx="628" cy="316"', history_svg)
+        quota_marker_y = 124 + len(PANEL_AGENT_ORDER) * 42 + 4 + 62
+        self.assertNotIn(
+            f'<circle class="agent-claude" cx="628" cy="{quota_marker_y}"', history_svg
+        )
+        self.assertIn(
+            f'<circle class="agent-codex" cx="628" cy="{quota_marker_y}"', history_svg
+        )
         self.assertIn('<rect class="agent-codex" x="732.0"', history_svg)
         signal_titles = {
             node.text: node.get("y")
             for node in history_root.findall("{*}text")
             if node.text in {"Fast share", "7-day quota peak"}
         }
+        # Both strip headings sit on one baseline below the effort rows, so the
+        # two columns stay aligned however many harnesses the rows above hold.
+        heading_y = str(quota_marker_y - 36)
         self.assertEqual(
             signal_titles,
-            {"Fast share": "280", "7-day quota peak": "280"},
+            {"Fast share": heading_y, "7-day quota peak": heading_y},
         )
         compact_dividers = [
             node.get("x1")
