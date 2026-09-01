@@ -50,7 +50,8 @@ the model's public release date. Initial entries use each model's first observed
 DeepSeek, Google Gemini, Kimi, and MiniMax are read directly from their canonical API pricing
 pages. The registered Gemini models use the standard text/image rate within TRAE's advertised
 200K context cap; audio and Google cache-storage charges are not present in the captured token
-buckets. OpenAI models with a separate
+buckets. DeepSeek daily aggregates do not retain request timestamps, so a peak/off-peak table uses
+the peak, undiscounted rate as a conservative API-equivalent estimate. OpenAI models with a separate
 long-context tier are accepted only when the pinned ccusage version is listed as knowing that
 model's request-tier boundary; otherwise the updater reports `UNSUPPORTED` instead of silently
 using ccusage's generic 200K fallback.
