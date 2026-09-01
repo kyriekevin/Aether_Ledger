@@ -278,11 +278,11 @@
         }
       }
     },
-    "totalCost": 0.12016553099999999,
+    "totalCost": 0.396440088,
     "totalTokens": 756233
   },
   "2026-08-25": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "deepseek-v4-pro": {
         "cacheCreationTokens": 0,
@@ -309,7 +309,7 @@
         }
       }
     },
-    "totalCost": 0.013047854000000001,
+    "totalCost": 0.184888232,
     "totalTokens": 185053
   },
   "2026-08-31": {
@@ -335,5 +335,36 @@
     },
     "totalCost": 0.069994429,
     "totalTokens": 1118056
+  },
+  "2026-09-01": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 76800,
+        "inputTokens": 30597,
+        "outputTokens": 1066,
+        "totalTokens": 108463
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7680,
+        "inputTokens": 16844,
+        "outputTokens": 58,
+        "totalTokens": 24582
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 581,
+          "totalTokens": 156678
+        }
+      }
+    },
+    "totalCost": 0.29497300000000004,
+    "totalTokens": 133045
   }
 }

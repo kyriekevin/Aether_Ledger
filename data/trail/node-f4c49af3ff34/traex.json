@@ -536,13 +536,47 @@
     "models": {
       "claude-opus-4-8": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 0,
-        "inputTokens": 99787,
-        "outputTokens": 432,
-        "totalTokens": 100219
+        "cacheReadTokens": 77311,
+        "inputTokens": 139282,
+        "outputTokens": 1696,
+        "totalTokens": 218289
       }
     },
-    "totalCost": 0.509735,
-    "totalTokens": 100219
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 3,
+          "reasoningCalls": 3,
+          "reasoningOutputTokens": 0,
+          "totalTokens": 118070
+        }
+      }
+    },
+    "totalCost": 0.7774655,
+    "totalTokens": 218289
+  },
+  "2026-08-31": {
+    "costSource": "official",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3666794,
+        "inputTokens": 346174,
+        "outputTokens": 25300,
+        "totalTokens": 4038268
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 64,
+          "reasoningCalls": 64,
+          "reasoningOutputTokens": 0,
+          "totalTokens": 4038268
+        }
+      }
+    },
+    "totalCost": 4.196767,
+    "totalTokens": 4038268
   }
 }
