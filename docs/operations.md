@@ -72,6 +72,51 @@ special handling. Codex is the exception. Multica gives each task a private `COD
 that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
 writes the result to a store of its own, `codex-multica.json`.
 
+Because those tokens already reach the ledger through the harnesses, the Multica API is never asked
+for token totals — that would count the same work twice, from two measurements that do not agree
+(for 2026-08-31 the API reported 21.63M against 21.50M parsed from the local rollouts). What only
+Multica knows is the shape of the work it dispatched, so `data/multica.json` records exactly that:
+per day, per public role, per agent, how many runs finished, how they ended, and how long they took.
+The audit rejects a `usage` section in that file, which is what re-introducing the double count would
+look like.
+
+The store sits at the data root rather than under a node label because one API answers for every
+runtime at once, and a single configured machine collects it so that the one-writer-per-file rule
+still holds. Collection is opt-in: `~/.config/token-activity/multica_runtime_roles.json` must map
+each runtime's operator-chosen custom name to `work`, `personal`, or `devbox`. A machine without
+that file collects nothing rather than guessing, and a runtime whose provider this repository does
+not recognise is reported on stderr rather than skipped silently — a renamed provider string would
+otherwise read exactly like that provider having done no work.
+
+Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
+still in flight has no duration and would be recounted under a different status next time. Each run
+and issue is counted once per collection: issue pages overlap while the workspace is being written
+to, and one run can surface under two issues. A duplicate would not break the arithmetic — it adds to
+`total` and to one outcome together — so nothing downstream would notice, and the merge would make
+the inflated total the permanent high-water mark. Days
+merge by keeping the fuller observation, for the same reason the token stores keep a high-water mark
+— a finished run's day, status and duration never change again, so a smaller number means the fetch
+saw less than the store already knows, which is what happens once the workspace prunes old issues.
+
+The comparison is over the whole counter bundle rather than each counter separately. Maxing counters
+independently would let `completed` come from one fetch and `failed` from another, and those two
+never described the same runs: prune two completed runs, land two failed ones, and the per-counter
+maxima claim two runs with four outcomes — a day that never happened, which the audit then rejects.
+Ties on total are broken by the longer duration, because a terminal run can be reported before its
+finish time is set and would otherwise keep a duration of zero for good. Keeping the observation with
+the larger total stays internally consistent, at the cost of recording
+the larger single observation rather than a sum when a day is pruned and refilled. That undercounts,
+which is the honest direction: the two fetches overlap by an unknown amount, so adding them would
+invent runs rather than miss them.
+
+The CLI answers for one profile and one workspace at a time, and a profile holding no issues returns
+an empty list rather than an error, so pointing the collector at the wrong one looks identical to an
+idle day. Set `MULTICA_PROFILE` (and `MULTICA_WORKSPACE_ID`, which the CLI reads itself) when the
+work is not in the CLI's default profile; `--profile` is a global flag and is rejected after the
+subcommand, so the collector puts it in front. A fetch that finds runtimes but no terminal runs says
+so on stderr rather than writing an empty day quietly. The two servers also disagree on one provider
+string — TRAE CLI is `traecli` on one and `traex` on the other — so both map to the `traex` agent.
+
 A separate store rather than a bigger Codex day, because the cumulative merge keeps the larger of
 the stored and incoming observations per day. That high-water rule is what protects history from
 session rotation, and it only holds while each stored number describes one fixed source. Add the

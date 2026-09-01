@@ -59,6 +59,41 @@ dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来�
 的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
 以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。
 
+既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
+工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有
+Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记这个：按天、按公开角色、按 agent，
+多少个 run 结束了、怎么结束的、跑了多久。审计会拒绝这个文件里出现 `usage` 段——重新引入重复计数
+就是长那个样子。
+
+这个 store 放在 data 根目录而不是某个节点标签下，因为一次 API 调用覆盖所有 runtime；由单台配置过的
+机器采集，"一个文件只有一个写入者"的规则才继续成立。采集是显式开启的：
+`~/.config/token-activity/multica_runtime_roles.json` 必须把每个 runtime 的自定义名映射到 `work`、
+`personal` 或 `devbox`。没有这个文件的机器什么都不采，而不是去猜；provider 不在已知集合里的 runtime
+会在 stderr 上报出来，而不是静默跳过——provider 字符串一旦改名，静默跳过看起来就和"这个 provider
+没干活"一模一样。
+
+run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
+被重新统计。每次采集中每个 run 和 issue 只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
+也可能挂在两个 issue 下。重复计数不会破坏算术关系——它同时给 `total` 和某一个结局各加一——所以下游
+什么都发现不了，而合并又会把这个虚高的总数变成永久的高水位。按天合并时保留"看得更全"的那次观测，理由和 token store 的高水位一样——已完成的 run 其
+日期、状态、时长都不会再变，所以数字变小只意味着这次抓取看到的比 store 里已知的少，而这正是
+workspace 清理旧 issue 之后会发生的事。
+
+比较的粒度是整组计数，不是逐个字段取大。逐字段取大会让 `completed` 来自一次抓取、`failed` 来自
+另一次，而这两个数从来没有描述同一批 run：两个 completed 的 run 被清理、两个 failed 的 run 落到
+同一天，逐字段取大就会得出"总数 2、结局 4"——一个从未发生过的日子，而且审计会直接拒绝。总数相同时按时长更长的那组胜出，因为终结的 run 可能在
+`completed_at` 写入之前就被返回，否则那个 0 会被永久保留。取总数更大的那一组，内部一致性由构造
+保证；代价是某天被清理又填入新 run 时，记录的是较大的那一次单独
+观测而不是两次之和。这样会少算，但方向是诚实的：两次抓取的重叠程度未知，相加等于凭空造出 run，
+而少算只是漏掉。
+
+CLI 一次只回答一个 profile、一个 workspace，而没有 issue 的 profile 返回的是空列表而不是报错，所以
+指错了地方和"这天没干活"长得一模一样。工作不在 CLI 默认 profile 时，设置 `MULTICA_PROFILE`（以及
+`MULTICA_WORKSPACE_ID`，这个 CLI 自己会读）；`--profile` 是全局 flag，放在子命令后面会被拒绝，所以
+采集器把它放在最前面。如果找到了 runtime 却一个终结 run 都没有，会在 stderr 上说出来，而不是静默
+写入一个空的天。另外两台服务器对同一个 provider 的叫法不一致——TRAE CLI 在一台上是 `traecli`，
+另一台上是 `traex`——所以两个都映射到 `traex` 这个 agent。
+
 之所以单开一个 store 而不是把数加进当天的 Codex 条目：累计合并按天保留存量与新观测中较大的
 那个，这条高水位规则是用来防止会话轮转导致历史缩水的，而它成立的前提是每个存量数字只描述
 一个固定来源。先把两棵树加起来，max() 比较的就是构成会变的和——某天 Multica 的 rollout 被清理、

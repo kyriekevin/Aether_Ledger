@@ -62,6 +62,7 @@ from pricing import (
     standard_cost,
     token_breakdown,
 )
+from multica_usage import collect_if_configured
 from render_dashboard import SHANGHAI
 
 # Data repo root: two levels up from this script (repo/scripts/sync_usage.py)
@@ -246,6 +247,14 @@ AGENT_STORES = {
     "traex": "traex.json",
     "dsh": "dsh.json",
 }
+
+# Multica's task aggregate is deliberately NOT in AGENT_STORES. Those are token
+# stores, one per machine per harness; this one holds no tokens and describes the
+# whole workspace, so it lives at the data root and is written by a single
+# designated machine. Multica's tokens are already counted through the harnesses
+# it drives — codex-multica.json above, and the others' own trees.
+MULTICA_TASK_STORE = "data/multica.json"
+MULTICA_TASK_WRITER = "work"
 
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 SPEED_LEVELS = frozenset({"standard", "fast"})
@@ -1940,7 +1949,15 @@ def git_push(machine: str) -> None:
     if _branch_is_ahead():
         _try_push()  # republish stranded commit; continue regardless of result
 
-    add = _git(["add", machine + "/"])
+    paths = [machine + "/"]
+    # The Multica aggregate sits outside every machine directory because it
+    # describes the workspace rather than one machine; stage it only when its
+    # designated writer is the one committing.
+    if Path(machine).name == MULTICA_TASK_WRITER and (
+        DATA_REPO_DIR / MULTICA_TASK_STORE
+    ).exists():
+        paths.append(MULTICA_TASK_STORE)
+    add = _git(["add", *paths])
     if add.returncode != 0:
         print(f"git add failed: {add.stderr.strip()}", file=sys.stderr)
         return
@@ -2136,6 +2153,26 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     merge_with_cumulative(
         mx_daily, multica_codex_path, reconcile_since=reconcile_since
     )
+
+    # Multica's task shape is workspace-wide, not per-machine: one API answers for
+    # every runtime at once. So exactly one writer collects it, and the others
+    # never call the workspace API — that keeps the repository's one-writer-per-
+    # file rule intact and avoids fanning out issue reads from every machine.
+    # A failure here must not cost the token stores that were just merged, so it
+    # is reported and stepped over rather than raised.
+    if Path(machine).name == MULTICA_TASK_WRITER:
+        try:
+            collect_if_configured(store_path=DATA_REPO_DIR / MULTICA_TASK_STORE)
+        except Exception as e:  # noqa: BLE001 — see below
+            # Deliberately broad. This step is an optional enrichment that runs
+            # *after* every token store has been merged but *before* the push, so
+            # any exception it lets through costs a day of token data on every
+            # machine, to save a counter nobody has looked at yet. An enumerated
+            # list was tried and was wrong: a JSON payload with a list where a
+            # string belongs raises TypeError out of a dict lookup, which was not
+            # in it. The failure is reported and the run continues to git_push.
+            print(f"Multica task fetch failed, keeping the stored aggregate: "
+                  f"{type(e).__name__}: {e}", file=sys.stderr)
 
     if not no_push:
         git_push(machine)

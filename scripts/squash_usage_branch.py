@@ -18,6 +18,10 @@ GENERATED_STORE = re.compile(
     r"(?:claude|codex|codex-multica|opencode|traex|dsh)\.json$"
     r"|^data/trail/[^/]+/"
     r"(?:claude|codex|codex-multica|opencode|traex|dsh)\.json$"
+    # The Multica task aggregate is machine-independent, so it sits at the data
+    # root rather than under a node label — but it is regenerated the same way
+    # and squashes under the same rule.
+    r"|^data/multica\.json$"
 )
 
 
