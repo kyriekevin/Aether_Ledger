@@ -1416,10 +1416,15 @@ class DshSessionTests(unittest.TestCase):
         }
 
     @staticmethod
-    def message(seq: int, millis: int, usage: dict) -> dict:
+    def message(
+        seq: int, millis: int, usage: dict, *, turn: int = 1, step: int | None = None
+    ) -> dict:
         return {
             "type": "assistant/message", "seq": seq, "time": millis,
-            "data": {"turn": 1, "step": 1, "message": {}, "usage": usage},
+            "data": {
+                "turn": turn, "step": seq if step is None else step,
+                "message": {}, "usage": usage,
+            },
         }
 
     def collect(self, since: date = date(2024, 1, 1)) -> list[dict]:
@@ -1514,18 +1519,46 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(sync_usage.dsh_session_roots(self.home), (self.root,))
         self.assertEqual(self.collect()[0]["totalTokens"], 10)
 
-    def test_multica_profile_trees_are_discovered_separately(self) -> None:
+    def test_multica_store_requires_one_selected_profile_tree(self) -> None:
         multica_home = self.home / ".multica"
         first = multica_home / "profiles" / "first" / "dsh-sessions"
         second = multica_home / "profiles" / "second" / "dsh-sessions"
         first.mkdir(parents=True)
-        second.mkdir(parents=True)
-        (multica_home / "profiles" / "second" / "other").mkdir()
 
         self.assertEqual(
-            sync_usage.multica_dsh_session_roots(multica_home),
-            (first, second),
+            sync_usage.multica_dsh_session_roots(multica_home), (first,)
         )
+
+        second.mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, "multiple Multica profiles"):
+            sync_usage.multica_dsh_session_roots(multica_home)
+
+        self.assertEqual(
+            sync_usage.multica_dsh_session_roots(multica_home, profile="second"),
+            (second,),
+        )
+
+    def test_the_same_session_step_is_counted_once_across_files(self) -> None:
+        millis = 1787198400000
+        events = [
+            {"type": "session", "id": "same-session", "createdAt": millis},
+            self.header(1, millis, "deepseek-v4-flash", effort="high"),
+            self.message(
+                2, millis, {"inputTokens": 10, "outputTokens": 0}, step=1
+            ),
+        ]
+        original = self.write_session("proj", "original", events)
+        copied_root = self.home / "copied-sessions"
+        copied = copied_root / "other" / "copy" / "session.jsonl"
+        copied.parent.mkdir(parents=True)
+        copied.write_text(original.read_text(), encoding="utf-8")
+
+        entry = sync_usage.collect_dsh_daily_since(
+            date(2024, 1, 1), (self.root, copied_root)
+        )[0]
+        self.assertEqual(entry["totalTokens"], 10)
+        self.assertEqual(entry["routing"]["efforts"]["high"]["calls"], 1)
+        self.assertNotIn("same-session", json.dumps(entry))
 
     def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
         millis = 1787198400000

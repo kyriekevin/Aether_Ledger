@@ -28,9 +28,10 @@ recorded in its own model metadata, so old and new sessions share one cumulative
 
 DeepSeek Harness (dsh) is read from its own logs, because ccusage has no `dsh` agent to borrow the
 way traex borrows the Codex reader. A dsh harness home holds one append-only JSONL event log per
-session at `<root>/<project>/<session>/session.jsonl[.zstd]`, and the writer reads three of its
-event types: `request/header` and `request/context` name the model serving the calls that follow,
-and `assistant/message` carries one model call's token accounting. dsh reports disjoint counts —
+session at `<root>/<project>/<session>/session.jsonl[.zstd]`. The writer uses `session` for an
+in-memory deduplication key, `request/header` and `request/context` to name the model serving the
+calls that follow, and `assistant/message` for one model call's token accounting. dsh reports
+disjoint counts —
 `inputTokens` excludes cached input, which arrives separately as cache reads and writes — so the
 four components add up to the billed total, the same convention the ccusage-fed stores use. Normal
 runs land in `dsh.json`, priced at the official standard tier; dsh records no priority tier for a
@@ -71,8 +72,10 @@ special handling. Codex and dsh are the exceptions. Multica gives each Codex tas
 `~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
 that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
 writes the result to a store of its own, `codex-multica.json`. Multica also relocates dsh logs to
-`~/.multica/profiles/<profile>/dsh-sessions`; the writer discovers those profile roots and records
-them in `dsh-multica.json`.
+`~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
+the writer selects it automatically when only one exists, but fails closed when several exist until
+`MULTICA_DSH_PROFILE` names one profile directory. This selector is independent of
+`MULTICA_PROFILE`, because API task collection and local DSH execution can use different profiles.
 
 Because those tokens already reach the ledger through the harnesses, the Multica API is never asked
 for token totals — that would count the same work twice, from two measurements that do not agree

@@ -25,8 +25,9 @@ TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支
 
 DeepSeek Harness（dsh）直接读它自己的日志：ccusage 没有 `dsh` agent，无法像 traex 借用 Codex
 读取器那样借用。一个 dsh harness home 下每个会话有一份追加写的 JSONL 事件日志，位于
-`<root>/<project>/<session>/session.jsonl[.zstd]`，采集器只看三类事件：`request/header` 和
-`request/context` 给出后续调用使用的模型，`assistant/message` 携带单次模型调用的 token 计数。
+`<root>/<project>/<session>/session.jsonl[.zstd]`。采集器用 `session` 生成仅在内存中存在的去重键，
+用 `request/header` 和 `request/context` 确定后续调用的模型，并从 `assistant/message` 读取单次调用的
+token 计数。
 dsh 的计数彼此不重叠——`inputTokens` 不含命中缓存的输入，缓存读写单独上报——所以四项相加就是
 计费总量，与 ccusage 采集的几个 store 是同一套口径。普通运行的数据写入 `dsh.json`，按官方 standard 价格
 计算；dsh 不记录优先级 tier，没有可用的乘数。effort 取自 header 的 `reasoningEffort`：dsh 的
@@ -58,8 +59,9 @@ dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来�
 其 `sessions` 是指向共享目录 `~/.codex/multica-sessions` 的软链接，而该目录是 `~/.codex/sessions`
 的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
 以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。Multica 还会把 dsh 日志放到
-`~/.multica/profiles/<profile>/dsh-sessions`；采集器发现这些 profile 根目录后，将数据写入
-`dsh-multica.json`。
+`~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
+只发现一棵时自动选择；发现多棵时拒绝混算，直到 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。
+这个选择与 `MULTICA_PROFILE` 相互独立，因为 API 任务采集和本地 DSH 执行可能使用不同 profile。
 
 既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
 工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有

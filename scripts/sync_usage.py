@@ -319,13 +319,14 @@ _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
 # is parsed directly (collect_dsh_daily_since).
 #
 # A normal dsh run writes under one harness home. Multica relocates its dsh logs
-# under profile-specific `dsh-sessions` roots, so those roots are read into the
-# separate dsh-multica store. Keeping the default and relocated trees apart is
-# what makes their per-day high-water marks stable when one source disappears.
+# under profile-specific `dsh-sessions` roots. dsh-multica.json must stay bound
+# to one such root: when several exist, MULTICA_DSH_PROFILE selects one rather
+# than summing sources whose membership can change under a per-day high-water.
 DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
 MULTICA_HOME = Path(
     os.environ.get("MULTICA_HOME", "").strip() or Path.home() / ".multica"
 )
+MULTICA_DSH_PROFILE = os.environ.get("MULTICA_DSH_PROFILE", "").strip() or None
 # `logSuffix()` in dsh's JSONL backend: `.jsonl.zstd` when the artifact is
 # compressed (the default every observed build writes) and `.jsonl` when it is not.
 DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
@@ -618,14 +619,31 @@ def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
     return (default,) if default.is_dir() else ()
 
 
-def multica_dsh_session_roots(home: Path = MULTICA_HOME) -> tuple[Path, ...]:
-    """The relocated dsh trees created under installed Multica profiles."""
+def multica_dsh_session_roots(
+    home: Path = MULTICA_HOME, profile: str | None = MULTICA_DSH_PROFILE
+) -> tuple[Path, ...]:
+    """The one Multica profile tree assigned to dsh-multica.json."""
     profiles = home / "profiles"
     if not profiles.is_dir():
         return ()
-    return tuple(sorted(
+    candidates = tuple(sorted(
         path for path in profiles.glob("*/dsh-sessions") if path.is_dir()
     ))
+    if profile is not None:
+        if Path(profile).name != profile or profile in {".", ".."}:
+            raise ValueError("MULTICA_DSH_PROFILE must be one profile directory name")
+        selected = profiles / profile / "dsh-sessions"
+        if selected not in candidates:
+            raise ValueError(
+                f"MULTICA_DSH_PROFILE={profile!r} has no dsh-sessions tree"
+            )
+        return (selected,)
+    if len(candidates) > 1:
+        raise ValueError(
+            "multiple Multica profiles have dsh-sessions trees; set "
+            "MULTICA_DSH_PROFILE so dsh-multica.json keeps one fixed source"
+        )
+    return candidates
 
 
 def _whole_lines(text: str) -> str:
@@ -758,11 +776,10 @@ def collect_dsh_daily_since(
 ) -> list[dict]:
     """Aggregate DeepSeek Harness usage per day straight from its session logs.
 
-    ccusage has no dsh reader, so this is a first-party parse. Only three event
-    types matter. `request/header` and `request/context` name the model serving
-    the calls that follow — a header is always written before the first one and
-    again whenever the route changes — and `assistant/message` carries one model
-    call's token accounting.
+    ccusage has no dsh reader, so this is a first-party parse. `session` supplies
+    the anonymous in-memory identity used to deduplicate copied logs;
+    `request/header` and `request/context` name the model serving the calls that
+    follow; and `assistant/message` carries one model call's token accounting.
 
     dsh's counts are disjoint by contract: `inputTokens` is uncached input only,
     and cached input arrives as cacheRead/cacheWrite, so the four components add
@@ -774,11 +791,12 @@ def collect_dsh_daily_since(
     gateway routes dsh can reach) keep their real token counts and contribute zero,
     and are named on stderr so a new one is noticed rather than billing zero unseen.
 
-    Nothing identifying is read: the log's cwd, prompts, tool arguments and output,
-    titles, and session ids are all skipped.
+    Session ids are used only for in-memory deduplication. The log's cwd, prompts,
+    tool arguments and output, titles, and every identity are absent from output.
     """
     session_roots = dsh_session_roots() if roots is None else tuple(roots)
     daily: dict[str, dict] = {}
+    messages: dict[tuple[object, int, int], tuple] = {}
     unreadable = 0
     partial = 0
     for path in _dsh_session_logs(session_roots):
@@ -788,9 +806,10 @@ def collect_dsh_daily_since(
             continue
         if not complete:
             partial += 1
+        session_id: str | None = None
         model: str | None = None
         effort: str | None = None
-        for line in text.splitlines():
+        for line_number, line in enumerate(text.splitlines()):
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
@@ -801,6 +820,11 @@ def collect_dsh_daily_since(
                 continue
             kind = event.get("type")
             data = event.get("data")
+            if kind == "session":
+                raw_session_id = event.get("id")
+                if isinstance(raw_session_id, str) and raw_session_id.strip():
+                    session_id = raw_session_id.strip()
+                continue
             if not isinstance(data, dict):
                 continue
             if kind == "request/header":
@@ -832,22 +856,54 @@ def collect_dsh_daily_since(
             tokens = sum(breakdown.values())
             if tokens <= 0:
                 continue
-            bucket = daily.setdefault(day.isoformat(), {}).setdefault(
-                "models", {}
-            ).setdefault(model, {"totalTokens": 0, **{k: 0 for k in breakdown}})
-            bucket["totalTokens"] += tokens
-            for key, value in breakdown.items():
-                bucket[key] += value
-            if effort is not None:
-                raw_reasoning = usage.get("reasoningTokens")
-                _add_routing_bucket(
-                    daily, day, "efforts", effort, tokens,
-                    reasoning_tokens=_token_value(raw_reasoning),
-                    reasoning_observed=(
-                        isinstance(raw_reasoning, (int, float))
-                        and not isinstance(raw_reasoning, bool)
-                    ),
-                )
+            # A copied or migrated session can appear in more than one file.
+            # DSH's stable call identity is session + turn + step; later records
+            # win so an older copy cannot replace a finalized observation.
+            turn = data.get("turn")
+            step = data.get("step")
+            valid_step = all(
+                isinstance(value, int) and not isinstance(value, bool) and value >= 0
+                for value in (turn, step)
+            )
+            identity = (
+                (session_id or path, turn, step)
+                if valid_step
+                else (path, -1, line_number)
+            )
+            raw_time = event.get("time")
+            raw_seq = event.get("seq")
+            priority = (
+                raw_time if isinstance(raw_time, (int, float)) else 0,
+                raw_seq if isinstance(raw_seq, (int, float)) else 0,
+                tokens,
+            )
+            raw_reasoning = usage.get("reasoningTokens")
+            candidate = (
+                priority, day, model, effort, breakdown,
+                _token_value(raw_reasoning),
+                isinstance(raw_reasoning, (int, float))
+                and not isinstance(raw_reasoning, bool),
+            )
+            if identity not in messages or priority >= messages[identity][0]:
+                messages[identity] = candidate
+
+    for (
+        _priority, day, model, effort, breakdown, reasoning,
+        reasoning_observed,
+    ) in messages.values():
+        tokens = sum(breakdown.values())
+        bucket = daily.setdefault(day.isoformat(), {}).setdefault(
+            "models", {}
+        ).setdefault(model, {"totalTokens": 0, **{k: 0 for k in breakdown}})
+        bucket["totalTokens"] += tokens
+        for key, value in breakdown.items():
+            bucket[key] += value
+        if effort is not None:
+            _add_routing_bucket(
+                daily, day, "efforts", effort, tokens,
+                reasoning_tokens=reasoning,
+                reasoning_observed=reasoning_observed,
+            )
     if unreadable:
         print(
             f"dsh: {unreadable} session log(s) could not be read at all and were "
@@ -2141,7 +2197,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         multica_dsh_daily = collect_dsh_daily_since(
             EPOCH, multica_dsh_session_roots()
         )
-    except OSError as e:
+    except (OSError, ValueError) as e:
         print(
             f"multica dsh session read failed, keeping cached store: {e}",
             file=sys.stderr,
