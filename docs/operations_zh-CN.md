@@ -78,6 +78,10 @@ Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记
 会在 stderr 上报出来，而不是静默跳过——provider 字符串一旦改名，静默跳过看起来就和"这个 provider
 没干活"一模一样。
 
+Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json`；复制
+`config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId` 和
+`dshProfile` 三个字段，校验后写入 launchd 环境。生成的 plist 不是第二份配置源，不应再手工修改。
+
 run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
 被重新统计。每次采集中每个 run 和 issue 只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
 也可能挂在两个 issue 下。重复计数不会破坏算术关系——它同时给 `total` 和某一个结局各加一——所以下游
@@ -218,7 +222,7 @@ printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已�
 ```sh
 git switch main
 git pull --ff-only
-uv run --script scripts/install_launchd.py
+make install
 ```
 
 安装器会创建 linked、仅供 launchd 使用的 Git worktree：
@@ -239,6 +243,9 @@ agent。
 安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
 `com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更
 立即生效，同时避免新旧定时任务一起运行。
+
+安装后运行 `make health`。它会检查依赖、本机配置、launchd 环境和 writer 脚本路径，但不会打印私有
+配置值。
 
 日志位置：
 

@@ -20,6 +20,7 @@
     <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
     <key>HOME</key>
     <string>__HOME__</string>
+__EXTRA_ENVIRONMENT__
   </dict>
 
   <key>StartCalendarInterval</key>

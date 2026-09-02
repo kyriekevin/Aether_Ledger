@@ -95,6 +95,11 @@ that file collects nothing rather than guessing, and a runtime whose provider th
 not recognise is reported on stderr rather than skipped silently — a renamed provider string would
 otherwise read exactly like that provider having done no work.
 
+Private Multica launch inputs live in `~/.config/token-activity/multica.json`; copy
+`config/multica.example.json` and replace its placeholders. The installer accepts only `profile`,
+`workspaceId`, and `dshProfile`, then renders them into the launchd environment. The generated plist
+is not a second configuration source and should not be edited by hand.
+
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
 still in flight has no duration and would be recounted under a different status next time. Each run
 and issue is counted once per collection: issue pages overlap while the workspace is being written
@@ -256,7 +261,7 @@ for development off the active `usage/YYYY-MM-DD` branch, update `main`, then in
 ```sh
 git switch main
 git pull --ff-only
-uv run --script scripts/install_launchd.py
+make install
 ```
 
 The installer creates `~/.cache/aether-ledger/writer` as a linked, launchd-only Git worktree and
@@ -279,6 +284,9 @@ Re-running the installer reuses the registered writer worktree and reloads the a
 The installer migrates an existing approved `machine_name`, then unloads and removes the legacy
 `com.kyriekevin.cc-cx-usage-data` agent. It atomically installs and reloads the current agent so
 schedule changes take effect immediately. This prevents old and new schedules from running together.
+
+Run `make health` after installation. It checks required binaries, local configuration, the rendered
+launchd environment, and the writer script path without printing private configuration values.
 
 Logs:
 

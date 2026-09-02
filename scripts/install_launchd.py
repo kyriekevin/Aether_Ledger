@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -23,12 +24,50 @@ LEGACY_LABEL = "com.kyriekevin.cc-cx-usage-data"
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 TEMPLATE = REPO_ROOT / "launchd" / f"{LABEL}.plist.template"
 SHANGHAI = ZoneInfo("Asia/Shanghai")
+MULTICA_CONFIG_KEYS = {
+    "profile": "MULTICA_PROFILE",
+    "workspaceId": "MULTICA_WORKSPACE_ID",
+    "dshProfile": "MULTICA_DSH_PROFILE",
+}
 
 
-def render_template(home: Path, repo_root: Path) -> str:
+def load_multica_environment(home: Path) -> dict[str, str]:
+    """Load private Multica inputs without exposing their values in output."""
+    path = home / ".config" / "token-activity" / "multica.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError(f"cannot read {path}: {type(error).__name__}") from error
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    unknown = set(payload).difference(MULTICA_CONFIG_KEYS)
+    if unknown:
+        raise ValueError(f"{path} has unknown keys: {', '.join(sorted(unknown))}")
+    environment = {}
+    for key, variable in MULTICA_CONFIG_KEYS.items():
+        value = payload.get(key)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{path} field {key!r} must be a non-empty string")
+        environment[variable] = value.strip()
+    return environment
+
+
+def render_template(
+    home: Path, repo_root: Path, environment: dict[str, str] | None = None
+) -> str:
     content = TEMPLATE.read_text(encoding="utf-8")
-    return content.replace("__HOME__", escape(str(home))).replace(
-        "__REPO_DIR__", escape(str(repo_root))
+    extra_environment = "\n".join(
+        f"    <key>{escape(key)}</key>\n    <string>{escape(value)}</string>"
+        for key, value in sorted((environment or {}).items())
+    )
+    return (
+        content.replace("__HOME__", escape(str(home)))
+        .replace("__REPO_DIR__", escape(str(repo_root)))
+        .replace("__EXTRA_ENVIRONMENT__", extra_environment)
     )
 
 
@@ -167,6 +206,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     home = Path.home().resolve()
+    try:
+        multica_environment = load_multica_environment(home)
+    except ValueError as error:
+        print(f"local configuration is invalid: {error}", file=sys.stderr)
+        return 1
     writer_path = args.writer_worktree or home / ".cache" / "aether-ledger" / "writer"
     existed = writer_path.expanduser().exists()
     try:
@@ -184,7 +228,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"removed legacy launchd agent {LEGACY_LABEL}")
     destination = home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
     (home / "Library" / "Logs" / "aether-ledger").mkdir(parents=True, exist_ok=True)
-    atomic_write(destination, render_template(home, writer_root))
+    atomic_write(
+        destination, render_template(home, writer_root, multica_environment)
+    )
     print(f"installed {destination}")
     loaded = reload_agent(destination, os.getuid())
     if loaded.returncode != 0:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import plistlib
 import shutil
 import subprocess
@@ -16,6 +17,7 @@ from install_launchd import (  # noqa: E402
     LABEL,
     LEGACY_LABEL,
     ensure_writer_worktree,
+    load_multica_environment,
     migrate_legacy_node_name,
     reload_agent,
     remove_legacy_agent,
@@ -119,12 +121,22 @@ class InstallLaunchdTests(unittest.TestCase):
     def test_rendered_plist_uses_current_paths_without_placeholders(self) -> None:
         home = Path("/tmp/example & home")
         repo = Path("/tmp/example & repo")
-        rendered = render_template(home, repo)
+        rendered = render_template(home, repo, {
+            "MULTICA_PROFILE": "profile & one",
+            "MULTICA_WORKSPACE_ID": "workspace-id",
+        })
         parsed = plistlib.loads(rendered.encode())
 
         self.assertNotIn("__HOME__", rendered)
         self.assertNotIn("__REPO_DIR__", rendered)
         self.assertEqual(parsed["EnvironmentVariables"]["HOME"], str(home))
+        self.assertEqual(
+            parsed["EnvironmentVariables"]["MULTICA_PROFILE"], "profile & one"
+        )
+        self.assertEqual(
+            parsed["EnvironmentVariables"]["MULTICA_WORKSPACE_ID"],
+            "workspace-id",
+        )
         self.assertEqual(
             parsed["ProgramArguments"][-1],
             str(repo / "scripts" / "sync_usage.py"),
@@ -134,6 +146,34 @@ class InstallLaunchdTests(unittest.TestCase):
             parsed["StartCalendarInterval"],
             [{"Minute": 0}, {"Minute": 15}, {"Minute": 30}, {"Minute": 45}],
         )
+
+    def test_loads_only_supported_private_multica_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            config = home / ".config" / "token-activity" / "multica.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(json.dumps({
+                "profile": "profile-one",
+                "workspaceId": "workspace-one",
+                "dshProfile": "profile-two",
+            }))
+
+            self.assertEqual(load_multica_environment(home), {
+                "MULTICA_PROFILE": "profile-one",
+                "MULTICA_WORKSPACE_ID": "workspace-one",
+                "MULTICA_DSH_PROFILE": "profile-two",
+            })
+
+    def test_rejects_unknown_or_malformed_multica_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            config = home / ".config" / "token-activity" / "multica.json"
+            config.parent.mkdir(parents=True)
+            for payload in ({"token": "secret"}, {"profile": []}):
+                with self.subTest(payload=payload):
+                    config.write_text(json.dumps(payload))
+                    with self.assertRaises(ValueError):
+                        load_multica_environment(home)
 
     def test_reload_replaces_loaded_agent_with_rendered_plist(self) -> None:
         destination = Path("/tmp/com.example.agent.plist")
