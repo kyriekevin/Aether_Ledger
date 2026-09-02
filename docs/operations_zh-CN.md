@@ -67,9 +67,9 @@ dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来�
 
 既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
 工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有
-Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记这个：按天、按公开角色、按 agent，
-多少个 run 结束了、怎么结束的、跑了多久。审计会拒绝这个文件里出现 `usage` 段——重新引入重复计数
-就是长那个样子。
+Multica 还能提供任务本身的运行情况。`data/multica.json` 按天记录 active issues，并按公开角色和
+agent 汇总已经结束的 runs、执行结果与时长。某个 issue 只要有 terminal run 在当天开始，就算当天的
+active issue。这个文件不接收 token；算力数据仍以 harness 日志为准，避免重复统计。
 
 这个 store 放在 data 根目录而不是某个节点标签下，因为一次 API 调用覆盖所有 runtime；由单台配置过的
 机器采集，"一个文件只有一个写入者"的规则才继续成立。采集是显式开启的：
@@ -83,7 +83,7 @@ Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json
 `dshProfile` 三个字段，校验后写入 launchd 环境。生成的 plist 不是第二份配置源，不应再手工修改。
 
 run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
-被重新统计。每次采集中每个 run 和 issue 只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
+被重新统计。Active issues 在每天内部去重，每个 run 也只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
 也可能挂在两个 issue 下。重复计数不会破坏算术关系——它同时给 `total` 和某一个结局各加一——所以下游
 什么都发现不了，而合并又会把这个虚高的总数变成永久的高水位。按天合并时保留"看得更全"的那次观测，理由和 token store 的高水位一样——已完成的 run 其
 日期、状态、时长都不会再变，所以数字变小只意味着这次抓取看到的比 store 里已知的少，而这正是
@@ -402,24 +402,22 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 - Active days，即聚合 token 总量大于零的自然日数量；
 - 最近 53 周的每日 token 热力图。
 
-拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent；每个 harness 沿用历史图中的同一
-色相，行内颜色强度表达它在该环境中的占比；
-历史上经 OpenCode 启动的用量归入 `Legacy`。
-最近 30 天窗口与活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与
-按需 GPU `trail`
-合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
-不会进入生成资源。
+README 把两本账分开处理。`work-overview.svg` 只读取 `data/multica.json`，展示已经结束的 runs、
+执行结果、时长和 harness 分布，不把 token 归到某个 issue。Issue-days 先按天统计产生过 terminal
+run 的去重 issues，再对展示周期求和；同一个 issue 可以在不同日期各贡献一次。这个字段加入前的
+旧快照显示为不可用。
 
-拓扑和分配都将最近 30 日截面与独立的 8 周历史图配对。两张历史图使用相同的连续周桶，并
-明确分成前 4 周与近 4 周。拓扑历史在 Work、Personal、Development 内使用绝对周度堆叠，
-柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
-+ Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
+`harness-model.svg` 读取本地 session 聚合。行表示 harness，列表示主要模型，单元格显示该模型在
+harness 内的 token 占比。每个活跃 harness 至少保留自己的首要模型，其余列再按总 token 补齐。
+模型接入服务不会被当成另一种 harness。
 
-因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对。运行截面用长度
-与明确数值展示 effort、Fast 和最近一天的 7 天额度峰值；历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线
-和每周 7 天额度峰值柱。effort 覆盖所有 harness，Fast 和额度只有 Codex 有，因此额度只有一条序列，
-按周居中而不是和一个空位配对。颜色只标识 harness 或 effort 类别，数值大小交给几何位置表达，与其他
-历史图的视觉逻辑一致。
+`work-review.svg` 将 Multica terminal runs 与 harness token 放到同一条 8 周时间轴上。共用时间轴
+方便观察变化，但不表示逐任务归因。活动热力图继续记录长期算力足迹。原有 topology、allocation
+history 和 runtime 图暂时保留，作为更底层的诊断视图。
+
+Effort、reasoning、速度和额度属于模型调用。目前 store 按 harness 分别聚合 model 与 routing，
+没有保留二者的交叉关系，因此图中不会声称某个模型对应了哪些 effort。现有数据里的 Fast 和额度
+仍只有 Codex 提供。
 
 Claude assistant 事件提供 effort，支持的模型还会提供 `thinking_tokens`。当前 Claude 环境不能
 选择 Fast，因此不采集、不展示只有 standard 的速度字段；Claude 日志也没有 Codex 式额度字段。Claude 确实会报额度，但只报给 `statusLine.command`，而读那一路要包住用户本来就在跑的 status line，这层包装做不到完全透明，所以不采也不画 Claude 额度。
@@ -428,7 +426,7 @@ Codex 提供 effort、reasoning、速度与额度。TRAE 是司内提供的 CLI�
 采集器也会在日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示
 为不可用，不会从 token 总量或金额反推。Reasoning 强度只在各 harness 内部解释，不跨厂商比较。
 
-七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
+所有 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
 并适配 GitHub 的浅色与深色主题。
 
 只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而

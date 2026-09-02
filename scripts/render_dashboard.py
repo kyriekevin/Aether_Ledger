@@ -27,6 +27,9 @@ DEFAULT_ALLOCATION_OUTPUT = REPO_ROOT / "assets" / "compute-allocation.svg"
 DEFAULT_ALLOCATION_HISTORY_OUTPUT = REPO_ROOT / "assets" / "compute-allocation-history.svg"
 DEFAULT_RUNTIME_PROFILE_OUTPUT = REPO_ROOT / "assets" / "runtime-profile.svg"
 DEFAULT_RUNTIME_HISTORY_OUTPUT = REPO_ROOT / "assets" / "runtime-history.svg"
+DEFAULT_WORK_OUTPUT = REPO_ROOT / "assets" / "work-overview.svg"
+DEFAULT_HARNESS_MODEL_OUTPUT = REPO_ROOT / "assets" / "harness-model.svg"
+DEFAULT_WORK_REVIEW_OUTPUT = REPO_ROOT / "assets" / "work-review.svg"
 AGENT_FILES = frozenset({
     "claude.json", "codex.json", "codex-multica.json", "dsh-multica.json",
     "opencode.json", "traex.json", "dsh.json",
@@ -306,6 +309,127 @@ class AllocationTotals:
     quota_observed_days: dict[str, int]
     quota_pressure_days: dict[str, int]
     quota_limit_days: dict[str, int]
+
+
+@dataclass(frozen=True)
+class WorkTotals:
+    as_of: date
+    recent_start: date
+    snapshot_present: bool
+    active_issues: int | None
+    runs: int
+    outcomes: dict[str, int]
+    duration_seconds: int
+    agent_runs: dict[str, int]
+    trend_starts: tuple[date, ...]
+    weekly_active_issues: tuple[int | None, ...]
+    weekly_agent_runs: tuple[dict[str, int], ...]
+    weekly_outcomes: tuple[dict[str, int], ...]
+
+
+def aggregate_work(root: Path, as_of: date) -> WorkTotals:
+    """Load privacy-safe Multica issue and terminal-run aggregates."""
+    recent_start = as_of - timedelta(days=29)
+    trend_start = as_of - timedelta(days=HISTORY_WEEKS * 7 - 1)
+    trend_starts = tuple(
+        trend_start + timedelta(days=index * 7) for index in range(HISTORY_WEEKS)
+    )
+    path = Path(root) / "data" / "multica.json"
+    if not path.exists():
+        return WorkTotals(
+            as_of=as_of,
+            recent_start=recent_start,
+            snapshot_present=False,
+            active_issues=None,
+            runs=0,
+            outcomes={status: 0 for status in ("completed", "failed", "cancelled")},
+            duration_seconds=0,
+            agent_runs={agent: 0 for agent in PANEL_AGENT_ORDER},
+            trend_starts=trend_starts,
+            weekly_active_issues=tuple(None for _ in trend_starts),
+            weekly_agent_runs=tuple({agent: 0 for agent in PANEL_AGENT_ORDER} for _ in trend_starts),
+            weekly_outcomes=tuple(
+                {status: 0 for status in ("completed", "failed", "cancelled")}
+                for _ in trend_starts
+            ),
+        )
+    try:
+        store = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"cannot read {path}: {exc}") from exc
+    if not isinstance(store, dict):
+        raise ValueError(f"expected a date-keyed object in {path}")
+
+    agent_runs = {agent: 0 for agent in PANEL_AGENT_ORDER}
+    outcomes = {status: 0 for status in ("completed", "failed", "cancelled")}
+    weekly_agent_runs = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_outcomes = tuple(defaultdict(int) for _ in trend_starts)
+    weekly_active_issues: list[int | None] = [None for _ in trend_starts]
+    active_issues: int | None = None
+    runs = 0
+    duration_seconds = 0
+    for raw_day, entry in store.items():
+        try:
+            day = date.fromisoformat(raw_day)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(entry, dict) or day > as_of:
+            continue
+        raw_issues = entry.get("activeIssues")
+        issue_count = (
+            max(0, raw_issues)
+            if isinstance(raw_issues, int) and not isinstance(raw_issues, bool)
+            else None
+        )
+        if trend_start <= day <= as_of:
+            week = (day - trend_start).days // 7
+            if issue_count is not None:
+                weekly_active_issues[week] = (weekly_active_issues[week] or 0) + issue_count
+        tasks = entry.get("tasks", {})
+        if not isinstance(tasks, dict):
+            continue
+        for agents in tasks.values():
+            if not isinstance(agents, dict):
+                continue
+            for agent, counters in agents.items():
+                if agent not in agent_runs or not isinstance(counters, dict):
+                    continue
+                total = counters.get("total", 0)
+                total = max(0, total) if isinstance(total, int) and not isinstance(total, bool) else 0
+                if trend_start <= day <= as_of:
+                    week = (day - trend_start).days // 7
+                    weekly_agent_runs[week][agent] += total
+                    for status in weekly_outcomes[week]:
+                        value = counters.get(status, 0)
+                        if isinstance(value, int) and not isinstance(value, bool):
+                            weekly_outcomes[week][status] += max(0, value)
+                if not recent_start <= day <= as_of:
+                    continue
+                agent_runs[agent] += total
+                runs += total
+                for status in outcomes:
+                    value = counters.get(status, 0)
+                    if isinstance(value, int) and not isinstance(value, bool):
+                        outcomes[status] += max(0, value)
+                duration = counters.get("durationSeconds", 0)
+                if isinstance(duration, int) and not isinstance(duration, bool):
+                    duration_seconds += max(0, duration)
+        if recent_start <= day <= as_of and issue_count is not None:
+            active_issues = (active_issues or 0) + issue_count
+    return WorkTotals(
+        as_of=as_of,
+        recent_start=recent_start,
+        snapshot_present=True,
+        active_issues=active_issues,
+        runs=runs,
+        outcomes=outcomes,
+        duration_seconds=duration_seconds,
+        agent_runs=agent_runs,
+        trend_starts=trend_starts,
+        weekly_active_issues=tuple(weekly_active_issues),
+        weekly_agent_runs=tuple(dict(window) for window in weekly_agent_runs),
+        weekly_outcomes=tuple(dict(window) for window in weekly_outcomes),
+    )
 
 
 def discover_agent_files(root: Path) -> tuple[Path, ...]:
@@ -1850,6 +1974,313 @@ def render_runtime_history_svg(allocation: AllocationTotals) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _compact_duration(seconds: int) -> str:
+    if seconds < 3600:
+        return f"{seconds // 60}m"
+    hours = seconds / 3600
+    return f"{hours:.1f}h".replace(".0h", "h")
+
+
+def render_work_overview_svg(work: WorkTotals) -> str:
+    """Render the Multica side of the ledger without inventing task-to-token joins."""
+    title = f"Delegated work through {work.as_of.isoformat()}"
+    height = 360
+    completion = _percent(work.outcomes["completed"], work.runs) if work.runs else "—"
+    values = (
+        ("ACTIVE ISSUE-DAYS", "—" if work.active_issues is None else str(work.active_issues)),
+        ("TERMINAL RUNS", "—" if not work.snapshot_present else str(work.runs)),
+        ("COMPLETED", completion),
+        ("AGENT RUNTIME", "—" if not work.snapshot_present else _compact_duration(work.duration_seconds)),
+    )
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        '  <desc id="desc">Privacy-safe Multica issue and terminal-run activity. '
+        'This view contains no prompts, issue titles, or token attribution.</desc>',
+        *_theme_style_lines(allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Delegated work</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{work.recent_start.isoformat()}–{work.as_of.isoformat()} · Multica aggregates · '
+        'issues organize work, runs record execution</text>',
+    ]
+    card_gap = 12
+    card_w = (CARD_WIDTH - card_gap * 3) / 4
+    for index, (label, value) in enumerate(values):
+        x = CARD_X + index * (card_w + card_gap)
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="{x:.1f}" y="90" width="{card_w:.1f}" '
+            'height="82" rx="14"/>',
+            f'  <text class="dashboard-muted" x="{x + 16:.1f}" y="116" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10" font-weight="600">{label}</text>',
+            f'  <text class="dashboard-primary" x="{x + 16:.1f}" y="151" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="25" font-weight="600">{escape(value)}</text>',
+        ))
+    lines.append(
+        '  <rect class="dashboard-panel" x="16" y="188" width="1148" height="144" rx="16"/>'
+    )
+    if not work.snapshot_present:
+        lines.extend((
+            '  <text class="dashboard-primary" x="42" y="228" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="16" font-weight="600">Waiting for the first published Multica snapshot</text>',
+            '  <text class="dashboard-muted" x="42" y="252" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">'
+            'The collector keeps only daily counts, outcomes, and duration. No issue content is published.</text>',
+            '  <text class="dashboard-secondary" x="164" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Issue</text>',
+            '  <text class="dashboard-muted" x="300" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>',
+            '  <text class="dashboard-secondary" x="436" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Run</text>',
+            '  <text class="dashboard-muted" x="574" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>',
+            '  <text class="dashboard-secondary" x="712" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Harness</text>',
+            '  <text class="dashboard-muted" x="850" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>',
+            '  <text class="dashboard-secondary" x="988" y="300" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Outcome</text>',
+        ))
+    else:
+        maximum = max(work.agent_runs.values(), default=0)
+        lines.append(
+            '  <text class="dashboard-primary" x="42" y="220" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="14" font-weight="600">Runs by harness</text>'
+        )
+        for index, agent in enumerate(PANEL_AGENT_ORDER):
+            y = 244 + index * 22
+            value = work.agent_runs[agent]
+            width = 660 * _share(value, maximum)
+            lines.extend((
+                f'  <text class="dashboard-secondary" x="42" y="{y + 10}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="11">{escape(AGENT_LABELS[agent])}</text>',
+                f'  <rect class="dashboard-border" x="120" y="{y}" width="660" height="12" '
+                'rx="6" fill="none" stroke-width="1"/>',
+                f'  <rect class="agent-{agent}" x="120" y="{y}" width="{width:.1f}" '
+                f'height="12" rx="6" data-agent="{agent}" data-runs="{value}"/>',
+                f'  <text class="dashboard-muted" x="796" y="{y + 10}" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="11">{value}</text>',
+            ))
+        lines.extend((
+            '  <text class="dashboard-muted" x="850" y="244" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">OUTCOMES</text>',
+            f'  <text class="dashboard-primary" x="850" y="273" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">'
+            f'{work.outcomes["completed"]} completed</text>',
+            f'  <text class="dashboard-secondary" x="850" y="298" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">'
+            f'{work.outcomes["failed"]} failed · {work.outcomes["cancelled"]} cancelled</text>',
+        ))
+    lines.append('</svg>')
+    return "\n".join(lines) + "\n"
+
+
+def _matrix_models(allocation: AllocationTotals, limit: int = 6) -> tuple[str, ...]:
+    totals: defaultdict[str, int] = defaultdict(int)
+    by_agent: dict[str, list[tuple[int, str]]] = {agent: [] for agent in PANEL_AGENT_ORDER}
+    for (agent, model), tokens in allocation.model_tokens.items():
+        if agent not in by_agent or tokens <= 0:
+            continue
+        totals[model] += tokens
+        by_agent[agent].append((tokens, model))
+    selected: set[str] = set()
+    for agent in PANEL_AGENT_ORDER:
+        if by_agent[agent]:
+            selected.add(max(by_agent[agent])[1])
+    for model in sorted(totals, key=lambda name: (-totals[name], name)):
+        if len(selected) >= limit:
+            break
+        selected.add(model)
+    return tuple(sorted(selected, key=lambda name: (-totals[name], name)))
+
+
+def render_harness_model_svg(allocation: AllocationTotals) -> str:
+    """Render the observed harness-by-model relationship as a token matrix."""
+    models = _matrix_models(allocation)
+    height = 430
+    title = f"Harness by model through {allocation.as_of.isoformat()}"
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">{escape(title)}</title>',
+        '  <desc id="desc">Trailing 30-day model-token shares within each harness. '
+        'Effort is a model-call setting and is deliberately not treated as a peer axis.</desc>',
+        *_theme_style_lines(topology=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Harness × model</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{allocation.recent_start.isoformat()}–{allocation.as_of.isoformat()} · '
+        'cells show token share within each harness · top observed models</text>',
+    ]
+    if not models:
+        lines.extend((
+            '  <rect class="dashboard-panel" x="16" y="92" width="1148" height="310" rx="16"/>',
+            '  <text class="dashboard-primary" x="590" y="235" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            'font-size="18" font-weight="600">No model detail observed</text>',
+            '</svg>',
+        ))
+        return "\n".join(lines) + "\n"
+    grid_x, grid_right, gap = 176.0, 1020.0, 8.0
+    cell_w = (grid_right - grid_x - gap * (len(models) - 1)) / len(models)
+    for column, model in enumerate(models):
+        x = grid_x + column * (cell_w + gap) + cell_w / 2
+        label = model if len(model) <= 18 else model[:17] + "…"
+        lines.extend((
+            f'  <text class="dashboard-secondary" x="{x:.1f}" y="108" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="10" font-weight="600">{escape(label)}</text>',
+            f'  <title>{escape(model)}</title>',
+        ))
+    lines.append(
+        '  <text class="dashboard-muted" x="1138" y="108" text-anchor="end" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">30D TOTAL</text>'
+    )
+    row_y, row_step = 128, 68
+    for row, agent in enumerate(PANEL_AGENT_ORDER):
+        y = row_y + row * row_step
+        total = allocation.agent_tokens[agent]
+        lines.extend((
+            f'  <circle class="agent-{agent}" cx="34" cy="{y + 24}" r="5"/>',
+            f'  <text class="dashboard-primary" x="48" y="{y + 29}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="14" font-weight="600">{escape(AGENT_LABELS[agent])}</text>',
+            f'  <text class="dashboard-muted" x="1138" y="{y + 29}" text-anchor="end" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="12">{_compact_number(total)}</text>',
+        ))
+        for column, model in enumerate(models):
+            tokens = allocation.model_tokens.get((agent, model), 0)
+            share = _share(tokens, total)
+            level = _topology_level(share)
+            x = grid_x + column * (cell_w + gap)
+            css = "heatmap-level-0" if not tokens else f"agent-{agent} topology-level-{level}"
+            label = "—" if not tokens else f"{_percent(tokens, total)} · {_compact_number(tokens)}"
+            lines.extend((
+                f'  <rect class="{css}" x="{x:.1f}" y="{y}" width="{cell_w:.1f}" '
+                f'height="48" rx="10" data-agent="{agent}" data-model="{escape(model)}" '
+                f'data-tokens="{tokens}" data-level="{level}">',
+                f'    <title>{escape(AGENT_LABELS[agent])} × {escape(model)}: '
+                f'{_compact_number(tokens)} ({escape(_percent(tokens, total))})</title>',
+                '  </rect>',
+                f'  <text class="topology-label-{level} topology-label-agent-{agent}-{level}" '
+                f'x="{x + cell_w / 2:.1f}" y="{y + 29}" text-anchor="middle" '
+                'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+                f'font-size="10" font-weight="600">{escape(label)}</text>',
+            ))
+    lines.extend((
+        '  <text class="dashboard-muted" x="16" y="414" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">'
+        'Model access paths such as OpenCode Go are described separately; the ledger only charts observed models.</text>',
+        '</svg>',
+    ))
+    return "\n".join(lines) + "\n"
+
+
+def render_work_review_svg(work: WorkTotals, topology: TopologyTotals) -> str:
+    """Place work and compute histories on one clock without claiming causality."""
+    height = 430
+    lines = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{height}" '
+        f'viewBox="0 0 {WIDTH} {height}" role="img" aria-labelledby="title desc">',
+        f'  <title id="title">Eight-week review through {work.as_of.isoformat()}</title>',
+        '  <desc id="desc">Multica terminal runs and locally observed harness tokens share '
+        'a weekly axis but remain independent measurements.</desc>',
+        *_theme_style_lines(allocation=True),
+        f'  <rect class="dashboard-background" width="{WIDTH}" height="{height}" rx="22"/>',
+        '  <text class="dashboard-primary" x="16" y="42" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+        'font-size="24" font-weight="600">Eight-week review</text>',
+        f'  <text class="dashboard-muted" x="16" y="66" '
+        'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">'
+        f'{work.trend_starts[0].isoformat()}–{work.as_of.isoformat()} · '
+        'work and compute share a timeline, not a per-task attribution</text>',
+    ]
+    plot_x, bar_w, bar_gap = 270.0, 76.0, 30.0
+    plot_span = HISTORY_WEEKS * (bar_w + bar_gap) - bar_gap
+    divider = plot_x + HISTORY_PERIOD_WEEKS * (bar_w + bar_gap) - bar_gap / 2
+    for panel_y, panel_title in ((92, "Multica terminal runs"), (254, "Harness tokens")):
+        lines.extend((
+            f'  <rect class="dashboard-panel" x="16" y="{panel_y}" width="1148" height="144" rx="16"/>',
+            f'  <text class="dashboard-primary" x="38" y="{panel_y + 34}" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="15" font-weight="600">{panel_title}</text>',
+            f'  <line class="dashboard-border" x1="{divider:.1f}" y1="{panel_y + 24}" '
+            f'x2="{divider:.1f}" y2="{panel_y + 116}" stroke-width="1" stroke-dasharray="2 3"/>',
+        ))
+    if not work.snapshot_present:
+        lines.extend((
+            '  <text class="dashboard-muted" x="38" y="166" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">'
+            'Waiting for the first published Multica snapshot</text>',
+            '  <text class="dashboard-muted" x="38" y="188" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">'
+            'This row will compare run volume and harness mix week by week.</text>',
+        ))
+    else:
+        weekly_runs = [sum(window.values()) for window in work.weekly_agent_runs]
+        maximum = max(weekly_runs, default=0)
+        baseline, plot_h = 214.0, 78.0
+        for week, window in enumerate(work.weekly_agent_runs):
+            x, cursor = plot_x + week * (bar_w + bar_gap), baseline
+            for agent in PANEL_AGENT_ORDER:
+                value = window.get(agent, 0)
+                segment = plot_h * _share(value, maximum)
+                if segment <= 0:
+                    continue
+                cursor -= segment
+                lines.append(
+                    f'  <rect class="agent-{agent}" x="{x:.1f}" y="{cursor:.1f}" '
+                    f'width="{bar_w}" height="{segment:.1f}" data-week="{work.trend_starts[week]}" '
+                    f'data-agent="{agent}" data-runs="{value}"/>'
+                )
+    weekly_tokens = []
+    for window in topology.weekly_topology:
+        by_agent = {
+            agent: sum(window.get((role, agent), 0) for role in TOPOLOGY_ROLE_ORDER)
+            for agent in TOPOLOGY_AGENT_ORDER
+        }
+        weekly_tokens.append(by_agent)
+    token_totals = [sum(window.values()) for window in weekly_tokens]
+    maximum_tokens = max(token_totals, default=0)
+    baseline, plot_h = 376.0, 78.0
+    for week, window in enumerate(weekly_tokens):
+        x, cursor = plot_x + week * (bar_w + bar_gap), baseline
+        for agent in TOPOLOGY_AGENT_ORDER:
+            value = window.get(agent, 0)
+            segment = plot_h * _share(value, maximum_tokens)
+            if segment <= 0:
+                continue
+            cursor -= segment
+            lines.append(
+                f'  <rect class="agent-{agent}" x="{x:.1f}" y="{cursor:.1f}" '
+                f'width="{bar_w}" height="{segment:.1f}" data-week="{topology.window_starts[week]}" '
+                f'data-agent="{agent}" data-tokens="{value}"/>'
+            )
+    for week, start in enumerate(work.trend_starts):
+        x = plot_x + week * (bar_w + bar_gap) + bar_w / 2
+        lines.append(
+            f'  <text class="dashboard-muted" x="{x:.1f}" y="410" text-anchor="middle" '
+            'font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" '
+            f'font-size="9">{start.strftime("%b %-d")}</text>'
+        )
+    lines.append('</svg>')
+    return "\n".join(lines) + "\n"
+
+
 def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
@@ -1975,6 +2406,47 @@ def generate_runtime_history(
     return _update_output(output, expected, check=check)
 
 
+def generate_work_overview(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_work_overview_svg(aggregate_work(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
+def generate_harness_model(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_harness_model_svg(aggregate_allocation(root, as_of))
+    return _update_output(output, expected, check=check)
+
+
+def generate_work_review(
+    root: Path,
+    output: Path,
+    as_of: date | None = None,
+    *,
+    check: bool = False,
+) -> bool:
+    if as_of is None:
+        as_of = _latest_activity_day(aggregate_daily(root))
+    expected = render_work_review_svg(
+        aggregate_work(root, as_of), aggregate_topology(root, as_of)
+    )
+    return _update_output(output, expected, check=check)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
@@ -2008,6 +2480,13 @@ def main() -> int:
         "--runtime-history-output",
         type=Path,
         default=DEFAULT_RUNTIME_HISTORY_OUTPUT,
+    )
+    parser.add_argument("--work-output", type=Path, default=DEFAULT_WORK_OUTPUT)
+    parser.add_argument(
+        "--harness-model-output", type=Path, default=DEFAULT_HARNESS_MODEL_OUTPUT
+    )
+    parser.add_argument(
+        "--work-review-output", type=Path, default=DEFAULT_WORK_REVIEW_OUTPUT
     )
     parser.add_argument("--as-of", type=date.fromisoformat, default=None)
     parser.add_argument("--check", action="store_true", help="fail if any SVG is stale")
@@ -2066,6 +2545,24 @@ def main() -> int:
                 args.runtime_history_output,
                 args.as_of,
                 check=args.check,
+            ),
+        ),
+        (
+            args.work_output,
+            generate_work_overview(
+                args.root, args.work_output, args.as_of, check=args.check
+            ),
+        ),
+        (
+            args.harness_model_output,
+            generate_harness_model(
+                args.root, args.harness_model_output, args.as_of, check=args.check
+            ),
+        ),
+        (
+            args.work_review_output,
+            generate_work_review(
+                args.root, args.work_review_output, args.as_of, check=args.check
             ),
         ),
     )

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="360" viewBox="0 0 1180 360" role="img" aria-labelledby="title desc">
+  <title id="title">Delegated work through 2026-09-01</title>
+  <desc id="desc">Privacy-safe Multica issue and terminal-run activity. This view contains no prompts, issue titles, or token attribution.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-dsh { fill: #ea76cb; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-dsh { fill: #f5c2e7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="360" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Delegated work</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-08-03–2026-09-01 · Multica aggregates · issues organize work, runs record execution</text>
+  <rect class="dashboard-panel" x="16.0" y="90" width="278.0" height="82" rx="14"/>
+  <text class="dashboard-muted" x="32.0" y="116" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">ACTIVE ISSUE-DAYS</text>
+  <text class="dashboard-primary" x="32.0" y="151" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">—</text>
+  <rect class="dashboard-panel" x="306.0" y="90" width="278.0" height="82" rx="14"/>
+  <text class="dashboard-muted" x="322.0" y="116" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">TERMINAL RUNS</text>
+  <text class="dashboard-primary" x="322.0" y="151" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">—</text>
+  <rect class="dashboard-panel" x="596.0" y="90" width="278.0" height="82" rx="14"/>
+  <text class="dashboard-muted" x="612.0" y="116" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">COMPLETED</text>
+  <text class="dashboard-primary" x="612.0" y="151" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">—</text>
+  <rect class="dashboard-panel" x="886.0" y="90" width="278.0" height="82" rx="14"/>
+  <text class="dashboard-muted" x="902.0" y="116" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">AGENT RUNTIME</text>
+  <text class="dashboard-primary" x="902.0" y="151" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">—</text>
+  <rect class="dashboard-panel" x="16" y="188" width="1148" height="144" rx="16"/>
+  <text class="dashboard-primary" x="42" y="228" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="600">Waiting for the first published Multica snapshot</text>
+  <text class="dashboard-muted" x="42" y="252" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">The collector keeps only daily counts, outcomes, and duration. No issue content is published.</text>
+  <text class="dashboard-secondary" x="164" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Issue</text>
+  <text class="dashboard-muted" x="300" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>
+  <text class="dashboard-secondary" x="436" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Run</text>
+  <text class="dashboard-muted" x="574" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>
+  <text class="dashboard-secondary" x="712" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Harness</text>
+  <text class="dashboard-muted" x="850" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">→</text>
+  <text class="dashboard-secondary" x="988" y="300" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Outcome</text>
+</svg>

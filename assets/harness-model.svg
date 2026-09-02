@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430" role="img" aria-labelledby="title desc">
+  <title id="title">Harness by model through 2026-09-01</title>
+  <desc id="desc">Trailing 30-day model-token shares within each harness. Effort is a model-call setting and is deliberately not treated as a peer axis.</desc>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-dsh { fill: #ea76cb; }
+    .agent-legacy { fill: #6c6f85; }
+    .topology-label-0 { fill: #6c6f85; }
+    .topology-label-1, .topology-label-2 { fill: #4c4f69; }
+    .topology-label-3, .topology-label-4 { fill: #eff1f5; }
+    .topology-label-agent-claude-3,
+    .topology-label-agent-claude-4 { fill: #4c4f69; }
+    .topology-work { fill: #fe640b; }
+    .topology-personal { fill: #1e66f5; }
+    .topology-development { fill: #8839ef; }
+    .topology-level-1 { fill-opacity: 0.22; }
+    .topology-level-2 { fill-opacity: 0.45; }
+    .topology-level-3 { fill-opacity: 0.68; }
+    .topology-level-4 { fill-opacity: 1; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-dsh { fill: #f5c2e7; }
+      .agent-legacy { fill: #a6adc8; }
+      .topology-label-0 { fill: #a6adc8; }
+      .topology-label-1, .topology-label-2 { fill: #cdd6f4; }
+      .topology-label-3, .topology-label-4 { fill: #1e1e2e; }
+      .topology-work { fill: #fab387; }
+      .topology-personal { fill: #89b4fa; }
+      .topology-development { fill: #cba6f7; }
+      .heatmap-level-0 { fill: #313244; }
+    }
+  </style>
+  <rect class="dashboard-background" width="1180" height="430" rx="22"/>
+  <text class="dashboard-primary" x="16" y="42" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="600">Harness × model</text>
+  <text class="dashboard-muted" x="16" y="66" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="13">2026-08-03–2026-09-01 · cells show token share within each harness · top observed models</text>
+  <text class="dashboard-secondary" x="243.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">gpt-5.6-sol</text>
+  <title>gpt-5.6-sol</title>
+  <text class="dashboard-secondary" x="385.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">gpt-5.5</text>
+  <title>gpt-5.5</title>
+  <text class="dashboard-secondary" x="527.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">claude-opus-4-8</text>
+  <title>claude-opus-4-8</title>
+  <text class="dashboard-secondary" x="669.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">claude-opus-5</text>
+  <title>claude-opus-5</title>
+  <text class="dashboard-secondary" x="811.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">claude-fable-5</text>
+  <title>claude-fable-5</title>
+  <text class="dashboard-secondary" x="953.0" y="108" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">gemini-3-flash-pr…</text>
+  <title>gemini-3-flash-preview</title>
+  <text class="dashboard-muted" x="1138" y="108" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10">30D TOTAL</text>
+  <circle class="agent-claude" cx="34" cy="152" r="5"/>
+  <text class="dashboard-primary" x="48" y="157" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Claude</text>
+  <text class="dashboard-muted" x="1138" y="157" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">932M</text>
+  <rect class="heatmap-level-0" x="176.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="gpt-5.6-sol" data-tokens="0" data-level="0">
+    <title>Claude × gpt-5.6-sol: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-claude-0" x="243.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="318.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="gpt-5.5" data-tokens="0" data-level="0">
+    <title>Claude × gpt-5.5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-claude-0" x="385.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="460.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="claude-opus-4-8" data-tokens="0" data-level="0">
+    <title>Claude × claude-opus-4-8: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-claude-0" x="527.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="agent-claude topology-level-3" x="602.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="claude-opus-5" data-tokens="592593791" data-level="3">
+    <title>Claude × claude-opus-5: 593M (63.6%)</title>
+  </rect>
+  <text class="topology-label-3 topology-label-agent-claude-3" x="669.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">63.6% · 593M</text>
+  <rect class="agent-claude topology-level-2" x="744.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="claude-fable-5" data-tokens="273899821" data-level="2">
+    <title>Claude × claude-fable-5: 274M (29.4%)</title>
+  </rect>
+  <text class="topology-label-2 topology-label-agent-claude-2" x="811.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">29.4% · 274M</text>
+  <rect class="heatmap-level-0" x="886.0" y="128" width="134.0" height="48" rx="10" data-agent="claude" data-model="gemini-3-flash-preview" data-tokens="0" data-level="0">
+    <title>Claude × gemini-3-flash-preview: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-claude-0" x="953.0" y="157" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <circle class="agent-codex" cx="34" cy="220" r="5"/>
+  <text class="dashboard-primary" x="48" y="225" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">Codex</text>
+  <text class="dashboard-muted" x="1138" y="225" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">4.5B</text>
+  <rect class="agent-codex topology-level-4" x="176.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="gpt-5.6-sol" data-tokens="3991403487" data-level="4">
+    <title>Codex × gpt-5.6-sol: 4B (88.3%)</title>
+  </rect>
+  <text class="topology-label-4 topology-label-agent-codex-4" x="243.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">88.3% · 4B</text>
+  <rect class="agent-codex topology-level-1" x="318.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="gpt-5.5" data-tokens="458964135" data-level="1">
+    <title>Codex × gpt-5.5: 459M (10.2%)</title>
+  </rect>
+  <text class="topology-label-1 topology-label-agent-codex-1" x="385.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">10.2% · 459M</text>
+  <rect class="heatmap-level-0" x="460.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="claude-opus-4-8" data-tokens="0" data-level="0">
+    <title>Codex × claude-opus-4-8: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-codex-0" x="527.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="602.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="claude-opus-5" data-tokens="0" data-level="0">
+    <title>Codex × claude-opus-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-codex-0" x="669.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="744.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="claude-fable-5" data-tokens="0" data-level="0">
+    <title>Codex × claude-fable-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-codex-0" x="811.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="886.0" y="196" width="134.0" height="48" rx="10" data-agent="codex" data-model="gemini-3-flash-preview" data-tokens="0" data-level="0">
+    <title>Codex × gemini-3-flash-preview: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-codex-0" x="953.0" y="225" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <circle class="agent-traex" cx="34" cy="288" r="5"/>
+  <text class="dashboard-primary" x="48" y="293" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">TRAE</text>
+  <text class="dashboard-muted" x="1138" y="293" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">1.3B</text>
+  <rect class="agent-traex topology-level-1" x="176.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="gpt-5.6-sol" data-tokens="22128546" data-level="1">
+    <title>TRAE × gpt-5.6-sol: 22.1M (1.8%)</title>
+  </rect>
+  <text class="topology-label-1 topology-label-agent-traex-1" x="243.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">1.8% · 22.1M</text>
+  <rect class="agent-traex topology-level-1" x="318.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="gpt-5.5" data-tokens="290218375" data-level="1">
+    <title>TRAE × gpt-5.5: 290M (23.1%)</title>
+  </rect>
+  <text class="topology-label-1 topology-label-agent-traex-1" x="385.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">23.1% · 290M</text>
+  <rect class="agent-traex topology-level-3" x="460.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="claude-opus-4-8" data-tokens="682636222" data-level="3">
+    <title>TRAE × claude-opus-4-8: 683M (54.4%)</title>
+  </rect>
+  <text class="topology-label-3 topology-label-agent-traex-3" x="527.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">54.4% · 683M</text>
+  <rect class="heatmap-level-0" x="602.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="claude-opus-5" data-tokens="0" data-level="0">
+    <title>TRAE × claude-opus-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-traex-0" x="669.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="744.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="claude-fable-5" data-tokens="0" data-level="0">
+    <title>TRAE × claude-fable-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-traex-0" x="811.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="agent-traex topology-level-1" x="886.0" y="264" width="134.0" height="48" rx="10" data-agent="traex" data-model="gemini-3-flash-preview" data-tokens="231606618" data-level="1">
+    <title>TRAE × gemini-3-flash-preview: 232M (18.5%)</title>
+  </rect>
+  <text class="topology-label-1 topology-label-agent-traex-1" x="953.0" y="293" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">18.5% · 232M</text>
+  <circle class="agent-dsh" cx="34" cy="356" r="5"/>
+  <text class="dashboard-primary" x="48" y="361" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" font-weight="600">DSH</text>
+  <text class="dashboard-muted" x="1138" y="361" text-anchor="end" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">0</text>
+  <rect class="heatmap-level-0" x="176.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="gpt-5.6-sol" data-tokens="0" data-level="0">
+    <title>DSH × gpt-5.6-sol: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="243.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="318.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="gpt-5.5" data-tokens="0" data-level="0">
+    <title>DSH × gpt-5.5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="385.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="460.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="claude-opus-4-8" data-tokens="0" data-level="0">
+    <title>DSH × claude-opus-4-8: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="527.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="602.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="claude-opus-5" data-tokens="0" data-level="0">
+    <title>DSH × claude-opus-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="669.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="744.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="claude-fable-5" data-tokens="0" data-level="0">
+    <title>DSH × claude-fable-5: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="811.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <rect class="heatmap-level-0" x="886.0" y="332" width="134.0" height="48" rx="10" data-agent="dsh" data-model="gemini-3-flash-preview" data-tokens="0" data-level="0">
+    <title>DSH × gemini-3-flash-preview: 0 (0.0%)</title>
+  </rect>
+  <text class="topology-label-0 topology-label-agent-dsh-0" x="953.0" y="361" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="600">—</text>
+  <text class="dashboard-muted" x="16" y="414" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11">Model access paths such as OpenCode Go are described separately; the ledger only charts observed models.</text>
+</svg>

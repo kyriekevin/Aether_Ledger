@@ -14,24 +14,32 @@ from render_dashboard import (  # noqa: E402
     PANEL_AGENT_ORDER,
     AllocationTotals,
     DailyTotals,
+    WorkTotals,
     _compact_number,
     aggregate_allocation,
     aggregate_daily,
     aggregate_topology,
+    aggregate_work,
     generate,
     generate_allocation,
     generate_allocation_history,
+    generate_harness_model,
     generate_runtime_history,
     generate_runtime_profile,
     generate_topology,
     generate_topology_history,
+    generate_work_overview,
+    generate_work_review,
     render_allocation_svg,
     render_allocation_history_svg,
+    render_harness_model_svg,
     render_runtime_history_svg,
     render_runtime_profile_svg,
     render_svg,
     render_topology_svg,
     render_topology_history_svg,
+    render_work_overview_svg,
+    render_work_review_svg,
 )
 
 
@@ -69,6 +77,81 @@ class AggregateDailyTests(unittest.TestCase):
             path.write_text("[]", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "date-keyed object"):
                 aggregate_daily(Path(directory))
+
+
+class WorkDashboardTests(unittest.TestCase):
+    def test_aggregates_multica_runs_without_task_content(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "multica.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-08-01": {
+                    "activeIssues": 2,
+                    "tasks": {"work": {
+                        "codex": {
+                            "total": 2, "completed": 1, "failed": 1,
+                            "cancelled": 0, "durationSeconds": 180,
+                        },
+                        "dsh": {
+                            "total": 1, "completed": 1, "failed": 0,
+                            "cancelled": 0, "durationSeconds": 60,
+                        },
+                    }},
+                }
+            }), encoding="utf-8")
+
+            work = aggregate_work(root, date(2026, 8, 1))
+
+            self.assertTrue(work.snapshot_present)
+            self.assertEqual(work.active_issues, 2)
+            self.assertEqual(work.runs, 3)
+            self.assertEqual(work.agent_runs["codex"], 2)
+            self.assertEqual(work.agent_runs["dsh"], 1)
+            self.assertEqual(work.outcomes["completed"], 2)
+            self.assertEqual(work.duration_seconds, 240)
+            svg = render_work_overview_svg(work)
+            ET.fromstring(svg)
+            self.assertIn('data-agent="codex"', svg)
+            self.assertNotIn("private prompt", svg)
+
+    def test_missing_multica_store_has_an_explicit_empty_state(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            work = aggregate_work(Path(directory), date(2026, 8, 1))
+            svg = render_work_overview_svg(work)
+
+            self.assertFalse(work.snapshot_present)
+            self.assertIn("Waiting for the first published Multica snapshot", svg)
+            ET.fromstring(svg)
+
+    def test_new_views_generate_and_pass_freshness_check(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            store = root / "data" / "work" / "codex.json"
+            store.parent.mkdir(parents=True)
+            store.write_text(json.dumps({
+                "2026-08-01": {
+                    "totalTokens": 100,
+                    "models": {"gpt-example": {"totalTokens": 100}},
+                }
+            }), encoding="utf-8")
+            work_output = root / "assets" / "work.svg"
+            matrix_output = root / "assets" / "matrix.svg"
+            review_output = root / "assets" / "review.svg"
+
+            self.assertTrue(generate_work_overview(root, work_output))
+            self.assertTrue(generate_harness_model(root, matrix_output))
+            self.assertTrue(generate_work_review(root, review_output))
+            self.assertFalse(generate_work_overview(root, work_output, check=True))
+            self.assertFalse(generate_harness_model(root, matrix_output, check=True))
+            self.assertFalse(generate_work_review(root, review_output, check=True))
+            matrix = matrix_output.read_text(encoding="utf-8")
+            review = review_output.read_text(encoding="utf-8")
+            self.assertIn("Harness × model", matrix)
+            self.assertIn('data-model="gpt-example"', matrix)
+            self.assertIn("Eight-week review", review)
+            ET.fromstring(matrix)
+            ET.fromstring(review)
 
 
 class AggregateTopologyTests(unittest.TestCase):

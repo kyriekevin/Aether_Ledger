@@ -51,7 +51,7 @@ QUOTA_KEYS = frozenset({"windows", "limitReached"})
 # --script` with no dependencies and so cannot import sync_usage; the tests
 # assert the two definitions agree.
 MULTICA_TASK_STORE = "data/multica.json"
-MULTICA_DAY_KEYS = frozenset({"tasks"})
+MULTICA_DAY_KEYS = frozenset({"activeIssues", "tasks"})
 # The agents the Multica collector can actually emit. Deliberately NOT derived
 # from AGENT_FILES: that list is the token stores, and it includes `opencode`,
 # which Multica does not dispatch, and the `*-multica` names, which are store
@@ -230,6 +230,13 @@ def _validate_multica_schema(value: object, path: Path, issues: list[str]) -> No
             continue
         for key in sorted(set(entry).difference(MULTICA_DAY_KEYS)):
             issues.append(f"{path}: {day} field {key!r} is not in the public schema")
+        active_issues = entry.get("activeIssues")
+        if active_issues is not None and (
+            not isinstance(active_issues, int)
+            or isinstance(active_issues, bool)
+            or active_issues < 0
+        ):
+            issues.append(f"{path}: {day} activeIssues must be a non-negative integer")
         roles = entry.get("tasks", {})
         if not isinstance(roles, dict):
             issues.append(f"{path}: {day} tasks must be an object")

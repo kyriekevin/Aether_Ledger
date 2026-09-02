@@ -1,8 +1,8 @@
 <h1 align="center">Aether Ledger</h1>
 
 <p align="center">
-  <strong>Nightglass Protocol</strong> 的 AI 算力账本 ——
-  持续更新、完全匿名化的 coding agent token 消耗记录。
+  记录我如何把工作交给 coding agents。<br>
+  <sub><strong>Nightglass Protocol</strong> 的一部分。</sub>
 </p>
 
 <p align="center">
@@ -16,79 +16,79 @@
 </p>
 
 > [!IMPORTANT]
-> 本仓库以公开为前提设计。账本只保存匿名化聚合数据——绝不记录提示词、会话、仓库名称、
-> 主机名、用户名或工作目录。
+> 仓库只发布匿名聚合数据，不记录提示词、issue 标题、session 标识、仓库名称、主机名、
+> 用户名或工作目录。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex、TRAE CLI 与 DSH，自己开的和 Multica 派出去跑的
-都算，并让这些活动清晰可见。
-历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
-Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
+现在我的 agent 工作大多从 Multica 开始。Issue 用来保存工作和上下文；每次 run 记录由哪个
+harness 执行、如何结束、运行了多久。以前这些信息散落在不同终端和历史记录里，现在可以在
+同一个地方查看和管理。
 
-## 活动
+Aether Ledger 把两本账放在一起：
 
-![Aether Ledger 活动面板](assets/token-activity.svg)
+- **工作账**来自 Multica 的 issues 和 runs；
+- **算力账**来自 Claude Code、Codex、TRAE CLI 与 DSH 的本地 session 日志。
 
-金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
-token 总量大于零的自然日累计。
+两本账来自同一套工作流，但不做逐任务关联。账本不会猜某个 issue 消耗了多少 token。
 
-## 拓扑
+## 下发的工作
 
-![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
+![Multica 工作概况](assets/work-overview.svg)
 
-![Aether Ledger 算力拓扑历史](assets/token-topology-history.svg)
+这张图从任务下发后开始记录：issue-days、已经结束的 runs、执行结果、运行时长，以及各 harness
+承担了多少次执行。一个 issue 当天产生过 terminal run，就记作一个 issue-day；每天先去重，再汇总
+到展示周期。公开数据只有计数，issue 内容仍留在 Multica 内。
 
-拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker；历史图用前 4 周与近 4 周对照，展示每个环境的
-周度总量与 harness 组合如何变化。
+## 执行方式
 
-## 分配
+![Harness 与模型矩阵](assets/harness-model.svg)
 
-![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
+矩阵展示最近 30 天里，各 harness 实际调用了哪些模型。Claude Code、Codex 和 TRAE 是日常执行
+路径；DSH 也可以由 Multica 下发，但我主要用它理解和试验 harness。OpenCode Go 一类服务让 DSH
+可以快速接入更多模型，它们是模型入口，不是另一种 harness。
 
-![Aether Ledger 模型分配历史](assets/compute-allocation-history.svg)
+Effort、reasoning、速度和额度仍有价值，但它们是模型调用的附属信息，不再单独构成一级分类。
 
-当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
-堆叠，展示各 harness 内部的模型迁移。
+## 复盘
 
-## 运行
+![八周工作与算力复盘](assets/work-review.svg)
 
-![Aether Ledger 运行概况](assets/runtime-profile.svg)
+两行数据共用一条周度时间轴。上面是 Multica 记录的 terminal runs，下面是本地 harness 日志里的
+token。放在一起可以观察工作与执行方式如何变化，但不把两种数据解释成逐任务归因。
 
-![Aether Ledger 运行历史](assets/runtime-history.svg)
+## 算力足迹
 
-当前图展示各 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
-峰值。历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、
-高度和位置表达，不再依赖颜色深浅。effort 从各 harness 自己的 session 日志读取；Fast 和额度是
-Codex 的字段，Claude 的日志里没有对应物。
+![Aether Ledger 算力活动](assets/token-activity.svg)
 
-## 账本
-
-适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、
-`devbox`）和匿名的临时 `trail` 节点组织。
+Token 和 API 等价成本仍然保留，但它们只描述资源消耗，不评价产出或能力。金额根据模型用量估算，
+不是实际订阅账单。
 
 ## 工作原理
 
 ```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  定时同步，自己开的和 Multica 派出去跑的都采
-        ▼
-usage/YYYY-MM-DD ── 当天聚合提交持续写入
-        │  Asia/Shanghai 跨日后触发 rollover
-        ▼
-main ── squash merge 当天数据 + 重新渲染面板
-        │
-        └─→ 删除已完成分支，创建当天新分支
+Issue ── Multica ──→ run ──→ Claude Code / Codex / TRAE / DSH
+  │                               │
+  └─ 每日工作聚合                  └─ 本地 session 聚合
+                 │                │
+                 └──── usage/YYYY-MM-DD
+                              │  Asia/Shanghai 跨日后 rollover
+                              ▼
+                            main ── 重新生成公开面板
 ```
 
-当天用量只写入日期分支；`main` 只接收 rollover workflow 合入的完整天。人工改动一律走
-PR，并以 `make verify` 作为交付门槛。
+任务可以在本机执行，也可以从工作 MacBook 通过 SSH 到远程 devbox。Devbox 是执行位置，不再被描述成
+一种独立的工作类型。直接运行各 harness 仍会进入算力账，但 Multica 已经成为组织和下发工作的主要入口。
 
-## 文档导航
+## 账本
+
+公开聚合数据保存在 [`data/`](data/) 下。高频更新写入当天的 `usage/YYYY-MM-DD` 分支；完整日期由
+rollover workflow 合入 `main`。人工改动通过 PR 交付，并以 `make verify` 作为基本门槛。
+
+## 文档
 
 | 指南 | 内容 |
 |---|---|
-| [运维文档](docs/operations_zh-CN.md) | 安装、机器身份、分支生命周期、数据结构、面板与恢复 |
-| [仓库约定](AGENTS.md) | 贡献与交付约定 |
+| [运维文档](docs/operations_zh-CN.md) | 采集、数据结构、分支生命周期、面板与恢复 |
+| [仓库约定](AGENTS.md) | 贡献与交付规则 |
 
 ## License
 

@@ -1,8 +1,8 @@
 <h1 align="center">Aether Ledger</h1>
 
 <p align="center">
-  The AI compute ledger of the <strong>Nightglass Protocol</strong> —
-  an anonymized, continuously updated record of how my coding agents spend tokens.
+  A public ledger for how I delegate work to coding agents.<br>
+  <sub>Part of the <strong>Nightglass Protocol</strong>.</sub>
 </p>
 
 <p align="center">
@@ -16,82 +16,86 @@
 </p>
 
 > [!IMPORTANT]
-> Public by design. The ledger keeps anonymized aggregates only — no prompts, sessions,
-> repository names, hostnames, usernames, or working directories are ever recorded.
+> This repository publishes anonymous aggregates only. It never records prompts, issue titles,
+> session identifiers, repository names, hostnames, usernames, or working directories.
 
-Aether Ledger records how I use Claude Code, Codex, TRAE CLI, and DSH—launched by hand or sent out
-by Multica—and makes that activity visible.
-Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
-Tokens are not skill points; they are the compute resources I spend while turning ideas into
-useful work.
+Most of my agent work now starts in Multica. An issue keeps the work and its context in one place;
+each run records which harness took it, how it ended, and how long it ran. This replaces a workflow
+that was spread across separate terminals, histories, and task states.
 
-## Activity
+Aether Ledger keeps two records side by side:
 
-![Aether Ledger activity dashboard](assets/token-activity.svg)
+- the **work record** comes from Multica issues and runs;
+- the **compute record** comes from the local session logs of Claude Code, Codex, TRAE CLI, and DSH.
 
-Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
-bill. Active days count every calendar day with a positive token total.
+They describe the same working system from different angles, but they are not joined per task. The
+ledger does not guess how many tokens a particular issue consumed.
 
-## Topology
+## Delegated work
 
-![Aether Ledger recent compute topology](assets/token-topology.svg)
+![Multica delegated work overview](assets/work-overview.svg)
 
-![Aether Ledger compute topology history](assets/token-topology-history.svg)
+This view follows work after it has been delegated: issue-days, terminal runs, outcomes, runtime,
+and the harnesses that carried those runs. An issue-day is one distinct issue with a terminal run on
+that day. Only daily counters are published; issue content stays in Multica.
 
-Topology shows which active agents serve each public environment over the latest 30 days.
-The history view compares the previous four weeks with the latest four weeks, showing how each
-environment's weekly total and harness mix changed.
-`Development` combines persistent devboxes with on-demand GPU trail workers.
+## Execution
 
-## Allocation
+![Harness by model matrix](assets/harness-model.svg)
 
-![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
+The matrix shows which models were actually used through each harness in the latest 30 days. Claude
+Code, Codex, and TRAE are regular execution paths. DSH is also available through Multica, but I use it
+mainly as a place to understand and experiment with harness design. Services such as OpenCode Go make
+it easy to try additional models through DSH; they are access paths, not harnesses of their own.
 
-![Aether Ledger model allocation history](assets/compute-allocation-history.svg)
+Effort, reasoning, speed, and quota remain useful model-call details. They sit below the
+harness–model relationship rather than forming another top-level taxonomy.
 
-The current view keeps the trailing 30-day model mix; the history view compares four weekly model
-stacks with the preceding four, using absolute Top 3 + Other values within each harness.
+## Review
 
-## Runtime
+![Eight-week work and compute review](assets/work-review.svg)
 
-![Aether Ledger runtime profile](assets/runtime-profile.svg)
+The two rows share a weekly clock. The first follows terminal runs reported by Multica; the second
+follows tokens observed in local harness logs. Reading them together helps review changes in work and
+execution without pretending that the measurements form a per-task attribution.
 
-![Aether Ledger runtime history](assets/runtime-history.svg)
+## Compute footprint
 
-The current view shows the latest 30-day effort mix across every harness, and Codex's Fast
-share and latest seven-day quota peak. The history view uses smaller weekly effort stacks, a Fast
-trajectory, and weekly seven-day quota peak bars, so magnitude comes from length, height, and
-position rather than color intensity. Effort is read from every harness's own session logs; Fast
-and quota are Codex fields, and no equivalent exists in Claude's logs.
+![Aether Ledger compute activity](assets/token-activity.svg)
 
-## Ledger
-
-The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,
-`work`, and `devbox`) plus anonymized ephemeral `trail` workers.
+Tokens and API-equivalent cost remain part of the ledger, but they are resource measurements rather
+than a score for output or ability. Cost is estimated from captured model usage and is not a
+subscription bill.
 
 ## How it works
 
 ```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  scheduled sync, launched by hand or by Multica
-        ▼
-usage/YYYY-MM-DD ── intraday aggregate commits
-        │  daily rollover, after Asia/Shanghai midnight
-        ▼
-main ── squash-merged day + regenerated dashboards
-        │
-        └─→ completed branch deleted, today's branch created
+Issue ── Multica ──→ run ──→ Claude Code / Codex / TRAE / DSH
+  │                               │
+  └─ daily work aggregates        └─ local session aggregates
+                 │                │
+                 └──── usage/YYYY-MM-DD
+                              │  daily rollover after Asia/Shanghai midnight
+                              ▼
+                            main ── regenerated public dashboards
 ```
 
-Usage lands throughout the day on the dated branch; `main` only receives completed days from the
-rollover workflow. Human changes go through pull requests gated by `make verify`.
+Work may run locally or on remote devboxes reached over SSH. Those machines are execution surfaces,
+not a separate kind of work. Direct harness sessions are still collected, but Multica is now the
+primary place where work is organized and dispatched.
+
+## Ledger
+
+Public aggregates live under [`data/`](data/). High-frequency updates land on the current
+`usage/YYYY-MM-DD` branch; `main` receives a completed day through the rollover workflow. Human
+changes go through pull requests gated by `make verify`.
 
 ## Documentation
 
 | Guide | Covers |
 |---|---|
-| [Operations](docs/operations.md) | Setup, machine identity, branch lifecycle, schemas, dashboards, and recovery |
-| [Repository guidance](AGENTS.md) | The contribution and hand-off contract |
+| [Operations](docs/operations.md) | Collection, schemas, branch lifecycle, dashboards, and recovery |
+| [Repository guidance](AGENTS.md) | Contribution and hand-off rules |
 
 ## License
 

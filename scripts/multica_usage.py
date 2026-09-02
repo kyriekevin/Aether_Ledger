@@ -9,9 +9,9 @@ Multica API for token totals as well would count the same
 work twice, from two measurements that do not even agree (for 2026-08-31 the API
 reported 21.63M against 21.50M parsed from the local rollouts).
 
-What only Multica knows is the shape of the work it dispatched: how many tasks
-ran, whether they finished, and how long they took. That is what this module
-collects, and it records no tokens or cost at all.
+What only Multica knows is the shape of the work it dispatched: how many issues
+were active, how many runs finished, and how long they took. That is what this
+module collects, and it records no tokens or cost at all.
 
 The API's runtime, issue and task records carry identity — real names, emails,
 absolute working directories, raw prompts and raw agent output. None of it is
@@ -30,6 +30,7 @@ import json
 import os
 import subprocess
 import sys
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
@@ -195,6 +196,7 @@ def collect_tasks(
     # which would make a transient double count permanent.
     counted_runs: set[str] = set()
     seen_issues: set[str] = set()
+    active_issue_ids: defaultdict[str, set[str]] = defaultdict(set)
     offset = 0
     while True:
         payload = run_json(
@@ -234,6 +236,7 @@ def collect_tasks(
                 if runtime is None or started is None:
                     continue
                 role, agent = runtime
+                active_issue_ids[started.date().isoformat()].add(issue["id"])
                 bucket = _task_bucket(days, started.date().isoformat(), role, agent)
                 bucket["total"] += 1
                 bucket[status] += 1
@@ -245,6 +248,8 @@ def collect_tasks(
         if not has_more:
             break
         offset += ISSUE_PAGE_SIZE
+    for raw_day, issue_ids in active_issue_ids.items():
+        days.setdefault(raw_day, {})["activeIssues"] = len(issue_ids)
     return days
 
 
@@ -297,7 +302,13 @@ def merge_snapshot(existing: dict, snapshot: dict) -> dict:
     """
     merged = {day: json.loads(json.dumps(entry)) for day, entry in existing.items()}
     for day, entry in snapshot.items():
-        target = merged.setdefault(day, {}).setdefault("tasks", {})
+        merged_day = merged.setdefault(day, {})
+        active_issues = entry.get("activeIssues")
+        if isinstance(active_issues, int) and not isinstance(active_issues, bool):
+            merged_day["activeIssues"] = max(
+                active_issues, merged_day.get("activeIssues", 0)
+            )
+        target = merged_day.setdefault("tasks", {})
         for role, agents in entry.get("tasks", {}).items():
             for agent, counters in agents.items():
                 stored = target.setdefault(role, {}).get(agent)

@@ -82,10 +82,10 @@ of `MULTICA_PROFILE`, because API task collection and local DSH execution can us
 Because those tokens already reach the ledger through the harnesses, the Multica API is never asked
 for token totals — that would count the same work twice, from two measurements that do not agree
 (for 2026-08-31 the API reported 21.63M against 21.50M parsed from the local rollouts). What only
-Multica knows is the shape of the work it dispatched, so `data/multica.json` records exactly that:
-per day, per public role, per agent, how many runs finished, how they ended, and how long they took.
-The audit rejects a `usage` section in that file, which is what re-introducing the double count would
-look like.
+Multica knows is the shape of the work it dispatched. `data/multica.json` therefore records the
+number of active issues, plus terminal-run counts, outcomes, and duration by public role and agent.
+An active issue is one with at least one terminal run that started on that Shanghai calendar day.
+The audit rejects token usage in this file so the harness logs remain the only compute source.
 
 The store sits at the data root rather than under a node label because one API answers for every
 runtime at once, and a single configured machine collects it so that the one-writer-per-file rule
@@ -101,8 +101,8 @@ Private Multica launch inputs live in `~/.config/token-activity/multica.json`; c
 is not a second configuration source and should not be edited by hand.
 
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
-still in flight has no duration and would be recounted under a different status next time. Each run
-and issue is counted once per collection: issue pages overlap while the workspace is being written
+still in flight has no duration and would be recounted under a different status next time. Active
+issues are deduplicated within each day. Runs are also counted once per collection: issue pages overlap while the workspace is being written
 to, and one run can surface under two issues. A duplicate would not break the arithmetic — it adds to
 `total` and to one outcome together — so nothing downstream would notice, and the merge would make
 the inflated total the permanent high-water mark. Days
@@ -464,27 +464,26 @@ The activity SVG contains:
 - active days, defined as calendar days with a positive aggregate token total;
 - a trailing 53-week daily heatmap.
 
-The topology SVG crosses public environment roles with agents active in the trailing 30 days.
-Each harness keeps the same hue used by the history view, while intensity within a row shows its
-share of that environment. OpenCode-launched history is retained as `Legacy`. The recent window
-ends on the same completed
-snapshot as the activity SVG. Trail workers and persistent `devbox` stores are combined as
-`Development`; opaque trail node IDs never enter the asset. The underlying stores remain separate
-for collection and operations.
+The README leads with two records that must stay separate. `work-overview.svg` reads only
+`data/multica.json`: terminal runs, outcomes, duration, and their harness distribution. It never
+attributes tokens to an issue. The issue-days card sums daily distinct issues with a terminal run;
+the same issue can contribute on more than one day. Snapshots created before this field was
+introduced show it as unavailable.
 
-Topology and allocation each pair the trailing-30-day snapshot with a separate eight-week history
-asset. Both histories use the same adjacent weekly buckets and explicitly split them into the
-previous four weeks and the latest four weeks. Topology history uses absolute weekly stacks within
-Work, Personal, and Development, so bar height preserves each environment's total while color
-shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
-each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
+`harness-model.svg` reads local session aggregates. Rows are harnesses and columns are the leading
+observed models; each cell shows that model's token share within its harness. At least the leading
+model from every active harness is kept before the remaining columns are filled by overall token
+volume. Model access services are not treated as harnesses unless session telemetry exposes them as
+one.
 
-The README therefore reads as activity, then current/history pairs for topology, allocation, and
-runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
-seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
-seven-day quota peak bars. Effort covers every harness; Fast and quota are Codex-only, so a single
-quota series is centred on each week rather than paired against an empty slot. Color identifies a harness or effort category while geometry shows
-magnitude, matching the visual grammar of the other history views.
+`work-review.svg` puts Multica terminal runs and harness token totals on one eight-week clock. The
+shared axis supports visual comparison but is not a per-task join. The activity heatmap remains the
+long-range compute footprint. The older topology, allocation-history, and runtime assets remain
+available as lower-level diagnostics while this presentation is being evaluated.
+
+Effort, reasoning, speed, and quota are model-call details. The current stores aggregate them by
+harness separately from model totals, so no chart may claim a model-by-effort relationship. Fast
+and quota remain Codex-only fields in the observed data.
 
 Claude assistant events expose effort and, on supported models, `thinking_tokens`; Fast is not
 selectable in the observed Claude setup, so its standard-only speed field is not collected or
@@ -495,7 +494,7 @@ collector also accepts their effort, speed, reasoning, and quota events when pre
 historical telemetry stays explicitly unavailable instead of being inferred from total tokens or
 cost. Reasoning intensity is interpreted only within one harness, never across vendors.
 
-All seven dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
+All dashboard SVGs use `prefers-color-scheme` with Catppuccin Latte and Mocha colors across
 GitHub's light and dark themes.
 
 Only the rollover workflow commits the shared SVGs. Individual machine writers commit only their

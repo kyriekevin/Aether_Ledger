@@ -77,7 +77,7 @@ class TaskCollectionTests(unittest.TestCase):
         )
         self.assertEqual(
             snapshot,
-            {"2026-08-31": {"tasks": {"work": {"codex": {
+            {"2026-08-31": {"activeIssues": 1, "tasks": {"work": {"codex": {
                 "total": 1, "completed": 1, "failed": 0, "cancelled": 0,
                 "durationSeconds": 150,
             }}}}},
@@ -155,11 +155,11 @@ class SnapshotMergeTests(unittest.TestCase):
     """A finished run's day, status and duration never change again."""
 
     def test_a_pruned_fetch_cannot_shrink_a_recorded_day(self) -> None:
-        stored = {"2026-08-31": {"tasks": {"work": {"codex": {
+        stored = {"2026-08-31": {"activeIssues": 7, "tasks": {"work": {"codex": {
             "total": 9, "completed": 8, "failed": 1, "cancelled": 0,
             "durationSeconds": 900,
         }}}}}
-        pruned = {"2026-08-31": {"tasks": {"work": {"codex": {
+        pruned = {"2026-08-31": {"activeIssues": 2, "tasks": {"work": {"codex": {
             "total": 2, "completed": 2, "failed": 0, "cancelled": 0,
             "durationSeconds": 200,
         }}}}}
@@ -306,6 +306,8 @@ class DeduplicationTests(unittest.TestCase):
         counters = days["2026-08-31"]["tasks"]["work"]["codex"]
         self.assertEqual(counters["total"], 1)
         self.assertEqual(counters["durationSeconds"], 60)
+        # The duplicate run is not evidence of a second active work unit.
+        self.assertEqual(days["2026-08-31"]["activeIssues"], 1)
 
     def test_an_issue_repeated_across_pages_counts_once(self) -> None:
         """Pages overlap when the workspace is written to mid-collection."""
@@ -317,6 +319,7 @@ class DeduplicationTests(unittest.TestCase):
             {"i1": [self.RUN]},
         )
         self.assertEqual(days["2026-08-31"]["tasks"]["work"]["codex"]["total"], 1)
+        self.assertEqual(days["2026-08-31"]["activeIssues"], 1)
 
 
 class MalformedPayloadTests(unittest.TestCase):
@@ -390,10 +393,19 @@ class AuditTests(unittest.TestCase):
         return issues
 
     def test_a_clean_aggregate_passes(self) -> None:
-        self.assertEqual(self._issues({"2026-08-31": {"tasks": {"work": {"codex": {
+        self.assertEqual(self._issues({"2026-08-31": {"activeIssues": 1, "tasks": {"work": {"codex": {
             "total": 2, "completed": 1, "failed": 1, "cancelled": 0,
             "durationSeconds": 12,
         }}}}}), [])
+
+    def test_active_issues_must_be_a_non_negative_integer(self) -> None:
+        for value in (-1, 1.5, True, "1"):
+            with self.subTest(value=value):
+                issues = self._issues({"2026-08-31": {
+                    "activeIssues": value,
+                    "tasks": {},
+                }})
+                self.assertTrue(any("activeIssues" in issue for issue in issues))
 
     def test_a_usage_section_is_rejected(self) -> None:
         """The guard against re-introducing the double count.

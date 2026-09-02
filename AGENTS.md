@@ -6,7 +6,8 @@
   Do not hand-edit them.
 - Treat `assets/token-activity.svg`, both `assets/token-topology*.svg`, both
   `assets/compute-allocation*.svg`, and both `assets/runtime-*.svg` as generated. Change
-  `scripts/render_dashboard.py`, then regenerate the assets.
+  `scripts/render_dashboard.py`, then regenerate the assets. The same applies to
+  `assets/work-overview.svg`, `assets/harness-model.svg`, and `assets/work-review.svg`.
 - Use `uv` to run Python scripts and tests.
 - High-frequency data commits belong on `usage/YYYY-MM-DD`, using the Asia/Shanghai calendar day.
   Do not send automated usage commits directly to `main`.
