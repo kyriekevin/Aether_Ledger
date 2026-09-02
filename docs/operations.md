@@ -73,9 +73,11 @@ special handling. Codex and dsh are the exceptions. Multica gives each Codex tas
 that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
 writes the result to a store of its own, `codex-multica.json`. Multica also relocates dsh logs to
 `~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
-the writer selects it automatically when only one exists, but fails closed when several exist until
-`MULTICA_DSH_PROFILE` names one profile directory. This selector is independent of
-`MULTICA_PROFILE`, because API task collection and local DSH execution can use different profiles.
+the writer selects it automatically when only one exists and persists that choice in
+`~/.config/token-activity/multica_dsh_profile`. When several exist before the first binding,
+`MULTICA_DSH_PROFILE` selects one. A missing or changed bound root fails closed and keeps the stored
+high-water rather than silently reusing the file for another profile. This selector is independent
+of `MULTICA_PROFILE`, because API task collection and local DSH execution can use different profiles.
 
 Because those tokens already reach the ledger through the harnesses, the Multica API is never asked
 for token totals — that would count the same work twice, from two measurements that do not agree

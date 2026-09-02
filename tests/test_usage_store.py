@@ -1521,22 +1521,60 @@ class DshSessionTests(unittest.TestCase):
 
     def test_multica_store_requires_one_selected_profile_tree(self) -> None:
         multica_home = self.home / ".multica"
+        binding = self.home / "multica_dsh_profile"
+        first = multica_home / "profiles" / "first" / "dsh-sessions"
+        second = multica_home / "profiles" / "second" / "dsh-sessions"
+        first.mkdir(parents=True)
+        second.mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, "multiple Multica profiles"):
+            sync_usage.multica_dsh_session_roots(
+                multica_home, binding_file=binding
+            )
+
+        self.assertEqual(
+            sync_usage.multica_dsh_session_roots(
+                multica_home, profile="second", binding_file=binding
+            ),
+            (second,),
+        )
+        self.assertEqual(binding.read_text().strip(), "second")
+
+    def test_multica_store_does_not_rebind_when_its_only_profile_changes(self) -> None:
+        multica_home = self.home / ".multica"
+        binding = self.home / "multica_dsh_profile"
         first = multica_home / "profiles" / "first" / "dsh-sessions"
         second = multica_home / "profiles" / "second" / "dsh-sessions"
         first.mkdir(parents=True)
 
         self.assertEqual(
-            sync_usage.multica_dsh_session_roots(multica_home), (first,)
+            sync_usage.multica_dsh_session_roots(
+                multica_home, binding_file=binding
+            ),
+            (first,),
         )
+        self.assertEqual(binding.read_text().strip(), "first")
 
+        first.rename(first.parent / "retired")
         second.mkdir(parents=True)
-        with self.assertRaisesRegex(ValueError, "multiple Multica profiles"):
-            sync_usage.multica_dsh_session_roots(multica_home)
+        with self.assertRaisesRegex(ValueError, "bound Multica DSH profile 'first'"):
+            sync_usage.multica_dsh_session_roots(
+                multica_home, binding_file=binding
+            )
+        self.assertEqual(binding.read_text().strip(), "first")
 
-        self.assertEqual(
-            sync_usage.multica_dsh_session_roots(multica_home, profile="second"),
-            (second,),
-        )
+    def test_multica_store_refuses_to_override_its_binding(self) -> None:
+        multica_home = self.home / ".multica"
+        binding = self.home / "multica_dsh_profile"
+        first = multica_home / "profiles" / "first" / "dsh-sessions"
+        second = multica_home / "profiles" / "second" / "dsh-sessions"
+        first.mkdir(parents=True)
+        second.mkdir(parents=True)
+        binding.write_text("first\n")
+
+        with self.assertRaisesRegex(ValueError, "refusing to switch"):
+            sync_usage.multica_dsh_session_roots(
+                multica_home, profile="second", binding_file=binding
+            )
 
     def test_the_same_session_step_is_counted_once_across_files(self) -> None:
         millis = 1787198400000

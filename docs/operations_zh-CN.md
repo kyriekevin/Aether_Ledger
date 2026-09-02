@@ -60,8 +60,10 @@ dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来�
 的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
 以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。Multica 还会把 dsh 日志放到
 `~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
-只发现一棵时自动选择；发现多棵时拒绝混算，直到 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。
-这个选择与 `MULTICA_PROFILE` 相互独立，因为 API 任务采集和本地 DSH 执行可能使用不同 profile。
+只发现一棵时自动选择，并把选择写入 `~/.config/token-activity/multica_dsh_profile`；首次绑定前发现
+多棵时，由 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。绑定的目录消失或配置改指另一棵树时，
+采集器会保留已有高水位并拒绝换源，不会把同一个 store 静默复用给另一个 profile。这个选择与
+`MULTICA_PROFILE` 相互独立，因为 API 任务采集和本地 DSH 执行可能使用不同 profile。
 
 既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
 工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有
