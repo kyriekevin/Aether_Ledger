@@ -1514,6 +1514,19 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(sync_usage.dsh_session_roots(self.home), (self.root,))
         self.assertEqual(self.collect()[0]["totalTokens"], 10)
 
+    def test_multica_profile_trees_are_discovered_separately(self) -> None:
+        multica_home = self.home / ".multica"
+        first = multica_home / "profiles" / "first" / "dsh-sessions"
+        second = multica_home / "profiles" / "second" / "dsh-sessions"
+        first.mkdir(parents=True)
+        second.mkdir(parents=True)
+        (multica_home / "profiles" / "second" / "other").mkdir()
+
+        self.assertEqual(
+            sync_usage.multica_dsh_session_roots(multica_home),
+            (first, second),
+        )
+
     def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
         millis = 1787198400000
         self.write_session("proj", "session-a", [
@@ -1974,6 +1987,10 @@ class SeparateStorePerTreeTests(unittest.TestCase):
         self.assertEqual(
             wiring["codex-multica"], "fetch_multica_codex_daily",
             "the Multica tree must land in its own store",
+        )
+        self.assertEqual(
+            wiring["dsh-multica"], "collect_dsh_daily_since",
+            "Multica's relocated dsh tree must land in its own store",
         )
         self.assertEqual(
             wiring["codex"], "fetch_daily_since",

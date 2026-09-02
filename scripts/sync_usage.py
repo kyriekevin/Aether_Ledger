@@ -8,20 +8,19 @@
 Reads this machine's local ccusage usage data, persists daily totals into
 `data/<machine>/claude.json`, `data/<machine>/codex.json`,
 `data/<machine>/opencode.json`, `data/<machine>/traex.json`,
-`data/<machine>/dsh.json`, and `data/<machine>/codex-multica.json` under this
-repo, and commits + pushes the result. AGENT_STORES is the list.
+`data/<machine>/dsh.json`, `data/<machine>/codex-multica.json`, and
+`data/<machine>/dsh-multica.json` under this repo, and commits + pushes the
+result. AGENT_STORES is the list.
 
 Two harnesses do not come from ccusage's default scan:
   - DeepSeek Harness (dsh) has no ccusage reader at all, so its own session log
     is parsed here (collect_dsh_daily_since).
-  - Multica, an orchestrator that drives these same CLIs, gives each Codex task
-    a private CODEX_HOME whose sessions live outside ~/.codex/sessions. Those
-    rollouts are read separately into codex-multica.json. Multica is not a
-    harness — the work is Codex's, on the same account and the same models, and
-    the dashboards render both stores as one Codex — but one store per session
-    tree is what keeps each per-day high-water mark sound. Its Claude and TRAE
-    runs already land in those CLIs' standard log directories and need nothing
-    extra.
+  - Multica, an orchestrator that drives these same CLIs, relocates the Codex and
+    dsh session trees. Those are read separately into codex-multica.json and
+    dsh-multica.json. Multica is not a harness — the dashboards fold each store
+    back into its real harness — but one store per source keeps each per-day
+    high-water mark sound. Its Claude and TRAE runs already land in those CLIs'
+    standard log directories and need nothing extra.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
 Sync-only machines only need to clone the data repo — they do NOT need the
@@ -236,13 +235,14 @@ MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
 # compact_trails, squash_usage_branch) must each cover all of them; a store one
 # of them has never heard of fails silently rather than loudly, so the tests
 # assert their registries against THIS mapping rather than a repeated literal.
-# `codex-multica` is not a fifth harness: it is Codex read from the separate
-# session tree Multica gives it, kept apart only so each tree gets its own
-# high-water mark, and folded back into the Codex bucket at render time.
+# The `*-multica` names are not extra harnesses. They keep Multica's relocated
+# trees on independent high-water marks and fold back into their harness buckets
+# at render time.
 AGENT_STORES = {
     "claude": "claude.json",
     "codex": "codex.json",
     "codex-multica": "codex-multica.json",
+    "dsh-multica": "dsh-multica.json",
     "opencode": "opencode.json",
     "traex": "traex.json",
     "dsh": "dsh.json",
@@ -252,7 +252,8 @@ AGENT_STORES = {
 # stores, one per machine per harness; this one holds no tokens and describes the
 # whole workspace, so it lives at the data root and is written by a single
 # designated machine. Multica's tokens are already counted through the harnesses
-# it drives — codex-multica.json above, and the others' own trees.
+# it drives — codex-multica.json and dsh-multica.json above, and the others'
+# own trees.
 MULTICA_TASK_STORE = "data/multica.json"
 MULTICA_TASK_WRITER = "work"
 
@@ -317,17 +318,14 @@ _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
 # delegated the way traex rides the Codex reader: its own append-only session log
 # is parsed directly (collect_dsh_daily_since).
 #
-# One harness home holds every session tree. `sessions` is the default one, and a
-# run's tree can in principle be relocated: dsh's `session-persistence-jsonl`
-# plugin takes a `root`. Nothing observed does relocate it — no installed dsh or
-# Multica build names an override, and every session on this machine lands in the
-# one default tree — so exactly one root is read. Collecting several would put
-# this store back where the Codex one was before AGENT_STORES split it: their sum
-# under a per-day max() cannot tell growth from a source disappearing, and a
-# relocated tree that is removed would take its share with it silently. Point
-# DSH_HOME at another harness home to read one; a second tree that genuinely
-# appears should get its own store, the way `codex-multica.json` did.
+# A normal dsh run writes under one harness home. Multica relocates its dsh logs
+# under profile-specific `dsh-sessions` roots, so those roots are read into the
+# separate dsh-multica store. Keeping the default and relocated trees apart is
+# what makes their per-day high-water marks stable when one source disappears.
 DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
+MULTICA_HOME = Path(
+    os.environ.get("MULTICA_HOME", "").strip() or Path.home() / ".multica"
+)
 # `logSuffix()` in dsh's JSONL backend: `.jsonl.zstd` when the artifact is
 # compressed (the default every observed build writes) and `.jsonl` when it is not.
 DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
@@ -618,6 +616,16 @@ def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
     """
     default = home / "sessions"
     return (default,) if default.is_dir() else ()
+
+
+def multica_dsh_session_roots(home: Path = MULTICA_HOME) -> tuple[Path, ...]:
+    """The relocated dsh trees created under installed Multica profiles."""
+    profiles = home / "profiles"
+    if not profiles.is_dir():
+        return ()
+    return tuple(sorted(
+        path for path in profiles.glob("*/dsh-sessions") if path.is_dir()
+    ))
 
 
 def _whole_lines(text: str) -> str:
@@ -2044,6 +2052,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     traex_path = machine_dir / AGENT_STORES["traex"]
     dsh_path = machine_dir / AGENT_STORES["dsh"]
     multica_codex_path = machine_dir / AGENT_STORES["codex-multica"]
+    multica_dsh_path = machine_dir / AGENT_STORES["dsh-multica"]
     machine_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebase onto the other machines' commits before writing, so the push at the
@@ -2128,13 +2137,23 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     except OSError as e:
         print(f"dsh session read failed, keeping cached store: {e}", file=sys.stderr)
         dsh_daily = []
+    try:
+        multica_dsh_daily = collect_dsh_daily_since(
+            EPOCH, multica_dsh_session_roots()
+        )
+    except OSError as e:
+        print(
+            f"multica dsh session read failed, keeping cached store: {e}",
+            file=sys.stderr,
+        )
+        multica_dsh_daily = []
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:
         # Entries that never observed tokens do not count as a read: a fetch made
         # only of image stubs looks non-empty and knows nothing about usage.
         if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily, *dsh_daily,
-                            *mx_daily)
+                            *mx_daily, *multica_dsh_daily)
                 if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
                   file=sys.stderr)
@@ -2152,6 +2171,9 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     # from a partial view of the day.
     merge_with_cumulative(
         mx_daily, multica_codex_path, reconcile_since=reconcile_since
+    )
+    merge_with_cumulative(
+        multica_dsh_daily, multica_dsh_path, reconcile_since=reconcile_since
     )
 
     # Multica's task shape is workspace-wide, not per-machine: one API answers for

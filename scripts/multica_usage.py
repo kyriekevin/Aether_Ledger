@@ -2,9 +2,10 @@
 
 Multica is an orchestrator, not a harness: it dispatches work to Claude Code,
 Codex, TRAE CLI and dsh, and those CLIs write the session logs the token stores
-are built from. The tokens are therefore already counted — Multica's Codex work
-arrives in ``codex-multica.json``, and the other three write to their harnesses'
-own trees. Asking the Multica API for token totals as well would count the same
+are built from. The tokens are therefore already counted — Multica's relocated
+Codex and dsh trees arrive in ``codex-multica.json`` and ``dsh-multica.json``,
+while Claude and TRAE write to their harnesses' default trees. Asking the
+Multica API for token totals as well would count the same
 work twice, from two measurements that do not even agree (for 2026-08-31 the API
 reported 21.63M against 21.50M parsed from the local rollouts).
 

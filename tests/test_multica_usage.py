@@ -398,9 +398,9 @@ class AuditTests(unittest.TestCase):
     def test_a_usage_section_is_rejected(self) -> None:
         """The guard against re-introducing the double count.
 
-        Multica's tokens reach the ledger through codex-multica.json and the
-        other harnesses' own trees. A `usage` key here means they are being
-        counted a second time.
+        Multica's tokens reach the ledger through the relocated Codex and dsh
+        stores, plus the other harnesses' own trees. A `usage` key here means
+        they are being counted a second time.
         """
         issues = self._issues({"2026-08-31": {
             "tasks": {},
@@ -430,10 +430,10 @@ class AuditTests(unittest.TestCase):
         """The allow-list is the collector's output, not the token-store list.
 
         `opencode` is a token store but not something Multica dispatches, and
-        `codex-multica` is a store name rather than an agent. Accepting either
-        would pass a file the collector could not have written.
+        The `*-multica` values are store names rather than agents. Accepting any
+        of them would pass a file the collector could not have written.
         """
-        for agent in ("opencode", "codex-multica"):
+        for agent in ("opencode", "codex-multica", "dsh-multica"):
             with self.subTest(agent=agent):
                 issues = self._issues({"2026-08-31": {"tasks": {"work": {agent: {
                     "total": 1, "completed": 1, "failed": 0, "cancelled": 0,

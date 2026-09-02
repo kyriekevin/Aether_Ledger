@@ -127,13 +127,13 @@ class AggregateTopologyTests(unittest.TestCase):
             )
 
 
-class MulticaCodexBucketTests(unittest.TestCase):
-    """The two Codex trees are stored apart and rendered as one harness.
+class MulticaHarnessBucketTests(unittest.TestCase):
+    """Relocated Multica trees are stored apart and rejoin their harnesses.
 
     Splitting the stores is what keeps each tree's high-water mark sound, but no
-    chart should show `codex-multica` as a harness of its own: it is Codex, run
-    from the session tree Multica hands its tasks. The rejoin happens here, so a
-    missing bucket entry would quietly drop a whole tree from every view.
+    chart should show a `*-multica` store as a harness of its own. The rejoin
+    happens here, so a missing bucket entry would quietly drop a whole tree from
+    every view.
     """
 
     def _root(self, directory: str) -> Path:
@@ -151,6 +151,8 @@ class MulticaCodexBucketTests(unittest.TestCase):
         }
         (node / "codex.json").write_text(json.dumps({"2026-08-30": day}))
         (node / "codex-multica.json").write_text(json.dumps({"2026-08-30": day}))
+        (node / "dsh.json").write_text(json.dumps({"2026-08-30": day}))
+        (node / "dsh-multica.json").write_text(json.dumps({"2026-08-30": day}))
         return root
 
     def test_both_trees_land_in_the_codex_bucket(self) -> None:
@@ -170,11 +172,20 @@ class MulticaCodexBucketTests(unittest.TestCase):
                 },
             )
 
+    def test_both_trees_land_in_the_dsh_bucket(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._root(directory)
+            allocation = aggregate_allocation(root, date(2026, 8, 30))
+            self.assertEqual(allocation.agent_tokens["dsh"], 200)
+            self.assertNotIn("dsh-multica", allocation.agent_tokens)
+            self.assertEqual(allocation.model_tokens[("dsh", "gpt-example")], 200)
+
     def test_the_topology_counts_the_multica_tree_under_codex(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._root(directory)
             topology = aggregate_topology(root, date(2026, 8, 30))
             self.assertEqual(topology.recent_agents["codex"], 200)
+            self.assertEqual(topology.recent_agents["dsh"], 200)
 
 
 class AggregateAllocationTests(unittest.TestCase):
