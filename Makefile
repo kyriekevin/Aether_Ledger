@@ -1,6 +1,6 @@
 UV ?= uv
 
-.PHONY: test audit render-check compile diff-check verify
+.PHONY: test audit render-check compile diff-check verify install health
 
 test:
 	$(UV) run python -m unittest discover -s tests -v
@@ -18,3 +18,9 @@ diff-check:
 	git diff --check
 
 verify: test audit render-check compile diff-check
+
+install:
+	$(UV) run --script scripts/install_launchd.py
+
+health:
+	$(UV) run --script scripts/check_install.py

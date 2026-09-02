@@ -8,20 +8,19 @@
 Reads this machine's local ccusage usage data, persists daily totals into
 `data/<machine>/claude.json`, `data/<machine>/codex.json`,
 `data/<machine>/opencode.json`, `data/<machine>/traex.json`,
-`data/<machine>/dsh.json`, and `data/<machine>/codex-multica.json` under this
-repo, and commits + pushes the result. AGENT_STORES is the list.
+`data/<machine>/dsh.json`, `data/<machine>/codex-multica.json`, and
+`data/<machine>/dsh-multica.json` under this repo, and commits + pushes the
+result. AGENT_STORES is the list.
 
 Two harnesses do not come from ccusage's default scan:
   - DeepSeek Harness (dsh) has no ccusage reader at all, so its own session log
     is parsed here (collect_dsh_daily_since).
-  - Multica, an orchestrator that drives these same CLIs, gives each Codex task
-    a private CODEX_HOME whose sessions live outside ~/.codex/sessions. Those
-    rollouts are read separately into codex-multica.json. Multica is not a
-    harness — the work is Codex's, on the same account and the same models, and
-    the dashboards render both stores as one Codex — but one store per session
-    tree is what keeps each per-day high-water mark sound. Its Claude and TRAE
-    runs already land in those CLIs' standard log directories and need nothing
-    extra.
+  - Multica, an orchestrator that drives these same CLIs, relocates the Codex and
+    dsh session trees. Those are read separately into codex-multica.json and
+    dsh-multica.json. Multica is not a harness — the dashboards fold each store
+    back into its real harness — but one store per source keeps each per-day
+    high-water mark sound. Its Claude and TRAE runs already land in those CLIs'
+    standard log directories and need nothing extra.
 
 Every machine that contributes data runs this script (or its launchd wrapper).
 Sync-only machines only need to clone the data repo — they do NOT need the
@@ -70,6 +69,7 @@ DATA_REPO_DIR = Path(__file__).resolve().parents[1]
 
 CONFIG_DIR = Path.home() / ".config" / "token-activity"
 NODE_NAME_FILE = CONFIG_DIR / "node_name"
+MULTICA_DSH_PROFILE_FILE = CONFIG_DIR / "multica_dsh_profile"
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 ROLLOVER_WATCHDOG_NODES = frozenset({"work", "personal"})
 NODE_ID_RE = re.compile(r"node-[0-9a-f]{12}")
@@ -236,13 +236,14 @@ MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
 # compact_trails, squash_usage_branch) must each cover all of them; a store one
 # of them has never heard of fails silently rather than loudly, so the tests
 # assert their registries against THIS mapping rather than a repeated literal.
-# `codex-multica` is not a fifth harness: it is Codex read from the separate
-# session tree Multica gives it, kept apart only so each tree gets its own
-# high-water mark, and folded back into the Codex bucket at render time.
+# The `*-multica` names are not extra harnesses. They keep Multica's relocated
+# trees on independent high-water marks and fold back into their harness buckets
+# at render time.
 AGENT_STORES = {
     "claude": "claude.json",
     "codex": "codex.json",
     "codex-multica": "codex-multica.json",
+    "dsh-multica": "dsh-multica.json",
     "opencode": "opencode.json",
     "traex": "traex.json",
     "dsh": "dsh.json",
@@ -252,7 +253,8 @@ AGENT_STORES = {
 # stores, one per machine per harness; this one holds no tokens and describes the
 # whole workspace, so it lives at the data root and is written by a single
 # designated machine. Multica's tokens are already counted through the harnesses
-# it drives — codex-multica.json above, and the others' own trees.
+# it drives — codex-multica.json and dsh-multica.json above, and the others'
+# own trees.
 MULTICA_TASK_STORE = "data/multica.json"
 MULTICA_TASK_WRITER = "work"
 
@@ -317,17 +319,15 @@ _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
 # delegated the way traex rides the Codex reader: its own append-only session log
 # is parsed directly (collect_dsh_daily_since).
 #
-# One harness home holds every session tree. `sessions` is the default one, and a
-# run's tree can in principle be relocated: dsh's `session-persistence-jsonl`
-# plugin takes a `root`. Nothing observed does relocate it — no installed dsh or
-# Multica build names an override, and every session on this machine lands in the
-# one default tree — so exactly one root is read. Collecting several would put
-# this store back where the Codex one was before AGENT_STORES split it: their sum
-# under a per-day max() cannot tell growth from a source disappearing, and a
-# relocated tree that is removed would take its share with it silently. Point
-# DSH_HOME at another harness home to read one; a second tree that genuinely
-# appears should get its own store, the way `codex-multica.json` did.
+# A normal dsh run writes under one harness home. Multica relocates its dsh logs
+# under profile-specific `dsh-sessions` roots. dsh-multica.json must stay bound
+# to one such root: when several exist, MULTICA_DSH_PROFILE selects one rather
+# than summing sources whose membership can change under a per-day high-water.
 DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
+MULTICA_HOME = Path(
+    os.environ.get("MULTICA_HOME", "").strip() or Path.home() / ".multica"
+)
+MULTICA_DSH_PROFILE = os.environ.get("MULTICA_DSH_PROFILE", "").strip() or None
 # `logSuffix()` in dsh's JSONL backend: `.jsonl.zstd` when the artifact is
 # compressed (the default every observed build writes) and `.jsonl` when it is not.
 DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
@@ -620,6 +620,94 @@ def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
     return (default,) if default.is_dir() else ()
 
 
+def multica_dsh_session_roots(
+    home: Path = MULTICA_HOME,
+    profile: str | None = MULTICA_DSH_PROFILE,
+    binding_file: Path = MULTICA_DSH_PROFILE_FILE,
+) -> tuple[Path, ...]:
+    """The one Multica profile tree assigned to dsh-multica.json."""
+    profiles = home / "profiles"
+    bound = _read_multica_dsh_profile(binding_file)
+    if profile is not None and bound is not None and profile != bound:
+        raise ValueError(
+            f"dsh-multica.json is bound to Multica profile {bound!r}; refusing "
+            f"to switch it to MULTICA_DSH_PROFILE={profile!r}"
+        )
+    selected_profile = bound or profile
+    if selected_profile is not None:
+        _validate_multica_dsh_profile(selected_profile)
+        selected = profiles / selected_profile / "dsh-sessions"
+        if not selected.is_dir():
+            raise ValueError(
+                f"bound Multica DSH profile {selected_profile!r} has no "
+                "dsh-sessions tree; keeping the stored high-water"
+            )
+        if bound is None:
+            persisted = _bind_multica_dsh_profile(binding_file, selected_profile)
+            if persisted != selected_profile:
+                raise ValueError(
+                    f"dsh-multica.json was concurrently bound to {persisted!r}; "
+                    f"refusing to collect {selected_profile!r}"
+                )
+        return (selected,)
+    if not profiles.is_dir():
+        return ()
+    candidates = tuple(sorted(
+        path for path in profiles.glob("*/dsh-sessions") if path.is_dir()
+    ))
+    if len(candidates) > 1:
+        raise ValueError(
+            "multiple Multica profiles have dsh-sessions trees; set "
+            "MULTICA_DSH_PROFILE so dsh-multica.json keeps one fixed source"
+        )
+    if not candidates:
+        return ()
+    selected_profile = candidates[0].parent.name
+    persisted = _bind_multica_dsh_profile(binding_file, selected_profile)
+    if persisted != selected_profile:
+        raise ValueError(
+            f"dsh-multica.json was concurrently bound to {persisted!r}; "
+            f"refusing to collect {selected_profile!r}"
+        )
+    return candidates
+
+
+def _validate_multica_dsh_profile(profile: str) -> None:
+    if Path(profile).name != profile or profile in {"", ".", ".."}:
+        raise ValueError("Multica DSH profile must be one profile directory name")
+
+
+def _read_multica_dsh_profile(path: Path) -> str | None:
+    try:
+        profile = path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return None
+    _validate_multica_dsh_profile(profile)
+    return profile
+
+
+def _bind_multica_dsh_profile(path: Path, profile: str) -> str:
+    """Atomically bind dsh-multica.json to one local Multica profile."""
+    _validate_multica_dsh_profile(profile)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(profile + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(tmp, path)
+        except FileExistsError:
+            persisted = _read_multica_dsh_profile(path)
+            if persisted is None:  # pragma: no cover - link says it exists
+                raise OSError(f"cannot read concurrently created {path}")
+            return persisted
+    finally:
+        os.unlink(tmp)
+    return profile
+
+
 def _whole_lines(text: str) -> str:
     """Drop a trailing line the decoder stopped in the middle of.
 
@@ -750,11 +838,10 @@ def collect_dsh_daily_since(
 ) -> list[dict]:
     """Aggregate DeepSeek Harness usage per day straight from its session logs.
 
-    ccusage has no dsh reader, so this is a first-party parse. Only three event
-    types matter. `request/header` and `request/context` name the model serving
-    the calls that follow — a header is always written before the first one and
-    again whenever the route changes — and `assistant/message` carries one model
-    call's token accounting.
+    ccusage has no dsh reader, so this is a first-party parse. `session` supplies
+    the anonymous in-memory identity used to deduplicate copied logs;
+    `request/header` and `request/context` name the model serving the calls that
+    follow; and `assistant/message` carries one model call's token accounting.
 
     dsh's counts are disjoint by contract: `inputTokens` is uncached input only,
     and cached input arrives as cacheRead/cacheWrite, so the four components add
@@ -766,11 +853,12 @@ def collect_dsh_daily_since(
     gateway routes dsh can reach) keep their real token counts and contribute zero,
     and are named on stderr so a new one is noticed rather than billing zero unseen.
 
-    Nothing identifying is read: the log's cwd, prompts, tool arguments and output,
-    titles, and session ids are all skipped.
+    Session ids are used only for in-memory deduplication. The log's cwd, prompts,
+    tool arguments and output, titles, and every identity are absent from output.
     """
     session_roots = dsh_session_roots() if roots is None else tuple(roots)
     daily: dict[str, dict] = {}
+    messages: dict[tuple[object, int, int], tuple] = {}
     unreadable = 0
     partial = 0
     for path in _dsh_session_logs(session_roots):
@@ -780,9 +868,10 @@ def collect_dsh_daily_since(
             continue
         if not complete:
             partial += 1
+        session_id: str | None = None
         model: str | None = None
         effort: str | None = None
-        for line in text.splitlines():
+        for line_number, line in enumerate(text.splitlines()):
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
@@ -793,6 +882,11 @@ def collect_dsh_daily_since(
                 continue
             kind = event.get("type")
             data = event.get("data")
+            if kind == "session":
+                raw_session_id = event.get("id")
+                if isinstance(raw_session_id, str) and raw_session_id.strip():
+                    session_id = raw_session_id.strip()
+                continue
             if not isinstance(data, dict):
                 continue
             if kind == "request/header":
@@ -824,22 +918,54 @@ def collect_dsh_daily_since(
             tokens = sum(breakdown.values())
             if tokens <= 0:
                 continue
-            bucket = daily.setdefault(day.isoformat(), {}).setdefault(
-                "models", {}
-            ).setdefault(model, {"totalTokens": 0, **{k: 0 for k in breakdown}})
-            bucket["totalTokens"] += tokens
-            for key, value in breakdown.items():
-                bucket[key] += value
-            if effort is not None:
-                raw_reasoning = usage.get("reasoningTokens")
-                _add_routing_bucket(
-                    daily, day, "efforts", effort, tokens,
-                    reasoning_tokens=_token_value(raw_reasoning),
-                    reasoning_observed=(
-                        isinstance(raw_reasoning, (int, float))
-                        and not isinstance(raw_reasoning, bool)
-                    ),
-                )
+            # A copied or migrated session can appear in more than one file.
+            # DSH's stable call identity is session + turn + step; later records
+            # win so an older copy cannot replace a finalized observation.
+            turn = data.get("turn")
+            step = data.get("step")
+            valid_step = all(
+                isinstance(value, int) and not isinstance(value, bool) and value >= 0
+                for value in (turn, step)
+            )
+            identity = (
+                (session_id or path, turn, step)
+                if valid_step
+                else (path, -1, line_number)
+            )
+            raw_time = event.get("time")
+            raw_seq = event.get("seq")
+            priority = (
+                raw_time if isinstance(raw_time, (int, float)) else 0,
+                raw_seq if isinstance(raw_seq, (int, float)) else 0,
+                tokens,
+            )
+            raw_reasoning = usage.get("reasoningTokens")
+            candidate = (
+                priority, day, model, effort, breakdown,
+                _token_value(raw_reasoning),
+                isinstance(raw_reasoning, (int, float))
+                and not isinstance(raw_reasoning, bool),
+            )
+            if identity not in messages or priority >= messages[identity][0]:
+                messages[identity] = candidate
+
+    for (
+        _priority, day, model, effort, breakdown, reasoning,
+        reasoning_observed,
+    ) in messages.values():
+        tokens = sum(breakdown.values())
+        bucket = daily.setdefault(day.isoformat(), {}).setdefault(
+            "models", {}
+        ).setdefault(model, {"totalTokens": 0, **{k: 0 for k in breakdown}})
+        bucket["totalTokens"] += tokens
+        for key, value in breakdown.items():
+            bucket[key] += value
+        if effort is not None:
+            _add_routing_bucket(
+                daily, day, "efforts", effort, tokens,
+                reasoning_tokens=reasoning,
+                reasoning_observed=reasoning_observed,
+            )
     if unreadable:
         print(
             f"dsh: {unreadable} session log(s) could not be read at all and were "
@@ -2044,6 +2170,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     traex_path = machine_dir / AGENT_STORES["traex"]
     dsh_path = machine_dir / AGENT_STORES["dsh"]
     multica_codex_path = machine_dir / AGENT_STORES["codex-multica"]
+    multica_dsh_path = machine_dir / AGENT_STORES["dsh-multica"]
     machine_dir.mkdir(parents=True, exist_ok=True)
 
     # Rebase onto the other machines' commits before writing, so the push at the
@@ -2128,13 +2255,23 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     except OSError as e:
         print(f"dsh session read failed, keeping cached store: {e}", file=sys.stderr)
         dsh_daily = []
+    try:
+        multica_dsh_daily = collect_dsh_daily_since(
+            EPOCH, multica_dsh_session_roots()
+        )
+    except (OSError, ValueError) as e:
+        print(
+            f"multica dsh session read failed, keeping cached store: {e}",
+            file=sys.stderr,
+        )
+        multica_dsh_daily = []
     # Reconciling rewrites history downward, so it must not run against an empty
     # read. Unknown-model zeroes are intentional under the official table.
     if reconcile_since is not None:
         # Entries that never observed tokens do not count as a read: a fetch made
         # only of image stubs looks non-empty and knows nothing about usage.
         if not [e for e in (*cc_daily, *cx_daily, *op_daily, *tx_daily, *dsh_daily,
-                            *mx_daily)
+                            *mx_daily, *multica_dsh_daily)
                 if e.get("tokensObserved", True)]:
             print("nothing fetched; refusing to reconcile against an empty read",
                   file=sys.stderr)
@@ -2152,6 +2289,9 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     # from a partial view of the day.
     merge_with_cumulative(
         mx_daily, multica_codex_path, reconcile_since=reconcile_since
+    )
+    merge_with_cumulative(
+        multica_dsh_daily, multica_dsh_path, reconcile_since=reconcile_since
     )
 
     # Multica's task shape is workspace-wide, not per-machine: one API answers for

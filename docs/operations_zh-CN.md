@@ -25,10 +25,11 @@ TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支
 
 DeepSeek Harness（dsh）直接读它自己的日志：ccusage 没有 `dsh` agent，无法像 traex 借用 Codex
 读取器那样借用。一个 dsh harness home 下每个会话有一份追加写的 JSONL 事件日志，位于
-`<root>/<project>/<session>/session.jsonl[.zstd]`，采集器只看三类事件：`request/header` 和
-`request/context` 给出后续调用使用的模型，`assistant/message` 携带单次模型调用的 token 计数。
+`<root>/<project>/<session>/session.jsonl[.zstd]`。采集器用 `session` 生成仅在内存中存在的去重键，
+用 `request/header` 和 `request/context` 确定后续调用的模型，并从 `assistant/message` 读取单次调用的
+token 计数。
 dsh 的计数彼此不重叠——`inputTokens` 不含命中缓存的输入，缓存读写单独上报——所以四项相加就是
-计费总量，与 ccusage 采集的几个 store 是同一套口径。数据写入 `dsh.json`，按官方 standard 价格
+计费总量，与 ccusage 采集的几个 store 是同一套口径。普通运行的数据写入 `dsh.json`，按官方 standard 价格
 计算；dsh 不记录优先级 tier，没有可用的乘数。effort 取自 header 的 `reasoningEffort`：dsh 的
 `off` 记为本仓库的 `none`；它的 `minimal` 在本仓库没有对应档位，因此不记 effort 桶，而不是并入
 `low`。
@@ -54,10 +55,15 @@ ccusage 抓取失败时的行为一致。
 
 Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Claude Code、Codex、TRAE CLI 和
 dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
-`~/.trae/cli/sessions`，无需额外处理。Codex 是例外：Multica 给每个任务一个私有 `CODEX_HOME`，
+`~/.trae/cli/sessions`，无需额外处理。Codex 和 dsh 是例外：Multica 给每个 Codex 任务一个私有 `CODEX_HOME`，
 其 `sessions` 是指向共享目录 `~/.codex/multica-sessions` 的软链接，而该目录是 `~/.codex/sessions`
 的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
-以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。
+以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。Multica 还会把 dsh 日志放到
+`~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
+只发现一棵时自动选择，并把选择写入 `~/.config/token-activity/multica_dsh_profile`；首次绑定前发现
+多棵时，由 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。绑定的目录消失或配置改指另一棵树时，
+采集器会保留已有高水位并拒绝换源，不会把同一个 store 静默复用给另一个 profile。这个选择与
+`MULTICA_PROFILE` 相互独立，因为 API 任务采集和本地 DSH 执行可能使用不同 profile。
 
 既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
 工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有
@@ -71,6 +77,10 @@ Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记
 `personal` 或 `devbox`。没有这个文件的机器什么都不采，而不是去猜；provider 不在已知集合里的 runtime
 会在 stderr 上报出来，而不是静默跳过——provider 字符串一旦改名，静默跳过看起来就和"这个 provider
 没干活"一模一样。
+
+Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json`；复制
+`config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId` 和
+`dshProfile` 三个字段，校验后写入 launchd 环境。生成的 plist 不是第二份配置源，不应再手工修改。
 
 run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
 被重新统计。每次采集中每个 run 和 issue 只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
@@ -94,12 +104,12 @@ CLI 一次只回答一个 profile、一个 workspace，而没有 issue 的 profi
 写入一个空的天。另外两台服务器对同一个 provider 的叫法不一致——TRAE CLI 在一台上是 `traecli`，
 另一台上是 `traex`——所以两个都映射到 `traex` 这个 agent。
 
-之所以单开一个 store 而不是把数加进当天的 Codex 条目：累计合并按天保留存量与新观测中较大的
+之所以单开 store 而不是把数加进当天的 Codex 或 dsh 条目：累计合并按天保留存量与新观测中较大的
 那个，这条高水位规则是用来防止会话轮转导致历史缩水的，而它成立的前提是每个存量数字只描述
 一个固定来源。先把两棵树加起来，max() 比较的就是构成会变的和——某天 Multica 的 rollout 被清理、
 标准树却继续涨过了原来的合计，较大的那个和胜出，被清理那棵树的份额就没了，既没有信号，后续
 也没有任何一次运行能把它找回来。一棵树一个 store，每个高水位标记才名副其实；渲染时
-`AGENT_BUCKETS` 再把 `codex-multica` 归回 `codex`，所以没有任何一张图会把它显示成独立 harness。
+`AGENT_BUCKETS` 再把 `codex-multica` 归回 `codex`、把 `dsh-multica` 归回 `dsh`，所以没有任何一张图会把它们显示成独立 harness。
 这样也隔离了抓取失败：空结果什么都不合并，而合并成一份时，`--reconcile-since` 会拿只有半棵树
 的观测覆盖掉当天的 Codex。
 
@@ -212,7 +222,7 @@ printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已�
 ```sh
 git switch main
 git pull --ff-only
-uv run --script scripts/install_launchd.py
+make install
 ```
 
 安装器会创建 linked、仅供 launchd 使用的 Git worktree：
@@ -233,6 +243,9 @@ agent。
 安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
 `com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更
 立即生效，同时避免新旧定时任务一起运行。
+
+安装后运行 `make health`。它会检查依赖、本机配置、launchd 环境和 writer 脚本路径，但不会打印私有
+配置值。
 
 日志位置：
 
@@ -381,7 +394,7 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 ## 活动面板
 
 `scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、
-`codex-multica.json`、`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
+`codex-multica.json`、`dsh-multica.json`、`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
 
 活动 SVG 包含：
 
@@ -530,8 +543,9 @@ Message 与 session 标识只在内存中用于去重，绝不写入仓库。历
 OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
 `--by-agent` 明细，而不是模型家族。
 
-dsh（`dsh.json`）使用相同的按日期结构；当会话 header 给出本仓库会渲染的 effort 档位时，还会带
-`routing.efforts`。它代表 DeepSeek Harness，手动启动和 Multica 调度的都算在内。
+dsh（`dsh.json` 和 `dsh-multica.json`）使用相同的按日期结构；当会话 header 给出本仓库会渲染的
+effort 档位时，还会带 `routing.efforts`。两个 store 在所有面板中都会合并为 DeepSeek Harness；
+分开存储只是为了让两棵源日志树各自保持可靠的高水位。
 
 traex（`traex.json`）使用与 Codex 相同的按日期结构，代表司内的 TRAE CLI；其中记录的模型名
 才描述该 harness 背后实际提供的能力。价格不会假设 Fast tier，已登记模型按官方 standard

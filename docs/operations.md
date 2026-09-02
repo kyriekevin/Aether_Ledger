@@ -28,12 +28,13 @@ recorded in its own model metadata, so old and new sessions share one cumulative
 
 DeepSeek Harness (dsh) is read from its own logs, because ccusage has no `dsh` agent to borrow the
 way traex borrows the Codex reader. A dsh harness home holds one append-only JSONL event log per
-session at `<root>/<project>/<session>/session.jsonl[.zstd]`, and the writer reads three of its
-event types: `request/header` and `request/context` name the model serving the calls that follow,
-and `assistant/message` carries one model call's token accounting. dsh reports disjoint counts —
+session at `<root>/<project>/<session>/session.jsonl[.zstd]`. The writer uses `session` for an
+in-memory deduplication key, `request/header` and `request/context` to name the model serving the
+calls that follow, and `assistant/message` for one model call's token accounting. dsh reports
+disjoint counts —
 `inputTokens` excludes cached input, which arrives separately as cache reads and writes — so the
-four components add up to the billed total, the same convention the ccusage-fed stores use. Days
-land in `dsh.json`, priced at the official standard tier; dsh records no priority tier for a
+four components add up to the billed total, the same convention the ccusage-fed stores use. Normal
+runs land in `dsh.json`, priced at the official standard tier; dsh records no priority tier for a
 multiplier to apply to. Effort comes from the header's `reasoningEffort`: dsh's `off` is recorded
 as this repository's `none`, and its `minimal`, which has no counterpart here, records no effort
 bucket rather than being folded into `low`.
@@ -66,11 +67,17 @@ as a failed ccusage fetch does.
 Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
 already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
-special handling. Codex is the exception. Multica gives each task a private `CODEX_HOME` whose
+special handling. Codex and dsh are the exceptions. Multica gives each Codex task a private `CODEX_HOME` whose
 `sessions` is a symlink into a shared `~/.codex/multica-sessions` tree, which is a sibling of
 `~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
 that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
-writes the result to a store of its own, `codex-multica.json`.
+writes the result to a store of its own, `codex-multica.json`. Multica also relocates dsh logs to
+`~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
+the writer selects it automatically when only one exists and persists that choice in
+`~/.config/token-activity/multica_dsh_profile`. When several exist before the first binding,
+`MULTICA_DSH_PROFILE` selects one. A missing or changed bound root fails closed and keeps the stored
+high-water rather than silently reusing the file for another profile. This selector is independent
+of `MULTICA_PROFILE`, because API task collection and local DSH execution can use different profiles.
 
 Because those tokens already reach the ledger through the harnesses, the Multica API is never asked
 for token totals — that would count the same work twice, from two measurements that do not agree
@@ -87,6 +94,11 @@ each runtime's operator-chosen custom name to `work`, `personal`, or `devbox`. A
 that file collects nothing rather than guessing, and a runtime whose provider this repository does
 not recognise is reported on stderr rather than skipped silently — a renamed provider string would
 otherwise read exactly like that provider having done no work.
+
+Private Multica launch inputs live in `~/.config/token-activity/multica.json`; copy
+`config/multica.example.json` and replace its placeholders. The installer accepts only `profile`,
+`workspaceId`, and `dshProfile`, then renders them into the launchd environment. The generated plist
+is not a second configuration source and should not be edited by hand.
 
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
 still in flight has no duration and would be recounted under a different status next time. Each run
@@ -117,15 +129,15 @@ subcommand, so the collector puts it in front. A fetch that finds runtimes but n
 so on stderr rather than writing an empty day quietly. The two servers also disagree on one provider
 string — TRAE CLI is `traecli` on one and `traex` on the other — so both map to the `traex` agent.
 
-A separate store rather than a bigger Codex day, because the cumulative merge keeps the larger of
+A separate store rather than a bigger Codex or dsh day, because the cumulative merge keeps the larger of
 the stored and incoming observations per day. That high-water rule is what protects history from
 session rotation, and it only holds while each stored number describes one fixed source. Add the
 two trees together first and max() is comparing sums whose composition can change: on a day whose
 Multica rollouts have aged out while the standard tree kept growing past the old combined total,
 the larger sum wins and the pruned tree's share is gone, with nothing to signal it and no later run
 able to restore it. One store per tree keeps every high-water mark meaning what it says, and
-`AGENT_BUCKETS` folds `codex-multica` back under `codex` at render time so no chart shows it as a
-harness of its own. It also isolates a failed Multica read: an empty fetch merges nothing, where a
+`AGENT_BUCKETS` folds `codex-multica` under `codex` and `dsh-multica` under `dsh` at render time, so
+no chart shows either as a harness of its own. It also isolates a failed Multica read: an empty fetch merges nothing, where a
 summed one would have rewritten the Codex day from a partial view under `--reconcile-since`.
 
 Unlike the traex path, this one keeps ccusage's own cost for a row whose every
@@ -249,7 +261,7 @@ for development off the active `usage/YYYY-MM-DD` branch, update `main`, then in
 ```sh
 git switch main
 git pull --ff-only
-uv run --script scripts/install_launchd.py
+make install
 ```
 
 The installer creates `~/.cache/aether-ledger/writer` as a linked, launchd-only Git worktree and
@@ -272,6 +284,9 @@ Re-running the installer reuses the registered writer worktree and reloads the a
 The installer migrates an existing approved `machine_name`, then unloads and removes the legacy
 `com.kyriekevin.cc-cx-usage-data` agent. It atomically installs and reloads the current agent so
 schedule changes take effect immediately. This prevents old and new schedules from running together.
+
+Run `make health` after installation. It checks required binaries, local configuration, the rendered
+launchd environment, and the writer script path without printing private configuration values.
 
 Logs:
 
@@ -440,7 +455,7 @@ pinned to `main` will be up to one day behind by design.
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
-`codex-multica.json`, `opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
+`codex-multica.json`, `dsh-multica.json`, `opencode.json`, `traex.json`, or `dsh.json`. Files such as `codex_by_repo.json` are deliberately
 excluded.
 
 The activity SVG contains:
@@ -604,9 +619,10 @@ rotate. Legacy entries may retain the former `turns` field with the same model-c
 OpenCode has the same date-keyed shape and may include per-model totals. Its agent attribution also
 comes directly from the `--by-agent` breakdown rather than from the model family.
 
-dsh (`dsh.json`) uses the same date-keyed shape, with `routing.efforts` when the session headers
-named a reasoning level this repository renders. It represents DeepSeek Harness, whether launched
-by hand or by Multica.
+dsh (`dsh.json` and `dsh-multica.json`) uses the same date-keyed shape, with `routing.efforts` when
+the session headers named a reasoning level this repository renders. Both stores represent
+DeepSeek Harness and are combined in every dashboard; the split only preserves their independent
+source-tree high-water marks.
 
 traex (`traex.json`) uses the same date-keyed shape as Codex. It represents the internal TRAE CLI,
 while its recorded model names describe the actual capacity supplied behind that harness. Fast

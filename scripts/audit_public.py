@@ -16,8 +16,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AGENT_FILES = frozenset({
-    "claude.json", "codex.json", "codex-multica.json", "opencode.json",
-    "traex.json", "dsh.json",
+    "claude.json", "codex.json", "codex-multica.json", "dsh-multica.json",
+    "opencode.json", "traex.json", "dsh.json",
 })
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 OPAQUE_NODE = re.compile(r"node-[0-9a-f]{12}")
@@ -54,8 +54,8 @@ MULTICA_TASK_STORE = "data/multica.json"
 MULTICA_DAY_KEYS = frozenset({"tasks"})
 # The agents the Multica collector can actually emit. Deliberately NOT derived
 # from AGENT_FILES: that list is the token stores, and it includes `opencode`,
-# which Multica does not dispatch, and `codex-multica`, which is a store name
-# rather than an agent. Validating against it would accept values the collector
+# which Multica does not dispatch, and the `*-multica` names, which are store
+# names rather than agents. Validating against it would accept values the collector
 # cannot produce, which is the shape a corrupted or hand-edited file would take.
 MULTICA_TASK_AGENTS = frozenset({"claude", "codex", "dsh", "traex"})
 MULTICA_TASK_KEYS = frozenset(

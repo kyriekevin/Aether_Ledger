@@ -15,9 +15,9 @@ from pathlib import Path
 
 GENERATED_STORE = re.compile(
     r"^data/(?:work|personal|devbox)/"
-    r"(?:claude|codex|codex-multica|opencode|traex|dsh)\.json$"
+    r"(?:claude|codex|codex-multica|dsh-multica|opencode|traex|dsh)\.json$"
     r"|^data/trail/[^/]+/"
-    r"(?:claude|codex|codex-multica|opencode|traex|dsh)\.json$"
+    r"(?:claude|codex|codex-multica|dsh-multica|opencode|traex|dsh)\.json$"
     # The Multica task aggregate is machine-independent, so it sits at the data
     # root rather than under a node label — but it is regenerated the same way
     # and squashes under the same rule.
