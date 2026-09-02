@@ -1,0 +1,15 @@
+{
+  "2026-08-31": {
+    "tasks": {
+      "work": {
+        "codex": {
+          "cancelled": 0,
+          "completed": 13,
+          "durationSeconds": 2930,
+          "failed": 0,
+          "total": 13
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "2026-09-02": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+        "inputTokens": 7681,
+        "outputTokens": 10,
+        "totalTokens": 7691
+      }
+    },
+    "routing": {
+      "efforts": {
+        "none": {
+          "calls": 1,
+          "totalTokens": 7691
+        }
+      }
+    },
+    "totalCost": 0.00339284,
+    "totalTokens": 7691
+  }
+}

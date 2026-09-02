@@ -366,5 +366,42 @@
     },
     "totalCost": 0.29497300000000004,
     "totalTokens": 133045
+  },
+  "2026-09-02": {
+    "costSource": "official",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 25933171,
+        "inputTokens": 1067425,
+        "outputTokens": 396629,
+        "totalTokens": 27397225
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4637696,
+        "inputTokens": 480855,
+        "outputTokens": 41242,
+        "totalTokens": 5159793
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 74,
+          "reasoningCalls": 74,
+          "reasoningOutputTokens": 13029,
+          "totalTokens": 5159793
+        },
+        "xhigh": {
+          "calls": 254,
+          "reasoningCalls": 254,
+          "reasoningOutputTokens": 269714,
+          "totalTokens": 27468837
+        }
+      }
+    },
+    "totalCost": 34.179818499999996,
+    "totalTokens": 32557018
   }
 }

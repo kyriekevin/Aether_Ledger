@@ -1502,11 +1502,11 @@
         "totalTokens": 9271781
       },
       "claude-opus-5": {
-        "cacheCreationTokens": 1320925,
-        "cacheReadTokens": 115110701,
-        "inputTokens": 1162,
-        "outputTokens": 438763,
-        "totalTokens": 116871551
+        "cacheCreationTokens": 1328997,
+        "cacheReadTokens": 118811516,
+        "inputTokens": 1188,
+        "outputTokens": 445554,
+        "totalTokens": 120587255
       },
       "claude-sonnet-5": {
         "cacheCreationTokens": 172296,
@@ -1519,14 +1519,58 @@
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 675,
-          "reasoningCalls": 671,
-          "reasoningOutputTokens": 214699,
-          "totalTokens": 126501042
+          "calls": 688,
+          "reasoningCalls": 684,
+          "reasoningOutputTokens": 216415,
+          "totalTokens": 130216746
         }
       }
     },
-    "totalCost": 107.40293149999995,
-    "totalTokens": 126501042
+    "totalCost": 109.50396399999995,
+    "totalTokens": 130216746
+  },
+  "2026-09-02": {
+    "costSource": "official",
+    "models": {
+      "claude-fable-5": {
+        "cacheCreationTokens": 565901,
+        "cacheReadTokens": 12484361,
+        "inputTokens": 196,
+        "outputTokens": 95699,
+        "totalTokens": 13146157
+      },
+      "claude-opus-5": {
+        "cacheCreationTokens": 1562214,
+        "cacheReadTokens": 43071849,
+        "inputTokens": 728,
+        "outputTokens": 361177,
+        "totalTokens": 44995968
+      },
+      "claude-sonnet-5": {
+        "cacheCreationTokens": 57201,
+        "cacheReadTokens": 313026,
+        "inputTokens": 16,
+        "outputTokens": 4500,
+        "totalTokens": 374743
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 8,
+          "reasoningCalls": 8,
+          "reasoningOutputTokens": 3267,
+          "totalTokens": 374743
+        },
+        "xhigh": {
+          "calls": 462,
+          "reasoningCalls": 462,
+          "reasoningOutputTokens": 198529,
+          "totalTokens": 58142125
+        }
+      }
+    },
+    "totalCost": 75.11686170000002,
+    "totalTokens": 58516868
   }
 }
