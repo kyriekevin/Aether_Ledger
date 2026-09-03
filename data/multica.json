@@ -11,5 +11,66 @@
         }
       }
     }
+  },
+  "2026-09-02": {
+    "tasks": {
+      "work": {
+        "claude": {
+          "cancelled": 0,
+          "completed": 18,
+          "durationSeconds": 25765,
+          "failed": 0,
+          "total": 18
+        },
+        "codex": {
+          "cancelled": 0,
+          "completed": 5,
+          "durationSeconds": 24910,
+          "failed": 0,
+          "total": 5
+        },
+        "dsh": {
+          "cancelled": 0,
+          "completed": 1,
+          "durationSeconds": 187,
+          "failed": 3,
+          "total": 4
+        },
+        "traex": {
+          "cancelled": 0,
+          "completed": 14,
+          "durationSeconds": 12620,
+          "failed": 0,
+          "total": 14
+        }
+      }
+    }
+  },
+  "2026-09-03": {
+    "tasks": {
+      "work": {
+        "claude": {
+          "cancelled": 0,
+          "completed": 4,
+          "durationSeconds": 4787,
+          "failed": 5,
+          "total": 9
+        },
+        "codex": {
+          "cancelled": 0,
+          "completed": 5,
+          "durationSeconds": 1919,
+          "failed": 0,
+          "total": 5
+        },
+        "traex": {
+          "cancelled": 3,
+          "completed": 26,
+          "durationSeconds": 19894,
+          "failed": 0,
+          "total": 29
+        }
+      }
+    }
   }
 }
