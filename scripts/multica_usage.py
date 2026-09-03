@@ -94,6 +94,10 @@ def _run_json(args: list[str]) -> object:
         # private issue ID, and that identifier must not reach the log.
         command = " ".join(args[:2])
         detail = " ".join((result.stderr or result.stdout).split())
+        if args[:2] == ["issue", "runs"]:
+            for issue_id in args[2:]:
+                if issue_id:
+                    detail = detail.replace(issue_id, "<redacted>")
         if not detail:
             detail = "no diagnostic output"
         raise RuntimeError(

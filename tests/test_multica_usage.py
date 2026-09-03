@@ -74,12 +74,14 @@ def _identity_bearing_fixture(
 class TaskCollectionTests(unittest.TestCase):
     def test_run_json_keeps_cli_diagnostic_without_private_issue_id(self) -> None:
         result = subprocess.CompletedProcess(
-            args=[], returncode=4, stdout="", stderr="authentication expired\n"
+            args=[], returncode=4, stdout="",
+            stderr="cannot resolve issue private-issue-id\n",
         )
         with patch.object(multica_usage.subprocess, "run", return_value=result):
             with self.assertRaisesRegex(
                 RuntimeError,
-                r"multica issue runs failed with exit status 4: authentication expired",
+                r"multica issue runs failed with exit status 4: "
+                r"cannot resolve issue <redacted>",
             ) as raised:
                 multica_usage._run_json(["issue", "runs", "private-issue-id"])
 
