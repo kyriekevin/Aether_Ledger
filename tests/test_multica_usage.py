@@ -5,6 +5,7 @@ import contextlib
 import inspect
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -71,6 +72,21 @@ def _identity_bearing_fixture(
 
 
 class TaskCollectionTests(unittest.TestCase):
+    def test_run_json_keeps_cli_diagnostic_without_private_issue_id(self) -> None:
+        result = subprocess.CompletedProcess(
+            args=[], returncode=4, stdout="",
+            stderr="cannot resolve issue private-issue-id\n",
+        )
+        with patch.object(multica_usage.subprocess, "run", return_value=result):
+            with self.assertRaisesRegex(
+                RuntimeError,
+                r"multica issue runs failed with exit status 4: "
+                r"cannot resolve issue <redacted>",
+            ) as raised:
+                multica_usage._run_json(["issue", "runs", "private-issue-id"])
+
+        self.assertNotIn("private-issue-id", str(raised.exception))
+
     def test_reduces_terminal_runs_to_counters_and_keeps_no_identity(self) -> None:
         snapshot = multica_usage.collect_snapshot(
             {"laptop-alias": "work"}, run_json=_identity_bearing_fixture()

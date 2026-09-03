@@ -84,9 +84,26 @@ def _run_json(args: list[str]) -> object:
         [MULTICA_BIN, *prefix, *args, "--output", "json"],
         capture_output=True,
         text=True,
-        check=True,
+        check=False,
         timeout=COMMAND_TIMEOUT_SECONDS,
     )
+    if result.returncode != 0:
+        # CalledProcessError's default string drops captured stderr, which left
+        # scheduled failures as an exit code with no actionable explanation.
+        # Name only the command family here: `issue runs` is followed by a
+        # private issue ID, and that identifier must not reach the log.
+        command = " ".join(args[:2])
+        detail = " ".join((result.stderr or result.stdout).split())
+        if args[:2] == ["issue", "runs"]:
+            for issue_id in args[2:]:
+                if issue_id:
+                    detail = detail.replace(issue_id, "<redacted>")
+        if not detail:
+            detail = "no diagnostic output"
+        raise RuntimeError(
+            f"multica {command} failed with exit status {result.returncode}: "
+            f"{detail[:1000]}"
+        )
     return json.loads(result.stdout)
 
 
