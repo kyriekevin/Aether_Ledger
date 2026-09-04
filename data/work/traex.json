@@ -427,5 +427,49 @@
     },
     "totalCost": 67.005238,
     "totalTokens": 74976889
+  },
+  "2026-09-04": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4-pro": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1058816,
+        "inputTokens": 109607,
+        "outputTokens": 6964,
+        "totalTokens": 1175387
+      },
+      "gemini-3-flash-preview": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 71320,
+        "inputTokens": 261293,
+        "outputTokens": 2221,
+        "totalTokens": 336725
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13144576,
+        "inputTokens": 629719,
+        "outputTokens": 50677,
+        "totalTokens": 13824972
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 16,
+          "reasoningCalls": 16,
+          "reasoningOutputTokens": 3386,
+          "totalTokens": 1175387
+        },
+        "medium": {
+          "calls": 100,
+          "reasoningCalls": 100,
+          "reasoningOutputTokens": 14762,
+          "totalTokens": 14209568
+        }
+      }
+    },
+    "totalCost": 11.600915084,
+    "totalTokens": 15337084
   }
 }

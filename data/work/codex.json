@@ -3497,5 +3497,41 @@
     },
     "totalCost": 14.319103300000002,
     "totalTokens": 10954805
+  },
+  "2026-09-04": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 723200,
+        "inputTokens": 55926,
+        "outputTokens": 5822,
+        "totalTokens": 784948
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 47.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 16,
+          "reasoningCalls": 16,
+          "reasoningOutputTokens": 3026,
+          "totalTokens": 784948
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 4,
+          "totalTokens": 273503
+        }
+      }
+    },
+    "totalCost": 1.258848,
+    "totalTokens": 784948
   }
 }

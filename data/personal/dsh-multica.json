@@ -1,0 +1,46 @@
+{
+  "2026-09-02": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2458112,
+        "inputTokens": 95517,
+        "outputTokens": 48500,
+        "totalTokens": 2602129
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 51,
+          "totalTokens": 2602129
+        }
+      }
+    },
+    "totalCost": 0.140461048,
+    "totalTokens": 2602129
+  },
+  "2026-09-04": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 40448,
+        "inputTokens": 17987,
+        "outputTokens": 2831,
+        "totalTokens": 61266
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 4,
+          "totalTokens": 61266
+        }
+      }
+    },
+    "totalCost": 0.012217472000000002,
+    "totalTokens": 61266
+  }
+}
