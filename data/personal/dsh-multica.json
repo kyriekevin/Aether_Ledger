@@ -42,5 +42,27 @@
     },
     "totalCost": 0.012217472000000002,
     "totalTokens": 61266
+  },
+  "2026-09-05": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 27460992,
+        "inputTokens": 1038878,
+        "outputTokens": 197174,
+        "totalTokens": 28697044
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 233,
+          "totalTokens": 28697044
+        }
+      }
+    },
+    "totalCost": 1.1018298880000001,
+    "totalTokens": 28697044
   }
 }
