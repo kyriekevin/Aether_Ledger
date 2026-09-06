@@ -85,5 +85,18 @@
         }
       }
     }
+  },
+  "2026-09-06": {
+    "tasks": {
+      "work": {
+        "codex": {
+          "cancelled": 0,
+          "completed": 4,
+          "durationSeconds": 1312,
+          "failed": 0,
+          "total": 4
+        }
+      }
+    }
   }
 }

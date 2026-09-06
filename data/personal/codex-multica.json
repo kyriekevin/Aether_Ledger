@@ -1,1 +1,38 @@
-{}
+{
+  "2026-09-06": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5805056,
+        "inputTokens": 278140,
+        "outputTokens": 34635,
+        "totalTokens": 6117831
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 49.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 104,
+          "reasoningCalls": 104,
+          "reasoningOutputTokens": 9016,
+          "totalTokens": 6117831
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 104,
+          "totalTokens": 6117831
+        }
+      }
+    },
+    "totalCost": 8.2545648,
+    "totalTokens": 6117831
+  }
+}
