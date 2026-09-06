@@ -1,5 +1,6 @@
 {
   "profile": "desktop-example.invalid",
   "workspaceId": "replace-with-workspace-id",
-  "dshProfile": "desktop-example.invalid"
+  "dshProfile": "desktop-example.invalid",
+  "taskWorkspacesRoot": "/path/to/multica-task-workspaces"
 }

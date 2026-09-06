@@ -23,6 +23,7 @@ class CheckInstallTests(unittest.TestCase):
             "profile": "profile-one",
             "workspaceId": "workspace-one",
             "dshProfile": "profile-two",
+            "taskWorkspacesRoot": "/private/task-workspaces",
         }))
         (config / "multica_runtime_roles.json").write_text(json.dumps({
             "runtime-one": "work",
@@ -38,6 +39,7 @@ class CheckInstallTests(unittest.TestCase):
                 "MULTICA_PROFILE": "profile-one",
                 "MULTICA_WORKSPACE_ID": "workspace-one",
                 "MULTICA_DSH_PROFILE": "profile-two",
+                "MULTICA_TASK_WORKSPACES_ROOT": "/private/task-workspaces",
             },
         }
         destination = root / "Library" / "LaunchAgents" / f"{LABEL}.plist"

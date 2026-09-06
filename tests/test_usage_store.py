@@ -1852,11 +1852,10 @@ class ZstdFrameDecodingTests(unittest.TestCase):
 
 
 class MulticaCodexTests(unittest.TestCase):
-    """Multica's Codex rollouts are the same agent read from another tree.
+    """Multica's Codex rollouts are the same agent read from other trees.
 
-    Multica gives each Codex task a private CODEX_HOME whose `sessions` symlinks
-    into ~/.codex/multica-sessions, so ccusage's default scan never sees them.
-    They are read with the same Codex reader, into a store of their own.
+    Issue runs can use ~/.codex/multica-sessions while direct chats can remain in
+    a task-private CODEX_HOME. They are read together into one Multica store.
     """
 
     def setUp(self) -> None:
@@ -1870,9 +1869,9 @@ class MulticaCodexTests(unittest.TestCase):
         with sync_usage._codex_home_over(self.sessions) as home:
             linked = home / "sessions"
             self.assertTrue(linked.is_dir())
-            self.assertEqual(linked.resolve(), self.sessions.resolve())
             self.assertTrue((linked / "rollout.jsonl").exists())
-        # Nothing was copied and the real tree survives the temporary home.
+            self.assertEqual((linked / "rollout.jsonl").read_text(), "{}\n")
+        # The real tree remains untouched after the temporary copy is removed.
         self.assertTrue((self.sessions / "rollout.jsonl").exists())
 
     def test_a_missing_tree_is_skipped_without_running_ccusage(self) -> None:
@@ -1882,6 +1881,39 @@ class MulticaCodexTests(unittest.TestCase):
                 [],
             )
         run.assert_not_called()
+
+    def test_discovers_direct_chat_sessions_beside_issue_tasks(self) -> None:
+        shared = Path(self._tmp.name) / "shared"
+        workspace = Path(self._tmp.name) / "workspaces"
+        direct = workspace / "profile" / "task-chat" / "codex-home" / "sessions"
+        issue = workspace / "task-issue" / "codex-home" / "sessions"
+        for root in (shared, direct, issue):
+            root.mkdir(parents=True)
+
+        self.assertEqual(
+            sync_usage.multica_codex_session_roots(shared, workspace),
+            [shared, issue, direct],
+        )
+
+    def test_duplicate_rollout_uses_the_larger_live_copy_once(self) -> None:
+        shared = Path(self._tmp.name) / "shared"
+        private = Path(self._tmp.name) / "private"
+        private_relative = Path("2026/09/05/rollout-same.jsonl")
+        shared_relative = Path("profile/agent/issue") / private_relative
+        for root, relative, text in (
+            (shared, shared_relative, "{}\n"),
+            (private, private_relative, "{}\n{}\n"),
+        ):
+            path = root / relative
+            path.parent.mkdir(parents=True)
+            path.write_text(text, encoding="utf-8")
+
+        selected = sync_usage._codex_session_files([shared, private])
+        self.assertEqual(selected, [(private_relative, private / private_relative)])
+        with sync_usage._codex_home_over([shared, private]) as home:
+            files = list((home / "sessions").rglob("*.jsonl"))
+            self.assertEqual(len(files), 1)
+            self.assertEqual(files[0].read_text(), "{}\n{}\n")
 
     def fetch(self, daily: list[dict], **kwargs) -> list[dict]:
         payload = json.dumps({"daily": daily})

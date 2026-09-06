@@ -156,12 +156,14 @@ class InstallLaunchdTests(unittest.TestCase):
                 "profile": "profile-one",
                 "workspaceId": "workspace-one",
                 "dshProfile": "profile-two",
+                "taskWorkspacesRoot": "/private/task-workspaces",
             }))
 
             self.assertEqual(load_multica_environment(home), {
                 "MULTICA_PROFILE": "profile-one",
                 "MULTICA_WORKSPACE_ID": "workspace-one",
                 "MULTICA_DSH_PROFILE": "profile-two",
+                "MULTICA_TASK_WORKSPACES_ROOT": "/private/task-workspaces",
             })
 
     def test_rejects_unknown_or_malformed_multica_inputs(self) -> None:

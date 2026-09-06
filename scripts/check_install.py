@@ -19,6 +19,7 @@ from multica_usage import load_runtime_roles
 REQUIRED_BINARIES = ("uv", "ccusage", "zstd")
 MULTICA_ENVIRONMENT = frozenset({
     "MULTICA_PROFILE", "MULTICA_WORKSPACE_ID", "MULTICA_DSH_PROFILE",
+    "MULTICA_TASK_WORKSPACES_ROOT",
 })
 
 
