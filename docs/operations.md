@@ -67,11 +67,13 @@ as a failed ccusage fetch does.
 Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, TRAE CLI, and dsh
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
 already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
-special handling. Codex and dsh are the exceptions. Multica gives each Codex task a private `CODEX_HOME` whose
-`sessions` is a symlink into a shared `~/.codex/multica-sessions` tree, which is a sibling of
-`~/.codex/sessions` rather than a child, so ccusage's default scan never sees it. The writer reads
-that tree with the same Codex reader through a temporary `CODEX_HOME` holding one symlink, and
-writes the result to a store of its own, `codex-multica.json`. Multica also relocates dsh logs to
+special handling. Codex and dsh are the exceptions. Multica Codex rollouts can use the shared
+`~/.codex/multica-sessions` tree or remain in a task-private `task-*/codex-home/sessions` tree for a
+direct chat. Both sit outside `~/.codex/sessions`, so ccusage's default scan never sees them. The
+writer discovers both kinds below `MULTICA_TASK_WORKSPACES_ROOT`, deduplicates matching rollout
+identities by their session-bearing filenames (preferring the larger live copy), presents the
+result through one temporary `CODEX_HOME`, and writes it to `codex-multica.json`. Multica also
+relocates dsh logs to
 `~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
 the writer selects it automatically when only one exists and persists that choice in
 `~/.config/token-activity/multica_dsh_profile`. When several exist before the first binding,
@@ -97,8 +99,10 @@ otherwise read exactly like that provider having done no work.
 
 Private Multica launch inputs live in `~/.config/token-activity/multica.json`; copy
 `config/multica.example.json` and replace its placeholders. The installer accepts only `profile`,
-`workspaceId`, and `dshProfile`, then renders them into the launchd environment. The generated plist
-is not a second configuration source and should not be edited by hand.
+`workspaceId`, `dshProfile`, and `taskWorkspacesRoot`, then renders them into the launchd
+environment. `taskWorkspacesRoot` is the local parent under which Multica creates profile and
+`task-*` directories; it is needed to collect direct chats whose rollouts never reach the shared
+tree. The generated plist is not a second configuration source and should not be edited by hand.
 
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
 still in flight has no duration and would be recounted under a different status next time. Each run
