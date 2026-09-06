@@ -28,6 +28,7 @@ MULTICA_CONFIG_KEYS = {
     "profile": "MULTICA_PROFILE",
     "workspaceId": "MULTICA_WORKSPACE_ID",
     "dshProfile": "MULTICA_DSH_PROFILE",
+    "taskWorkspacesRoot": "MULTICA_TASK_WORKSPACES_ROOT",
 }
 
 

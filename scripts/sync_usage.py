@@ -221,15 +221,17 @@ CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
 CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
 CLAUDE_PROJECTS_DIR = Path.home() / ".claude" / "projects"
 
-# Multica runs Codex with a per-task CODEX_HOME whose `sessions` is a symlink
-# into this shared tree, so those rollouts are siblings of ~/.codex/sessions
-# rather than children of it and ccusage's default scan never sees them. They
-# are real Codex usage on the same account, so they are read from here into
+# Multica Codex rollouts can land in either the shared tree or a task-private
+# CODEX_HOME (direct chats do the latter). Both are siblings of ~/.codex/sessions,
+# so ccusage's default scan never sees them. They are read together into
 # codex-multica.json and rendered under the Codex bucket; see _sync for why the
-# two trees keep separate stores instead of one summed day. Multica's Claude and
+# Multica and ordinary Codex sources keep separate stores. Multica's Claude and
 # TRAE runs need no equivalent: those CLIs keep writing to ~/.claude/projects and
 # ~/.trae/cli/sessions, which are already scanned.
 MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
+MULTICA_TASK_WORKSPACES_ROOT = Path(
+    os.environ.get("MULTICA_TASK_WORKSPACES_ROOT", "").strip()
+) if os.environ.get("MULTICA_TASK_WORKSPACES_ROOT", "").strip() else None
 
 # Every store this script writes, by the canonical agent name the dashboards
 # bucket it under. Consumers (audit_public, render_dashboard, update_pricing,
@@ -438,22 +440,20 @@ def _add_routing_bucket(
 
 
 def collect_codex_routing_since(
-    since: date, sessions_dir: Path = CODEX_SESSION_DIR
+    since: date, sessions: Path | Iterable[Path] = CODEX_SESSION_DIR
 ) -> dict[str, dict]:
-    """Aggregate privacy-safe Codex routing and quota telemetry from one tree.
+    """Aggregate privacy-safe Codex routing and quota telemetry from session trees.
 
     Session files expose model effort, service tier, per-call token usage, and
     rate-limit snapshots. Only enum buckets, counters, and window percentages
     leave this function; paths, prompts, turn IDs, and session IDs never do.
 
-    One tree per call, deliberately. Multica keeps its Codex rollouts in a tree
-    of their own and they are collected into a store of their own, so nothing
-    here has to establish that two trees are disjoint before adding them up.
+    Duplicate relative rollout paths across Multica's shared and task-private
+    trees are processed once, matching the token reader.
     """
     daily: dict[str, dict] = {}
-    if not sessions_dir.is_dir():
-        return daily
-    for path in sessions_dir.rglob("*.jsonl"):
+    sessions_dirs = [sessions] if isinstance(sessions, Path) else list(sessions)
+    for _, path in _codex_session_files(sessions_dirs):
         effort: str | None = None
         speed: str | None = None
         try:
@@ -1200,39 +1200,104 @@ def _lowercased_codex_home(source: Path) -> Iterator[Path]:
         yield mirror_root
 
 
+def multica_codex_session_roots(
+    shared: Path = MULTICA_CODEX_SESSION_DIR,
+    workspaces_root: Path | None = MULTICA_TASK_WORKSPACES_ROOT,
+) -> list[Path]:
+    """Return every local Multica Codex session tree, once.
+
+    Issue runs normally use the shared tree. Direct chats can instead retain
+    their rollout only in ``task-*/codex-home/sessions`` under Multica's task
+    workspace root. The root is supplied explicitly because its install-specific
+    location cannot be inferred safely from a public repository checkout.
+    """
+    candidates = [shared]
+    if workspaces_root is not None and workspaces_root.is_dir():
+        for pattern in (
+            "task-*/codex-home/sessions",
+            "*/task-*/codex-home/sessions",
+        ):
+            candidates.extend(workspaces_root.glob(pattern))
+
+    roots: list[Path] = []
+    seen: set[Path] = set()
+    for candidate in candidates:
+        if not candidate.is_dir():
+            continue
+        try:
+            identity = candidate.resolve()
+        except OSError:
+            continue
+        if identity not in seen:
+            seen.add(identity)
+            roots.append(candidate)
+    return roots
+
+
+def _codex_session_files(sessions_dirs: Iterable[Path]) -> list[tuple[Path, Path]]:
+    """Choose one copy of each rollout relative path across session trees.
+
+    A task may expose the same shared rollout through more than one tree. The
+    relative date/filename is the stable identity; on a collision the largest
+    copy is preferred because a live JSONL grows by appending events.
+    """
+    selected: dict[Path, Path] = {}
+    for sessions_dir in sessions_dirs:
+        if not sessions_dir.is_dir():
+            continue
+        for path in sessions_dir.rglob("*.jsonl"):
+            relative = path.relative_to(sessions_dir)
+            previous = selected.get(relative)
+            try:
+                size = path.stat().st_size
+                previous_size = previous.stat().st_size if previous else -1
+            except OSError:
+                continue
+            if size > previous_size:
+                selected[relative] = path
+    return sorted(selected.items())
+
+
 @contextmanager
-def _codex_home_over(sessions_dir: Path) -> Iterator[Path]:
-    """Yield a throwaway CODEX_HOME whose `sessions` is *sessions_dir*.
+def _codex_home_over(sessions: Path | Iterable[Path]) -> Iterator[Path]:
+    """Yield a throwaway CODEX_HOME over one or more session trees.
 
-    ccusage's Codex reader only ever looks at `$CODEX_HOME/sessions`, and Multica's
-    rollouts live at ~/.codex/multica-sessions — a sibling of that directory, not a
-    child. One symlink in a temp directory is the whole adapter: nothing is copied,
-    and the real tree is only ever read (this is the cheap counterpart to
-    _lowercased_codex_home, which has to rewrite bytes because it changes them).
+    ccusage's Codex reader only ever looks at `$CODEX_HOME/sessions`, while
+    Multica's rollouts live outside the ordinary Codex tree. The source trees
+    remain read-only; only selected rollout bytes are copied into the temporary
+    merged view.
 
-    A sessions_dir that does not exist yields a home with no `sessions` at all,
-    which ccusage reports as no usage — the same answer, without a dangling link.
+    Duplicate rollout paths are copied only once. ccusage deliberately ignores
+    symlinked files, so the temporary merge must contain regular files. A missing
+    source yields a home with no ``sessions`` directory and therefore no usage.
     """
     with tempfile.TemporaryDirectory(prefix="codex-alt-") as tmp:
         root = Path(tmp)
-        if sessions_dir.is_dir():
-            (root / "sessions").symlink_to(sessions_dir, target_is_directory=True)
+        sessions_dirs = [sessions] if isinstance(sessions, Path) else list(sessions)
+        files = _codex_session_files(sessions_dirs)
+        for relative, source in files:
+            destination = root / "sessions" / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
         yield root
 
 
 def fetch_multica_codex_daily(
-    since: date, sessions_dir: Path = MULTICA_CODEX_SESSION_DIR
+    since: date, sessions: Path | Iterable[Path] | None = None
 ) -> list[dict]:
-    """Multica-orchestrated Codex usage, read from its relocated rollout tree.
+    """Multica-orchestrated Codex usage from shared and private rollout trees.
 
     The rollouts are byte-identical to the ones under ~/.codex/sessions — same CLI,
     same account, same models — so they are read with the same Codex reader, into
-    a store of their own. See MULTICA_CODEX_SESSION_DIR for the tree, and _sync
-    for why each tree keeps a separate high-water mark.
+    a store of their own. See multica_codex_session_roots and _sync for why the
+    combined Multica source keeps a separate high-water mark.
     """
-    if not sessions_dir.is_dir():
+    roots = multica_codex_session_roots() if sessions is None else (
+        [sessions] if isinstance(sessions, Path) else list(sessions)
+    )
+    if not _codex_session_files(roots):
         return []
-    with _codex_home_over(sessions_dir) as home:
+    with _codex_home_over(roots) as home:
         return fetch_codex_home_daily(
             since, home, trust_row_cost=True, label="multica codex"
         )
@@ -2205,8 +2270,9 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
     # on the larger *sum* and silently drop what the pruned tree had contributed.
     # One store per tree keeps each high-water mark meaning what it says, and the
     # dashboards add the two back together under the same Codex bucket.
+    multica_codex_roots = multica_codex_session_roots()
     try:
-        mx_daily = fetch_multica_codex_daily(EPOCH)
+        mx_daily = fetch_multica_codex_daily(EPOCH, multica_codex_roots)
     except (
         subprocess.CalledProcessError,
         subprocess.TimeoutExpired,
@@ -2222,7 +2288,7 @@ def _sync(machine: str, *, no_push: bool, reconcile_since: date | None = None) -
         cx_daily, collect_codex_routing_since(EPOCH, CODEX_SESSION_DIR)
     )
     _attach_telemetry(
-        mx_daily, collect_codex_routing_since(EPOCH, MULTICA_CODEX_SESSION_DIR)
+        mx_daily, collect_codex_routing_since(EPOCH, multica_codex_roots)
     )
     # traex (TRAE CLI) is read from its own CODEX_HOME in a separate invocation, so
     # its failure is isolated: an empty fetch merges [] and keeps the cached store

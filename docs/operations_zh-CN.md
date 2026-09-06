@@ -55,10 +55,12 @@ ccusage 抓取失败时的行为一致。
 
 Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Claude Code、Codex、TRAE CLI 和
 dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
-`~/.trae/cli/sessions`，无需额外处理。Codex 和 dsh 是例外：Multica 给每个 Codex 任务一个私有 `CODEX_HOME`，
-其 `sessions` 是指向共享目录 `~/.codex/multica-sessions` 的软链接，而该目录是 `~/.codex/sessions`
-的同级而非子目录，ccusage 默认扫描永远看不到。采集器用一个只放一个软链接的临时 `CODEX_HOME`，
-以同一个 Codex 读取器读下来，写进独立的 store `codex-multica.json`。Multica 还会把 dsh 日志放到
+`~/.trae/cli/sessions`，无需额外处理。Codex 和 dsh 是例外：Multica 的 Codex rollout 既可能进入
+共享目录 `~/.codex/multica-sessions`，直接 chat 时也可能只留在任务私有的
+`task-*/codex-home/sessions` 中。两者都不在 `~/.codex/sessions` 下，ccusage 默认扫描永远看不到。
+采集器从 `MULTICA_TASK_WORKSPACES_ROOT` 下发现这两类目录，按 rollout 相对路径去重（实时副本冲突时
+取较大的一份），再通过一个临时 `CODEX_HOME` 用同一个 Codex 读取器读取，写进独立的 store
+`codex-multica.json`。Multica 还会把 dsh 日志放到
 `~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
 只发现一棵时自动选择，并把选择写入 `~/.config/token-activity/multica_dsh_profile`；首次绑定前发现
 多棵时，由 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。绑定的目录消失或配置改指另一棵树时，
@@ -79,8 +81,10 @@ active issue。这个文件不接收 token；算力数据仍以 harness 日志�
 没干活"一模一样。
 
 Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json`；复制
-`config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId` 和
-`dshProfile` 三个字段，校验后写入 launchd 环境。生成的 plist 不是第二份配置源，不应再手工修改。
+`config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId`、
+`dshProfile` 和 `taskWorkspacesRoot` 四个字段，校验后写入 launchd 环境。其中
+`taskWorkspacesRoot` 是 Multica 创建 profile 与 `task-*` 目录的本地父目录，用于收集没有汇入共享树
+的直接 chat rollout。生成的 plist 不是第二份配置源，不应再手工修改。
 
 run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
 被重新统计。Active issues 在每天内部去重，每个 run 也只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
