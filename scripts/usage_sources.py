@@ -135,7 +135,7 @@ def _workspace_codex_homes(root: Path) -> list[Path]:
     a home's contents during this scan, but declarations in those contents are
     accepted only if their parent remains reachable outside valid home boundaries.
     """
-    if root.name == "codex-home":
+    if root.name == "codex-home" or root.resolve().name == "codex-home":
         return [root]
 
     def identity(path: Path) -> tuple[int, int]:
@@ -197,7 +197,9 @@ def _workspace_codex_homes(root: Path) -> list[Path]:
         ]
         updated = frozenset(home_id for home_id, _ in homes)
         if updated == boundaries:
-            return [path for _, path in homes]
+            # Reachability starts at the configured root even if it is a home.
+            # Once confirmed as such, its contents cannot supply more homes.
+            return [path for home_id, path in homes if root_id not in updated or home_id == root_id]
         boundaries = updated
     raise ValueError("ambiguous cyclic Multica harness-home aliases")
 

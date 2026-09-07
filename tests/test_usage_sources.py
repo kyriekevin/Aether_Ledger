@@ -189,10 +189,24 @@ class SourceDiscoveryTests(unittest.TestCase):
             usage_sources.multica_codex_session_roots(self.root / "shared", workspace)
 
     def test_configured_harness_home_keeps_its_own_sessions(self):
-        home = self.root / "codex-home"
-        (home / "sessions").mkdir(parents=True)
-        roots = usage_sources.multica_codex_session_roots(self.root / "shared", home)
-        self.assertEqual(roots, [home / "sessions"])
+        for name in ("codex-home", "self-home-task"):
+            with self.subTest(name=name):
+                home = self.root / name
+                (home / "sessions").mkdir(parents=True)
+                (home / "sessions/rollout-real.jsonl").write_text("{}\n")
+                if name != "codex-home":
+                    (home / "codex-home").symlink_to(home, target_is_directory=True)
+                cached = home / "cache/copied/codex-home/sessions"
+                cached.mkdir(parents=True)
+                (cached / "rollout-cached.jsonl").write_text("{}\n")
+                roots = usage_sources.multica_codex_session_roots(self.root / "shared", home)
+                self.assertEqual([p.resolve() for p in roots], [(home / "sessions").resolve()])
+                self.assertEqual([p.name for _, p in usage_sources._codex_session_files(roots)],
+                                 ["rollout-real.jsonl"])
+        alias = self.root / "linked-root"
+        alias.symlink_to(self.root / "codex-home", target_is_directory=True)
+        roots = usage_sources.multica_codex_session_roots(self.root / "shared", alias)
+        self.assertEqual([p.resolve() for p in roots], [(self.root / "codex-home/sessions").resolve()])
 
     def test_unconfigured_source_can_be_absent(self):
         self.assertEqual(usage_sources.multica_codex_session_roots(self.root / "shared", None), [])
