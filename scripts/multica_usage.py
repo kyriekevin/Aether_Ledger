@@ -34,7 +34,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from render_dashboard import SHANGHAI
+from usage_schema import SHANGHAI
 
 
 CONFIG_FILE = Path.home() / ".config" / "token-activity" / "multica_runtime_roles.json"

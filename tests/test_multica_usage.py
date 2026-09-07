@@ -1,23 +1,19 @@
 from __future__ import annotations
 
-import ast
 import contextlib
-import inspect
 import io
 import json
 import sys
 import tempfile
-import textwrap
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import audit_public  # noqa: E402
 import multica_usage  # noqa: E402
 import squash_usage_branch  # noqa: E402
-import sync_usage  # noqa: E402
+import usage_schema
 
 
 RUNTIME_ID = "runtime-private-id"
@@ -369,17 +365,17 @@ class StoreRegistrationTests(unittest.TestCase):
         Everything in AGENT_STORES is summed into the ledger's totals; this one
         would contribute nothing and be looked for under every node label.
         """
-        self.assertNotIn("multica", sync_usage.AGENT_STORES)
-        self.assertNotIn("multica.json", set(sync_usage.AGENT_STORES.values()))
+        self.assertNotIn("multica", usage_schema.AGENT_STORES)
+        self.assertNotIn("multica.json", set(usage_schema.AGENT_STORES.values()))
 
     def test_the_audit_and_the_writer_name_the_same_file(self) -> None:
         """audit_public runs standalone and repeats the path as a literal."""
-        self.assertEqual(audit_public.MULTICA_TASK_STORE, sync_usage.MULTICA_TASK_STORE)
+        self.assertEqual(audit_public.MULTICA_TASK_STORE, usage_schema.MULTICA_TASK_STORE)
 
     def test_the_squash_rule_covers_the_task_store(self) -> None:
         """Without this the daily squash treats it as a hand-edited file."""
         self.assertIsNotNone(
-            squash_usage_branch.GENERATED_STORE.fullmatch(sync_usage.MULTICA_TASK_STORE)
+            squash_usage_branch.GENERATED_STORE.fullmatch(usage_schema.MULTICA_TASK_STORE)
         )
 
 
@@ -460,74 +456,6 @@ class AuditTests(unittest.TestCase):
                 self.assertTrue(issues)
 
 
-class SyncIntegrationTests(unittest.TestCase):
-    """The collector is an enrichment; it must never cost a day of token data.
-
-    These read _sync's syntax tree rather than running it: _sync fetches from
-    ccusage, walks session trees and pushes to git, so exercising it end to end
-    would test the mocks. What matters is structural and is checked as such.
-    """
-
-    @staticmethod
-    def _sync_tree() -> ast.AST:
-        return ast.parse(textwrap.dedent(inspect.getsource(sync_usage._sync)))
-
-    @staticmethod
-    def _calls(node: ast.AST, name: str) -> list[ast.Call]:
-        return [
-            call for call in ast.walk(node)
-            if isinstance(call, ast.Call)
-            and isinstance(call.func, ast.Name)
-            and call.func.id == name
-        ]
-
-    def test_the_collector_call_catches_everything(self) -> None:
-        """An enumerated list was tried and was wrong.
-
-        A JSON payload with a list where a string belongs raises TypeError out of
-        a dict lookup, which was not in the list, and that escaping _sync skips
-        git_push — so the token stores merged just before it never get committed.
-        """
-        guards = [
-            node for node in ast.walk(self._sync_tree())
-            if isinstance(node, ast.Try) and self._calls(node.body[0], "collect_if_configured")
-        ]
-        self.assertEqual(len(guards), 1, "collector call is not wrapped exactly once")
-        handlers = guards[0].handlers
-        self.assertEqual(len(handlers), 1)
-        self.assertIsInstance(handlers[0].type, ast.Name)
-        self.assertEqual(handlers[0].type.id, "Exception")
-
-    def test_the_push_is_not_inside_the_collector_guard(self) -> None:
-        """git_push has to be reachable whether or not the collector raised."""
-        tree = self._sync_tree()
-        guarded = {
-            id(call)
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Try) and self._calls(node.body[0], "collect_if_configured")
-            for call in self._calls(node, "git_push")
-        }
-        pushes = self._calls(tree, "git_push")
-        self.assertTrue(pushes, "_sync no longer pushes")
-        self.assertFalse(guarded, "git_push moved inside the collector's try block")
-
-    def test_both_shared_file_touchpoints_are_writer_guarded(self) -> None:
-        """One writer per file is what makes the high-water merge trustworthy."""
-        self.assertEqual(sync_usage.MULTICA_TASK_WRITER, "work")
-        module = ast.parse(inspect.getsource(sync_usage))
-        guarded_calls, guarded_appends = 0, 0
-        for node in ast.walk(module):
-            if not isinstance(node, ast.If):
-                continue
-            if "MULTICA_TASK_WRITER" not in ast.dump(node.test):
-                continue
-            body = ast.dump(ast.Module(body=node.body, type_ignores=[]))
-            guarded_calls += "collect_if_configured" in body
-            # The collector guard also names the store (it passes store_path), so
-            # the staging site is identified by the append itself.
-            guarded_appends += "attr='append'" in body and "MULTICA_TASK_STORE" in body
-        self.assertEqual(guarded_calls, 1, "the collector runs outside the writer check")
-        self.assertEqual(guarded_appends, 1, "the store is staged outside the writer check")
 
 
 if __name__ == "__main__":

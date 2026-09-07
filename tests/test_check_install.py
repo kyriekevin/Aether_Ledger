@@ -18,12 +18,13 @@ class CheckInstallTests(unittest.TestCase):
     def make_home(self, root: Path) -> Path:
         config = root / ".config" / "token-activity"
         config.mkdir(parents=True)
+        (root / "workspaces").mkdir()
         (config / "node_name").write_text("work\n")
         (config / "multica.json").write_text(json.dumps({
             "profile": "profile-one",
             "workspaceId": "workspace-one",
             "dshProfile": "profile-two",
-            "taskWorkspacesRoot": "/private/task-workspaces",
+            "taskWorkspacesRoot": str(root / "workspaces"),
         }))
         (config / "multica_runtime_roles.json").write_text(json.dumps({
             "runtime-one": "work",
@@ -39,7 +40,7 @@ class CheckInstallTests(unittest.TestCase):
                 "MULTICA_PROFILE": "profile-one",
                 "MULTICA_WORKSPACE_ID": "workspace-one",
                 "MULTICA_DSH_PROFILE": "profile-two",
-                "MULTICA_TASK_WORKSPACES_ROOT": "/private/task-workspaces",
+                "MULTICA_TASK_WORKSPACES_ROOT": str(root / "workspaces"),
             },
         }
         destination = root / "Library" / "LaunchAgents" / f"{LABEL}.plist"
@@ -72,7 +73,7 @@ class CheckInstallTests(unittest.TestCase):
             self.assertNotIn("wrong-private-value", "\n".join(issues))
 
     @patch("check_install.shutil.which", return_value="/bin/example")
-    def test_reports_missing_roles_and_dsh_binding_drift(self, _which) -> None:
+    def test_token_only_install_does_not_require_task_roles(self, _which) -> None:
         with tempfile.TemporaryDirectory() as directory:
             home = self.make_home(Path(directory))
             roles = home / ".config" / "token-activity" / "multica_runtime_roles.json"
@@ -81,10 +82,17 @@ class CheckInstallTests(unittest.TestCase):
             binding.write_text("another-profile\n")
 
             issues = installation_issues(home)
-            self.assertIn("multica_runtime_roles.json is missing", issues)
+            self.assertNotIn("multica_runtime_roles.json is missing", issues)
             self.assertIn(
                 "Multica DSH source binding differs from multica.json", issues
             )
+
+    @patch("check_install.shutil.which", return_value="/bin/example")
+    def test_reports_a_missing_configured_workspace(self, _which) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = self.make_home(Path(directory))
+            (home / "workspaces").rmdir()
+            self.assertIn("configured Multica workspace root is missing", installation_issues(home))
 
 
 if __name__ == "__main__":

@@ -45,8 +45,8 @@ import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from render_dashboard import SHANGHAI
-from sync_usage import (
+from usage_schema import SHANGHAI
+from usage_git import (
     GIT_LOCK_PATH,
     GIT_LOCK_WAIT_SECONDS,
     git_catch_up,

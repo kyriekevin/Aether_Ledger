@@ -68,11 +68,19 @@ Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, 
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
 already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
 special handling. Codex and dsh are the exceptions. Multica Codex rollouts can use the shared
-`~/.codex/multica-sessions` tree or remain in a task-private `task-*/codex-home/sessions` tree for a
-direct chat. Both sit outside `~/.codex/sessions`, so ccusage's default scan never sees them. The
-writer discovers both kinds below `MULTICA_TASK_WORKSPACES_ROOT`, deduplicates matching rollout
-identities by their session-bearing filenames (preferring the larger live copy), presents the
-result through one temporary `CODEX_HOME`, and writes it to `codex-multica.json`. Multica also
+`~/.codex/multica-sessions` tree or remain in a task-private `codex-home/sessions` or
+`codex-home/archived_sessions` tree.
+The writer discovers harness homes below `MULTICA_TASK_WORKSPACES_ROOT` by structure, independent
+of task names and nesting depth. It stops descending at each harness home and skips dependency
+and Git directories. Linked profile, task, and harness directories are followed; physical-directory
+identity bounds directory scanning. Only home declarations reachable outside other valid home
+boundaries become sources; discarded cache declarations cannot suppress independent task paths.
+Contradictory cyclic home aliases fail explicitly rather than yielding a guessed source set.
+The harness-home boundary also applies through aliases, so cached nested homes do not become sources.
+A missing explicitly configured root fails instead of looking like an idle day.
+The writer deduplicates the shared and discovered trees by session-bearing rollout filename
+(preferring the larger live copy), presents them through one temporary `CODEX_HOME`, and writes
+the result to `codex-multica.json`. Multica also
 relocates dsh logs to
 `~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
 the writer selects it automatically when only one exists and persists that choice in
@@ -91,7 +99,11 @@ look like.
 
 The store sits at the data root rather than under a node label because one API answers for every
 runtime at once, and a single configured machine collects it so that the one-writer-per-file rule
-still holds. Collection is opt-in: `~/.config/token-activity/multica_runtime_roles.json` must map
+still holds. Scheduled token sync no longer polls task metadata. The
+[manual invocation](#manual-sync) can enable `--include-multica-tasks`: the writer attempts to
+publish tokens before the optional API work, then separately attempts to publish task changes.
+A failed push does not prevent the API step. Existing task history is retained. The option only runs on
+the `work` writer, and `~/.config/token-activity/multica_runtime_roles.json` must map
 each runtime's operator-chosen custom name to `work`, `personal`, or `devbox`. A machine without
 that file collects nothing rather than guessing, and a runtime whose provider this repository does
 not recognise is reported on stderr rather than skipped silently — a renamed provider string would
@@ -100,9 +112,9 @@ otherwise read exactly like that provider having done no work.
 Private Multica launch inputs live in `~/.config/token-activity/multica.json`; copy
 `config/multica.example.json` and replace its placeholders. The installer accepts only `profile`,
 `workspaceId`, `dshProfile`, and `taskWorkspacesRoot`, then renders them into the launchd
-environment. `taskWorkspacesRoot` is the local parent under which Multica creates profile and
-`task-*` directories; it is needed to collect direct chats whose rollouts never reach the shared
-tree. The generated plist is not a second configuration source and should not be edited by hand.
+environment. `taskWorkspacesRoot` is the local parent of Multica task workspaces; their names
+are opaque. It is needed to collect rollouts that never reach the shared tree. The generated plist
+is not a second configuration source and should not be edited by hand.
 
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
 still in flight has no duration and would be recounted under a different status next time. Each run
@@ -218,7 +230,10 @@ same gate covers human changes without disabling the automated close.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
-Cost follows the winning token observation. Once a date has an official-priced observation, the
+Cost follows the winning token observation. If model high waters retain tokens absent from that
+observation, its cost is incomplete and the merged row is marked `unpriced`; daily aggregates
+cannot reconstruct the missing request-level cost. A later complete read can backfill it.
+Once a date has an official-priced observation, the
 same token high-water mark is immutable; use `--reconcile-since` for an intentional historical
 correction. A provisional `unpriced` observation is the exception and can be back-filled once.
 Legacy dates with no model breakdown keep their existing amount because they cannot be reconstructed
@@ -226,11 +241,35 @@ without guessing a model.
 
 A new machine can only recover dates still present in its local logs.
 
+## Collector module boundaries
+
+`sync_usage.py` owns command arguments, source orchestration, status reporting, and publishing.
+The implementation is split by responsibility:
+
+| Module | Responsibility |
+| --- | --- |
+| `usage_schema.py` | Public store vocabulary, token helpers, model aliases |
+| `usage_sources.py` | Session discovery, source binding, deduplication, temporary Codex homes |
+| `usage_ccusage.py` | ccusage report adaptation and repository-owned pricing |
+| `usage_dsh.py` | DSH events and compressed-log decoding |
+| `usage_telemetry.py` | Optional effort, speed, reasoning, and quota observations |
+| `usage_store.py` | Cumulative merge and atomic writes |
+| `usage_git.py` | Writer identity, shared lock, daily branches and publishing |
+
+Readers do not import the command entry point or the dashboard renderer. The existing data
+filenames, public schema, dedicated writer, and T+1 rollover remain compatible. Multica task
+metadata stays in `multica_usage.py` and is explicitly requested rather than part of every tick.
+ccusage runtime pricing verification remains required; a failed probe is reported as a collection
+failure, not silently treated as zero new usage.
+
 ## Prerequisites
 
 - macOS with Homebrew
 - `uv`
-- `ccusage` 20.0.19 or newer (`--by-agent`, pricing overrides, and recorded Fast tier support)
+- System `ccusage` plus a runner that passes [the pricing probe](#ccusage-runtime-upgrade);
+  a version number alone is not sufficient
+- Rust/Cargo to build the pinned ccusage runtime when it is not already installed
+- `zstd` for compressed DSH logs under the pinned Python 3.11 interpreter
 - Git and authenticated push access to this repository
 - Authenticated GitHub CLI (`gh`) on the `work` and `personal` writers for rollover recovery
 - Claude Code, Codex, OpenCode, TRAE CLI (traex), or DeepSeek Harness (dsh) local usage logs
@@ -238,11 +277,18 @@ A new machine can only recover dates still present in its local logs.
 Install the command-line dependencies:
 
 ```sh
-brew install uv ccusage gh
+brew install uv ccusage gh rust zstd
+uv run python scripts/ccusage_runtime.py --install
+uv run python scripts/ccusage_runtime.py --check
 ```
 
-The scripts are dependency-free single files carrying their own `requires-python = ">=3.11"`, so
-there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
+Run these commands from a complete checkout containing the runtime installer. Install and check
+on each writing device before its daily branch starts using the updated code. The cached binary
+is outside Git; installing it does not change the active usage branch. See
+[scheduled sync](#scheduled-sync) for the T+1 code transition.
+
+The command entry points declare `requires-python = ">=3.11"` and import sibling modules
+without third-party Python dependencies, so there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
 picks the newest installed version that satisfies it, which differs between a developer machine, CI,
 and the rollover runner, and neither workflow passes a `python-version`. `.python-version` pins all
 of them to 3.11 — the declared floor, so what runs is what the scripts claim to support. Every
@@ -312,13 +358,80 @@ schedule changes take effect immediately. This prevents old and new schedules fr
 
 Run `make health` after installation. It checks required binaries, local configuration, the rendered
 launchd environment, and the writer script path without printing private configuration values.
+For configured Multica workspaces it also reports discovered roots, unique rollout count, and
+latest file modification time. The command uses the checking checkout's code: it does not prove
+that the installed writer has switched to that revision, that pricing verification passes, or
+that a sync has published data.
 
 Logs:
 
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
-Each invocation writes start and finish heartbeat lines to the standard-output log.
+Normal runs write start and finish lines to stdout; an uncaught error can omit the finish line.
+Source summaries report observed days, latest usage day, and today's tokens. These are incoming
+observations, before cumulative merge; `latest_mtime` is a file timestamp, not the last token event.
+
+| Signal | Meaning and next check |
+| --- | --- |
+| Source `status=ok` | Returned at least one daily row, possibly only historical data. Check `latest_day` and `today_tokens`. |
+| Source `status=empty` | Returned no rows. It does not distinguish an idle source from absent logs or an unconfigured source. |
+| Source/telemetry `status=failed` | A reader exception was caught. Normal sync still merges successful token reads and attempts publication; the run returns 1. |
+| DSH unreadable/partial-log warning | The reader can return the decoded prefix or no rows without raising. This warning alone does not set exit 1. |
+| `status=lock-busy` or branch-defer message | No collection in this tick; exit 0. Inspect the next scheduled run. |
+| `sync run finished exit=0` | No tracked collection failure; not proof that all sources were complete or that Git published successfully. |
+| `git add/commit/push failed` | Inspect stderr and Git state. These helpers do not propagate a failure exit code to the sync entry point. |
+| Multica task failure | Optional API work failed after the token publication attempt; the run returns 1. |
+
+`make health` also reports discovery `status=ok`/`empty`; there these describe files found,
+not parsed usage. Do not interpret a file count as a successful collection.
+
+<a id="manual-sync"></a>
+
+### Manual sync
+
+The installer loads private `multica.json` settings into launchd. Running `sync_usage.py` in a
+terminal does **not** load that file or inherit the installed agent's environment. Run `make health`
+first to detect configuration drift, then use the installed command and environment below. This
+also selects a custom writer path and excludes conflicting shell overrides such as `CODEX_HOME`.
+The writer must already contain this PR's options; a merge to `main` does not update today's branch.
+
+```sh
+uv run python - --include-multica-tasks <<'PYTHON'
+import plistlib
+import subprocess
+import sys
+from pathlib import Path
+
+plist = Path.home() / "Library/LaunchAgents/com.kyriekevin.aether-ledger.plist"
+with plist.open("rb") as stream:
+    agent = plistlib.load(stream)
+command = agent["ProgramArguments"]
+script = next(Path(arg) for arg in command if Path(arg).name == "sync_usage.py")
+result = subprocess.run(
+    [*command, *sys.argv[1:]],
+    cwd=script.parent.parent,
+    env=agent["EnvironmentVariables"],
+)
+raise SystemExit(result.returncode)
+PYTHON
+```
+
+This command writes cumulative data and attempts to commit/push it; it is not a preview. It still
+uses the writer lock and branch guards. Remove `--include-multica-tasks` from the first line for
+ordinary token sync, or replace it with `--help` to inspect the installed CLI without syncing.
+Task collection additionally requires the `work` role and runtime-role mapping; without the
+mapping file it silently skips task refresh even when the flag is present.
+
+| Option | Effect |
+| --- | --- |
+| No option | Collect and merge token stores, then attempt commit/push on the daily branch. |
+| `--include-multica-tasks` | Also request workspace task metadata after the token publication attempt. Does not enable a new recurring schedule. |
+| `--no-push` | Still writes stores in the executed script's checkout. Skips branch switching, commits and pushes; **not a dry run**. |
+| `--reconcile-since YYYY-MM-DD` | Allows lower token, cost, model, and telemetry values from that date. Manual correction only; see [recovery](#recovery). |
+
+For read-only diagnosis, inspect `make health`, logs, `git status --short --branch`, and the
+installed CLI's `--help`. Do not use `--no-push` as a substitute for read-only inspection.
 
 ### Concurrent Git access
 
@@ -633,6 +746,9 @@ contribute the same routing fields as Codex when present:
 ```
 
 `calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+Codex events that repeat the preceding cumulative usage do not add another invocation; updated
+quota from those events is still observed. Ordinary Codex telemetry includes archived sessions.
+Historical inflated telemetry is not automatically rewritten by this change.
 `reasoningCalls` counts invocations where the harness exposed a reasoning or thinking-token field,
 including an explicit zero, so per-call trends do not turn missing telemetry into zero.
 Routing token totals come from that session stream and are not coverage estimates for the
@@ -669,6 +785,22 @@ uv run --script scripts/compact_trails.py --dry-run
 ```
 
 ## Recovery
+
+For stalled usage, first check source summaries and stderr, then the installed writer's branch
+and revision. Fix source configuration or runtime verification before retrying normal sync; a
+retained `unpriced` row may recover from a later complete observation. Missing or rotated logs
+cannot be recreated by a retry.
+
+Use `--reconcile-since` only for an intentional historical correction after preserving a copy of
+the existing stores and checking source completeness. Reported collection failures abort this
+mode before store writes, but an `empty` source or DSH partial-read warning is not such a failure.
+Dates absent from the read keep their stored values; dates that are present can be replaced by
+lower values from a partial read. The option applies to all collected stores, not one metric;
+it does not reconstruct missing history. Existing `imageCount` still uses its maximum.
+
+Check publication separately: in the writer, inspect `git status --short --branch` and compare
+HEAD with the actual remote daily-branch tip. A local upstream ref may be stale. Exit 0 or a
+completed source read alone is not evidence of publication.
 
 - A failed data push leaves a clean local commit; the next sync retries it before switching days.
 - A dirty worktree blocks automatic day switching rather than carrying edits onto another date.
