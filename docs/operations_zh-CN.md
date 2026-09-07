@@ -121,6 +121,21 @@ CLI 一次只回答一个 profile、一个 workspace，而没有 issue 的 profi
 路径会保留 ccusage 自己算的金额——ccusage 仍然知道其中哪些调用走了优先级 tier、哪些越过了长上
 下文阈值，而按天汇总的数据说不出这些。
 
+Astra 计价要求 ccusage 认识单次请求的 272K 阈值。稳定版 20.0.20 内嵌的快照仍较旧，
+账本使用单独缓存的上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`。
+先安装 Rust（macOS 可运行 `brew install rust`），再在每台写入设备上运行：
+
+```sh
+uv run python scripts/ccusage_runtime.py --install
+uv run python scripts/ccusage_runtime.py --check
+```
+
+读取真实会话前，执行器会用模拟请求验证低于、等于和超过 272K 的计价，包括缓存输入和已记录的
+Fast 模式。不兼容的版本会使本轮采集失败，已有存储继续保留，不会写入虚高费用。
+如果固定版本缓存不存在，也允许通过验证的系统 `ccusage`。
+Fable 5.1 和 Astra 的价格分别从账本首次记录的 2026-09-03、2026-09-07 生效。
+更新进入 writer 后，下次同步可补算此前未计价的记录。直接运行 `ccusage` 仍使用系统安装版。
+
 Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时强制使用 `--offline`，并注入
 由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
 逐请求识别 Codex Fast/standard 与长上下文，仓库负责提供费率。未进入表的模型，以及
