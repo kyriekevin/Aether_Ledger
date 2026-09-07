@@ -145,12 +145,24 @@ def multica_codex_session_roots(
         def unreadable(error: OSError) -> None:
             raise OSError("cannot read configured Multica workspace tree") from error
 
-        for directory, children, _ in os.walk(workspaces_root, onerror=unreadable):
+        visited: set[tuple[int, int]] = set()
+        for directory, children, _ in os.walk(
+            workspaces_root, onerror=unreadable, followlinks=True,
+        ):
             home = Path(directory)
             if home.name == "codex-home":
                 candidates.extend(home / name for name in ("sessions", "archived_sessions"))
                 children[:] = []
             else:
+                # Links may point outside the workspace or back to an ancestor.
+                # Traverse each physical directory once. Check the harness marker
+                # first so an earlier alias cannot hide a named codex-home.
+                stat = home.stat()
+                identity = (stat.st_dev, stat.st_ino)
+                if identity in visited:
+                    children[:] = []
+                    continue
+                visited.add(identity)
                 children[:] = sorted(
                     name for name in children
                     if name not in {".git", "node_modules", ".venv", "__pycache__"}

@@ -72,7 +72,9 @@ special handling. Codex and dsh are the exceptions. Multica Codex rollouts can u
 `codex-home/archived_sessions` tree.
 The writer discovers harness homes below `MULTICA_TASK_WORKSPACES_ROOT` by structure, independent
 of task names and nesting depth. It stops descending at each harness home and skips dependency
-and Git directories. A missing explicitly configured root fails instead of looking like an idle day.
+and Git directories. Linked profile, task, and harness directories are followed; physical-directory
+identity prevents cycles and repeated traversal. Discovered session roots are deduplicated.
+A missing explicitly configured root fails instead of looking like an idle day.
 The writer deduplicates the shared and discovered trees by session-bearing rollout filename
 (preferring the larger live copy), presents them through one temporary `CODEX_HOME`, and writes
 the result to `codex-multica.json`. Multica also
