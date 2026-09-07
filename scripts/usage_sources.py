@@ -142,32 +142,29 @@ def multica_codex_session_roots(
     if workspaces_root is not None:
         if not workspaces_root.is_dir():
             raise ValueError("configured Multica workspace root is missing")
-        def unreadable(error: OSError) -> None:
-            raise OSError("cannot read configured Multica workspace tree") from error
-
-        visited: set[tuple[int, int]] = set()
         homes: list[Path] = []
-        for directory, children, _ in os.walk(
-            workspaces_root, onerror=unreadable, followlinks=True,
-        ):
-            home = Path(directory)
+        pending: list[tuple[Path, frozenset[tuple[int, int]]]] = [(workspaces_root, frozenset())]
+        while pending:
+            home, ancestors = pending.pop()
             if home.name == "codex-home":
                 homes.append(home)
-                children[:] = []
-            else:
-                # Links may point outside the workspace or back to an ancestor.
-                # Traverse each physical directory once. Check the harness marker
-                # first so an earlier alias cannot hide a named codex-home.
+                continue
+            try:
                 stat = home.stat()
                 identity = (stat.st_dev, stat.st_ino)
-                if identity in visited:
-                    children[:] = []
+                if identity in ancestors:
                     continue
-                visited.add(identity)
-                children[:] = sorted(
-                    name for name in children
-                    if name not in {".git", "node_modules", ".venv", "__pycache__"}
-                )
+                with os.scandir(home) as entries:
+                    children = sorted(
+                        Path(entry.path) for entry in entries
+                        if entry.name not in {".git", "node_modules", ".venv", "__pycache__"}
+                        and entry.is_dir(follow_symlinks=True)
+                    )
+            except OSError as error:
+                raise OSError("cannot read configured Multica workspace tree") from error
+            # Cut cycles only on this path. A discarded cache route must not
+            # suppress an independent task route to the same physical directory.
+            pending.extend((child, ancestors | {identity}) for child in reversed(children))
 
         # A differently named alias can enter a harness home before its named
         # path is discovered. Exclude nested homes after discovery, using both
@@ -175,9 +172,10 @@ def multica_codex_session_roots(
         # point outside the outer home). This makes the boundary order-independent.
         physical_homes = {home.resolve() for home in homes}
         for home in homes:
-            ancestors = set(home.resolve().parents)
-            ancestors.update(parent.resolve() for parent in home.parents)
-            if physical_homes.isdisjoint(ancestors):
+            physical_home = home.resolve()
+            parent_homes = set(physical_home.parents)
+            parent_homes.update(parent.resolve() for parent in home.parents)
+            if (physical_homes - {physical_home}).isdisjoint(parent_homes):
                 candidates.extend(home / name for name in ("sessions", "archived_sessions"))
 
     roots: list[Path] = []

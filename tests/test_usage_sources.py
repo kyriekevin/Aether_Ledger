@@ -126,6 +126,35 @@ class SourceDiscoveryTests(unittest.TestCase):
                         self.assertEqual([p.name for p in temporary_home.rglob("*.jsonl")],
                                          ["rollout-real.jsonl"])
 
+    def test_cached_route_does_not_hide_an_independent_task_route(self):
+        for alias_name in ("a-alias", "zz-alias"):
+            with self.subTest(alias=alias_name):
+                case = self.root / alias_name
+                workspace = case / "workspaces"
+                home = workspace / "task-real/codex-home"
+                (home / "sessions").mkdir(parents=True)
+                (home / "sessions/rollout-real.jsonl").write_text("{}\n")
+                external = case / "external-task"
+                external_sessions = external / "codex-home/sessions"
+                external_sessions.mkdir(parents=True)
+                (external_sessions / "rollout-independent.jsonl").write_text("{}\n")
+                (home / "cache").mkdir()
+                (home / "cache/linked-task").symlink_to(external, target_is_directory=True)
+                (workspace / "z-valid-task").symlink_to(external, target_is_directory=True)
+                (workspace / alias_name).symlink_to(home, target_is_directory=True)
+                roots = usage_sources.multica_codex_session_roots(case / "shared", workspace)
+                self.assertEqual({p.resolve() for p in roots},
+                                 {(home / "sessions").resolve(), external_sessions.resolve()})
+                self.assertEqual(len(usage_sources._codex_session_files(roots)), 2)
+
+    def test_harness_link_to_its_task_directory_is_not_a_nested_home(self):
+        workspace = self.root / "workspaces"
+        task = workspace / "task-real"
+        (task / "sessions").mkdir(parents=True)
+        (task / "codex-home").symlink_to(task, target_is_directory=True)
+        roots = usage_sources.multica_codex_session_roots(self.root / "shared", workspace)
+        self.assertEqual([p.resolve() for p in roots], [(task / "sessions").resolve()])
+
     def test_unconfigured_source_can_be_absent(self):
         self.assertEqual(usage_sources.multica_codex_session_roots(self.root / "shared", None), [])
 
