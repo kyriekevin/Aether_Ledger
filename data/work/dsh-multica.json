@@ -42,5 +42,27 @@
     },
     "totalCost": 0.103503752,
     "totalTokens": 2053673
+  },
+  "2026-09-07": {
+    "costSource": "unpriced",
+    "models": {
+      "minimax-m3": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 128,
+        "inputTokens": 14050,
+        "outputTokens": 597,
+        "totalTokens": 14775
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 1,
+          "totalTokens": 14775
+        }
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 14775
   }
 }

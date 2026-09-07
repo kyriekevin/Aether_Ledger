@@ -471,5 +471,36 @@
     },
     "totalCost": 11.600915084,
     "totalTokens": 15337084
+  },
+  "2026-09-07": {
+    "costSource": "official",
+    "models": {
+      "deepseek-v4-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 228352,
+        "inputTokens": 40352,
+        "outputTokens": 2072,
+        "totalTokens": 270776
+      },
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 20555776,
+        "inputTokens": 368454,
+        "outputTokens": 70271,
+        "totalTokens": 20994501
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 152,
+          "reasoningCalls": 152,
+          "reasoningOutputTokens": 25908,
+          "totalTokens": 21265277
+        }
+      }
+    },
+    "totalCost": 14.251974848,
+    "totalTokens": 21265277
   }
 }

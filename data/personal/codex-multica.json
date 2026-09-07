@@ -4,10 +4,10 @@
     "models": {
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 5805056,
-        "inputTokens": 278140,
-        "outputTokens": 34635,
-        "totalTokens": 6117831
+        "cacheReadTokens": 9257856,
+        "inputTokens": 476697,
+        "outputTokens": 55905,
+        "totalTokens": 9790458
       }
     },
     "quota": {
@@ -19,20 +19,20 @@
     "routing": {
       "efforts": {
         "medium": {
-          "calls": 104,
-          "reasoningCalls": 104,
-          "reasoningOutputTokens": 9016,
-          "totalTokens": 6117831
+          "calls": 180,
+          "reasoningCalls": 180,
+          "reasoningOutputTokens": 17651,
+          "totalTokens": 9973845
         }
       },
       "speeds": {
         "fast": {
-          "calls": 104,
-          "totalTokens": 6117831
+          "calls": 180,
+          "totalTokens": 9973845
         }
       }
     },
-    "totalCost": 8.2545648,
-    "totalTokens": 6117831
+    "totalCost": 13.456060800000001,
+    "totalTokens": 9790458
   }
 }

@@ -47,5 +47,84 @@
     },
     "totalCost": 29.770877800000004,
     "totalTokens": 21501877
+  },
+  "2026-09-04": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1299968,
+        "inputTokens": 90801,
+        "outputTokens": 14712,
+        "totalTokens": 1405481
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 47.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 21,
+          "reasoningCalls": 21,
+          "reasoningOutputTokens": 3570,
+          "totalTokens": 1405481
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 11,
+          "totalTokens": 957394
+        }
+      }
+    },
+    "totalCost": 1.8662296,
+    "totalTokens": 1405481
+  },
+  "2026-09-07": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 329984,
+        "inputTokens": 54776,
+        "outputTokens": 3806,
+        "totalTokens": 388566
+      },
+      "gpt-6-astra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 103168,
+        "inputTokens": 30223,
+        "outputTokens": 934,
+        "totalTokens": 134325
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 13.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 50,
+          "totalTokens": 134325
+        },
+        "medium": {
+          "calls": 9,
+          "reasoningCalls": 9,
+          "reasoningOutputTokens": 1990,
+          "totalTokens": 388566
+        }
+      }
+    },
+    "totalCost": 0.42721760000000003,
+    "totalTokens": 522891
   }
 }

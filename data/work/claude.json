@@ -1610,5 +1610,36 @@
     },
     "totalCost": 7.427072500000001,
     "totalTokens": 27430945
+  },
+  "2026-09-07": {
+    "costSource": "unpriced",
+    "models": {
+      "claude-fable-5-1": {
+        "cacheCreationTokens": 524732,
+        "cacheReadTokens": 11724011,
+        "inputTokens": 1083,
+        "outputTokens": 64158,
+        "totalTokens": 12313984
+      },
+      "claude-opus-5": {
+        "cacheCreationTokens": 460969,
+        "cacheReadTokens": 24298194,
+        "inputTokens": 260,
+        "outputTokens": 106170,
+        "totalTokens": 24865593
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "calls": 158,
+          "reasoningCalls": 158,
+          "reasoningOutputTokens": 70534,
+          "totalTokens": 37179577
+        }
+      }
+    },
+    "totalCost": 19.414337000000007,
+    "totalTokens": 37179577
   }
 }
