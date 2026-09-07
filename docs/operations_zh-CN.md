@@ -75,8 +75,9 @@ Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记
 就是长那个样子。
 
 这个 store 放在 data 根目录而不是某个节点标签下，因为一次 API 调用覆盖所有 runtime；由单台配置过的
-机器采集，"一个文件只有一个写入者"的规则才继续成立。定时 token 同步不再查询任务元数据。需要刷新时，在 writer 中手动添加
-`--include-multica-tasks`；脚本先发布 token 数据，再查询 API 并单独发布任务数据。已有任务历史保留，
+机器采集，保证一个文件只有一个写入者。定时 token 同步不再查询任务元数据。
+需要刷新时，按[手动同步](#manual-sync)示例添加 `--include-multica-tasks`：脚本先尝试发布 token
+数据，再查询 API，并单独尝试发布任务数据。推送失败不会阻止后续 API 步骤。已有任务历史保留，
 只有 `work` writer 会执行这项操作。还需配置：
 `~/.config/token-activity/multica_runtime_roles.json` 必须把每个 runtime 的自定义名映射到 `work`、
 `personal` 或 `devbox`。没有这个文件的机器什么都不采，而不是去猜；provider 不在已知集合里的 runtime
@@ -183,8 +184,10 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 与自动收口共用同一门禁，同时不会把自动 writer 锁死。
 
 本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
-设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测；某天一旦
-有官方计价结果，同一 token 高水位下金额不再改变。需要有意修正历史时使用 `--reconcile-since`。
+设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测。
+若模型累计值保留了当前计价观察中已缺失的 token，费用就不完整，合并行会标为 `unpriced`。
+按日汇总无法还原缺失请求的费用，后续完整读取可以补算。
+某天已有官方计价结果时，同一 token 高水位下金额不再改变。需要有意修正历史时使用 `--reconcile-since`。
 `unpriced` 暂记是例外，拿到官方价格后允许补价。没有模型明细的旧 Claude 日期无法可靠复算，
 因此保留原金额，不猜模型。
 
@@ -208,17 +211,13 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 保持兼容。Multica 任务元数据留在 `multica_usage.py`，按需开启。ccusage 运行器仍要求通过计价验证；
 验证失败会报告采集失败，不会静默视为没有新增用量。
 
-若模型累计值保留了当前计价观察中已缺失的 token，费用就不完整，合并行会标为 `unpriced`。
-按日汇总无法还原缺失请求的费用，后续完整读取可以补算。
-
-Codex 遥测遇到重复的累计用量事件时，只计一次调用，同时保留更新后的 quota；普通 Codex
-遥测也读取归档会话。这次修改不会自动改写历史上已累计的重复调用数。
-
 ## 前置条件
 
 - 安装 Homebrew 的 macOS
 - `uv`
-- `ccusage` 20.0.19 或更高版本（需支持 `--by-agent`、价格 override 与已记录 Fast tier）
+- 系统 `ccusage`，以及通过[计价验证](#ccusage-runtime-upgrade)的运行器；版本号本身不够
+- Rust/Cargo，用于构建尚未安装的固定版本 ccusage 运行器
+- `zstd`，用于在固定的 Python 3.11 下解码 DSH 压缩日志
 - Git，以及本仓库的已认证推送权限
 - `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
 - Claude Code、Codex、OpenCode、TRAE CLI（traex）或 DeepSeek Harness（dsh）的本地用量日志
@@ -226,8 +225,14 @@ Codex 遥测遇到重复的累计用量事件时，只计一次调用，同时�
 安装命令行依赖：
 
 ```sh
-brew install uv ccusage gh
+brew install uv ccusage gh rust zstd
+uv run python scripts/ccusage_runtime.py --install
+uv run python scripts/ccusage_runtime.py --check
 ```
+
+从包含运行器安装脚本的完整 checkout 执行以上命令。每台写入设备都应在每日分支开始使用新代码前
+完成安装和验证。缓存的二进制不在 Git 中，安装它不会改变当前 usage 分支。
+代码何时切换见[定时同步](#定时同步)中的 T+1 说明。
 
 命令入口使用同目录下的 Python 模块，不依赖第三方 Python 包；入口各自带着 `requires-python = ">=3.11"`，所以没有项目文件也没有 lock 文件。
 但只有这个下限并不能确定解释器：`uv` 会挑满足下限的、已装的最新版本，开发机、CI 和 rollover
@@ -297,16 +302,76 @@ agent。
 
 安装后运行 `make health`。它会检查依赖、本机配置、launchd 环境和 writer 脚本路径，但不会打印私有
 配置值。配置了 Multica 工作区后，还会报告发现的目录数、去重后的 rollout 数和最新文件修改时间。
-`empty` 与 `failed` 分开显示；安装检查通过不代表用量采集成功。同步日志逐来源报告状态、
-观察到的日期数、最新用量日期和今日 token。部分来源失败时，成功来源仍会发布，进程返回 1；
-带 `--reconcile-since` 的运行则会在写入前拒绝有失败项的采集结果。
+检查使用的是执行命令所在 checkout 的代码，不能据此确认已安装 writer 已切到该版本、
+计价验证通过或同步数据已发布。
 
 日志位置：
 
 - `~/Library/Logs/aether-ledger/sync.log`
 - `~/Library/Logs/aether-ledger/sync.err.log`
 
-每次运行都会在标准输出日志中写入开始和结束心跳。
+正常运行会在 stdout 写入开始和结束记录；未捕获异常可能导致缺少结束记录。
+来源摘要给出观察到的日期数、最新用量日期和今日 token。这些是累计合并前的读取结果；
+`latest_mtime` 是文件修改时间，不是最后一个 token 事件的时间。
+
+| 信号 | 含义与下一步检查 |
+| --- | --- |
+| 来源 `status=ok` | 返回了至少一条每日记录，也可能只有历史数据。继续看 `latest_day` 和 `today_tokens`。 |
+| 来源 `status=empty` | 没有返回记录；无法单独区分空闲、日志不存在或来源未配置。 |
+| 来源或遥测 `status=failed` | 捕获到读取异常。普通同步仍会合并其他成功读取的 token 并尝试发布，进程返回 1。 |
+| DSH 不可读或部分读取警告 | 读取器可能返回已解码部分或空记录，不抛异常；仅有该警告不会使退出码变为 1。 |
+| `status=lock-busy` 或分支推迟消息 | 本轮没有采集，返回 0。检查下一次定时运行。 |
+| `sync run finished exit=0` | 没有被记录的采集失败；不保证所有来源完整，也不保证 Git 发布成功。 |
+| `git add/commit/push failed` | 检查 stderr 和 Git 状态；这些辅助函数没有把失败退出码传回同步入口。 |
+| Multica 任务失败 | token 发布尝试之后，可选 API 步骤失败，进程返回 1。 |
+
+`make health` 中的发现结果也使用 `status=ok`／`empty`，此处只表示是否找到文件，
+不表示已经解析出用量。文件数不能作为采集成功的证据。
+
+<a id="manual-sync"></a>
+
+### 手动同步
+
+安装器会把私有 `multica.json` 配置写入 launchd 环境。在终端直接运行 `sync_usage.py`，
+**不会**加载该文件，也不会继承已安装 agent 的环境。先用 `make health` 检查配置是否一致，
+再用下面的示例复用已安装的命令和环境。它也适用于自定义 writer 路径，并排除终端中
+`CODEX_HOME` 等变量的干扰。writer 必须已包含这些选项；PR 合入 `main` 不会更新当天分支。
+
+```sh
+uv run python - --include-multica-tasks <<'PYTHON'
+import plistlib
+import subprocess
+import sys
+from pathlib import Path
+
+plist = Path.home() / "Library/LaunchAgents/com.kyriekevin.aether-ledger.plist"
+with plist.open("rb") as stream:
+    agent = plistlib.load(stream)
+command = agent["ProgramArguments"]
+script = next(Path(arg) for arg in command if Path(arg).name == "sync_usage.py")
+result = subprocess.run(
+    [*command, *sys.argv[1:]],
+    cwd=script.parent.parent,
+    env=agent["EnvironmentVariables"],
+)
+raise SystemExit(result.returncode)
+PYTHON
+```
+
+这条命令会写入累计数据并尝试提交、推送，不是预览；运行时仍遵守 writer 锁和分支检查。
+删除第一行的 `--include-multica-tasks`，就是普通 token 同步；换成 `--help`，则只查看
+已安装 CLI 的帮助，不执行同步。任务采集还需要 `work` 角色和 runtime 角色映射；
+即使传了开关，映射文件不存在时也会静默跳过任务刷新。
+
+| 选项 | 作用 |
+| --- | --- |
+| 无选项 | 读取并合并 token store，随后尝试在日期分支提交、推送。 |
+| `--include-multica-tasks` | token 发布尝试之后，再请求工作区任务元数据；不会新增定时任务。 |
+| `--no-push` | 仍会写入所执行脚本所在 checkout 的 store；跳过切分支、提交和推送，**不是 dry run**。 |
+| `--reconcile-since YYYY-MM-DD` | 允许指定日期起的 token、费用、模型和遥测统计下降；仅供人工修正，见[恢复](#恢复)。 |
+
+只读诊断可查看 `make health`、日志、`git status --short --branch` 和已安装 CLI 的 `--help`。
+不要用 `--no-push` 代替只读检查。
 
 ### Git 并发访问
 
@@ -586,7 +651,11 @@ TRAE session 事件在确实提供时贡献与 Codex 相同的路由字段：
 }
 ```
 
-`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。`reasoningCalls` 统计
+`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。
+Codex 遥测遇到重复的累计用量事件时，只计一次调用，同时保留更新后的 quota；普通 Codex
+遥测也读取归档会话。这次修改不会自动改写历史上已累计的重复调用数。
+
+`reasoningCalls` 统计
 harness 明确给出 reasoning 或 thinking token 字段的调用，包括字段明确为零的情况，避免把
 缺失遥测算成零。Routing token 来自
 session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。
@@ -619,6 +688,18 @@ uv run --script scripts/compact_trails.py --dry-run
 ```
 
 ## 恢复
+
+用量停增时，先看来源摘要和 stderr，再确认已安装 writer 的分支、版本。先修复来源配置或
+运行器验证问题，再重跑普通同步；保留的 `unpriced` 记录可能由后续完整读取补算。
+重试无法恢复已经删除或轮转掉的日志。
+
+只有在需要有意修正历史、保留了原 store 副本并确认来源完整后，才使用 `--reconcile-since`。
+采集阶段报告失败时，该模式会在写入前中止；但 `empty` 来源和 DSH 部分读取警告不算这类失败。
+本次完全没读到的日期保留旧值，读到了的日期则可能被部分读取的较低值覆盖。
+该选项作用于全部已采集 store，而非单个指标，也不能恢复缺失历史；已有 `imageCount` 仍取最大值。
+
+发布结果需要单独确认：在 writer 中查看 `git status --short --branch`，并将 HEAD 与远端
+实际日期分支的 tip 比较。本地 upstream ref 可能过期，退出码 0 或来源读取完成都不能证明发布成功。
 
 - 数据推送失败时，本地提交会保留；下一次同步会在切换日期前重试。
 - 工作区不干净时，自动日期切换会停止，不会把改动带入另一天。
