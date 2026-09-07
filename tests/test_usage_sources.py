@@ -95,6 +95,37 @@ class SourceDiscoveryTests(unittest.TestCase):
         roots = usage_sources.multica_codex_session_roots(self.root / "shared", workspace)
         self.assertEqual([path.resolve() for path in roots], [(target / "sessions").resolve()])
 
+    def test_aliases_cannot_turn_harness_caches_into_sources(self):
+        for alias_name in ("a-alias", "z-alias"):
+            for linked_home in (False, True):
+                with self.subTest(alias=alias_name, linked_home=linked_home):
+                    case = self.root / f"{alias_name}-{linked_home}"
+                    workspace = case / "workspaces"
+                    named_home = workspace / "task-real" / "codex-home"
+                    home = case / "external-home" if linked_home else named_home
+                    (home / "sessions").mkdir(parents=True)
+                    (home / "sessions/rollout-real.jsonl").write_text("{}\n")
+                    if linked_home:
+                        named_home.parent.mkdir(parents=True)
+                        named_home.symlink_to(home, target_is_directory=True)
+                    cached = home / "cache/copied/codex-home/sessions"
+                    cached.mkdir(parents=True)
+                    (cached / "rollout-unrelated.jsonl").write_text("{}\n")
+                    # Even a cached home linked outside the containing home is
+                    # excluded; it is reached through the cache, not a task.
+                    external = case / "cached-external-home"
+                    (external / "sessions").mkdir(parents=True)
+                    (external / "sessions/rollout-external.jsonl").write_text("{}\n")
+                    cached_link = home / "cache/linked/codex-home"
+                    cached_link.parent.mkdir(parents=True)
+                    cached_link.symlink_to(external, target_is_directory=True)
+                    (workspace / alias_name).symlink_to(home, target_is_directory=True)
+                    roots = usage_sources.multica_codex_session_roots(case / "shared", workspace)
+                    self.assertEqual([path.resolve() for path in roots], [(home / "sessions").resolve()])
+                    with usage_sources._codex_home_over(roots) as temporary_home:
+                        self.assertEqual([p.name for p in temporary_home.rglob("*.jsonl")],
+                                         ["rollout-real.jsonl"])
+
     def test_unconfigured_source_can_be_absent(self):
         self.assertEqual(usage_sources.multica_codex_session_roots(self.root / "shared", None), [])
 
