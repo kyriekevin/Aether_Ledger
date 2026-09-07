@@ -15,6 +15,7 @@ from pathlib import Path
 
 from install_launchd import LABEL, load_multica_environment
 from multica_usage import load_runtime_roles
+from usage_sources import multica_codex_session_roots, codex_source_summary
 
 REQUIRED_BINARIES = ("uv", "ccusage", "zstd")
 MULTICA_ENVIRONMENT = frozenset({
@@ -43,10 +44,12 @@ def installation_issues(home: Path = Path.home()) -> list[str]:
         expected_environment = {}
         issues.append("multica.json is invalid")
 
+    workspace_root = expected_environment.get("MULTICA_TASK_WORKSPACES_ROOT")
+    if workspace_root is not None and not Path(workspace_root).is_dir():
+        issues.append("configured Multica workspace root is missing")
+
     roles_path = home / ".config" / "token-activity" / "multica_runtime_roles.json"
-    if expected_environment and not roles_path.exists():
-        issues.append("multica_runtime_roles.json is missing")
-    elif roles_path.exists():
+    if roles_path.exists():
         try:
             load_runtime_roles(roles_path)
         except (OSError, json.JSONDecodeError, ValueError):
@@ -75,7 +78,9 @@ def installation_issues(home: Path = Path.home()) -> list[str]:
         if environment.get(variable) != expected_environment.get(variable):
             issues.append(f"launchd environment differs from multica.json: {variable}")
     arguments = plist.get("ProgramArguments", [])
-    script = Path(arguments[-1]) if arguments else None
+    if "--include-multica-tasks" in arguments and not roles_path.exists():
+        issues.append("multica_runtime_roles.json is missing")
+    script = next((Path(arg) for arg in arguments if Path(arg).name == "sync_usage.py"), None)
     if script is None or script.name != "sync_usage.py" or not script.is_file():
         issues.append("launchd writer script is missing")
     return issues
@@ -87,7 +92,16 @@ def main() -> int:
         for issue in issues:
             print(f"FAIL: {issue}", file=sys.stderr)
         return 1
-    print("Aether Ledger installation is healthy")
+    environment = load_multica_environment(Path.home())
+    root = environment.get("MULTICA_TASK_WORKSPACES_ROOT")
+    if root:
+        try:
+            roots = multica_codex_session_roots(workspaces_root=Path(root))
+            print("Multica Codex discovery: " + codex_source_summary(roots))
+        except (OSError, ValueError) as error:
+            print(f"FAIL: Multica source discovery failed: {type(error).__name__}", file=sys.stderr)
+            return 1
+    print("Installation checks passed; source coverage above does not verify a completed sync")
     return 0
 
 

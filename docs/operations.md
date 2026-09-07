@@ -68,11 +68,14 @@ Multica is an orchestrator rather than a harness: it drives Claude Code, Codex, 
 in its own workspaces, and that work belongs to those CLIs' stores. Its Claude and TRAE runs
 already write to `~/.claude/projects` and `~/.trae/cli/sessions`, so they are collected with no
 special handling. Codex and dsh are the exceptions. Multica Codex rollouts can use the shared
-`~/.codex/multica-sessions` tree or remain in a task-private `task-*/codex-home/sessions` tree for a
-direct chat. Both sit outside `~/.codex/sessions`, so ccusage's default scan never sees them. The
-writer discovers both kinds below `MULTICA_TASK_WORKSPACES_ROOT`, deduplicates matching rollout
-identities by their session-bearing filenames (preferring the larger live copy), presents the
-result through one temporary `CODEX_HOME`, and writes it to `codex-multica.json`. Multica also
+`~/.codex/multica-sessions` tree or remain in a task-private `codex-home/sessions` or
+`codex-home/archived_sessions` tree.
+The writer discovers harness homes below `MULTICA_TASK_WORKSPACES_ROOT` by structure, independent
+of task names and nesting depth. It stops descending at each harness home and skips dependency
+and Git directories. A missing explicitly configured root fails instead of looking like an idle day.
+The writer deduplicates the shared and discovered trees by session-bearing rollout filename
+(preferring the larger live copy), presents them through one temporary `CODEX_HOME`, and writes
+the result to `codex-multica.json`. Multica also
 relocates dsh logs to
 `~/.multica/profiles/<profile>/dsh-sessions`. `dsh-multica.json` stays bound to one profile root:
 the writer selects it automatically when only one exists and persists that choice in
@@ -91,7 +94,10 @@ look like.
 
 The store sits at the data root rather than under a node label because one API answers for every
 runtime at once, and a single configured machine collects it so that the one-writer-per-file rule
-still holds. Collection is opt-in: `~/.config/token-activity/multica_runtime_roles.json` must map
+still holds. Scheduled token sync no longer polls task metadata. To refresh it, run the writer manually with
+`--include-multica-tasks`; token stores are published before the optional API work, and task
+changes are published separately. Existing task history is retained. The option only runs on
+the `work` writer, and `~/.config/token-activity/multica_runtime_roles.json` must map
 each runtime's operator-chosen custom name to `work`, `personal`, or `devbox`. A machine without
 that file collects nothing rather than guessing, and a runtime whose provider this repository does
 not recognise is reported on stderr rather than skipped silently — a renamed provider string would
@@ -100,9 +106,9 @@ otherwise read exactly like that provider having done no work.
 Private Multica launch inputs live in `~/.config/token-activity/multica.json`; copy
 `config/multica.example.json` and replace its placeholders. The installer accepts only `profile`,
 `workspaceId`, `dshProfile`, and `taskWorkspacesRoot`, then renders them into the launchd
-environment. `taskWorkspacesRoot` is the local parent under which Multica creates profile and
-`task-*` directories; it is needed to collect direct chats whose rollouts never reach the shared
-tree. The generated plist is not a second configuration source and should not be edited by hand.
+environment. `taskWorkspacesRoot` is the local parent of Multica task workspaces; their names
+are opaque. It is needed to collect rollouts that never reach the shared tree. The generated plist
+is not a second configuration source and should not be edited by hand.
 
 Runs are dated by when they started, in Shanghai time, and only terminal runs are counted: a run
 still in flight has no duration and would be recounted under a different status next time. Each run
@@ -218,13 +224,37 @@ same gate covers human changes without disabling the automated close.
 
 Local Claude/Codex session logs rotate. Once a daily observation reaches this repository,
 `sync_usage.py` preserves the highest observed token total for that machine, agent, and date.
-Cost follows the winning token observation. Once a date has an official-priced observation, the
+Cost follows the winning token observation. If model high waters retain tokens absent from that
+observation, its cost is incomplete and the merged row is marked `unpriced`; daily aggregates
+cannot reconstruct the missing request-level cost. A later complete read can backfill it.
+Once a date has an official-priced observation, the
 same token high-water mark is immutable; use `--reconcile-since` for an intentional historical
 correction. A provisional `unpriced` observation is the exception and can be back-filled once.
 Legacy dates with no model breakdown keep their existing amount because they cannot be reconstructed
 without guessing a model.
 
 A new machine can only recover dates still present in its local logs.
+
+## Collector module boundaries
+
+`sync_usage.py` owns command arguments, source orchestration, status reporting, and publishing.
+The implementation is split by responsibility:
+
+| Module | Responsibility |
+| --- | --- |
+| `usage_schema.py` | Public store vocabulary, token helpers, model aliases |
+| `usage_sources.py` | Session discovery, source binding, deduplication, temporary Codex homes |
+| `usage_ccusage.py` | ccusage report adaptation and repository-owned pricing |
+| `usage_dsh.py` | DSH events and compressed-log decoding |
+| `usage_telemetry.py` | Optional effort, speed, reasoning, and quota observations |
+| `usage_store.py` | Cumulative merge and atomic writes |
+| `usage_git.py` | Writer identity, shared lock, daily branches and publishing |
+
+Readers do not import the command entry point or the dashboard renderer. The existing data
+filenames, public schema, dedicated writer, and T+1 rollover remain compatible. Multica task
+metadata stays in `multica_usage.py` and is explicitly requested rather than part of every tick.
+ccusage runtime pricing verification remains required; a failed probe is reported as a collection
+failure, not silently treated as zero new usage.
 
 ## Prerequisites
 
@@ -241,8 +271,8 @@ Install the command-line dependencies:
 brew install uv ccusage gh
 ```
 
-The scripts are dependency-free single files carrying their own `requires-python = ">=3.11"`, so
-there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
+The command entry points declare `requires-python = ">=3.11"` and import sibling modules
+without third-party Python dependencies, so there is no project file or lockfile to resolve. That floor alone left the interpreter open: `uv`
 picks the newest installed version that satisfies it, which differs between a developer machine, CI,
 and the rollover runner, and neither workflow passes a `python-version`. `.python-version` pins all
 of them to 3.11 — the declared floor, so what runs is what the scripts claim to support. Every
@@ -312,6 +342,11 @@ schedule changes take effect immediately. This prevents old and new schedules fr
 
 Run `make health` after installation. It checks required binaries, local configuration, the rendered
 launchd environment, and the writer script path without printing private configuration values.
+For configured Multica workspaces it also reports discovered roots, unique rollout count, and
+latest file modification time. `empty` is distinct from `failed`; installation success alone
+does not prove that usage was collected. Sync logs report each source's status, observed days,
+latest usage day, and today's tokens. A partial collection publishes successful sources and
+returns exit 1. Reconciliation refuses a collection with reported failures before writing stores.
 
 Logs:
 
@@ -633,6 +668,9 @@ contribute the same routing fields as Codex when present:
 ```
 
 `calls` counts model invocations observed in session telemetry; it is not a count of user turns.
+Codex events that repeat the preceding cumulative usage do not add another invocation; updated
+quota from those events is still observed. Ordinary Codex telemetry includes archived sessions.
+Historical inflated telemetry is not automatically rewritten by this change.
 `reasoningCalls` counts invocations where the harness exposed a reasoning or thinking-token field,
 including an explicit zero, so per-call trends do not turn missing telemetry into zero.
 Routing token totals come from that session stream and are not coverage estimates for the

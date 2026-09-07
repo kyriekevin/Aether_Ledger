@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import ast
 import importlib
-import inspect
 import io
 import json
 import shutil
@@ -20,6 +18,13 @@ import audit_public  # noqa: E402
 import compact_trails  # noqa: E402
 import render_dashboard  # noqa: E402
 import squash_usage_branch  # noqa: E402
+import usage_ccusage
+import usage_dsh
+import usage_git
+import usage_schema
+import usage_sources
+import usage_store
+import usage_telemetry
 import sync_usage  # noqa: E402
 import update_pricing  # noqa: E402
 
@@ -42,9 +47,9 @@ class SharedStoreCoverageTests(unittest.TestCase):
         writer could add a sixth store and every assertion below would still pass
         against the stale five.
         """
-        written = set(sync_usage.AGENT_STORES.values())
+        written = set(usage_schema.AGENT_STORES.values())
         self.assertEqual(
-            set(sync_usage.AGENT_STORES), set(render_dashboard.AGENT_BUCKETS),
+            set(usage_schema.AGENT_STORES), set(render_dashboard.AGENT_BUCKETS),
             "every written store needs a dashboard bucket to render under",
         )
         self.assertEqual(set(compact_trails.AGENT_FILES), written)
@@ -125,7 +130,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_growing_tokens_carry_their_fresh_cost(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 1.0}})
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 250, "totalCost": 2.5}], self.store
         )
         self.assertEqual(
@@ -134,7 +139,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_same_tokens_repriced_lower_flow_through(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 4.0}})
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 100, "totalCost": 1.5}], self.store
         )
         self.assertEqual(
@@ -147,7 +152,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalTokens": 100, "totalCost": 4.0, "costSource": "official"
             }
         })
-        sync_usage.merge_with_cumulative([{
+        usage_store.merge_with_cumulative([{
             "date": "2026-08-04", "totalTokens": 100, "totalCost": 1.5,
             "costSource": "official",
         }], self.store)
@@ -159,7 +164,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalTokens": 100, "totalCost": 0.0, "costSource": "unpriced"
             }
         })
-        sync_usage.merge_with_cumulative([{
+        usage_store.merge_with_cumulative([{
             "date": "2026-08-04", "totalTokens": 100, "totalCost": 5.0,
             "costSource": "official",
         }], self.store)
@@ -174,7 +179,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "totalTokens": 100, "totalCost": 5.0, "costSource": "official"
             }
         })
-        sync_usage.merge_with_cumulative([{
+        usage_store.merge_with_cumulative([{
             "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
             "costSource": "unpriced",
         }], self.store)
@@ -185,7 +190,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_unpriced_zero_replaces_a_legacy_proxy_price(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 9.0}})
-        sync_usage.merge_with_cumulative([{
+        usage_store.merge_with_cumulative([{
             "date": "2026-08-04", "totalTokens": 100, "totalCost": 0.0,
             "costSource": "unpriced", "costTrusted": True,
         }], self.store)
@@ -196,7 +201,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_token_regression_freezes_the_stored_pair(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 100, "totalCost": 4.0}})
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 40, "totalCost": 1.6}], self.store
         )
         self.assertEqual(
@@ -211,7 +216,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "2026-08-04": {"totalTokens": 100, "totalCost": 4.0},
             }
         )
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [
                 {"date": "2026-07-06", "totalTokens": 900, "totalCost": 0.0},
                 {"date": "2026-08-04", "totalTokens": 250, "totalCost": 0.0},
@@ -226,7 +231,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_next_priced_fetch_overwrites_the_held_cost(self) -> None:
         self.write_store({"2026-08-04": {"totalTokens": 250, "totalCost": 4.0}})
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 300, "totalCost": 9.5}], self.store
         )
         self.assertEqual(
@@ -234,13 +239,13 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
 
     def test_day_first_seen_unpriced_is_recorded_and_recovers(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 250, "totalCost": 0.0}], self.store
         )
         self.assertEqual(
             self.read_store()["2026-08-04"], {"totalTokens": 250, "totalCost": 0.0}
         )
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 250, "totalCost": 7.25}], self.store
         )
         self.assertEqual(
@@ -255,12 +260,12 @@ class MergeWithCumulativeTests(unittest.TestCase):
         the day at 0 — that back-fill is the reason cost follows tokens at all.
         """
         for tokens in (250, 400, 900):
-            sync_usage.merge_with_cumulative(
+            usage_store.merge_with_cumulative(
                 [{"date": "2026-08-04", "totalTokens": tokens, "totalCost": 0.0}],
                 self.store,
             )
             self.assertEqual(self.read_store()["2026-08-04"]["totalCost"], 0.0)
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-08-04", "totalTokens": 900, "totalCost": 12.5}], self.store
         )
         self.assertEqual(
@@ -276,7 +281,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
         day untrusted; tokens still advance.
         """
         self.write_store({"2026-08-04": {"totalTokens": 900, "totalCost": 69.47}})
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04", "totalTokens": 1200, "totalCost": 1.03,
                 "costTrusted": False,
@@ -286,7 +291,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
         self.assertEqual(
             self.read_store()["2026-08-04"], {"totalTokens": 1200, "totalCost": 69.47}
         )
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04", "totalTokens": 1200, "totalCost": 74.5,
                 "costTrusted": True,
@@ -299,7 +304,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
 
     def test_an_untrusted_day_with_no_stored_cost_still_records(self) -> None:
         """Nothing to preserve, so the marking must not pin the day at nothing."""
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04", "totalTokens": 900, "totalCost": 1.03,
                 "costTrusted": False,
@@ -311,7 +316,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
         )
 
     def test_the_marking_never_reaches_the_store(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04", "totalTokens": 900, "totalCost": 2.0,
                 "costTrusted": True,
@@ -332,7 +337,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 },
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-07-09",
                 "totalTokens": 95_406_538,
@@ -365,7 +370,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 },
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 120,
@@ -394,7 +399,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "models": {"model-a": {"totalTokens": 100}},
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 110,
@@ -426,7 +431,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "models": models,
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-07",
                 "totalTokens": 1_957_155,
@@ -454,7 +459,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "models": {"gpt-5.5": {"totalTokens": 100}},
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 100,
@@ -481,7 +486,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 "cacheReadTokens": 70,
             },
         )
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 110,
@@ -521,7 +526,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
                 },
             }
         })
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 90,
@@ -577,7 +582,7 @@ class MergeWithCumulativeTests(unittest.TestCase):
             }
         })
 
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{
                 "date": "2026-08-04",
                 "totalTokens": 100,
@@ -664,7 +669,7 @@ class RoutingTelemetryTests(unittest.TestCase):
                 },
             },
         ])
-        telemetry = sync_usage.collect_codex_routing_since(
+        telemetry = usage_telemetry.collect_codex_routing_since(
             date(2026, 8, 15), self.root
         )["2026-08-15"]
         self.assertEqual(
@@ -716,7 +721,7 @@ class RoutingTelemetryTests(unittest.TestCase):
         self.write_jsonl(
             "multica-sessions/p_x/w/r/2026/08/15/rollout.jsonl", [settings, event]
         )
-        daily = sync_usage.collect_codex_routing_since(
+        daily = usage_telemetry.collect_codex_routing_since(
             date(2026, 1, 1), self.root / "sessions"
         )
         bucket = daily["2026-08-15"]["routing"]["efforts"]["high"]
@@ -734,7 +739,7 @@ class RoutingTelemetryTests(unittest.TestCase):
                 "info": {"last_token_usage": {"total_tokens": 7}},
             },
         }])
-        daily = sync_usage.collect_codex_routing_since(
+        daily = usage_telemetry.collect_codex_routing_since(
             date(2026, 1, 1), self.root / "sessions"
         )
         self.assertEqual(
@@ -778,7 +783,7 @@ class RoutingTelemetryTests(unittest.TestCase):
                 },
             },
         ])
-        telemetry = sync_usage.collect_claude_routing_since(
+        telemetry = usage_telemetry.collect_claude_routing_since(
             date(2026, 8, 15), self.root
         )["2026-08-15"]["routing"]
         self.assertEqual(telemetry["efforts"]["low"], {
@@ -812,13 +817,13 @@ class ReconcileTests(unittest.TestCase):
         ]
 
     def test_lower_counts_are_refused_by_default(self) -> None:
-        sync_usage.merge_with_cumulative(self.corrected, self.store)
+        usage_store.merge_with_cumulative(self.corrected, self.store)
         store = json.loads(self.store.read_text())
         self.assertEqual(store["2026-07-10"], {"totalTokens": 500, "totalCost": 10.0})
         self.assertEqual(store["2026-07-25"], {"totalTokens": 900, "totalCost": 20.0})
 
     def test_reconciling_takes_them_from_the_given_date_on(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             self.corrected, self.store, reconcile_since=date(2026, 7, 25)
         )
         store = json.loads(self.store.read_text())
@@ -829,7 +834,7 @@ class ReconcileTests(unittest.TestCase):
 
     def test_reconciling_does_not_re_apply_the_unpriced_guard(self) -> None:
         """Inside the window the fetch is authoritative, and was checked upstream."""
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-25", "totalTokens": 300, "totalCost": 0.0}],
             self.store,
             reconcile_since=date(2026, 7, 25),
@@ -845,17 +850,17 @@ class TrailIdentityTests(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         self.id_file = Path(self._tmp.name) / "trail_id"
-        p = patch.object(sync_usage, "TRAIL_ID_FILE", self.id_file)
+        p = patch.object(usage_git, "TRAIL_ID_FILE", self.id_file)
         p.start()
         self.addCleanup(p.stop)
 
     def resolve(self) -> str:
-        with patch.dict(sync_usage.os.environ, {sync_usage.TRAIL_ENV: "1"}):
-            return sync_usage.resolve_machine()
+        with patch.dict(usage_git.os.environ, {usage_git.TRAIL_ENV: "1"}):
+            return usage_git.resolve_machine()
 
     def test_the_identity_is_minted_once_and_reused(self) -> None:
         first = self.resolve()
-        self.assertTrue(sync_usage.NODE_ID_RE.fullmatch(first.rsplit("/", 1)[-1]))
+        self.assertTrue(usage_git.NODE_ID_RE.fullmatch(first.rsplit("/", 1)[-1]))
         self.assertEqual(first, self.resolve())
         self.assertEqual(first.rsplit("/", 1)[-1], self.id_file.read_text().strip())
 
@@ -902,28 +907,28 @@ class TrailIdentityTests(unittest.TestCase):
 
     def test_an_id_minted_concurrently_is_adopted(self) -> None:
         """Two first runs must converge, not split the history across two folders."""
-        real = sync_usage.os.link
+        real = usage_git.os.link
         def link_after_someone_else_won(src, dst):
             Path(dst).write_text("node-aaaabbbbcccc\n")
             return real(src, dst)
-        with patch.object(sync_usage.os, "link", link_after_someone_else_won):
+        with patch.object(usage_git.os, "link", link_after_someone_else_won):
             self.assertEqual(self.resolve(), "data/trail/node-aaaabbbbcccc")
 
     def test_a_partial_id_is_never_visible_to_a_reader(self) -> None:
         """The file appears only once fully written, so a racing reader can't see half."""
         seen = []
-        real = sync_usage.os.link
+        real = usage_git.os.link
         def record_then_link(src, dst):
             seen.append(Path(src).read_text())
             return real(src, dst)
-        with patch.object(sync_usage.os, "link", record_then_link):
+        with patch.object(usage_git.os, "link", record_then_link):
             minted = self.resolve().rsplit("/", 1)[-1]
         self.assertEqual(seen, [minted + "\n"])
 
     def test_an_explicit_identity_still_hashes(self) -> None:
-        with patch.dict(sync_usage.os.environ, {sync_usage.TRAIL_ENV: "worker-7"}):
-            machine = sync_usage.resolve_machine()
-        self.assertEqual(machine, f"data/trail/{sync_usage._opaque_node_id('worker-7')}")
+        with patch.dict(usage_git.os.environ, {usage_git.TRAIL_ENV: "worker-7"}):
+            machine = usage_git.resolve_machine()
+        self.assertEqual(machine, f"data/trail/{usage_git._opaque_node_id('worker-7')}")
         self.assertFalse(self.id_file.exists())
 
 
@@ -953,9 +958,9 @@ class OfficialPricingFetchTests(unittest.TestCase):
             return completed
 
         with patch.object(sync_usage.subprocess, "run", side_effect=fake_run), \
-                patch.object(sync_usage, "count_codex_image_files_per_day",
+                patch.object(usage_ccusage, "count_codex_image_files_per_day",
                              return_value={}):
-            cc, cx, op = sync_usage.fetch_daily_since(date(2026, 1, 1))
+            cc, cx, op = usage_ccusage.fetch_daily_since(date(2026, 1, 1))
         self.captured = captured
         return {
             "claude": cc[0] if cc else None,
@@ -1068,7 +1073,7 @@ class TraexFetchTests(unittest.TestCase):
             return completed
 
         with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
-            out = sync_usage.fetch_codex_home_daily(
+            out = usage_ccusage.fetch_codex_home_daily(
                 date(2026, 1, 1), Path("/some/trae/home")
             )
         self.captured = captured
@@ -1078,7 +1083,7 @@ class TraexFetchTests(unittest.TestCase):
         self.fetch([])
         self.assertEqual(self.captured["env"]["CODEX_HOME"], "/some/trae/home")
         # Uses the codex subcommand, not the unified daily.
-        self.assertEqual(self.captured["cmd"][:4], [*sync_usage.CCUSAGE_RUNNER, "codex", "daily"])
+        self.assertEqual(self.captured["cmd"][:4], [*usage_ccusage.CCUSAGE_RUNNER, "codex", "daily"])
 
     def test_a_priced_day_is_trusted(self) -> None:
         out = self.fetch([{
@@ -1178,7 +1183,7 @@ class LowercasedCodexHomeTests(unittest.TestCase):
             '{"model":"Gemini-3-Flash-Preview"}\n'
         )
         src = self.write("rollout-a.jsonl", original)
-        with sync_usage._lowercased_codex_home(self.home) as mirror:
+        with usage_ccusage._lowercased_codex_home(self.home) as mirror:
             mirrored = (mirror / "sessions" / "2026" / "08" / "07" / "rollout-a.jsonl").read_text()
         # Model names dropped to lowercase...
         self.assertIn('"model":"gpt-5.5"', mirrored)
@@ -1190,23 +1195,23 @@ class LowercasedCodexHomeTests(unittest.TestCase):
 
     def test_normalise_model_lowercases_and_resolves_aliases(self) -> None:
         # Real names only need casing; opaque aliases resolve to real Opus slugs.
-        self.assertEqual(sync_usage._normalise_model("GPT-5.5"), "gpt-5.5")
-        self.assertEqual(sync_usage._normalise_model("openrouter-1o"), "claude-opus-4-6")
-        self.assertEqual(sync_usage._normalise_model("openrouter-2o"), "claude-opus-4-7")
-        self.assertEqual(sync_usage._normalise_model("openrouter-3o"), "claude-opus-4-8")
+        self.assertEqual(usage_schema._normalise_model("GPT-5.5"), "gpt-5.5")
+        self.assertEqual(usage_schema._normalise_model("openrouter-1o"), "claude-opus-4-6")
+        self.assertEqual(usage_schema._normalise_model("openrouter-2o"), "claude-opus-4-7")
+        self.assertEqual(usage_schema._normalise_model("openrouter-3o"), "claude-opus-4-8")
         self.assertEqual(
-            sync_usage._normalise_model("OpenRouter-3o__max"), "claude-opus-4-8"
+            usage_schema._normalise_model("OpenRouter-3o__max"), "claude-opus-4-8"
         )
         # An unmapped opaque slug is only lowercased, staying unpriced.
-        self.assertEqual(sync_usage._normalise_model("Seed-1.6"), "seed-1.6")
+        self.assertEqual(usage_schema._normalise_model("Seed-1.6"), "seed-1.6")
 
     def test_normalise_model_collapses_traex_gemini_display_aliases(self) -> None:
         self.assertEqual(
-            sync_usage._normalise_model("gemini-3.1-pro"),
+            usage_schema._normalise_model("gemini-3.1-pro"),
             "gemini-3.1-pro-preview",
         )
         self.assertEqual(
-            sync_usage._normalise_model("Gemini-3-Flash"),
+            usage_schema._normalise_model("Gemini-3-Flash"),
             "gemini-3-flash-preview",
         )
 
@@ -1222,7 +1227,7 @@ class LowercasedCodexHomeTests(unittest.TestCase):
             '{"model":"OpenRouter-3o"}\n'
         )
         self.write("rollout-alias.jsonl", original)
-        with sync_usage._lowercased_codex_home(self.home) as mirror:
+        with usage_ccusage._lowercased_codex_home(self.home) as mirror:
             mirrored = (
                 mirror / "sessions" / "2026" / "08" / "07" / "rollout-alias.jsonl"
             ).read_text()
@@ -1236,7 +1241,7 @@ class LowercasedCodexHomeTests(unittest.TestCase):
     def test_a_source_without_sessions_yields_an_empty_mirror(self) -> None:
         empty = Path(self._tmp.name) / "no-sessions-here"
         empty.mkdir()
-        with sync_usage._lowercased_codex_home(empty) as mirror:
+        with usage_ccusage._lowercased_codex_home(empty) as mirror:
             self.assertFalse((mirror / "sessions").exists())
 
     def test_lowercase_flag_routes_through_a_mirror(self) -> None:
@@ -1252,7 +1257,7 @@ class LowercasedCodexHomeTests(unittest.TestCase):
             return completed
 
         with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
-            sync_usage.fetch_codex_home_daily(
+            usage_ccusage.fetch_codex_home_daily(
                 date(2026, 1, 1), self.home, lowercase_models=True
             )
         self.assertIsNotNone(seen["home"])
@@ -1332,7 +1337,7 @@ class ReconcileStubTests(unittest.TestCase):
 
     def test_an_image_stub_cannot_zero_a_reconciled_day(self) -> None:
         """ccusage rotated the session away; the stub knows images, not tokens."""
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-25", "totalTokens": 0, "totalCost": 0.0,
               "models": {}, "imageCount": 3, "tokensObserved": False}],
             self.store,
@@ -1343,7 +1348,7 @@ class ReconcileStubTests(unittest.TestCase):
         self.assertEqual(day["imageCount"], 3)
 
     def test_a_real_reading_still_corrects_downward(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-25", "totalTokens": 223_000_000, "totalCost": 30.0}],
             self.store,
             reconcile_since=date(2026, 7, 18),
@@ -1351,7 +1356,7 @@ class ReconcileStubTests(unittest.TestCase):
         self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 223_000_000)
 
     def test_reconciling_lets_an_emptied_breakdown_win(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-25", "totalTokens": 223_000_000, "totalCost": 30.0,
               "models": {}}],
             self.store,
@@ -1360,7 +1365,7 @@ class ReconcileStubTests(unittest.TestCase):
         self.assertEqual(self.read()["2026-07-25"]["models"], {})
 
     def test_a_normal_merge_still_keeps_a_stale_breakdown(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-25", "totalTokens": 800_000_000, "totalCost": 99.0,
               "models": {}}],
             self.store,
@@ -1371,7 +1376,7 @@ class ReconcileStubTests(unittest.TestCase):
         )
 
     def test_a_day_the_fetch_dropped_keeps_its_stored_value(self) -> None:
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(
             [{"date": "2026-07-26", "totalTokens": 100, "totalCost": 1.0}],
             self.store,
             reconcile_since=date(2026, 7, 18),
@@ -1428,8 +1433,8 @@ class DshSessionTests(unittest.TestCase):
         }
 
     def collect(self, since: date = date(2024, 1, 1)) -> list[dict]:
-        return sync_usage.collect_dsh_daily_since(
-            since, sync_usage.dsh_session_roots(self.home)
+        return usage_dsh.collect_dsh_daily_since(
+            since, usage_sources.dsh_session_roots(self.home)
         )
 
     def test_one_call_becomes_a_priced_day(self) -> None:
@@ -1516,7 +1521,7 @@ class DshSessionTests(unittest.TestCase):
             )) + "\n",
             encoding="utf-8",
         )
-        self.assertEqual(sync_usage.dsh_session_roots(self.home), (self.root,))
+        self.assertEqual(usage_sources.dsh_session_roots(self.home), (self.root,))
         self.assertEqual(self.collect()[0]["totalTokens"], 10)
 
     def test_multica_store_requires_one_selected_profile_tree(self) -> None:
@@ -1527,12 +1532,12 @@ class DshSessionTests(unittest.TestCase):
         first.mkdir(parents=True)
         second.mkdir(parents=True)
         with self.assertRaisesRegex(ValueError, "multiple Multica profiles"):
-            sync_usage.multica_dsh_session_roots(
+            usage_sources.multica_dsh_session_roots(
                 multica_home, binding_file=binding
             )
 
         self.assertEqual(
-            sync_usage.multica_dsh_session_roots(
+            usage_sources.multica_dsh_session_roots(
                 multica_home, profile="second", binding_file=binding
             ),
             (second,),
@@ -1547,7 +1552,7 @@ class DshSessionTests(unittest.TestCase):
         first.mkdir(parents=True)
 
         self.assertEqual(
-            sync_usage.multica_dsh_session_roots(
+            usage_sources.multica_dsh_session_roots(
                 multica_home, binding_file=binding
             ),
             (first,),
@@ -1557,7 +1562,7 @@ class DshSessionTests(unittest.TestCase):
         first.rename(first.parent / "retired")
         second.mkdir(parents=True)
         with self.assertRaisesRegex(ValueError, "bound Multica DSH profile 'first'"):
-            sync_usage.multica_dsh_session_roots(
+            usage_sources.multica_dsh_session_roots(
                 multica_home, binding_file=binding
             )
         self.assertEqual(binding.read_text().strip(), "first")
@@ -1572,7 +1577,7 @@ class DshSessionTests(unittest.TestCase):
         binding.write_text("first\n")
 
         with self.assertRaisesRegex(ValueError, "refusing to switch"):
-            sync_usage.multica_dsh_session_roots(
+            usage_sources.multica_dsh_session_roots(
                 multica_home, profile="second", binding_file=binding
             )
 
@@ -1591,7 +1596,7 @@ class DshSessionTests(unittest.TestCase):
         copied.parent.mkdir(parents=True)
         copied.write_text(original.read_text(), encoding="utf-8")
 
-        entry = sync_usage.collect_dsh_daily_since(
+        entry = usage_dsh.collect_dsh_daily_since(
             date(2024, 1, 1), (self.root, copied_root)
         )[0]
         self.assertEqual(entry["totalTokens"], 10)
@@ -1696,7 +1701,7 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(self.collect(), [])
 
     def test_a_home_with_no_sessions_yields_nothing(self) -> None:
-        self.assertEqual(sync_usage.dsh_session_roots(self.home), ())
+        self.assertEqual(usage_sources.dsh_session_roots(self.home), ())
         self.assertEqual(self.collect(), [])
 
     @unittest.skipUnless(
@@ -1755,7 +1760,7 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         self.c = self.frame(b"charlie\n")
 
     def test_whole_frames_decode_completely(self) -> None:
-        text, complete = sync_usage._zstd_frames_text(self.a + self.b + self.c)
+        text, complete = usage_dsh._zstd_frames_text(self.a + self.b + self.c)
         self.assertEqual(text, "alpha\nbravo\ncharlie\n")
         self.assertTrue(complete)
 
@@ -1768,7 +1773,7 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         recomputes the day from the whole artifact, so an early partial read is
         superseded by the completed one rather than added to it.
         """
-        text, complete = sync_usage._zstd_frames_text(
+        text, complete = usage_dsh._zstd_frames_text(
             self.a + self.b + self.c[: len(self.c) // 2]
         )
         self.assertEqual(text, "alpha\nbravo\n")
@@ -1782,7 +1787,7 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         for the same artifact.
         """
         torn = self.frame(b'{"n":"charlie"}\n')
-        text, complete = sync_usage._zstd_frames_text(
+        text, complete = usage_dsh._zstd_frames_text(
             self.frame(b'{"n":"alpha"}\n') + torn[: len(torn) // 2]
         )
         self.assertEqual(text, '{"n":"alpha"}\n')
@@ -1799,7 +1804,7 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         """
         damaged = bytearray(self.b)
         damaged[len(damaged) // 2 : len(damaged) // 2 + 4] = b"\xff\xff\xff\xff"
-        text, complete = sync_usage._zstd_frames_text(
+        text, complete = usage_dsh._zstd_frames_text(
             self.a + bytes(damaged) + self.c
         )
         self.assertEqual(text, "alpha\n")
@@ -1820,9 +1825,9 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         cases = (b"", self.a, self.a + self.b, torn, b"not a zstd artifact")
         for raw in cases:
             with self.subTest(raw=raw[:16]):
-                in_process = sync_usage._zstd_frames_text(raw)
+                in_process = usage_dsh._zstd_frames_text(raw)
                 with patch.dict(sys.modules, {"compression.zstd": None}):
-                    subprocess_path = sync_usage._zstd_frames_text(raw)
+                    subprocess_path = usage_dsh._zstd_frames_text(raw)
                 self.assertEqual(in_process, subprocess_path)
 
     def test_bytes_that_are_not_zstd_report_unreadable_rather_than_empty(
@@ -1834,17 +1839,17 @@ class ZstdFrameDecodingTests(unittest.TestCase):
         session that genuinely recorded nothing, and the operator would never
         learn a log had stopped being readable.
         """
-        text, complete = sync_usage._zstd_frames_text(b"this is not a zstd artifact")
+        text, complete = usage_dsh._zstd_frames_text(b"this is not a zstd artifact")
         self.assertIsNone(text)
         self.assertFalse(complete)
 
     def test_an_empty_artifact_is_an_empty_session_not_a_failure(self) -> None:
-        self.assertEqual(sync_usage._zstd_frames_text(b""), ("", True))
+        self.assertEqual(usage_dsh._zstd_frames_text(b""), ("", True))
 
     def test_a_damaged_frame_keeps_the_prefix_and_reports_partial(self) -> None:
         damaged = bytearray(self.b)
         damaged[len(damaged) // 2] ^= 0xFF
-        text, complete = sync_usage._zstd_frames_text(
+        text, complete = usage_dsh._zstd_frames_text(
             self.a + bytes(damaged) + self.c
         )
         self.assertIn("alpha", text)
@@ -1866,7 +1871,7 @@ class MulticaCodexTests(unittest.TestCase):
     def test_the_temporary_home_points_ccusage_at_the_relocated_tree(self) -> None:
         self.sessions.mkdir(parents=True)
         (self.sessions / "rollout.jsonl").write_text("{}\n", encoding="utf-8")
-        with sync_usage._codex_home_over(self.sessions) as home:
+        with usage_sources._codex_home_over(self.sessions) as home:
             linked = home / "sessions"
             self.assertTrue(linked.is_dir())
             self.assertTrue((linked / "rollout.jsonl").exists())
@@ -1877,7 +1882,7 @@ class MulticaCodexTests(unittest.TestCase):
     def test_a_missing_tree_is_skipped_without_running_ccusage(self) -> None:
         with patch.object(sync_usage.subprocess, "run") as run:
             self.assertEqual(
-                sync_usage.fetch_multica_codex_daily(date(2026, 1, 1), self.sessions),
+                usage_ccusage.fetch_multica_codex_daily(date(2026, 1, 1), self.sessions),
                 [],
             )
         run.assert_not_called()
@@ -1891,8 +1896,8 @@ class MulticaCodexTests(unittest.TestCase):
             root.mkdir(parents=True)
 
         self.assertEqual(
-            sync_usage.multica_codex_session_roots(shared, workspace),
-            [shared, issue, direct],
+            usage_sources.multica_codex_session_roots(shared, workspace),
+            sorted([shared, issue, direct]),
         )
 
     def test_duplicate_rollout_uses_the_larger_live_copy_once(self) -> None:
@@ -1908,9 +1913,9 @@ class MulticaCodexTests(unittest.TestCase):
             path.parent.mkdir(parents=True)
             path.write_text(text, encoding="utf-8")
 
-        selected = sync_usage._codex_session_files([shared, private])
+        selected = usage_sources._codex_session_files([shared, private])
         self.assertEqual(selected, [(private_relative, private / private_relative)])
-        with sync_usage._codex_home_over([shared, private]) as home:
+        with usage_sources._codex_home_over([shared, private]) as home:
             files = list((home / "sessions").rglob("*.jsonl"))
             self.assertEqual(len(files), 1)
             self.assertEqual(files[0].read_text(), "{}\n{}\n")
@@ -1919,7 +1924,7 @@ class MulticaCodexTests(unittest.TestCase):
         payload = json.dumps({"daily": daily})
         completed = subprocess.CompletedProcess([], 0, stdout=payload, stderr="")
         with patch.object(sync_usage.subprocess, "run", return_value=completed):
-            return sync_usage.fetch_codex_home_daily(
+            return usage_ccusage.fetch_codex_home_daily(
                 date(2026, 1, 1), Path("/some/home"), **kwargs
             )
 
@@ -2008,13 +2013,13 @@ class SeparateStorePerTreeTests(unittest.TestCase):
         return json.loads(path.read_text())["2026-08-31"]["totalTokens"]
 
     def test_a_pruned_tree_keeps_its_share_while_the_other_grows(self) -> None:
-        sync_usage.merge_with_cumulative(self.day(100), self.codex)
-        sync_usage.merge_with_cumulative(self.day(100), self.multica)
+        usage_store.merge_with_cumulative(self.day(100), self.codex)
+        usage_store.merge_with_cumulative(self.day(100), self.multica)
 
         # Multica's rollouts age out of ~/.codex/multica-sessions while the
         # standard tree keeps growing past what the two used to total.
-        sync_usage.merge_with_cumulative(self.day(250), self.codex)
-        sync_usage.merge_with_cumulative([], self.multica)
+        usage_store.merge_with_cumulative(self.day(250), self.codex)
+        usage_store.merge_with_cumulative([], self.multica)
 
         self.assertEqual(self.stored(self.codex), 250)
         self.assertEqual(
@@ -2028,79 +2033,12 @@ class SeparateStorePerTreeTests(unittest.TestCase):
 
     def test_the_same_model_in_both_trees_stays_separable(self) -> None:
         """Both trees run gpt-5.5, so a shared store could not tell them apart."""
-        sync_usage.merge_with_cumulative(self.day(100), self.codex)
-        sync_usage.merge_with_cumulative(self.day(80), self.multica)
+        usage_store.merge_with_cumulative(self.day(100), self.codex)
+        usage_store.merge_with_cumulative(self.day(80), self.multica)
         for path, expected in ((self.codex, 100), (self.multica, 80)):
             models = json.loads(path.read_text())["2026-08-31"]["models"]
             self.assertEqual(models["gpt-5.5"]["totalTokens"], expected)
 
-    def test_the_writer_sends_each_reader_to_its_own_store(self) -> None:
-        """The tests above drive merge_with_cumulative directly, so on their own
-        they would still pass if _sync merged two observations into one path.
-
-        Distinct names are not enough either: swapping two of them would keep
-        every pair unique while sending Multica's rollouts to `codex.json`. So
-        read the writer and follow each observation list back to the reader that
-        produced it, then assert which store that reader's output lands in.
-        """
-        tree = ast.parse(inspect.getsource(sync_usage._sync))
-        produced_by: dict[str, str] = {}
-        store_of: dict[str, str] = {}
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Assign):
-                continue
-            call = node.value if isinstance(node.value, ast.Call) else None
-            for target in node.targets:
-                names = (
-                    target.elts if isinstance(target, ast.Tuple) else [target]
-                )
-                for name in names:
-                    if not isinstance(name, ast.Name):
-                        continue
-                    if call is not None and isinstance(call.func, ast.Name):
-                        produced_by[name.id] = call.func.id
-                    for sub in ast.walk(node.value):
-                        if (
-                            isinstance(sub, ast.Subscript)
-                            and isinstance(sub.value, ast.Name)
-                            and sub.value.id == "AGENT_STORES"
-                            and isinstance(sub.slice, ast.Constant)
-                        ):
-                            store_of[name.id] = sub.slice.value
-
-        wiring = {}
-        for node in ast.walk(tree):
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "merge_with_cumulative"
-            ):
-                source = ast.unparse(node.args[0])
-                target = ast.unparse(node.args[1])
-                self.assertIn(target, store_of, f"{target} is not an AGENT_STORES path")
-                self.assertNotIn(
-                    store_of[target], wiring, f"{target} is written twice"
-                )
-                wiring[store_of[target]] = produced_by.get(source, source)
-
-        self.assertEqual(
-            set(wiring), set(sync_usage.AGENT_STORES),
-            "every store the writer declares must be written exactly once",
-        )
-        self.assertEqual(
-            wiring["codex-multica"], "fetch_multica_codex_daily",
-            "the Multica tree must land in its own store",
-        )
-        self.assertEqual(
-            wiring["dsh-multica"], "collect_dsh_daily_since",
-            "Multica's relocated dsh tree must land in its own store",
-        )
-        self.assertEqual(
-            wiring["codex"], "fetch_daily_since",
-            "codex.json must hold the standard tree, not the Multica one",
-        )
-        self.assertEqual(wiring["dsh"], "collect_dsh_daily_since")
-        self.assertEqual(wiring["traex"], "fetch_codex_home_daily")
 
     def test_a_failed_multica_read_cannot_reconcile_the_codex_day_away(
         self,
@@ -2112,8 +2050,8 @@ class SeparateStorePerTreeTests(unittest.TestCase):
         failure reached the Codex store as a standard-tree-only total and the
         Multica half was rewritten out of history.
         """
-        sync_usage.merge_with_cumulative(self.day(100), self.multica)
-        sync_usage.merge_with_cumulative(
+        usage_store.merge_with_cumulative(self.day(100), self.multica)
+        usage_store.merge_with_cumulative(
             [], self.multica, reconcile_since=date(2026, 8, 1)
         )
         self.assertEqual(self.stored(self.multica), 100)

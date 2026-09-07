@@ -14,6 +14,9 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
+import usage_ccusage
+import usage_git
+import usage_schema
 import sync_usage  # noqa: E402
 import squash_usage_branch  # noqa: E402
 
@@ -38,14 +41,14 @@ WORKTREE_LIST_WITH_MAIN = WORKTREE_LIST_WITHOUT_MAIN + (
 class DailyBranchTests(unittest.TestCase):
     def test_defers_usage_fetch_after_switching_to_a_new_code_snapshot(self) -> None:
         with (
-            patch.object(sync_usage, "prepare_daily_branch", return_value=True),
+            patch.object(usage_git, "prepare_daily_branch", return_value=True),
             patch.object(
-                sync_usage,
+                usage_git,
                 "_current_branch",
                 side_effect=["usage/2026-08-09", "usage/2026-08-10"],
             ),
             patch.object(
-                sync_usage,
+                usage_ccusage,
                 "fetch_daily_since",
                 side_effect=AssertionError("old process must not fetch on the new branch"),
             ),
@@ -55,7 +58,7 @@ class DailyBranchTests(unittest.TestCase):
     @patch.object(sync_usage.subprocess, "run", return_value=result())
     def test_automated_commit_overrides_host_git_identity(self, run) -> None:
         with patch.dict(
-            sync_usage.os.environ,
+            usage_git.os.environ,
             {
                 "GIT_AUTHOR_NAME": "Private Author",
                 "GIT_AUTHOR_EMAIL": "author@company.example",
@@ -63,7 +66,7 @@ class DailyBranchTests(unittest.TestCase):
                 "GIT_COMMITTER_EMAIL": "committer@company.example",
             },
         ):
-            sync_usage.git_commit("chore(data): sync personal usage")
+            usage_git.git_commit("chore(data): sync personal usage")
 
         env = run.call_args.kwargs["env"]
         self.assertEqual(env["GIT_AUTHOR_NAME"], "Aether Ledger")
@@ -72,16 +75,16 @@ class DailyBranchTests(unittest.TestCase):
         self.assertEqual(env["GIT_COMMITTER_EMAIL"], "noreply@github.com")
 
     def test_only_scheduled_durable_writers_are_rollover_watchdogs(self) -> None:
-        self.assertEqual(sync_usage.ROLLOVER_WATCHDOG_NODES, {"work", "personal"})
-        self.assertNotIn("devbox", sync_usage.ROLLOVER_WATCHDOG_NODES)
+        self.assertEqual(usage_git.ROLLOVER_WATCHDOG_NODES, {"work", "personal"})
+        self.assertNotIn("devbox", usage_git.ROLLOVER_WATCHDOG_NODES)
 
     def test_usage_commit_subject_is_conventional_and_stable(self) -> None:
         self.assertEqual(
-            sync_usage.usage_commit_message("data/trail/node-a1b2c3d4e5f6"),
+            usage_git.usage_commit_message("data/trail/node-a1b2c3d4e5f6"),
             "chore(data): sync node-a1b2c3d4e5f6 usage",
         )
         self.assertEqual(
-            sync_usage.usage_commit_message("data/personal"),
+            usage_git.usage_commit_message("data/personal"),
             "chore(data): sync personal usage",
         )
 
@@ -153,26 +156,26 @@ class DailyBranchTests(unittest.TestCase):
         self.assertIn('git push origin --delete "$candidate_branch" || true', workflow)
         self.assertLess(candidate, check)
 
-    @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
-    @patch.object(sync_usage, "_current_branch", return_value="main")
+    @patch.object(usage_git, "_branch_is_ahead", return_value=False)
+    @patch.object(usage_git, "_current_branch", return_value="main")
     def test_waits_while_any_older_branch_still_exists(self, _current, _ahead) -> None:
         with (
-            patch.object(sync_usage, "_ref_exists", return_value=False),
-            patch.object(sync_usage, "_sync_local_main"),
-            patch.object(sync_usage, "_cleanup_completed_local_branches"),
+            patch.object(usage_git, "_ref_exists", return_value=False),
+            patch.object(usage_git, "_sync_local_main"),
+            patch.object(usage_git, "_cleanup_completed_local_branches"),
             patch.object(
-                sync_usage,
+                usage_git,
                 "_pending_daily_branches",
                 return_value=["usage/2026-07-30"],
             ),
-            patch.object(sync_usage, "_git", side_effect=[result(), result()]) as git,
+            patch.object(usage_git, "_git", side_effect=[result(), result()]) as git,
         ):
-            self.assertFalse(sync_usage.prepare_daily_branch(date(2026, 8, 1)))
+            self.assertFalse(usage_git.prepare_daily_branch(date(2026, 8, 1)))
         self.assertEqual(git.call_count, 2)  # clean-status check and fetch only
 
-    @patch.object(sync_usage, "_request_rollover_recovery", return_value=True)
-    @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
-    @patch.object(sync_usage, "_current_branch", return_value="main")
+    @patch.object(usage_git, "_request_rollover_recovery", return_value=True)
+    @patch.object(usage_git, "_branch_is_ahead", return_value=False)
+    @patch.object(usage_git, "_current_branch", return_value="main")
     def test_external_writer_recovers_a_missed_rollover(
         self,
         _current,
@@ -181,14 +184,14 @@ class DailyBranchTests(unittest.TestCase):
     ) -> None:
         pending = ["usage/2026-07-31"]
         with (
-            patch.object(sync_usage, "_ref_exists", return_value=False),
-            patch.object(sync_usage, "_sync_local_main"),
-            patch.object(sync_usage, "_cleanup_completed_local_branches"),
-            patch.object(sync_usage, "_pending_daily_branches", return_value=pending),
-            patch.object(sync_usage, "_git", side_effect=[result(), result()]),
+            patch.object(usage_git, "_ref_exists", return_value=False),
+            patch.object(usage_git, "_sync_local_main"),
+            patch.object(usage_git, "_cleanup_completed_local_branches"),
+            patch.object(usage_git, "_pending_daily_branches", return_value=pending),
+            patch.object(usage_git, "_git", side_effect=[result(), result()]),
         ):
             self.assertFalse(
-                sync_usage.prepare_daily_branch(
+                usage_git.prepare_daily_branch(
                     date(2026, 8, 1),
                     recover_missed_rollover=True,
                 )
@@ -197,30 +200,30 @@ class DailyBranchTests(unittest.TestCase):
 
     def test_lists_every_prior_date_branch_in_order(self) -> None:
         refs = "2026-07-31\nnot-a-date\n2026-07-29\n2026-08-01\n"
-        with patch.object(sync_usage, "_git", return_value=result(stdout=refs)):
+        with patch.object(usage_git, "_git", return_value=result(stdout=refs)):
             self.assertEqual(
-                sync_usage._pending_daily_branches(date(2026, 8, 1)),
+                usage_git._pending_daily_branches(date(2026, 8, 1)),
                 ["usage/2026-07-29", "usage/2026-07-31"],
             )
 
-    @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
-    @patch.object(sync_usage, "_current_branch", return_value="main")
+    @patch.object(usage_git, "_branch_is_ahead", return_value=False)
+    @patch.object(usage_git, "_current_branch", return_value="main")
     def test_tracks_an_existing_today_branch(self, _current, _ahead) -> None:
         refs = {
             "refs/remotes/origin/usage/2026-08-01": True,
             "refs/heads/usage/2026-08-01": False,
         }
         with (
-            patch.object(sync_usage, "_ref_exists", side_effect=lambda ref: refs.get(ref, False)),
-            patch.object(sync_usage, "_sync_local_main"),
-            patch.object(sync_usage, "_cleanup_completed_local_branches"),
+            patch.object(usage_git, "_ref_exists", side_effect=lambda ref: refs.get(ref, False)),
+            patch.object(usage_git, "_sync_local_main"),
+            patch.object(usage_git, "_cleanup_completed_local_branches"),
             patch.object(
-                sync_usage,
+                usage_git,
                 "_git",
                 side_effect=[result(), result(), result(), result()],
             ) as git,
         ):
-            self.assertTrue(sync_usage.prepare_daily_branch(date(2026, 8, 1)))
+            self.assertTrue(usage_git.prepare_daily_branch(date(2026, 8, 1)))
         commands = [call.args[0] for call in git.call_args_list]
         self.assertIn(
             ["switch", "--track", "-c", "usage/2026-08-01", "origin/usage/2026-08-01"],
@@ -231,35 +234,35 @@ class DailyBranchTests(unittest.TestCase):
             commands,
         )
 
-    @patch.object(sync_usage, "_branch_is_ahead", return_value=False)
-    @patch.object(sync_usage, "_current_branch", return_value="main")
+    @patch.object(usage_git, "_branch_is_ahead", return_value=False)
+    @patch.object(usage_git, "_current_branch", return_value="main")
     def test_bootstraps_today_only_after_yesterday_is_gone(self, _current, _ahead) -> None:
         with (
-            patch.object(sync_usage, "_ref_exists", return_value=False),
-            patch.object(sync_usage, "_sync_local_main"),
-            patch.object(sync_usage, "_cleanup_completed_local_branches"),
-            patch.object(sync_usage, "_pending_daily_branches", return_value=[]),
+            patch.object(usage_git, "_ref_exists", return_value=False),
+            patch.object(usage_git, "_sync_local_main"),
+            patch.object(usage_git, "_cleanup_completed_local_branches"),
+            patch.object(usage_git, "_pending_daily_branches", return_value=[]),
             patch.object(
-                sync_usage,
+                usage_git,
                 "_git",
                 side_effect=[result(), result(), result(), result()],
             ) as git,
         ):
-            self.assertTrue(sync_usage.prepare_daily_branch(date(2026, 8, 1)))
+            self.assertTrue(usage_git.prepare_daily_branch(date(2026, 8, 1)))
         commands = [call.args[0] for call in git.call_args_list]
         self.assertIn(["switch", "-c", "usage/2026-08-01", "origin/main"], commands)
         self.assertIn(["push", "-u", "origin", "usage/2026-08-01"], commands)
 
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
-    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_ref_exists", return_value=True)
     def test_fast_forwards_main_ref_while_usage_is_checked_out(self, _exists, _current) -> None:
         worktrees = result(stdout=WORKTREE_LIST_WITHOUT_MAIN)
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[result(), worktrees, result()],
         ) as git:
-            sync_usage._sync_local_main()
+            usage_git._sync_local_main()
         self.assertEqual(
             [call.args[0] for call in git.call_args_list],
             [
@@ -269,15 +272,15 @@ class DailyBranchTests(unittest.TestCase):
             ],
         )
 
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
-    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_ref_exists", return_value=True)
     def test_leaves_main_to_the_worktree_holding_it(self, _exists, _current) -> None:
         worktrees = result(stdout=WORKTREE_LIST_WITH_MAIN)
         with (
-            patch.object(sync_usage, "_git", side_effect=[result(), worktrees]) as git,
+            patch.object(usage_git, "_git", side_effect=[result(), worktrees]) as git,
             redirect_stderr(io.StringIO()) as err,
         ):
-            sync_usage._sync_local_main()
+            usage_git._sync_local_main()
         self.assertEqual(
             [call.args[0] for call in git.call_args_list],
             [
@@ -287,36 +290,36 @@ class DailyBranchTests(unittest.TestCase):
         )
         self.assertEqual(err.getvalue(), "")
 
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
-    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_ref_exists", return_value=True)
     def test_an_unreadable_worktree_listing_keeps_hands_off_main(self, _exists, _current) -> None:
         """Guessing "free" wrongly is the expensive mistake, so guess "held"."""
         failed = result(returncode=124, stderr="git timed out after 30s")
         with (
-            patch.object(sync_usage, "_git", side_effect=[result(), failed]) as git,
+            patch.object(usage_git, "_git", side_effect=[result(), failed]) as git,
             redirect_stderr(io.StringIO()) as err,
         ):
-            sync_usage._sync_local_main()
+            usage_git._sync_local_main()
         self.assertNotIn(["branch", "-f", "main", "origin/main"],
                          [call.args[0] for call in git.call_args_list])
         self.assertIn("leaving local main alone", err.getvalue())
 
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
-    @patch.object(sync_usage, "_ref_exists", return_value=True)
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_ref_exists", return_value=True)
     def test_keeps_diverged_local_main(self, _exists, _current) -> None:
-        with patch.object(sync_usage, "_git", return_value=result(returncode=1)) as git:
-            sync_usage._sync_local_main()
+        with patch.object(usage_git, "_git", return_value=result(returncode=1)) as git:
+            usage_git._sync_local_main()
         git.assert_called_once_with(["merge-base", "--is-ancestor", "main", "origin/main"])
 
     @patch.object(
-        sync_usage,
+        usage_git,
         "_completed_local_daily_branches",
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
     def test_deletes_completed_local_branch_matching_snapshot(self, _current, _completed) -> None:
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[
                 result(stdout="snapshot\n"),  # locate the finalized snapshot
@@ -326,7 +329,7 @@ class DailyBranchTests(unittest.TestCase):
                 result(),  # delete
             ],
         ) as git:
-            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+            usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         commands = [call.args[0] for call in git.call_args_list]
         self.assertIn(
             ["diff", "--quiet", "snapshot", "usage/2026-08-02", "--", "data"],
@@ -347,11 +350,11 @@ class DailyBranchTests(unittest.TestCase):
         self.assertIn(["branch", "-D", "usage/2026-08-02"], commands)
 
     @patch.object(
-        sync_usage,
+        usage_git,
         "_completed_local_daily_branches",
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
     def test_keeps_completed_local_branch_when_the_comparison_itself_fails(
         self,
         _current,
@@ -359,25 +362,25 @@ class DailyBranchTests(unittest.TestCase):
     ) -> None:
         """Exit codes above 1 are Git failures, not differences, and say so."""
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[
                 result(stdout="snapshot\n"),
                 result(returncode=128, stderr="fatal: bad object"),
             ],
         ) as git:
-            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+            usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertNotIn(
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
 
     @patch.object(
-        sync_usage,
+        usage_git,
         "_completed_local_daily_branches",
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
     def test_keeps_completed_local_branch_when_the_fork_comparison_fails(
         self,
         _current,
@@ -385,7 +388,7 @@ class DailyBranchTests(unittest.TestCase):
     ) -> None:
         """The second comparison must fail closed too, not only the first."""
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[
                 result(stdout="snapshot\n"),
@@ -394,25 +397,25 @@ class DailyBranchTests(unittest.TestCase):
                 result(returncode=128, stderr="fatal: bad revision"),
             ],
         ) as git:
-            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+            usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertNotIn(
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
 
     @patch.object(
-        sync_usage,
+        usage_git,
         "_completed_local_daily_branches",
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
     def test_keeps_completed_local_branch_carrying_its_own_code(
         self,
         _current,
         _completed,
     ) -> None:
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[
                 result(stdout="snapshot\n"),
@@ -421,25 +424,25 @@ class DailyBranchTests(unittest.TestCase):
                 result(returncode=1),  # but the branch changed something outside data/
             ],
         ) as git:
-            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+            usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertNotIn(
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
         )
 
     @patch.object(
-        sync_usage,
+        usage_git,
         "_completed_local_daily_branches",
         return_value=[(date(2026, 8, 2), "usage/2026-08-02")],
     )
-    @patch.object(sync_usage, "_current_branch", return_value="usage/2026-08-03")
+    @patch.object(usage_git, "_current_branch", return_value="usage/2026-08-03")
     def test_keeps_completed_local_branch_with_unfinalized_data(self, _current, _completed) -> None:
         with patch.object(
-            sync_usage,
+            usage_git,
             "_git",
             side_effect=[result(stdout="snapshot\n"), result(returncode=1)],
         ) as git:
-            sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+            usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertNotIn(
             ["branch", "-D", "usage/2026-08-02"],
             [call.args[0] for call in git.call_args_list],
@@ -558,7 +561,7 @@ class RealRepositoryCleanupTests(unittest.TestCase):
         self.git("config", "user.name", "Test")
         self.git("config", "user.email", "test@example.invalid")
         self.git("config", "commit.gpgsign", "false")
-        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher = patch.object(usage_schema, "DATA_REPO_DIR", self.repo)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -608,7 +611,7 @@ class RealRepositoryCleanupTests(unittest.TestCase):
         # replaced would have kept the branch here forever.
         self.assertEqual(whole_tree.returncode, 1)
 
-        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertNotIn("usage/2026-08-02", self.branches())
 
     def test_keeps_completed_branch_holding_its_own_code(self) -> None:
@@ -618,7 +621,7 @@ class RealRepositoryCleanupTests(unittest.TestCase):
         self.commit("fix: something only this branch has")
         self.git("switch", "-q", "main")
 
-        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertIn("usage/2026-08-02", self.branches())
 
     def test_keeps_completed_branch_holding_unpublished_data(self) -> None:
@@ -628,7 +631,7 @@ class RealRepositoryCleanupTests(unittest.TestCase):
         self.commit("chore(data): sync work usage")
         self.git("switch", "-q", "main")
 
-        sync_usage._cleanup_completed_local_branches(date(2026, 8, 3))
+        usage_git._cleanup_completed_local_branches(date(2026, 8, 3))
         self.assertIn("usage/2026-08-02", self.branches())
 
 
@@ -667,7 +670,7 @@ class RealRepositoryMainRefTests(unittest.TestCase):
         self.ahead = self.git("rev-parse", "HEAD")
         self.git("update-ref", "refs/remotes/origin/main", self.ahead)
 
-        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher = patch.object(usage_schema, "DATA_REPO_DIR", self.repo)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -683,7 +686,7 @@ class RealRepositoryMainRefTests(unittest.TestCase):
 
     def sync(self) -> str:
         with redirect_stderr(io.StringIO()) as err:
-            sync_usage._sync_local_main()
+            usage_git._sync_local_main()
         return err.getvalue()
 
     def test_fast_forwards_main_when_no_worktree_holds_it(self) -> None:
@@ -722,37 +725,37 @@ class GitLockTests(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
         patcher = patch.object(
-            sync_usage, "GIT_LOCK_PATH", Path(self._tmp.name) / "nested" / "git.lock"
+            usage_git, "GIT_LOCK_PATH", Path(self._tmp.name) / "nested" / "git.lock"
         )
         patcher.start()
         self.addCleanup(patcher.stop)
 
     def test_acquires_and_releases_the_shared_lock(self) -> None:
-        with sync_usage.repo_git_lock(0) as acquired:
+        with usage_git.repo_git_lock(0) as acquired:
             self.assertTrue(acquired)
         # A second run must find it free again.
-        with sync_usage.repo_git_lock(0) as acquired:
+        with usage_git.repo_git_lock(0) as acquired:
             self.assertTrue(acquired)
 
     def test_reports_failure_when_another_process_holds_the_lock(self) -> None:
-        sync_usage.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(sync_usage.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+        usage_git.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(usage_git.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
         self.addCleanup(os.close, fd)
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        with sync_usage.repo_git_lock(wait_seconds=0) as acquired:
+        with usage_git.repo_git_lock(wait_seconds=0) as acquired:
             self.assertFalse(acquired)
 
-    @patch.object(sync_usage, "resolve_machine", return_value="data/work")
+    @patch.object(usage_git, "resolve_machine", return_value="data/work")
     def test_run_is_skipped_rather_than_racing_a_lock_holder(self, _machine) -> None:
         with (
             patch.object(sync_usage, "_sync") as sync,
             patch.object(sync_usage.sys, "argv", ["sync_usage.py"]),
         ):
-            sync_usage.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
-            fd = os.open(sync_usage.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
+            usage_git.GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(usage_git.GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
             self.addCleanup(os.close, fd)
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            with patch.object(sync_usage, "GIT_LOCK_WAIT_SECONDS", 0):
+            with patch.object(usage_git, "GIT_LOCK_WAIT_SECONDS", 0):
                 self.assertEqual(sync_usage.main(), 0)
         sync.assert_not_called()
 
@@ -791,7 +794,7 @@ class GitCatchUpTests(unittest.TestCase):
         self.git("commit", "-q", "-m", "seed")
         self.git("push", "-q", "-u", "origin", "main")
 
-        patcher = patch.object(sync_usage, "DATA_REPO_DIR", self.repo)
+        patcher = patch.object(usage_schema, "DATA_REPO_DIR", self.repo)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -819,7 +822,7 @@ class GitCatchUpTests(unittest.TestCase):
 
     def test_it_catches_up_with_the_upstream(self) -> None:
         self.push_from_elsewhere("1\n")
-        self.assertTrue(sync_usage.git_catch_up())
+        self.assertTrue(usage_git.git_catch_up())
         self.assertEqual((self.repo / "seed").read_text(), "1\n")
 
     def test_it_replays_local_commits_on_top(self) -> None:
@@ -827,21 +830,21 @@ class GitCatchUpTests(unittest.TestCase):
         self.git("add", "-A")
         self.git("commit", "-q", "-m", "mine")
         self.push_from_elsewhere("1\n")
-        self.assertTrue(sync_usage.git_catch_up())
+        self.assertTrue(usage_git.git_catch_up())
         self.assertEqual((self.repo / "seed").read_text(), "1\n")
         self.assertEqual((self.repo / "mine").read_text(), "local\n")
 
     def test_it_rebases_onto_the_tracking_ref_and_never_pulls(self) -> None:
         """The regression guard: going back to `git pull` reopens the race."""
         calls: list[list[str]] = []
-        real = sync_usage._git
+        real = usage_git._git
 
         def record(args, **kw):
             calls.append(args)
             return real(args, **kw)
 
-        with patch.object(sync_usage, "_git", record):
-            sync_usage.git_catch_up()
+        with patch.object(usage_git, "_git", record):
+            usage_git.git_catch_up()
         verbs = [c[0] for c in calls]
         self.assertNotIn("pull", verbs)
         rebase = next(c for c in calls if c[0] == "rebase")
@@ -849,13 +852,13 @@ class GitCatchUpTests(unittest.TestCase):
 
     def test_no_upstream_is_reported_not_crashed(self) -> None:
         self.git("checkout", "-q", "-b", "orphan")
-        self.assertFalse(sync_usage.git_catch_up())
+        self.assertFalse(usage_git.git_catch_up())
 
     def test_uncommitted_work_survives_the_catch_up(self) -> None:
         """--autostash must give the dirt back; the writer's tree is live data."""
         self.push_from_elsewhere("1\n")
         self.write("seed", "0\nuncommitted\n")
-        self.assertTrue(sync_usage.git_catch_up())
+        self.assertTrue(usage_git.git_catch_up())
         self.assertIn("uncommitted", (self.repo / "seed").read_text())
 
     def test_a_failed_rebase_parks_uncommitted_work_recoverably(self) -> None:
@@ -882,7 +885,7 @@ class GitCatchUpTests(unittest.TestCase):
 
         err = io.StringIO()
         with redirect_stderr(err):
-            self.assertFalse(sync_usage.git_catch_up())
+            self.assertFalse(usage_git.git_catch_up())
 
         self.assertEqual((self.repo / "mine").read_text(), "local\n",
                          "autostash took the edit out of the tree")
@@ -905,14 +908,14 @@ class GitCatchUpTests(unittest.TestCase):
 
     def count_verbs(self, verb: str, **kw) -> int:
         seen: list[str] = []
-        real = sync_usage._git
+        real = usage_git._git
 
         def record(args, **inner):
             seen.append(args[0])
             return real(args, **inner)
 
-        with patch.object(sync_usage, "_git", record):
-            sync_usage.git_catch_up(**kw)
+        with patch.object(usage_git, "_git", record):
+            usage_git.git_catch_up(**kw)
         return seen.count(verb)
 
     def test_a_failure_before_the_rebase_prescribes_no_rebase_recovery(self) -> None:
@@ -922,7 +925,7 @@ class GitCatchUpTests(unittest.TestCase):
         self.git("checkout", "-q", "-b", "orphan")
         err = io.StringIO()
         with redirect_stderr(err):
-            self.assertFalse(sync_usage.git_catch_up())
+            self.assertFalse(usage_git.git_catch_up())
         printed = err.getvalue()
         self.assertIn("no upstream", printed)
         self.assertNotIn("rebase --abort", printed)

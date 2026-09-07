@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import sys
 import tempfile
@@ -11,8 +10,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from audit_public import _validate_store_schema, _walk_json  # noqa: E402
-import sync_usage  # noqa: E402
-from sync_usage import NODE_ID_RE, _opaque_node_id  # noqa: E402
+import usage_git
+from usage_git import NODE_ID_RE, _opaque_node_id  # noqa: E402
 
 
 class PublicAuditTests(unittest.TestCase):
@@ -144,15 +143,15 @@ class PublicAuditTests(unittest.TestCase):
 
     def test_trail_machine_path_never_contains_raw_identity(self) -> None:
         raw = "worker-hostname-with-job-id"
-        previous = os.environ.get(sync_usage.TRAIL_ENV)
+        previous = os.environ.get(usage_git.TRAIL_ENV)
         try:
-            os.environ[sync_usage.TRAIL_ENV] = raw
-            resolved = sync_usage.resolve_machine()
+            os.environ[usage_git.TRAIL_ENV] = raw
+            resolved = usage_git.resolve_machine()
         finally:
             if previous is None:
-                os.environ.pop(sync_usage.TRAIL_ENV, None)
+                os.environ.pop(usage_git.TRAIL_ENV, None)
             else:
-                os.environ[sync_usage.TRAIL_ENV] = previous
+                os.environ[usage_git.TRAIL_ENV] = previous
 
         self.assertRegex(resolved, r"^data/trail/node-[0-9a-f]{12}$")
         self.assertNotIn(raw, resolved)
@@ -162,10 +161,10 @@ class PublicAuditTests(unittest.TestCase):
             node_name = Path(directory) / "node_name"
             node_name.write_text("personal\n")
             with (
-                patch.object(sync_usage, "NODE_NAME_FILE", node_name),
+                patch.object(usage_git, "NODE_NAME_FILE", node_name),
                 patch.dict(os.environ, {}, clear=True),
             ):
-                self.assertEqual(sync_usage.resolve_machine(), "data/personal")
+                self.assertEqual(usage_git.resolve_machine(), "data/personal")
 
 
 if __name__ == "__main__":

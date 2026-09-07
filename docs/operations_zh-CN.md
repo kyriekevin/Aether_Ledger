@@ -57,8 +57,9 @@ Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Clau
 dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
 `~/.trae/cli/sessions`，无需额外处理。Codex 和 dsh 是例外：Multica 的 Codex rollout 既可能进入
 共享目录 `~/.codex/multica-sessions`，直接 chat 时也可能只留在任务私有的
-`task-*/codex-home/sessions` 中。两者都不在 `~/.codex/sessions` 下，ccusage 默认扫描永远看不到。
-采集器从 `MULTICA_TASK_WORKSPACES_ROOT` 下发现这两类目录，按包含 session ID 的 rollout 文件名去重
+`codex-home/sessions` 或 `codex-home/archived_sessions` 中。这些日志不在普通 Codex 的
+`~/.codex/sessions` 下。
+采集器读取共享树，并从 `MULTICA_TASK_WORKSPACES_ROOT` 下发现任务私有目录，按包含 session ID 的 rollout 文件名去重
 （实时副本冲突时取较大的一份），再通过一个临时 `CODEX_HOME` 用同一个 Codex 读取器读取，写进独立的
 store `codex-multica.json`。Multica 还会把 dsh 日志放到
 `~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
@@ -74,7 +75,9 @@ Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记
 就是长那个样子。
 
 这个 store 放在 data 根目录而不是某个节点标签下，因为一次 API 调用覆盖所有 runtime；由单台配置过的
-机器采集，"一个文件只有一个写入者"的规则才继续成立。采集是显式开启的：
+机器采集，"一个文件只有一个写入者"的规则才继续成立。定时 token 同步不再查询任务元数据。需要刷新时，在 writer 中手动添加
+`--include-multica-tasks`；脚本先发布 token 数据，再查询 API 并单独发布任务数据。已有任务历史保留，
+只有 `work` writer 会执行这项操作。还需配置：
 `~/.config/token-activity/multica_runtime_roles.json` 必须把每个 runtime 的自定义名映射到 `work`、
 `personal` 或 `devbox`。没有这个文件的机器什么都不采，而不是去猜；provider 不在已知集合里的 runtime
 会在 stderr 上报出来，而不是静默跳过——provider 字符串一旦改名，静默跳过看起来就和"这个 provider
@@ -83,7 +86,9 @@ Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记
 Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json`；复制
 `config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId`、
 `dshProfile` 和 `taskWorkspacesRoot` 四个字段，校验后写入 launchd 环境。其中
-`taskWorkspacesRoot` 是 Multica 创建 profile 与 `task-*` 目录的本地父目录，用于收集没有汇入共享树
+`taskWorkspacesRoot` 是 Multica 任务工作区的本地父目录。采集器按 `codex-home` 结构发现日志，
+不依赖任务名称或嵌套层数；找到 harness home 后停止向下搜索，并跳过 Git 和依赖目录。
+显式配置的根目录不存在时会报错。它用于收集没有汇入共享树
 的直接 chat rollout。生成的 plist 不是第二份配置源，不应再手工修改。
 
 run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
@@ -185,6 +190,30 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 
 新设备只能恢复其本地日志中仍然存在的日期。
 
+## 采集模块职责
+
+`sync_usage.py` 负责命令参数、来源调度、状态报告和发布。具体实现按职责拆分：
+
+| 模块 | 职责 |
+| --- | --- |
+| `usage_schema.py` | 公开存储名称、token 辅助函数和模型别名 |
+| `usage_sources.py` | 会话发现、来源绑定、去重和临时 Codex home |
+| `usage_ccusage.py` | ccusage 报告转换和仓库价格计算 |
+| `usage_dsh.py` | DSH 事件读取和压缩日志解码 |
+| `usage_telemetry.py` | 可选的 effort、速度、reasoning 和 quota 统计 |
+| `usage_store.py` | 累计合并和原子写入 |
+| `usage_git.py` | writer 身份、共享锁、日期分支和发布 |
+
+读取模块不依赖命令入口或面板渲染器。数据文件名、公开 schema、独立 writer 和 T+1 rollover
+保持兼容。Multica 任务元数据留在 `multica_usage.py`，按需开启。ccusage 运行器仍要求通过计价验证；
+验证失败会报告采集失败，不会静默视为没有新增用量。
+
+若模型累计值保留了当前计价观察中已缺失的 token，费用就不完整，合并行会标为 `unpriced`。
+按日汇总无法还原缺失请求的费用，后续完整读取可以补算。
+
+Codex 遥测遇到重复的累计用量事件时，只计一次调用，同时保留更新后的 quota；普通 Codex
+遥测也读取归档会话。这次修改不会自动改写历史上已累计的重复调用数。
+
 ## 前置条件
 
 - 安装 Homebrew 的 macOS
@@ -200,7 +229,7 @@ Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此�
 brew install uv ccusage gh
 ```
 
-脚本是零依赖单文件，各自带着 `requires-python = ">=3.11"`，所以没有项目文件也没有 lock 文件。
+命令入口使用同目录下的 Python 模块，不依赖第三方 Python 包；入口各自带着 `requires-python = ">=3.11"`，所以没有项目文件也没有 lock 文件。
 但只有这个下限并不能确定解释器：`uv` 会挑满足下限的、已装的最新版本，开发机、CI 和 rollover
 运行器挑到的可能各不相同，而两个 workflow 都没传 `python-version`。`.python-version` 把三处
 统一钉在 3.11——就是脚本声明的下限，跑的就是它声称支持的版本。所有 `make` 目标都走 `uv`，
@@ -267,7 +296,10 @@ agent。
 立即生效，同时避免新旧定时任务一起运行。
 
 安装后运行 `make health`。它会检查依赖、本机配置、launchd 环境和 writer 脚本路径，但不会打印私有
-配置值。
+配置值。配置了 Multica 工作区后，还会报告发现的目录数、去重后的 rollout 数和最新文件修改时间。
+`empty` 与 `failed` 分开显示；安装检查通过不代表用量采集成功。同步日志逐来源报告状态、
+观察到的日期数、最新用量日期和今日 token。部分来源失败时，成功来源仍会发布，进程返回 1；
+带 `--reconcile-since` 的运行则会在写入前拒绝有失败项的采集结果。
 
 日志位置：
 
