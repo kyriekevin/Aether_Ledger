@@ -85,6 +85,8 @@ PR，并以 `make verify` 作为交付门槛。
 
 ## 文档导航
 
+> **更新写入设备前：**每台设备都必须安装并验证[兼容的 ccusage 运行器](docs/operations_zh-CN.md#ccusage-runtime-upgrade)。否则所有依赖 ccusage 的新增采集都会停止，不仅是 Astra；已有数据会保留。
+
 | 指南 | 内容 |
 |---|---|
 | [运维文档](docs/operations_zh-CN.md) | 安装、机器身份、分支生命周期、数据结构、面板与恢复 |

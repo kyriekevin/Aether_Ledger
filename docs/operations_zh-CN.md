@@ -121,6 +121,8 @@ CLI 一次只回答一个 profile、一个 workspace，而没有 issue 的 profi
 路径会保留 ccusage 自己算的金额——ccusage 仍然知道其中哪些调用走了优先级 tier、哪些越过了长上
 下文阈值，而按天汇总的数据说不出这些。
 
+<a id="ccusage-runtime-upgrade"></a>
+
 Astra 计价要求 ccusage 认识单次请求的 272K 阈值。稳定版 20.0.20 内嵌的快照仍较旧，
 账本使用单独缓存的上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`。
 先安装 Rust（macOS 可运行 `brew install rust`），再在每台写入设备上运行：
@@ -131,7 +133,8 @@ uv run python scripts/ccusage_runtime.py --check
 ```
 
 读取真实会话前，执行器会用模拟请求验证低于、等于和超过 272K 的计价，包括缓存输入和已记录的
-Fast 模式。不兼容的版本会使本轮采集失败，已有存储继续保留，不会写入虚高费用。
+Fast 模式。**每台写入设备必须在启用更新后的 writer 前完成安装和验证。**
+不兼容的版本会停止所有依赖 ccusage 的新增采集，不仅是 Astra；已有存储继续保留。
 如果固定版本缓存不存在，也允许通过验证的系统 `ccusage`。
 Fable 5.1 和 Astra 的价格分别从账本首次记录的 2026-09-03、2026-09-07 生效。
 更新进入 writer 后，下次同步可补算此前未计价的记录。直接运行 `ccusage` 仍使用系统安装版。

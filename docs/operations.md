@@ -148,6 +148,8 @@ Unlike the traex path, this one keeps ccusage's own cost for a row whose every
 model has an unchanged official rate, because ccusage still knows which of those calls ran on the
 priority tier or crossed a long-context threshold and a day's totals cannot say.
 
+<a id="ccusage-runtime-upgrade"></a>
+
 Astra pricing requires a ccusage build with the 272K request boundary. Stable 20.0.20
 still embeds an older snapshot; the ledger uses upstream revision
 `98a1b6a88292ef00153508874a33685a81eac1e6` in a separate local cache. Install Rust
@@ -159,8 +161,9 @@ uv run python scripts/ccusage_runtime.py --check
 ```
 
 The runner checks synthetic requests below, at, and above 272K, including cached input
-and recorded Fast mode, before reading real sessions. An incompatible build fails the
-collection instead of recording an inflated cost; existing stores remain available.
+and recorded Fast mode, before reading real sessions. **Install and verify the runtime
+on every writing device before enabling the updated writer.** An incompatible build stops
+all ccusage-backed collection, not only Astra; existing stores remain available.
 A capable system `ccusage` is also accepted when the pinned cache is absent.
 Fable 5.1 rates apply from 2026-09-03 and Astra rates from 2026-09-07, their first
 observed ledger dates. After this change reaches the writer, the next sync can backfill
