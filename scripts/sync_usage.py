@@ -175,7 +175,8 @@ def resolve_machine() -> str:
 # opencode / ...），并在每日行的 `agents` 中保留准确的调用端归属。模型名只作为
 # 明细保留，不能用于推断 agent：Claude Code 经代理或 cc-switch 路由后可能记录
 # 任意模型族。各 agent 仍写入独立 store，使 session rotation 下的高水位彼此隔离。
-CCUSAGE_CMD = ["ccusage", "daily", "--json", "--by-agent"]
+CCUSAGE_RUNNER = [sys.executable, str(Path(__file__).with_name("ccusage_runtime.py"))]
+CCUSAGE_CMD = [*CCUSAGE_RUNNER, "daily", "--json", "--by-agent"]
 
 # ccusage walks every session JSONL, so it is the slowest step here — and it runs
 # while this process holds the checkout-wide Git lock. An unbounded hang would
@@ -288,7 +289,7 @@ SPEED_LEVELS = frozenset({"standard", "fast"})
 TRAEX_CODEX_HOME = Path.home() / ".trae" / "cli"
 # ccusage `codex daily` (unlike the unified `daily`) reports per-model tokens but
 # only a row-level costUSD, and dates under key `date`, not `period`.
-CCUSAGE_CODEX_CMD = ["ccusage", "codex", "daily", "--json"]
+CCUSAGE_CODEX_CMD = [*CCUSAGE_RUNNER, "codex", "daily", "--json"]
 
 # Session lines record the model as `"model":"<name>"`. We rewrite only that field
 # when mirroring, leaving every other byte untouched.

@@ -1078,7 +1078,7 @@ class TraexFetchTests(unittest.TestCase):
         self.fetch([])
         self.assertEqual(self.captured["env"]["CODEX_HOME"], "/some/trae/home")
         # Uses the codex subcommand, not the unified daily.
-        self.assertEqual(self.captured["cmd"][:3], ["ccusage", "codex", "daily"])
+        self.assertEqual(self.captured["cmd"][:4], [*sync_usage.CCUSAGE_RUNNER, "codex", "daily"])
 
     def test_a_priced_day_is_trusted(self) -> None:
         out = self.fetch([{

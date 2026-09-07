@@ -88,6 +88,8 @@ rollover workflow. Human changes go through pull requests gated by `make verify`
 
 ## Documentation
 
+> **Before upgrading a writer:** install and verify the [compatible ccusage runtime](docs/operations.md#ccusage-runtime-upgrade) on every writing device. Otherwise, all ccusage-backed collection stops, not only Astra. Existing data is retained.
+
 | Guide | Covers |
 |---|---|
 | [Operations](docs/operations.md) | Setup, machine identity, branch lifecycle, schemas, dashboards, and recovery |
