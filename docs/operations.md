@@ -73,8 +73,9 @@ special handling. Codex and dsh are the exceptions. Multica Codex rollouts can u
 The writer discovers harness homes below `MULTICA_TASK_WORKSPACES_ROOT` by structure, independent
 of task names and nesting depth. It stops descending at each harness home and skips dependency
 and Git directories. Linked profile, task, and harness directories are followed; physical-directory
-identity detects cycles along each traversal path. Discovered session roots are deduplicated after
-filtering; a discarded cache path cannot suppress an independently valid task path.
+identity bounds directory scanning. Only home declarations reachable outside other valid home
+boundaries become sources; discarded cache declarations cannot suppress independent task paths.
+Contradictory cyclic home aliases fail explicitly rather than yielding a guessed source set.
 The harness-home boundary also applies through aliases, so cached nested homes do not become sources.
 A missing explicitly configured root fails instead of looking like an idle day.
 The writer deduplicates the shared and discovered trees by session-bearing rollout filename

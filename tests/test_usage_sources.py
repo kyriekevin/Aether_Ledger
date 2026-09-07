@@ -155,6 +155,45 @@ class SourceDiscoveryTests(unittest.TestCase):
         roots = usage_sources.multica_codex_session_roots(self.root / "shared", workspace)
         self.assertEqual([p.resolve() for p in roots], [(task / "sessions").resolve()])
 
+    def test_rejected_cached_markers_cannot_shadow_valid_sources(self):
+        for alias_name in ("a-alias", "zz-alias"):
+            for target_kind in ("project", "workspace-cycle"):
+                with self.subTest(alias=alias_name, target=target_kind):
+                    case = self.root / f"{alias_name}-{target_kind}"
+                    workspace = case / "workspaces"
+                    home = workspace / "task-real/codex-home"
+                    (home / "sessions").mkdir(parents=True)
+                    (home / "sessions/rollout-real.jsonl").write_text("{}\n")
+                    project = case / "external-project"
+                    other = project / "other-task/codex-home/sessions"
+                    other.mkdir(parents=True)
+                    (other / "rollout-other.jsonl").write_text("{}\n")
+                    (workspace / "valid-task").symlink_to(other.parent.parent, target_is_directory=True)
+                    (workspace / alias_name).symlink_to(home, target_is_directory=True)
+                    (home / "cache").mkdir()
+                    target = project if target_kind == "project" else workspace
+                    (home / "cache/codex-home").symlink_to(target, target_is_directory=True)
+                    roots = usage_sources.multica_codex_session_roots(case / "shared", workspace)
+                    self.assertEqual({p.resolve() for p in roots},
+                                     {(home / "sessions").resolve(), other.resolve()})
+                    self.assertEqual(len(usage_sources._codex_session_files(roots)), 2)
+
+    def test_contradictory_home_aliases_fail_instead_of_guessing_sources(self):
+        workspace = self.root / "workspaces"
+        first, second = workspace / "first", workspace / "second"
+        first.mkdir(parents=True)
+        second.mkdir()
+        (first / "codex-home").symlink_to(second, target_is_directory=True)
+        (second / "codex-home").symlink_to(first, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "ambiguous cyclic"):
+            usage_sources.multica_codex_session_roots(self.root / "shared", workspace)
+
+    def test_configured_harness_home_keeps_its_own_sessions(self):
+        home = self.root / "codex-home"
+        (home / "sessions").mkdir(parents=True)
+        roots = usage_sources.multica_codex_session_roots(self.root / "shared", home)
+        self.assertEqual(roots, [home / "sessions"])
+
     def test_unconfigured_source_can_be_absent(self):
         self.assertEqual(usage_sources.multica_codex_session_roots(self.root / "shared", None), [])
 

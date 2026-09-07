@@ -127,6 +127,81 @@ def _bind_multica_dsh_profile(path: Path, profile: str) -> str:
     return profile
 
 
+def _workspace_codex_homes(root: Path) -> list[Path]:
+    """Resolve home boundaries independently of directory alias traversal order.
+
+    Scan each physical directory once, recording ordinary directory edges and
+    named home edges separately. Named edges are terminal. An alias can expose
+    a home's contents during this scan, but declarations in those contents are
+    accepted only if their parent remains reachable outside valid home boundaries.
+    """
+    if root.name == "codex-home":
+        return [root]
+
+    def identity(path: Path) -> tuple[int, int]:
+        stat = path.stat()
+        return stat.st_dev, stat.st_ino
+
+    directories: dict[tuple[int, int], set[tuple[int, int]]] = {}
+    declarations: list[tuple[tuple[int, int], tuple[int, int], Path]] = []
+    canonical_homes: set[tuple[int, int]] = set()
+    pending = [root]
+    try:
+        root_id = identity(root)
+        while pending:
+            directory = pending.pop()
+            parent_id = identity(directory)
+            if parent_id in directories:
+                continue
+            directories[parent_id] = set()
+            if directory.resolve().name == "codex-home":
+                canonical_homes.add(parent_id)
+            with os.scandir(directory) as entries:
+                children = sorted(
+                    Path(entry.path) for entry in entries
+                    if entry.name not in {".git", "node_modules", ".venv", "__pycache__"}
+                    and entry.is_dir(follow_symlinks=True)
+                )
+            for child in children:
+                child_id = identity(child)
+                if child.name == "codex-home":
+                    declarations.append((parent_id, child_id, child))
+                else:
+                    directories[parent_id].add(child_id)
+                    pending.append(child)
+    except OSError as error:
+        raise OSError("cannot read configured Multica workspace tree") from error
+
+    # Discarded cache declarations must stop influencing the next reachability
+    # pass. Re-evaluate until the set of valid homes stabilizes. Mutually
+    # contradictory alias declarations fail visibly rather than guessing.
+    boundaries = frozenset(home_id for _, home_id, _ in declarations)
+    attempted: set[frozenset[tuple[int, int]]] = set()
+    while boundaries not in attempted:
+        attempted.add(boundaries)
+        reachable: set[tuple[int, int]] = set()
+        expanded: set[tuple[int, int]] = set()
+        pending_ids = [root_id]
+        while pending_ids:
+            directory_id = pending_ids.pop()
+            if directory_id in reachable:
+                continue
+            reachable.add(directory_id)
+            if directory_id != root_id and directory_id in boundaries | canonical_homes:
+                continue
+            expanded.add(directory_id)
+            pending_ids.extend(directories.get(directory_id, ()))
+        homes = [
+            (home_id, path) for parent_id, home_id, path in declarations
+            if parent_id in expanded or (parent_id == home_id and parent_id in reachable)
+        ]
+        updated = frozenset(home_id for home_id, _ in homes)
+        if updated == boundaries:
+            return [path for _, path in homes]
+        boundaries = updated
+    raise ValueError("ambiguous cyclic Multica harness-home aliases")
+
+
 def multica_codex_session_roots(
     shared: Path = MULTICA_CODEX_SESSION_DIR,
     workspaces_root: Path | None = MULTICA_TASK_WORKSPACES_ROOT,
@@ -142,41 +217,9 @@ def multica_codex_session_roots(
     if workspaces_root is not None:
         if not workspaces_root.is_dir():
             raise ValueError("configured Multica workspace root is missing")
-        homes: list[Path] = []
-        pending: list[tuple[Path, frozenset[tuple[int, int]]]] = [(workspaces_root, frozenset())]
-        while pending:
-            home, ancestors = pending.pop()
-            if home.name == "codex-home":
-                homes.append(home)
-                continue
-            try:
-                stat = home.stat()
-                identity = (stat.st_dev, stat.st_ino)
-                if identity in ancestors:
-                    continue
-                with os.scandir(home) as entries:
-                    children = sorted(
-                        Path(entry.path) for entry in entries
-                        if entry.name not in {".git", "node_modules", ".venv", "__pycache__"}
-                        and entry.is_dir(follow_symlinks=True)
-                    )
-            except OSError as error:
-                raise OSError("cannot read configured Multica workspace tree") from error
-            # Cut cycles only on this path. A discarded cache route must not
-            # suppress an independent task route to the same physical directory.
-            pending.extend((child, ancestors | {identity}) for child in reversed(children))
-
-        # A differently named alias can enter a harness home before its named
-        # path is discovered. Exclude nested homes after discovery, using both
-        # physical containment and lexical ancestors (a cached link may itself
-        # point outside the outer home). This makes the boundary order-independent.
-        physical_homes = {home.resolve() for home in homes}
+        homes = _workspace_codex_homes(workspaces_root)
         for home in homes:
-            physical_home = home.resolve()
-            parent_homes = set(physical_home.parents)
-            parent_homes.update(parent.resolve() for parent in home.parents)
-            if (physical_homes - {physical_home}).isdisjoint(parent_homes):
-                candidates.extend(home / name for name in ("sessions", "archived_sessions"))
+            candidates.extend(home / name for name in ("sessions", "archived_sessions"))
 
     roots: list[Path] = []
     seen: set[Path] = set()

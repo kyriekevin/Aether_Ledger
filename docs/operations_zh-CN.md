@@ -89,8 +89,9 @@ Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json
 `dshProfile` 和 `taskWorkspacesRoot` 四个字段，校验后写入 launchd 环境。其中
 `taskWorkspacesRoot` 是 Multica 任务工作区的本地父目录。采集器按 `codex-home` 结构发现日志，
 不依赖任务名称或嵌套层数；找到 harness home 后停止向下搜索，并跳过 Git 和依赖目录。
-profile、任务和 harness 目录的符号链接会继续遍历；按目录的实际身份检测当前路径上的循环，
-过滤后再对会话根目录去重。被排除的缓存路径不会阻止独立的真实任务路径进入采集。
+profile、任务和 harness 目录的符号链接会继续遍历；按目录的实际身份避免重复读取。
+只有不穿过其他有效 home 就能到达的 home 声明才成为来源，已排除的缓存声明不会遮挡独立任务路径。
+互相矛盾的循环 home 别名会明确报错，不会猜测应采集哪些目录。
 即使通过别名进入 harness home，其中缓存的嵌套 home 也不会成为采集来源。
 显式配置的根目录不存在时会报错。它用于收集没有汇入共享树
 的直接 chat rollout。生成的 plist 不是第二份配置源，不应再手工修改。
