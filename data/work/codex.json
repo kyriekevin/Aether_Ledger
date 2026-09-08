@@ -82,6 +82,35 @@
         "totalTokens": 19956446
       }
     },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 4.0,
+        "300": 18.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 13,
+          "reasoningCalls": 13,
+          "reasoningOutputTokens": 4053,
+          "totalTokens": 939575
+        },
+        "medium": {
+          "calls": 2,
+          "reasoningCalls": 2,
+          "reasoningOutputTokens": 163,
+          "totalTokens": 38622
+        },
+        "xhigh": {
+          "calls": 235,
+          "reasoningCalls": 235,
+          "reasoningOutputTokens": 74804,
+          "totalTokens": 18978249
+        }
+      }
+    },
     "totalCost": 76.58003500000001,
     "totalTokens": 19956446
   },
@@ -94,6 +123,29 @@
         "inputTokens": 6028416,
         "outputTokens": 346894,
         "totalTokens": 45487502
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 12.0,
+        "300": 29.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 6,
+          "reasoningCalls": 6,
+          "reasoningOutputTokens": 401,
+          "totalTokens": 166447
+        },
+        "xhigh": {
+          "calls": 474,
+          "reasoningCalls": 474,
+          "reasoningOutputTokens": 147981,
+          "totalTokens": 45321055
+        }
       }
     },
     "totalCost": 150.26249,
@@ -114,17 +166,17 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 13.0,
+        "10080": 15.0,
         "300": 16.0
       }
     },
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 3,
-          "reasoningCalls": 3,
-          "reasoningOutputTokens": 2699,
-          "totalTokens": 80854
+          "calls": 91,
+          "reasoningCalls": 91,
+          "reasoningOutputTokens": 37982,
+          "totalTokens": 7607618
         }
       }
     },
@@ -157,6 +209,12 @@
           "reasoningCalls": 124,
           "reasoningOutputTokens": 2454,
           "totalTokens": 13920017
+        },
+        "xhigh": {
+          "calls": 547,
+          "reasoningCalls": 547,
+          "reasoningOutputTokens": 127811,
+          "totalTokens": 64646463
         }
       }
     },
@@ -184,11 +242,29 @@
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 80,
+          "reasoningCalls": 80,
+          "reasoningOutputTokens": 25873,
+          "totalTokens": 3296434
+        },
         "low": {
           "calls": 152,
           "reasoningCalls": 152,
           "reasoningOutputTokens": 4760,
           "totalTokens": 15550718
+        },
+        "medium": {
+          "calls": 3,
+          "reasoningCalls": 3,
+          "reasoningOutputTokens": 2551,
+          "totalTokens": 197067
+        },
+        "xhigh": {
+          "calls": 432,
+          "reasoningCalls": 432,
+          "reasoningOutputTokens": 84978,
+          "totalTokens": 48853620
         }
       }
     },
@@ -223,16 +299,16 @@
           "totalTokens": 29991430
         },
         "medium": {
-          "calls": 20,
-          "reasoningCalls": 20,
-          "reasoningOutputTokens": 5262,
-          "totalTokens": 769557
+          "calls": 25,
+          "reasoningCalls": 25,
+          "reasoningOutputTokens": 6875,
+          "totalTokens": 991596
         },
         "xhigh": {
-          "calls": 1,
-          "reasoningCalls": 1,
-          "reasoningOutputTokens": 27,
-          "totalTokens": 21503
+          "calls": 660,
+          "reasoningCalls": 660,
+          "reasoningOutputTokens": 118582,
+          "totalTokens": 91975186
         }
       }
     },
@@ -254,17 +330,17 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 38.0,
+        "10080": 39.0,
         "300": 10.0
       }
     },
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 42,
-          "reasoningCalls": 42,
-          "reasoningOutputTokens": 30819,
-          "totalTokens": 1641700
+          "calls": 130,
+          "reasoningCalls": 130,
+          "reasoningOutputTokens": 87747,
+          "totalTokens": 6365574
         }
       }
     },
@@ -285,8 +361,8 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 41.0,
-        "300": 9.0
+        "10080": 42.0,
+        "300": 13.0
       }
     },
     "routing": {
@@ -296,6 +372,12 @@
           "reasoningCalls": 3,
           "reasoningOutputTokens": 362,
           "totalTokens": 73892
+        },
+        "xhigh": {
+          "calls": 151,
+          "reasoningCalls": 151,
+          "reasoningOutputTokens": 56839,
+          "totalTokens": 11847269
         }
       }
     },
@@ -311,6 +393,23 @@
         "inputTokens": 541164,
         "outputTokens": 84032,
         "totalTokens": 5130540
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 7.0,
+        "300": 19.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "calls": 94,
+          "reasoningCalls": 94,
+          "reasoningOutputTokens": 53240,
+          "totalTokens": 5130540
+        }
       }
     },
     "totalCost": 18.69863,
@@ -338,10 +437,10 @@
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 366,
-          "reasoningCalls": 366,
-          "reasoningOutputTokens": 218262,
-          "totalTokens": 24673301
+          "calls": 538,
+          "reasoningCalls": 538,
+          "reasoningOutputTokens": 299252,
+          "totalTokens": 38637308
         }
       }
     },
@@ -376,17 +475,29 @@
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 4293,
+          "totalTokens": 287256
+        },
         "low": {
           "calls": 137,
           "reasoningCalls": 137,
           "reasoningOutputTokens": 3594,
           "totalTokens": 11491005
         },
+        "medium": {
+          "calls": 24,
+          "reasoningCalls": 24,
+          "reasoningOutputTokens": 10132,
+          "totalTokens": 1504610
+        },
         "xhigh": {
-          "calls": 4,
-          "reasoningCalls": 4,
-          "reasoningOutputTokens": 1198,
-          "totalTokens": 122950
+          "calls": 1054,
+          "reasoningCalls": 1054,
+          "reasoningOutputTokens": 202688,
+          "totalTokens": 143540884
         }
       }
     },
@@ -414,10 +525,10 @@
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 67,
-          "reasoningCalls": 67,
-          "reasoningOutputTokens": 64729,
-          "totalTokens": 3981404
+          "calls": 143,
+          "reasoningCalls": 143,
+          "reasoningOutputTokens": 111180,
+          "totalTokens": 9966040
         }
       }
     },
@@ -438,17 +549,17 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 46.0,
-        "300": 0.0
+        "10080": 49.0,
+        "300": 15.0
       }
     },
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 5,
-          "reasoningCalls": 5,
-          "reasoningOutputTokens": 8783,
-          "totalTokens": 241818
+          "calls": 204,
+          "reasoningCalls": 204,
+          "reasoningOutputTokens": 201665,
+          "totalTokens": 12084112
         }
       }
     },
@@ -469,8 +580,8 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 53.0,
-        "300": 11.0
+        "10080": 54.0,
+        "300": 14.0
       }
     },
     "routing": {
@@ -480,6 +591,12 @@
           "reasoningCalls": 7,
           "reasoningOutputTokens": 484,
           "totalTokens": 210910
+        },
+        "xhigh": {
+          "calls": 169,
+          "reasoningCalls": 169,
+          "reasoningOutputTokens": 108301,
+          "totalTokens": 15142616
         }
       }
     },
@@ -495,6 +612,23 @@
         "inputTokens": 613376,
         "outputTokens": 50163,
         "totalTokens": 4139763
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 55.0,
+        "300": 11.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "calls": 50,
+          "reasoningCalls": 50,
+          "reasoningOutputTokens": 34387,
+          "totalTokens": 4139763
+        }
       }
     },
     "totalCost": 15.774704999999999,
@@ -514,8 +648,8 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 2.0,
-        "300": 20.0
+        "10080": 58.0,
+        "300": 24.0
       }
     },
     "routing": {
@@ -525,6 +659,12 @@
           "reasoningCalls": 5,
           "reasoningOutputTokens": 336,
           "totalTokens": 155119
+        },
+        "xhigh": {
+          "calls": 461,
+          "reasoningCalls": 461,
+          "reasoningOutputTokens": 290535,
+          "totalTokens": 42591080
         }
       }
     },
@@ -546,7 +686,7 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 35.0,
+        "10080": 36.0,
         "300": 99.0
       }
     },
@@ -559,10 +699,10 @@
           "totalTokens": 36208656
         },
         "xhigh": {
-          "calls": 89,
-          "reasoningCalls": 89,
-          "reasoningOutputTokens": 47480,
-          "totalTokens": 4668450
+          "calls": 1255,
+          "reasoningCalls": 1255,
+          "reasoningOutputTokens": 392797,
+          "totalTokens": 149223379
         }
       }
     },
@@ -597,10 +737,10 @@
           "totalTokens": 589887
         },
         "xhigh": {
-          "calls": 103,
-          "reasoningCalls": 103,
-          "reasoningOutputTokens": 39659,
-          "totalTokens": 5000300
+          "calls": 233,
+          "reasoningCalls": 233,
+          "reasoningOutputTokens": 95509,
+          "totalTokens": 18336426
         }
       }
     },
@@ -629,10 +769,10 @@
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 163,
-          "reasoningCalls": 163,
-          "reasoningOutputTokens": 66011,
-          "totalTokens": 7646480
+          "calls": 192,
+          "reasoningCalls": 192,
+          "reasoningOutputTokens": 90832,
+          "totalTokens": 9180943
         }
       }
     },
@@ -654,7 +794,7 @@
       "limitReached": false,
       "windows": {
         "10080": 11.0,
-        "300": 47.0
+        "300": 54.0
       }
     },
     "routing": {
@@ -666,10 +806,10 @@
           "totalTokens": 181327
         },
         "xhigh": {
-          "calls": 26,
-          "reasoningCalls": 26,
-          "reasoningOutputTokens": 17540,
-          "totalTokens": 1484546
+          "calls": 593,
+          "reasoningCalls": 593,
+          "reasoningOutputTokens": 215975,
+          "totalTokens": 37269628
         }
       }
     },
@@ -692,7 +832,7 @@
       "limitReached": false,
       "windows": {
         "10080": 18.0,
-        "300": 22.0
+        "300": 23.0
       }
     },
     "routing": {
@@ -703,11 +843,17 @@
           "reasoningOutputTokens": 122,
           "totalTokens": 14248
         },
+        "medium": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 672,
+          "totalTokens": 299140
+        },
         "xhigh": {
-          "calls": 45,
-          "reasoningCalls": 45,
-          "reasoningOutputTokens": 26237,
-          "totalTokens": 1900443
+          "calls": 166,
+          "reasoningCalls": 166,
+          "reasoningOutputTokens": 71077,
+          "totalTokens": 11012437
         }
       }
     },
@@ -730,16 +876,16 @@
       "limitReached": false,
       "windows": {
         "10080": 56.0,
-        "300": 39.0
+        "300": 44.0
       }
     },
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 13,
-          "reasoningCalls": 13,
-          "reasoningOutputTokens": 3674,
-          "totalTokens": 491453
+          "calls": 63,
+          "reasoningCalls": 63,
+          "reasoningOutputTokens": 45477,
+          "totalTokens": 5341223
         }
       }
     },
@@ -762,16 +908,16 @@
       "limitReached": false,
       "windows": {
         "10080": 62.0,
-        "300": 22.0
+        "300": 28.0
       }
     },
     "routing": {
       "efforts": {
         "xhigh": {
-          "calls": 26,
-          "reasoningCalls": 26,
-          "reasoningOutputTokens": 18296,
-          "totalTokens": 924006
+          "calls": 105,
+          "reasoningCalls": 105,
+          "reasoningOutputTokens": 76000,
+          "totalTokens": 9821209
         }
       }
     },
@@ -805,10 +951,16 @@
           "totalTokens": 8456628
         },
         "medium": {
-          "calls": 4,
-          "reasoningCalls": 4,
-          "reasoningOutputTokens": 2134,
-          "totalTokens": 179447
+          "calls": 118,
+          "reasoningCalls": 118,
+          "reasoningOutputTokens": 33394,
+          "totalTokens": 8632066
+        },
+        "xhigh": {
+          "calls": 318,
+          "reasoningCalls": 318,
+          "reasoningOutputTokens": 107292,
+          "totalTokens": 39643745
         }
       }
     },
@@ -830,17 +982,17 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 99.0,
-        "300": 2.0
+        "10080": 100.0,
+        "300": 4.0
       }
     },
     "routing": {
       "efforts": {
         "high": {
-          "calls": 5,
-          "reasoningCalls": 5,
-          "reasoningOutputTokens": 4976,
-          "totalTokens": 183828
+          "calls": 80,
+          "reasoningCalls": 80,
+          "reasoningOutputTokens": 40185,
+          "totalTokens": 5640836
         },
         "low": {
           "calls": 10,
@@ -862,6 +1014,23 @@
         "inputTokens": 34243,
         "outputTokens": 4113,
         "totalTokens": 68820
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 100.0,
+        "300": 0.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 2,
+          "reasoningCalls": 2,
+          "reasoningOutputTokens": 1947,
+          "totalTokens": 68820
+        }
       }
     },
     "totalCost": 0.7745925,
@@ -889,10 +1058,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 51,
-          "reasoningCalls": 51,
-          "reasoningOutputTokens": 10481,
-          "totalTokens": 1945376
+          "calls": 59,
+          "reasoningCalls": 59,
+          "reasoningOutputTokens": 21741,
+          "totalTokens": 2215541
         }
       }
     },
@@ -908,6 +1077,29 @@
         "inputTokens": 88239,
         "outputTokens": 10184,
         "totalTokens": 321015
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 2.0,
+        "300": 4.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 4,
+          "reasoningCalls": 4,
+          "reasoningOutputTokens": 1766,
+          "totalTokens": 135224
+        },
+        "xhigh": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 2442,
+          "totalTokens": 185791
+        }
       }
     },
     "totalCost": 2.1450275000000003,
@@ -927,8 +1119,9 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 2.0,
-        "300": 11.0
+        "10080": 18.0,
+        "300": 54.0,
+        "43200": 16.0
       }
     },
     "routing": {
@@ -938,6 +1131,12 @@
           "reasoningCalls": 1,
           "reasoningOutputTokens": 44,
           "totalTokens": 18914
+        },
+        "xhigh": {
+          "calls": 159,
+          "reasoningCalls": 159,
+          "reasoningOutputTokens": 115279,
+          "totalTokens": 15023864
         }
       }
     },
@@ -953,6 +1152,23 @@
         "inputTokens": 274676,
         "outputTokens": 28368,
         "totalTokens": 1600836
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 24.0,
+        "300": 35.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "xhigh": {
+          "calls": 29,
+          "reasoningCalls": 29,
+          "reasoningOutputTokens": 18883,
+          "totalTokens": 1600836
+        }
       }
     },
     "totalCost": 7.18329,
@@ -973,7 +1189,7 @@
       "limitReached": false,
       "windows": {
         "10080": 59.0,
-        "300": 7.0
+        "300": 9.0
       }
     },
     "routing": {
@@ -983,6 +1199,18 @@
           "reasoningCalls": 1,
           "reasoningOutputTokens": 110,
           "totalTokens": 13632
+        },
+        "medium": {
+          "calls": 8,
+          "reasoningCalls": 8,
+          "reasoningOutputTokens": 1192,
+          "totalTokens": 257027
+        },
+        "xhigh": {
+          "calls": 1,
+          "reasoningCalls": 1,
+          "reasoningOutputTokens": 2928,
+          "totalTokens": 134668
         }
       }
     },
@@ -1003,12 +1231,18 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 2.0,
-        "300": 10.0
+        "10080": 3.0,
+        "300": 17.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 39,
+          "reasoningCalls": 39,
+          "reasoningOutputTokens": 10672,
+          "totalTokens": 1945817
+        },
         "low": {
           "calls": 18,
           "reasoningCalls": 18,
@@ -1031,6 +1265,23 @@
         "totalTokens": 5728569
       }
     },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 17.0,
+        "300": 49.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 82,
+          "reasoningCalls": 82,
+          "reasoningOutputTokens": 21954,
+          "totalTokens": 5728569
+        }
+      }
+    },
     "totalCost": 21.6121225,
     "totalTokens": 5728569
   },
@@ -1043,6 +1294,23 @@
         "inputTokens": 66245,
         "outputTokens": 5815,
         "totalTokens": 417020
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 39.0,
+        "300": 3.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 9,
+          "reasoningCalls": 9,
+          "reasoningOutputTokens": 2937,
+          "totalTokens": 417020
+        }
       }
     },
     "totalCost": 1.6953875,
@@ -1094,16 +1362,16 @@
       "limitReached": false,
       "windows": {
         "10080": 77.0,
-        "300": 92.0
+        "300": 93.0
       }
     },
     "routing": {
       "efforts": {
         "high": {
-          "calls": 80,
-          "reasoningCalls": 80,
-          "reasoningOutputTokens": 13653,
-          "totalTokens": 5330373
+          "calls": 438,
+          "reasoningCalls": 438,
+          "reasoningOutputTokens": 88589,
+          "totalTokens": 45925624
         },
         "low": {
           "calls": 13,
@@ -1131,16 +1399,28 @@
       "limitReached": false,
       "windows": {
         "10080": 100.0,
-        "300": 58.0
+        "300": 83.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 510,
+          "reasoningCalls": 510,
+          "reasoningOutputTokens": 88192,
+          "totalTokens": 62319527
+        },
         "low": {
           "calls": 60,
           "reasoningCalls": 60,
           "reasoningOutputTokens": 2592,
           "totalTokens": 5043674
+        },
+        "medium": {
+          "calls": 27,
+          "reasoningCalls": 27,
+          "reasoningOutputTokens": 7775,
+          "totalTokens": 1458652
         }
       }
     },
@@ -1175,16 +1455,22 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 12,
-          "reasoningCalls": 12,
-          "reasoningOutputTokens": 4905,
-          "totalTokens": 952874
+          "calls": 605,
+          "reasoningCalls": 605,
+          "reasoningOutputTokens": 102414,
+          "totalTokens": 74369172
         },
         "low": {
           "calls": 43,
           "reasoningCalls": 43,
           "reasoningOutputTokens": 1848,
           "totalTokens": 1863824
+        },
+        "medium": {
+          "calls": 73,
+          "reasoningCalls": 73,
+          "reasoningOutputTokens": 40837,
+          "totalTokens": 4547385
         }
       }
     },
@@ -1206,11 +1492,17 @@
       "limitReached": false,
       "windows": {
         "10080": 50.0,
-        "300": 22.0
+        "300": 46.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 145,
+          "reasoningCalls": 145,
+          "reasoningOutputTokens": 27218,
+          "totalTokens": 14974069
+        },
         "low": {
           "calls": 41,
           "reasoningCalls": 41,
@@ -1237,11 +1529,17 @@
       "limitReached": false,
       "windows": {
         "10080": 72.0,
-        "300": 65.0
+        "300": 76.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 368,
+          "reasoningCalls": 368,
+          "reasoningOutputTokens": 72594,
+          "totalTokens": 50278764
+        },
         "low": {
           "calls": 81,
           "reasoningCalls": 81,
@@ -1274,17 +1572,29 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 23.0,
+        "10080": 24.0,
         "300": 81.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 461,
+          "reasoningCalls": 461,
+          "reasoningOutputTokens": 72102,
+          "totalTokens": 58995627
+        },
         "low": {
           "calls": 163,
           "reasoningCalls": 163,
           "reasoningOutputTokens": 4745,
           "totalTokens": 14737347
+        },
+        "medium": {
+          "calls": 6,
+          "reasoningCalls": 6,
+          "reasoningOutputTokens": 3404,
+          "totalTokens": 313685
         }
       }
     },
@@ -1305,12 +1615,18 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 16.0,
-        "300": 84.0
+        "10080": 17.0,
+        "300": 86.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 291,
+          "reasoningCalls": 291,
+          "reasoningOutputTokens": 81331,
+          "totalTokens": 34261834
+        },
         "low": {
           "calls": 85,
           "reasoningCalls": 85,
@@ -1336,12 +1652,18 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 18.0,
-        "300": 6.0
+        "10080": 19.0,
+        "300": 14.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 34,
+          "reasoningCalls": 34,
+          "reasoningOutputTokens": 10813,
+          "totalTokens": 3406253
+        },
         "low": {
           "calls": 8,
           "reasoningCalls": 8,
@@ -1374,16 +1696,22 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 3,
-          "reasoningCalls": 3,
-          "reasoningOutputTokens": 458,
-          "totalTokens": 66344
+          "calls": 44,
+          "reasoningCalls": 44,
+          "reasoningOutputTokens": 11848,
+          "totalTokens": 2456652
         },
         "low": {
           "calls": 15,
           "reasoningCalls": 15,
           "reasoningOutputTokens": 647,
           "totalTokens": 271063
+        },
+        "xhigh": {
+          "calls": 1,
+          "reasoningCalls": 1,
+          "reasoningOutputTokens": 1034,
+          "totalTokens": 25156
         }
       }
     },
@@ -1404,17 +1732,29 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 27.0,
-        "300": 27.0
+        "10080": 28.0,
+        "300": 30.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 140,
+          "reasoningCalls": 140,
+          "reasoningOutputTokens": 35363,
+          "totalTokens": 12399765
+        },
         "low": {
           "calls": 31,
           "reasoningCalls": 31,
           "reasoningOutputTokens": 1047,
           "totalTokens": 1017278
+        },
+        "xhigh": {
+          "calls": 1,
+          "reasoningCalls": 1,
+          "reasoningOutputTokens": 2742,
+          "totalTokens": 102732
         }
       }
     },
@@ -1436,11 +1776,17 @@
       "limitReached": false,
       "windows": {
         "10080": 39.0,
-        "300": 39.0
+        "300": 51.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 17,
+          "reasoningCalls": 17,
+          "reasoningOutputTokens": 6303,
+          "totalTokens": 1592281
+        },
         "low": {
           "calls": 16,
           "reasoningCalls": 16,
@@ -1448,10 +1794,10 @@
           "totalTokens": 632505
         },
         "xhigh": {
-          "calls": 24,
-          "reasoningCalls": 24,
-          "reasoningOutputTokens": 8320,
-          "totalTokens": 1066202
+          "calls": 205,
+          "reasoningCalls": 205,
+          "reasoningOutputTokens": 81472,
+          "totalTokens": 18843414
         }
       }
     },
@@ -1479,11 +1825,29 @@
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 400,
+          "reasoningCalls": 400,
+          "reasoningOutputTokens": 64417,
+          "totalTokens": 49918032
+        },
         "low": {
           "calls": 105,
           "reasoningCalls": 105,
           "reasoningOutputTokens": 4363,
           "totalTokens": 10035272
+        },
+        "medium": {
+          "calls": 5,
+          "reasoningCalls": 5,
+          "reasoningOutputTokens": 672,
+          "totalTokens": 196641
+        },
+        "xhigh": {
+          "calls": 129,
+          "reasoningCalls": 129,
+          "reasoningOutputTokens": 49318,
+          "totalTokens": 11047262
         }
       }
     },
@@ -1506,16 +1870,16 @@
       "limitReached": false,
       "windows": {
         "10080": 52.0,
-        "300": 95.0
+        "300": 96.0
       }
     },
     "routing": {
       "efforts": {
         "high": {
-          "calls": 37,
-          "reasoningCalls": 37,
-          "reasoningOutputTokens": 13410,
-          "totalTokens": 2310847
+          "calls": 350,
+          "reasoningCalls": 350,
+          "reasoningOutputTokens": 54360,
+          "totalTokens": 42016426
         },
         "low": {
           "calls": 81,
@@ -1549,10 +1913,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 42,
-          "reasoningCalls": 42,
-          "reasoningOutputTokens": 5848,
-          "totalTokens": 3519187
+          "calls": 121,
+          "reasoningCalls": 121,
+          "reasoningOutputTokens": 14777,
+          "totalTokens": 11140863
         },
         "low": {
           "calls": 32,
@@ -1587,23 +1951,33 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 15.0,
-        "300": 99.0
+        "10080": 16.0,
+        "300": 100.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 301,
+          "reasoningCalls": 301,
+          "reasoningOutputTokens": 51155,
+          "totalTokens": 43694679
+        },
         "low": {
-          "calls": 156,
-          "reasoningCalls": 156,
-          "reasoningOutputTokens": 4426,
-          "totalTokens": 10297380
+          "calls": 216,
+          "reasoningCalls": 216,
+          "reasoningOutputTokens": 9318,
+          "totalTokens": 14476006
         }
       },
       "speeds": {
+        "fast": {
+          "calls": 219,
+          "totalTokens": 32017397
+        },
         "standard": {
-          "calls": 3,
-          "totalTokens": 86430
+          "calls": 46,
+          "totalTokens": 3741242
         }
       }
     },
@@ -1621,6 +1995,22 @@
         "totalTokens": 919940
       }
     },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 4.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 23,
+          "reasoningCalls": 23,
+          "reasoningOutputTokens": 5979,
+          "totalTokens": 919940
+        }
+      }
+    },
     "totalCost": 3.785462,
     "totalTokens": 919940
   },
@@ -1633,6 +2023,28 @@
         "inputTokens": 180391,
         "outputTokens": 14421,
         "totalTokens": 800252
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 19.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 15,
+          "reasoningCalls": 15,
+          "reasoningOutputTokens": 5357,
+          "totalTokens": 800252
+        }
+      },
+      "speeds": {
+        "standard": {
+          "calls": 8,
+          "totalTokens": 545232
+        }
       }
     },
     "totalCost": 2.1605730000000003,
@@ -1659,16 +2071,38 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 45.0
+        "10080": 46.0
       }
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 343,
+          "reasoningCalls": 343,
+          "reasoningOutputTokens": 220455,
+          "totalTokens": 39948281
+        },
         "low": {
           "calls": 21,
           "reasoningCalls": 21,
           "reasoningOutputTokens": 1079,
           "totalTokens": 807127
+        },
+        "medium": {
+          "calls": 45,
+          "reasoningCalls": 45,
+          "reasoningOutputTokens": 16071,
+          "totalTokens": 2400756
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 309,
+          "totalTokens": 38668388
+        },
+        "standard": {
+          "calls": 77,
+          "totalTokens": 5150193
         }
       }
     },
@@ -1707,6 +2141,18 @@
           "reasoningCalls": 135,
           "reasoningOutputTokens": 6048,
           "totalTokens": 8310520
+        },
+        "medium": {
+          "calls": 216,
+          "reasoningCalls": 216,
+          "reasoningOutputTokens": 37664,
+          "totalTokens": 24819001
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 201,
+          "totalTokens": 24917150
         }
       }
     },
@@ -1734,7 +2180,7 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 20.0
+        "10080": 21.0
       }
     },
     "routing": {
@@ -1744,6 +2190,18 @@
           "reasoningCalls": 102,
           "reasoningOutputTokens": 3076,
           "totalTokens": 7655826
+        },
+        "medium": {
+          "calls": 252,
+          "reasoningCalls": 252,
+          "reasoningOutputTokens": 42566,
+          "totalTokens": 29645641
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 239,
+          "totalTokens": 29113511
         }
       }
     },
@@ -1771,7 +2229,7 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 40.0
+        "10080": 47.0
       }
     },
     "routing": {
@@ -1783,10 +2241,16 @@
           "totalTokens": 1805799
         },
         "medium": {
-          "calls": 10,
-          "reasoningCalls": 10,
-          "reasoningOutputTokens": 4672,
-          "totalTokens": 532792
+          "calls": 313,
+          "reasoningCalls": 313,
+          "reasoningOutputTokens": 97659,
+          "totalTokens": 40509012
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 276,
+          "totalTokens": 37859254
         }
       }
     },
@@ -1824,6 +2288,18 @@
           "reasoningCalls": 75,
           "reasoningOutputTokens": 3292,
           "totalTokens": 3832864
+        },
+        "medium": {
+          "calls": 372,
+          "reasoningCalls": 372,
+          "reasoningOutputTokens": 114715,
+          "totalTokens": 43372617
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 368,
+          "totalTokens": 46597191
         }
       }
     },
@@ -1856,11 +2332,29 @@
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 129,
+          "reasoningCalls": 129,
+          "reasoningOutputTokens": 40505,
+          "totalTokens": 18840554
+        },
         "low": {
           "calls": 8,
           "reasoningCalls": 8,
           "reasoningOutputTokens": 496,
           "totalTokens": 448979
+        },
+        "medium": {
+          "calls": 265,
+          "reasoningCalls": 265,
+          "reasoningOutputTokens": 99202,
+          "totalTokens": 30859304
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 532,
+          "totalTokens": 73372853
         }
       }
     },
@@ -1878,6 +2372,28 @@
         "totalTokens": 348233
       }
     },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 85.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 1894,
+          "totalTokens": 348233
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 3,
+          "totalTokens": 178921
+        }
+      }
+    },
     "totalCost": 1.160502,
     "totalTokens": 348233
   },
@@ -1892,6 +2408,28 @@
         "totalTokens": 1307047
       }
     },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 84.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 26,
+          "reasoningCalls": 26,
+          "reasoningOutputTokens": 10114,
+          "totalTokens": 1307047
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 3,
+          "totalTokens": 117634
+        }
+      }
+    },
     "totalCost": 3.9559740000000003,
     "totalTokens": 1307047
   },
@@ -1904,6 +2442,28 @@
         "inputTokens": 52799,
         "outputTokens": 1834,
         "totalTokens": 364649
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 6.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "low": {
+          "calls": 10,
+          "reasoningCalls": 10,
+          "reasoningOutputTokens": 454,
+          "totalTokens": 364649
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 9,
+          "totalTokens": 337597
+        }
       }
     },
     "totalCost": 0.948046,
@@ -1935,11 +2495,27 @@
     },
     "routing": {
       "efforts": {
+        "high": {
+          "calls": 42,
+          "reasoningCalls": 42,
+          "reasoningOutputTokens": 6134,
+          "totalTokens": 3718622
+        },
         "low": {
-          "calls": 29,
-          "reasoningCalls": 29,
-          "reasoningOutputTokens": 817,
-          "totalTokens": 1021612
+          "calls": 52,
+          "reasoningCalls": 52,
+          "reasoningOutputTokens": 1609,
+          "totalTokens": 2601770
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 3,
+          "totalTokens": 247447
+        },
+        "standard": {
+          "calls": 39,
+          "totalTokens": 3615377
         }
       }
     },
@@ -1973,19 +2549,21 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 234,
-          "reasoningOutputTokens": 149417,
+          "calls": 235,
+          "reasoningCalls": 235,
+          "reasoningOutputTokens": 150240,
           "totalTokens": 26473969
         },
         "low": {
-          "calls": 13,
-          "reasoningCalls": 13,
-          "reasoningOutputTokens": 1343,
-          "totalTokens": 255004
+          "calls": 20,
+          "reasoningCalls": 20,
+          "reasoningOutputTokens": 1663,
+          "totalTokens": 591951
         },
         "xhigh": {
           "calls": 256,
-          "reasoningOutputTokens": 113214,
+          "reasoningCalls": 253,
+          "reasoningOutputTokens": 120366,
           "totalTokens": 31780577
         }
       },
@@ -2017,14 +2595,28 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 40.0
+        "10080": 49.0
       }
     },
     "routing": {
+      "efforts": {
+        "high": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 5055,
+          "totalTokens": 284878
+        },
+        "medium": {
+          "calls": 21,
+          "reasoningCalls": 21,
+          "reasoningOutputTokens": 1973,
+          "totalTokens": 1127161
+        }
+      },
       "speeds": {
         "fast": {
-          "calls": 2,
-          "totalTokens": 255202
+          "calls": 8,
+          "totalTokens": 506055
         }
       }
     },
@@ -2040,6 +2632,28 @@
         "inputTokens": 119171,
         "outputTokens": 20422,
         "totalTokens": 1071689
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 94.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "high": {
+          "calls": 16,
+          "reasoningCalls": 16,
+          "reasoningOutputTokens": 11160,
+          "totalTokens": 1071689
+        }
+      },
+      "speeds": {
+        "fast": {
+          "calls": 5,
+          "totalTokens": 530992
+        }
       }
     },
     "totalCost": 3.349126,
@@ -2073,6 +2687,7 @@
       "efforts": {
         "high": {
           "calls": 5,
+          "reasoningCalls": 5,
           "reasoningOutputTokens": 2627,
           "totalTokens": 706390
         },
@@ -2081,12 +2696,18 @@
           "reasoningCalls": 6,
           "reasoningOutputTokens": 216,
           "totalTokens": 107453
+        },
+        "medium": {
+          "calls": 23,
+          "reasoningCalls": 23,
+          "reasoningOutputTokens": 3610,
+          "totalTokens": 865254
         }
       },
       "speeds": {
         "standard": {
-          "calls": 10,
-          "totalTokens": 801822
+          "calls": 27,
+          "totalTokens": 1503543
         }
       }
     },
@@ -2114,15 +2735,16 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 36.0
+        "10080": 41.0
       }
     },
     "routing": {
       "efforts": {
         "high": {
-          "calls": 6,
-          "reasoningOutputTokens": 5506,
-          "totalTokens": 978082
+          "calls": 47,
+          "reasoningCalls": 47,
+          "reasoningOutputTokens": 41416,
+          "totalTokens": 3800566
         },
         "low": {
           "calls": 2,
@@ -2131,16 +2753,20 @@
           "totalTokens": 20594
         },
         "medium": {
-          "calls": 7,
-          "reasoningCalls": 7,
-          "reasoningOutputTokens": 2961,
-          "totalTokens": 208808
+          "calls": 50,
+          "reasoningCalls": 50,
+          "reasoningOutputTokens": 26924,
+          "totalTokens": 2814047
         }
       },
       "speeds": {
         "fast": {
           "calls": 7,
           "totalTokens": 989063
+        },
+        "standard": {
+          "calls": 15,
+          "totalTokens": 927924
         }
       }
     },
@@ -2175,7 +2801,8 @@
       "efforts": {
         "high": {
           "calls": 504,
-          "reasoningOutputTokens": 258948,
+          "reasoningCalls": 456,
+          "reasoningOutputTokens": 258624,
           "totalTokens": 67352124
         },
         "low": {
@@ -2185,14 +2812,15 @@
           "totalTokens": 528906
         },
         "medium": {
-          "calls": 17,
-          "reasoningCalls": 16,
-          "reasoningOutputTokens": 9047,
-          "totalTokens": 1436224
+          "calls": 208,
+          "reasoningCalls": 208,
+          "reasoningOutputTokens": 63188,
+          "totalTokens": 14189558
         },
         "xhigh": {
           "calls": 793,
-          "reasoningOutputTokens": 550663,
+          "reasoningCalls": 752,
+          "reasoningOutputTokens": 544981,
           "totalTokens": 110641682
         }
       },
@@ -2202,8 +2830,8 @@
           "totalTokens": 147973240
         },
         "standard": {
-          "calls": 550,
-          "totalTokens": 80476425
+          "calls": 566,
+          "totalTokens": 81528497
         }
       }
     },
@@ -2243,13 +2871,15 @@
           "totalTokens": 5165555
         },
         "medium": {
-          "calls": 13,
-          "reasoningOutputTokens": 4505,
-          "totalTokens": 2042088
+          "calls": 30,
+          "reasoningCalls": 30,
+          "reasoningOutputTokens": 6183,
+          "totalTokens": 2641709
         },
         "xhigh": {
           "calls": 367,
-          "reasoningOutputTokens": 157316,
+          "reasoningCalls": 349,
+          "reasoningOutputTokens": 150411,
           "totalTokens": 52979506
         }
       },
@@ -2299,18 +2929,20 @@
       "efforts": {
         "high": {
           "calls": 408,
-          "reasoningOutputTokens": 140516,
+          "reasoningCalls": 392,
+          "reasoningOutputTokens": 138532,
           "totalTokens": 47163315
         },
         "low": {
-          "calls": 96,
-          "reasoningCalls": 96,
-          "reasoningOutputTokens": 1555,
-          "totalTokens": 12419291
+          "calls": 103,
+          "reasoningCalls": 103,
+          "reasoningOutputTokens": 2001,
+          "totalTokens": 12649124
         },
         "xhigh": {
           "calls": 372,
-          "reasoningOutputTokens": 98529,
+          "reasoningCalls": 351,
+          "reasoningOutputTokens": 92826,
           "totalTokens": 43368966
         }
       },
@@ -2391,20 +3023,20 @@
           "totalTokens": 15973795
         },
         "medium": {
-          "calls": 20,
-          "reasoningCalls": 20,
-          "reasoningOutputTokens": 2880,
-          "totalTokens": 959140
+          "calls": 578,
+          "reasoningCalls": 578,
+          "reasoningOutputTokens": 137161,
+          "totalTokens": 68433518
         }
       },
       "speeds": {
         "fast": {
-          "calls": 46,
-          "totalTokens": 3307163
+          "calls": 301,
+          "totalTokens": 37052202
         },
         "standard": {
-          "calls": 91,
-          "totalTokens": 11833922
+          "calls": 334,
+          "totalTokens": 42391817
         }
       }
     },
@@ -2445,20 +3077,26 @@
           "totalTokens": 6013999
         },
         "medium": {
-          "calls": 34,
-          "reasoningCalls": 34,
-          "reasoningOutputTokens": 8002,
-          "totalTokens": 1089145
+          "calls": 534,
+          "reasoningCalls": 534,
+          "reasoningOutputTokens": 112121,
+          "totalTokens": 50323663
+        },
+        "xhigh": {
+          "calls": 7,
+          "reasoningCalls": 7,
+          "reasoningOutputTokens": 7534,
+          "totalTokens": 291607
         }
       },
       "speeds": {
         "fast": {
-          "calls": 40,
-          "totalTokens": 2746581
+          "calls": 198,
+          "totalTokens": 25681769
         },
         "standard": {
-          "calls": 64,
-          "totalTokens": 3122657
+          "calls": 226,
+          "totalTokens": 19999645
         }
       }
     },
@@ -2499,22 +3137,22 @@
           "totalTokens": 7146431
         },
         "low": {
-          "calls": 60,
-          "reasoningCalls": 60,
-          "reasoningOutputTokens": 3318,
-          "totalTokens": 1839447
+          "calls": 81,
+          "reasoningCalls": 81,
+          "reasoningOutputTokens": 4598,
+          "totalTokens": 2947166
         },
         "medium": {
-          "calls": 261,
-          "reasoningCalls": 261,
-          "reasoningOutputTokens": 37998,
-          "totalTokens": 27749370
+          "calls": 505,
+          "reasoningCalls": 505,
+          "reasoningOutputTokens": 83632,
+          "totalTokens": 51033609
         }
       },
       "speeds": {
         "fast": {
-          "calls": 318,
-          "totalTokens": 35035920
+          "calls": 481,
+          "totalTokens": 55134998
         }
       }
     },
@@ -2536,16 +3174,16 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 0.0
+        "10080": 3.0
       }
     },
     "routing": {
       "efforts": {
         "medium": {
-          "calls": 140,
-          "reasoningCalls": 140,
-          "reasoningOutputTokens": 13722,
-          "totalTokens": 16200868
+          "calls": 148,
+          "reasoningCalls": 148,
+          "reasoningOutputTokens": 16111,
+          "totalTokens": 16465423
         }
       },
       "speeds": {
@@ -2579,27 +3217,34 @@
     "quota": {
       "limitReached": false,
       "windows": {
-        "10080": 10.0
+        "10080": 11.0
       }
     },
     "routing": {
       "efforts": {
         "high": {
-          "calls": 151,
-          "reasoningOutputTokens": 18714,
-          "totalTokens": 19429155
+          "calls": 611,
+          "reasoningCalls": 611,
+          "reasoningOutputTokens": 69943,
+          "totalTokens": 82273504
         },
         "low": {
           "calls": 168,
           "reasoningCalls": 168,
           "reasoningOutputTokens": 4325,
           "totalTokens": 16004912
+        },
+        "medium": {
+          "calls": 234,
+          "reasoningCalls": 234,
+          "reasoningOutputTokens": 44044,
+          "totalTokens": 27184618
         }
       },
       "speeds": {
         "fast": {
-          "calls": 285,
-          "totalTokens": 32279035
+          "calls": 893,
+          "totalTokens": 115635683
         }
       }
     },
@@ -2634,18 +3279,28 @@
       "efforts": {
         "high": {
           "calls": 123,
-          "reasoningCalls": 42,
-          "reasoningOutputTokens": 9149,
+          "reasoningCalls": 122,
+          "reasoningOutputTokens": 27311,
           "totalTokens": 9080147
         },
         "low": {
+          "calls": 19,
+          "reasoningCalls": 19,
+          "reasoningOutputTokens": 1655,
+          "totalTokens": 772001
+        },
+        "medium": {
           "calls": 16,
           "reasoningCalls": 16,
-          "reasoningOutputTokens": 709,
-          "totalTokens": 504094
+          "reasoningOutputTokens": 2852,
+          "totalTokens": 928699
         }
       },
       "speeds": {
+        "fast": {
+          "calls": 3,
+          "totalTokens": 267907
+        },
         "standard": {
           "calls": 541,
           "totalTokens": 62566600
@@ -2691,8 +3346,8 @@
       "efforts": {
         "high": {
           "calls": 1462,
-          "reasoningCalls": 463,
-          "reasoningOutputTokens": 133847,
+          "reasoningCalls": 1438,
+          "reasoningOutputTokens": 382376,
           "totalTokens": 261790747
         },
         "low": {
@@ -2703,9 +3358,9 @@
         },
         "medium": {
           "calls": 1384,
-          "reasoningCalls": 1279,
-          "reasoningOutputTokens": 182849,
-          "totalTokens": 162477746
+          "reasoningCalls": 1382,
+          "reasoningOutputTokens": 210961,
+          "totalTokens": 163797021
         }
       },
       "speeds": {
@@ -2714,8 +3369,8 @@
           "totalTokens": 226812537
         },
         "standard": {
-          "calls": 1846,
-          "totalTokens": 263100522
+          "calls": 1874,
+          "totalTokens": 271480068
         }
       }
     },
@@ -2756,10 +3411,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 1628,
-          "reasoningCalls": 315,
-          "reasoningOutputTokens": 57725,
-          "totalTokens": 292288970
+          "calls": 1839,
+          "reasoningCalls": 1839,
+          "reasoningOutputTokens": 453374,
+          "totalTokens": 385176218
         },
         "low": {
           "calls": 124,
@@ -2768,20 +3423,20 @@
           "totalTokens": 7372058
         },
         "medium": {
-          "calls": 163,
-          "reasoningCalls": 163,
-          "reasoningOutputTokens": 32991,
-          "totalTokens": 35752288
+          "calls": 282,
+          "reasoningCalls": 282,
+          "reasoningOutputTokens": 73861,
+          "totalTokens": 44620701
         }
       },
       "speeds": {
         "fast": {
-          "calls": 297,
-          "totalTokens": 69943191
+          "calls": 326,
+          "totalTokens": 84074053
         },
         "standard": {
-          "calls": 1665,
-          "totalTokens": 260767580
+          "calls": 2031,
+          "totalTokens": 376646173
         }
       }
     },
@@ -2822,10 +3477,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 15,
-          "reasoningCalls": 15,
-          "reasoningOutputTokens": 7748,
-          "totalTokens": 1871924
+          "calls": 20,
+          "reasoningCalls": 20,
+          "reasoningOutputTokens": 9602,
+          "totalTokens": 2794913
         },
         "low": {
           "calls": 6,
@@ -2834,16 +3489,16 @@
           "totalTokens": 120037
         },
         "medium": {
-          "calls": 216,
-          "reasoningCalls": 216,
-          "reasoningOutputTokens": 111293,
-          "totalTokens": 16609316
+          "calls": 231,
+          "reasoningCalls": 231,
+          "reasoningOutputTokens": 123735,
+          "totalTokens": 17835846
         }
       },
       "speeds": {
         "fast": {
-          "calls": 49,
-          "totalTokens": 4211875
+          "calls": 57,
+          "totalTokens": 5801369
         }
       }
     },
@@ -2883,16 +3538,16 @@
           "totalTokens": 71891
         },
         "medium": {
-          "calls": 12,
-          "reasoningCalls": 12,
-          "reasoningOutputTokens": 1482,
-          "totalTokens": 745783
+          "calls": 36,
+          "reasoningCalls": 36,
+          "reasoningOutputTokens": 4579,
+          "totalTokens": 2256976
         }
       },
       "speeds": {
         "fast": {
-          "calls": 3,
-          "totalTokens": 49691
+          "calls": 4,
+          "totalTokens": 180144
         }
       }
     },
@@ -2932,16 +3587,16 @@
           "totalTokens": 5379836
         },
         "medium": {
-          "calls": 454,
-          "reasoningCalls": 454,
-          "reasoningOutputTokens": 94755,
-          "totalTokens": 95291090
+          "calls": 624,
+          "reasoningCalls": 624,
+          "reasoningOutputTokens": 156903,
+          "totalTokens": 103702598
         }
       },
       "speeds": {
         "fast": {
-          "calls": 301,
-          "totalTokens": 41083836
+          "calls": 344,
+          "totalTokens": 43635227
         },
         "standard": {
           "calls": 143,
@@ -2986,10 +3641,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 191,
-          "reasoningCalls": 191,
-          "reasoningOutputTokens": 60186,
-          "totalTokens": 35576282
+          "calls": 207,
+          "reasoningCalls": 207,
+          "reasoningOutputTokens": 61886,
+          "totalTokens": 36303744
         },
         "low": {
           "calls": 44,
@@ -2998,10 +3653,10 @@
           "totalTokens": 3365498
         },
         "medium": {
-          "calls": 197,
-          "reasoningCalls": 197,
-          "reasoningOutputTokens": 36128,
-          "totalTokens": 19746508
+          "calls": 223,
+          "reasoningCalls": 223,
+          "reasoningOutputTokens": 43480,
+          "totalTokens": 21766382
         },
         "xhigh": {
           "calls": 76,
@@ -3012,7 +3667,7 @@
       },
       "speeds": {
         "fast": {
-          "calls": 245,
+          "calls": 246,
           "totalTokens": 51668191
         },
         "standard": {
@@ -3197,16 +3852,16 @@
           "totalTokens": 83999
         },
         "medium": {
-          "calls": 20,
-          "reasoningCalls": 20,
-          "reasoningOutputTokens": 66,
-          "totalTokens": 3256176
+          "calls": 36,
+          "reasoningCalls": 36,
+          "reasoningOutputTokens": 4769,
+          "totalTokens": 4616490
         }
       },
       "speeds": {
         "fast": {
-          "calls": 48,
-          "totalTokens": 5674354
+          "calls": 60,
+          "totalTokens": 6860090
         },
         "standard": {
           "calls": 20,
@@ -3351,10 +4006,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 244,
-          "reasoningCalls": 244,
-          "reasoningOutputTokens": 47830,
-          "totalTokens": 61737776
+          "calls": 527,
+          "reasoningCalls": 527,
+          "reasoningOutputTokens": 142517,
+          "totalTokens": 119525626
         },
         "low": {
           "calls": 399,
@@ -3369,20 +4024,20 @@
           "totalTokens": 5984355
         },
         "medium": {
-          "calls": 308,
-          "reasoningCalls": 308,
-          "reasoningOutputTokens": 58078,
-          "totalTokens": 47953988
+          "calls": 627,
+          "reasoningCalls": 627,
+          "reasoningOutputTokens": 110790,
+          "totalTokens": 91376974
         }
       },
       "speeds": {
         "fast": {
-          "calls": 650,
-          "totalTokens": 87654537
+          "calls": 958,
+          "totalTokens": 152868394
         },
         "standard": {
-          "calls": 249,
-          "totalTokens": 46734840
+          "calls": 269,
+          "totalTokens": 50955447
         }
       }
     },
@@ -3417,10 +4072,10 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 77,
-          "reasoningCalls": 77,
-          "reasoningOutputTokens": 22305,
-          "totalTokens": 34412813
+          "calls": 185,
+          "reasoningCalls": 185,
+          "reasoningOutputTokens": 42406,
+          "totalTokens": 53505147
         },
         "low": {
           "calls": 132,
@@ -3429,16 +4084,16 @@
           "totalTokens": 8208264
         },
         "medium": {
-          "calls": 153,
-          "reasoningCalls": 153,
-          "reasoningOutputTokens": 39533,
-          "totalTokens": 32254630
+          "calls": 242,
+          "reasoningCalls": 242,
+          "reasoningOutputTokens": 52125,
+          "totalTokens": 67446350
         }
       },
       "speeds": {
         "fast": {
-          "calls": 306,
-          "totalTokens": 70537051
+          "calls": 452,
+          "totalTokens": 117775608
         },
         "standard": {
           "calls": 17,
@@ -3535,7 +4190,7 @@
     "totalTokens": 784948
   },
   "2026-09-07": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -3568,30 +4223,66 @@
           "totalTokens": 10153378
         },
         "low": {
-          "calls": 169,
-          "reasoningCalls": 169,
-          "reasoningOutputTokens": 15090,
-          "totalTokens": 18008061
+          "calls": 170,
+          "reasoningCalls": 170,
+          "reasoningOutputTokens": 13772,
+          "totalTokens": 18632475
         },
         "medium": {
-          "calls": 204,
-          "reasoningCalls": 204,
-          "reasoningOutputTokens": 7759,
-          "totalTokens": 23054143
+          "calls": 254,
+          "reasoningCalls": 254,
+          "reasoningOutputTokens": 25259,
+          "totalTokens": 32788600
         }
       },
       "speeds": {
         "fast": {
           "calls": 125,
-          "totalTokens": 11395786
+          "totalTokens": 11561547
         },
         "standard": {
-          "calls": 173,
-          "totalTokens": 32040279
+          "calls": 263,
+          "totalTokens": 44489133
         }
       }
     },
-    "totalCost": 11.089489,
+    "totalCost": 116.997774,
     "totalTokens": 61574453
+  },
+  "2026-09-08": {
+    "costSource": "official",
+    "models": {
+      "gpt-6-astra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 841088,
+        "inputTokens": 85868,
+        "outputTokens": 13213,
+        "totalTokens": 940169
+      }
+    },
+    "quota": {
+      "limitReached": false,
+      "windows": {
+        "10080": 20.0
+      }
+    },
+    "routing": {
+      "efforts": {
+        "medium": {
+          "calls": 14,
+          "reasoningCalls": 14,
+          "reasoningOutputTokens": 365,
+          "totalTokens": 940169
+        }
+      },
+      "speeds": {
+        "standard": {
+          "calls": 10,
+          "totalTokens": 761198
+        }
+      }
+    },
+    "totalCost": 2.360418,
+    "totalTokens": 940169
   }
 }
