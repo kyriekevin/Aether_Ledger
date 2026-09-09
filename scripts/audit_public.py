@@ -290,6 +290,8 @@ def audit_tree(root: Path) -> list[str]:
         if not path.exists():
             continue
         relative = path.relative_to(root)
+        if path.suffix in {".sqlite", ".sqlite3"}:
+            issues.append(f"{relative}: private measurement journals must not be tracked")
         if relative.name == "codex_by_repo.json":
             issues.append(f"{relative}: repository-level session export must not be tracked")
         if path.suffix == ".json":
@@ -317,6 +319,23 @@ def audit_tree(root: Path) -> list[str]:
                 _validate_store_schema(parsed, relative, issues)
         elif relative == Path(MULTICA_TASK_STORE) and parsed_ok:
             _validate_multica_schema(parsed, relative, issues)
+        elif path.name == "statistics.json" and parsed_ok:
+            from collect_statistics import allowed_models
+            from statistics_schema import validate
+            try:
+                if len(relative.parts) != 3 or relative.parts[0] != "data" or relative.parts[1] not in DURABLE_NODES:
+                    raise ValueError("invalid statistics location")
+                validate(parsed, allowed_models(root))
+                if parsed["role"] != relative.parts[1]:
+                    raise ValueError("statistics role mismatch")
+            except (ValueError, TypeError, KeyError):
+                issues.append(f"{relative}: invalid public statistics")
+        elif relative == Path("data/multica-dispatch.json") and parsed_ok:
+            from multica_dispatch import public_models, validate_snapshot
+            try:
+                validate_snapshot(parsed, public_models(root))
+            except (ValueError, TypeError, KeyError):
+                issues.append(f"{relative}: invalid public dispatch snapshot")
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):

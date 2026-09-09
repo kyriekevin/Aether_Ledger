@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import plistlib
 import subprocess
 import sys
 import tempfile
@@ -58,9 +59,13 @@ def load_multica_environment(home: Path) -> dict[str, str]:
 
 
 def render_template(
-    home: Path, repo_root: Path, environment: dict[str, str] | None = None
+    home: Path, repo_root: Path, environment: dict[str, str] | None = None,
+    *, statistics: bool = False,
 ) -> str:
     content = TEMPLATE.read_text(encoding="utf-8")
+    if statistics:
+        content = content.replace("    <string>__REPO_DIR__/scripts/sync_usage.py</string>",
+                                  "    <string>__REPO_DIR__/scripts/sync_usage.py</string>\n    <string>--include-statistics</string>")
     extra_environment = "\n".join(
         f"    <key>{escape(key)}</key>\n    <string>{escape(value)}</string>"
         for key, value in sorted((environment or {}).items())
@@ -196,6 +201,16 @@ def migrate_legacy_node_name(home: Path) -> str | None:
     return node_name
 
 
+def statistics_setting(path: Path, requested: bool | None) -> bool:
+    if requested is not None:
+        return requested
+    if not path.exists():
+        return False
+    with path.open("rb") as stream:
+        current = plistlib.load(stream)
+    return "--include-statistics" in current.get("ProgramArguments", [])
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Install the scheduled usage writer in a dedicated Git worktree."
@@ -205,8 +220,18 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="launchd-only checkout (default: ~/.cache/aether-ledger/writer)",
     )
+    options = parser.add_mutually_exclusive_group()
+    options.add_argument("--statistics", action="store_true", dest="statistics", help="enable the new per-source statistics journal")
+    options.add_argument("--no-statistics", action="store_false", dest="statistics", help="disable statistics collection without deleting its journal")
+    parser.set_defaults(statistics=None)
     args = parser.parse_args(argv)
     home = Path.home().resolve()
+    destination = home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
+    try:
+        enabled_statistics = statistics_setting(destination, args.statistics)
+    except (OSError, ValueError, plistlib.InvalidFileException) as error:
+        print(f"cannot preserve statistics setting: {type(error).__name__}", file=sys.stderr)
+        return 1
     try:
         multica_environment = load_multica_environment(home)
     except ValueError as error:
@@ -230,7 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     destination = home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
     (home / "Library" / "Logs" / "aether-ledger").mkdir(parents=True, exist_ok=True)
     atomic_write(
-        destination, render_template(home, writer_root, multica_environment)
+        destination, render_template(home, writer_root, multica_environment, statistics=enabled_statistics)
     )
     print(f"installed {destination}")
     loaded = reload_agent(destination, os.getuid())

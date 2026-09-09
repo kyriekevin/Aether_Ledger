@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Callable
 
 import multica_usage
+import collect_statistics
 import usage_ccusage
 import usage_dsh
 import usage_git
@@ -102,6 +103,7 @@ def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
 def _sync(
     machine: str, *, no_push: bool, reconcile_since: date | None = None,
     include_multica_tasks: bool = False,
+    include_statistics: bool = False,
 ) -> int:
     now = datetime.now(usage_schema.SHANGHAI)
     if not no_push:
@@ -131,6 +133,21 @@ def _sync(
     if not no_push:
         usage_git.git_push(machine)
 
+    # The new statistics journal is opt-in and independently published. A new
+    # parser/API failure must not block the legacy token publication above.
+    if include_statistics:
+        try:
+            statistics = collect_statistics.collect(machine_dir)
+            if any(s["status"] in {"partial", "failed"} for s in statistics["sources"].values()):
+                failures.add("statistics")
+            if statistics["multica"] and (statistics["multica"]["status"] == "failed" or statistics["multica"]["assignmentStatus"] == "failed"):
+                failures.add("statistics multica")
+            if not no_push:
+                usage_git.git_push(machine)
+        except Exception as error:
+            failures.add("statistics")
+            print(f"statistics: status=failed error={type(error).__name__}", file=sys.stderr)
+
     # Workspace-wide task metadata is optional and runs AFTER publishing tokens.
     # Existing task history stays readable when this opt-in is not used.
     if include_multica_tasks and Path(machine).name == usage_schema.MULTICA_TASK_WRITER:
@@ -152,6 +169,8 @@ def main() -> int:
                         help="update local data without switching branches, committing, or pushing")
     parser.add_argument("--reconcile-since", metavar="YYYY-MM-DD", type=date.fromisoformat,
                         help="accept lower counts from this date; manual use only")
+    parser.add_argument("--include-statistics", action="store_true",
+                        help="collect versioned statistics and per-machine Multica runs after tokens publish")
     parser.add_argument("--include-multica-tasks", action="store_true",
                         help="also refresh optional workspace task metadata after publishing tokens")
     args = parser.parse_args()
@@ -162,7 +181,8 @@ def main() -> int:
             print("sync run finished status=lock-busy", flush=True)
             return 0
         status = _sync(machine, no_push=args.no_push, reconcile_since=args.reconcile_since,
-                       include_multica_tasks=args.include_multica_tasks)
+                       include_multica_tasks=args.include_multica_tasks,
+                       include_statistics=args.include_statistics)
     print(f"sync run finished exit={status}", flush=True)
     return status
 

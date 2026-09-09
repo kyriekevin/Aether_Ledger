@@ -590,6 +590,12 @@ installer requires it to give up today's branch before the writer worktree can e
 on `main` or on whatever its owner is working on, and today has no data there. A separate clone
 pinned to `main` will be up to one day behind by design.
 
+## Versioned statistics
+
+The opt-in measurement journal, per-metric activation dates, independent Work/Personal rollout,
+and recovery rules are described in [Statistics contract](statistics.md). Existing dashboard
+inputs remain unchanged until a later view migration.
+
 ## Dashboard
 
 `scripts/render_dashboard.py` scans `data/` for canonical files named `claude.json`, `codex.json`,
