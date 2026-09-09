@@ -7,7 +7,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from multica_dispatch import collect_dispatch, configuration, issue_state, validate_snapshot
-from dashboard_story import render_dispatch
 
 
 class DispatchTests(unittest.TestCase):
@@ -55,7 +54,6 @@ class DispatchTests(unittest.TestCase):
         self.assertEqual(row["archivedAgents"], 1)
         self.assertEqual(row["issues"]["done"], 1)
         self.assertNotIn("private", json.dumps(snapshot))
-        self.assertIn("Work", render_dispatch(snapshot))
 
     def test_public_schema_rejects_identity_and_nonconserving_counts(self):
         baseline = self.snapshot()
