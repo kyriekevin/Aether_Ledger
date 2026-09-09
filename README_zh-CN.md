@@ -30,21 +30,18 @@ Token 包含缓存读取；金额是 API 等价成本估算，并非订阅账单
 
 ## Issue 分派
 
-![按 harness 分组的 issue 分派](assets/agent-dispatch-zh.svg)
+![按 harness 分组的 Issue 分派](assets/agent-dispatch-zh.svg)
 
-每个 harness 一组，只展示已分派 issue 的配置，相同 model/effort 组合合并。数量包含当前快照
-中的全部 issue 状态，目前仅采集工作环境。这是当前分派，不是历史执行归因。
+读取每台机器的当前分派记录，按 harness 和 model × effort 分组，只展示已有分派的组合。
+工作和个人各自提供自己的记录，快照日期分别显示。
 
-## 模型分配与变化
+## Harness × Model × Effort
 
-![按 harness 分组的模型用量与前后期对比](assets/model-matrix-zh.svg)
+![已验证的模型与 effort 用量](assets/model-matrix-zh.svg)
 
-每行模型并排比较前 28 天与近 28 天。两张图中 harness 颜色一致，实色代表工作，浅色代表个人；
-Issue 横条全图同尺，用量横条按 harness 分别缩放、组内前后期同尺。只列任一时期有记录的组合，“新增”表示前期没有记录到用量。
-用量图仅含工作和个人，热力图还包含历史环境。
-
-用量包含手动和 Multica 执行。历史汇总仍将 model 与 effort 分开保存，因此这些 token 没有
-归到上面的具体 agent 配置。
+只使用指标生效后的有效日期。实色代表工作，浅色代表个人；图中列出已覆盖来源，取这些来源的
+共同有效日期。连续积累 56 个有效日后才显示前后期对比，此前只显示已观测用量。
+漏采不会当成零值，热力图继续保留完整历史。
 
 [模型历史、effort、Fast、额度与指标口径](docs/dashboard-details_zh-CN.md)
 

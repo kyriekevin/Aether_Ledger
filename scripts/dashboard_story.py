@@ -45,6 +45,10 @@ class Story:
     as_of: date
     contexts: dict[str, Context]
     historical_context_tokens: int = 0
+    verified: bool = False
+    valid_days: tuple[str, ...] = ()
+    comparable: bool = True
+    sources: tuple[str, ...] = ()
 
 
 def aggregate_story(root: Path, paths: tuple[Path, ...], as_of: date, aliases: dict[str, str]) -> Story:
@@ -95,6 +99,71 @@ def aggregate_story(root: Path, paths: tuple[Path, ...], as_of: date, aliases: d
             context.cache_read += min(tokens, cache)
             context.models[harness]["Unattributed"] += max(0, tokens - covered)
     return story
+
+
+def statistics_story(root: Path, as_of: date | None = None) -> Story:
+    """Intersect verified model/effort days across the explicitly shown sources."""
+    sources = []
+    attempted = []
+    for role in CONTEXTS:
+        path = root / "data" / role / "statistics.json"
+        if not path.exists():
+            continue
+        snapshot = json.loads(path.read_text())
+        for source, data in snapshot["sources"].items():
+            attempted.append(data["lastAttempt"])
+            start = data["metrics"]["modelEffort"]["effectiveFrom"]
+            if start is not None:
+                valid = {d for d, row in data["days"].items()
+                         if d >= start and "modelEffort" in row["validMetrics"]}
+                sources.append((role, source, data, valid))
+    end = as_of or (date.fromisoformat(max(attempted)) - timedelta(days=1) if attempted else date(1970, 1, 1))
+    common = set.intersection(*(item[3] for item in sources)) if sources else set()
+    common = {d for d in common if end - timedelta(days=55) <= date.fromisoformat(d) <= end}
+    story = Story(end, {role: Context() for role in CONTEXTS}, verified=True,
+                  valid_days=tuple(sorted(common)), comparable=len(common) == 56,
+                  sources=tuple(f"{role}/{source}" for role, source, _, _ in sources))
+    recent = end - timedelta(days=27)
+    for role, source, data, _ in sources:
+        harness = source.removesuffix("-multica")
+        if harness not in HARNESSES:
+            continue
+        context = story.contexts[role]
+        for raw_day in sorted(common):
+            day = date.fromisoformat(raw_day)
+            if day < recent and not story.comparable:
+                continue
+            for row in data["days"][raw_day]["combinations"]:
+                name = row["model"] + " · " + row["effort"]
+                tokens = row["totalTokens"]
+                attr = context.models if day >= recent else context.previous_models
+                attr[harness][name] += tokens
+                context.weekly[(day - (end - timedelta(days=55))).days // 7] += tokens
+                if day >= recent:
+                    context.harnesses[harness] += tokens
+    return story
+
+
+def statistics_assignment(root: Path) -> dict | None:
+    """Each durable role owns its rows, even when workspace snapshots overlap."""
+    rows, dates, roles = [], [], []
+    for role in CONTEXTS:
+        path = root / "data" / role / "statistics.json"
+        if not path.exists():
+            continue
+        data = json.loads(path.read_text()).get("multica")
+        if not data or data["status"] != "ok" or data["assignmentStatus"] != "ok" or not data["assignment"]:
+            continue
+        snapshot = data["assignment"]
+        if role not in snapshot["coveredRoles"]:
+            continue
+        roles.append(role)
+        dates.append(snapshot["asOf"])
+        rows.extend(row for row in snapshot["configurations"] if row["role"] == role)
+    if not roles:
+        return None
+    return {"asOf": " / ".join(f"{role} {day}" for role, day in zip(roles, dates)),
+            "coveredRoles": roles, "configurations": rows, "unassignedIssues": 0}
 
 
 def number(value: int) -> str:
@@ -187,15 +256,23 @@ def render_model_matrix(story: Story, locale: str = "en") -> str:
     """Keep the existing asset/API name; render grouped period comparisons."""
     t = WORDS[locale]
     groups = model_groups(story)
-    height = 180 + 48 * len(groups) + 42 * sum(len(names) for _, names in groups)
+    if story.verified and not groups:
+        svg = Canvas(160, "Harness × Model × Effort")
+        svg.text(28, 42, "Harness × Model × Effort", size=24, bold=True)
+        has_days = any(d >= str(story.as_of - timedelta(days=27)) for d in story.valid_days)
+        message = ("有效期间无用量" if locale == "zh" else "No usage in the verified period") if has_days else ("等待完整统计日" if locale == "zh" else "Waiting for verified collection days")
+        svg.text(28, 94, message, muted=True)
+        return svg.finish()
+    source_lines = [" · ".join(story.sources[i:i + 4]) for i in range(0, len(story.sources), 4)] if story.verified else []
+    height = 180 + 48 * len(groups) + 42 * sum(len(names) for _, names in groups) + 18 * max(0, len(source_lines) - 1)
     svg = Canvas(height, t["matrix"])
-    svg.text(28, 39, t["matrix"], size=24, bold=True)
+    svg.text(28, 39, "Harness × Model × Effort" if story.verified else t["matrix"], size=24, bold=True)
     svg.text(1072, 37, str(story.as_of), anchor="end", muted=True)
     svg.text(28, 73, t["purpose"], muted=True)
-    svg.text(1072, 73, f'{t["recent"]}: {number(sum(c.current for c in story.contexts.values()))} tokens', anchor="end", muted=True)
-    svg.text(44, 112, t["model"], muted=True)
-    svg.text(390, 112, t["previous"], muted=True)
-    svg.text(705, 112, t["recent"], muted=True)
+    svg.text(1072, 73, f'{number(sum(c.current for c in story.contexts.values()))} tokens', anchor="end", muted=True)
+    svg.text(44, 112, t["model"] + (" × Effort" if story.verified else ""), muted=True)
+    svg.text(390, 112, t["previous"] if story.comparable else ("积累中" if locale == "zh" else "Collecting history"), muted=True)
+    svg.text(705, 112, (f"{sum(d >= str(story.as_of - timedelta(days=27)) for d in story.valid_days)} " + ("个有效日" if locale == "zh" else "verified days")) if story.verified else t["recent"], muted=True)
     svg.text(1072, 112, t["change"], muted=True, anchor="end")
     y = 126
     for h, names in groups:
@@ -203,11 +280,16 @@ def render_model_matrix(story: Story, locale: str = "en") -> str:
                       for name in names for attr in ("previous_models", "models"))
         before = sum(sum(c.previous_models[h].values()) for c in story.contexts.values())
         after = sum(c.harnesses[h] for c in story.contexts.values())
-        svg.group(y, h, f'{number(before)} → {number(after)} tokens')
+        svg.group(y, h, f'{number(before)} → {number(after)} tokens' if story.comparable else f'{number(after)} tokens')
         y += 48
         for name in names:
             label = t.get(name, name)
-            svg.text(44, y + 19, label if len(label) <= 34 else label[:31] + "…", size=15)
+            if story.verified:
+                model, effort = label.rsplit(" · ", 1)
+                label = (model if len(model) <= 23 else model[:20] + "…") + " · " + effort
+            else:
+                label = label if len(label) <= 34 else label[:31] + "…"
+            svg.text(44, y + 19, label, size=15)
             totals = []
             for x, attr in ((390, "previous_models"), (705, "models")):
                 values = {role: getattr(c, attr)[h][name] for role, c in story.contexts.items()}
@@ -216,12 +298,16 @@ def render_model_matrix(story: Story, locale: str = "en") -> str:
                 svg.text(x + 240, y + 18, number(total) if total else "—", anchor="end", size=15, muted=not total)
                 svg.bar(x, y + 25, 240, maximum, h, values, t, label)
             before, after = totals
-            delta = f'{(after / before - 1) * 100:+.0f}%' if before else t["new"]
+            delta = (f'{(after / before - 1) * 100:+.0f}%' if before else t["new"]) if story.comparable else "—"
             svg.text(1072, y + 19, delta, anchor="end", size=14, muted=True)
             y += 42
     if not groups:
         svg.text(44, y + 19, t["empty"], muted=True)
-    svg.text(28, height - 17, t["scale"], size=13, muted=True)
+    if story.verified:
+        for i, line in enumerate(source_lines):
+            svg.text(28, height - 17 - 18 * (len(source_lines) - i - 1), line, size=13, muted=True)
+    else:
+        svg.text(28, height - 17, t["scale"], size=13, muted=True)
     return svg.finish()
 
 

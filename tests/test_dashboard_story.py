@@ -103,6 +103,6 @@ class WorkflowStoryTests(unittest.TestCase):
         self.assertTrue(generate_matrix(self.root, output, date(2026, 9, 6)))
         self.assertFalse(generate_matrix(self.root, output, date(2026, 9, 6), check=True))
         before = output.read_text()
-        self.assertTrue(generate_matrix(self.root, output, date(2026, 9, 7), check=True))
+        self.assertFalse(generate_matrix(self.root, output, date(2026, 9, 7), check=True))
         self.assertTrue(generate_matrix(self.root, output, date(2026, 9, 6), check=True, locale="zh"))
         self.assertEqual(output.read_text(), before)

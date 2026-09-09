@@ -32,22 +32,17 @@ Token use includes cache reads. Costs are API-equivalent estimates, not subscrip
 
 ![Issue allocation grouped by harness](assets/agent-dispatch.svg)
 
-One group per harness, showing only configurations with assigned issues. Identical model/effort
-configurations are combined. Counts include all issue states in the current snapshot; currently
-only Work is collected. This is current assignment, not historical execution attribution.
+Current assignments from each machine, grouped by harness and model × effort. Only assigned
+combinations appear. Work and Personal contribute their own rows; snapshot dates are shown separately.
 
-## Model allocation & change
+## Harness × Model × Effort
 
-![Model use and period comparison grouped by harness](assets/model-matrix.svg)
+![Verified model and effort usage](assets/model-matrix.svg)
 
-Each model row compares the previous and latest 28 days. Harness colors stay the same across
-both charts; solid bars represent Work and light bars Personal. Issue bars share one scale; usage bars share a scale within each harness
-across both periods. Only combinations observed in either period are shown; New means no prior-period
-usage was recorded. The usage view covers Work and Personal; the heatmap also includes legacy
-environments.
-
-Usage includes direct and Multica execution. Model and effort are still separate in historical
-aggregates, so these tokens are not attributed to the agent configurations above.
+Only verified days after each metric takes effect are included. Solid bars represent Work;
+light bars represent Personal. The chart lists its covered sources and uses their common valid days.
+A previous-period comparison appears after 56 consecutive valid days; until then, only observed
+usage is shown. Missing collection is never treated as zero. The heatmap keeps its full history.
 
 [Model history, effort, Fast, quota, and metric definitions](docs/dashboard-details.md)
 

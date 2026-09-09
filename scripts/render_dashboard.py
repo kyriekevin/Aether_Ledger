@@ -1840,21 +1840,16 @@ def generate_runtime_history(
 
 def generate_matrix(root: Path, output: Path, as_of: date | None = None, *,
                     check: bool = False, locale: str = "en") -> bool:
-    from dashboard_story import aggregate_story, render_model_matrix
+    from dashboard_story import statistics_story, render_model_matrix
 
-    if as_of is None:
-        as_of = _latest_activity_day(aggregate_daily(root))
-    story = aggregate_story(root, discover_agent_files(root), as_of, AGENT_BUCKETS)
-    return _update_output(output, render_model_matrix(story, locale), check=check)
+    return _update_output(output, render_model_matrix(statistics_story(root, as_of), locale), check=check)
 
 
 def generate_dispatch(root: Path, output: Path, *, check: bool = False,
                       locale: str = "en") -> bool:
-    from dashboard_story import render_dispatch
+    from dashboard_story import statistics_assignment, render_dispatch
 
-    source = root / "data" / "multica-dispatch.json"
-    snapshot = json.loads(source.read_text()) if source.exists() else None
-    return _update_output(output, render_dispatch(snapshot, locale), check=check)
+    return _update_output(output, render_dispatch(statistics_assignment(root), locale), check=check)
 
 
 def main() -> int:

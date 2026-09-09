@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="676" viewBox="0 0 1180 676" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="232" viewBox="0 0 1180 232" role="img" aria-labelledby="title">
 <title id="title">Issue → Agent</title>
   <style>
     .dashboard-background { fill: #eff1f5; }
@@ -65,59 +65,15 @@
     }
   </style>
 <style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}</style>
-<rect width="1180" height="676" rx="22" class="dashboard-background"/>
+<rect width="1180" height="232" rx="22" class="dashboard-background"/>
 <g transform="translate(40,0)">
 <text x="28" y="39" font-size="24" text-anchor="start" class="dashboard-primary" font-weight="600">Issue → Agent</text>
-<text x="1072" y="37" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">配置快照 · 2026-09-09</text>
-<text x="28" y="73" font-size="18" text-anchor="start" class="dashboard-primary" font-weight="400">30 issues · 7 种已分派组合</text>
-<text x="1072" y="73" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">工作</text>
+<text x="1072" y="37" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">配置快照 · —</text>
+<text x="28" y="73" font-size="18" text-anchor="start" class="dashboard-primary" font-weight="400">0 issues · 0 种已分派组合</text>
+<text x="1072" y="73" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">暂无记录</text>
 <text x="44" y="112" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">模型</text>
 <text x="390" y="112" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">Effort</text>
 <text x="1072" y="112" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">Issue</text>
-<line x1="28" y1="126" x2="1072" y2="126" class="dashboard-border"/>
-<rect x="28.00" y="141.00" width="4.00" height="18.00" rx="2" class="agent-codex" opacity="1"></rect>
-<text x="43" y="156" font-size="18" text-anchor="start" class="agent-codex" font-weight="600">Codex</text>
-<text x="1072" y="156" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">14 issues</text>
-<text x="44" y="193" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-6-astra</text>
-<text x="390" y="193" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">medium</text>
-<rect x="575.00" y="187.00" width="385.00" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-6-astra · medium · 工作: 10</title></rect>
-<text x="1072" y="193" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">10</text>
-<text x="44" y="235" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-6-astra</text>
-<text x="390" y="235" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">low</text>
-<rect x="575.00" y="229.00" width="115.50" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-6-astra · low · 工作: 3</title></rect>
-<text x="1072" y="235" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">3</text>
-<text x="44" y="277" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-sol</text>
-<text x="390" y="277" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">medium</text>
-<rect x="575.00" y="271.00" width="38.50" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.6-sol · medium · 工作: 1</title></rect>
-<text x="1072" y="277" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">1</text>
-<line x1="28" y1="300" x2="1072" y2="300" class="dashboard-border"/>
-<rect x="28.00" y="315.00" width="4.00" height="18.00" rx="2" class="agent-claude" opacity="1"></rect>
-<text x="43" y="330" font-size="18" text-anchor="start" class="agent-claude" font-weight="600">Claude Code</text>
-<text x="1072" y="330" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">4 issues</text>
-<text x="44" y="367" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-opus-5</text>
-<text x="390" y="367" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">xhigh</text>
-<rect x="575.00" y="361.00" width="154.00" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-opus-5 · xhigh · 工作: 4</title></rect>
-<text x="1072" y="367" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">4</text>
-<line x1="28" y1="390" x2="1072" y2="390" class="dashboard-border"/>
-<rect x="28.00" y="405.00" width="4.00" height="18.00" rx="2" class="agent-traex" opacity="1"></rect>
-<text x="43" y="420" font-size="18" text-anchor="start" class="agent-traex" font-weight="600">TRAEX</text>
-<text x="1072" y="420" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">10 issues</text>
-<text x="44" y="457" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.5</text>
-<text x="390" y="457" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">medium</text>
-<rect x="575.00" y="451.00" width="308.00" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.5 · medium · 工作: 8</title></rect>
-<text x="1072" y="457" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">8</text>
-<text x="44" y="499" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-opus-4-8</text>
-<text x="390" y="499" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">xhigh</text>
-<rect x="575.00" y="493.00" width="77.00" height="8.00" rx="2" class="agent-traex" opacity="1"><title>claude-opus-4-8 · xhigh · 工作: 2</title></rect>
-<text x="1072" y="499" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">2</text>
-<line x1="28" y1="522" x2="1072" y2="522" class="dashboard-border"/>
-<rect x="28.00" y="537.00" width="4.00" height="18.00" rx="2" class="agent-dsh" opacity="1"></rect>
-<text x="43" y="552" font-size="18" text-anchor="start" class="agent-dsh" font-weight="600">DSH</text>
-<text x="1072" y="552" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">2 issues</text>
-<text x="44" y="589" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">deepseek-v4-pro</text>
-<text x="390" y="589" font-size="15" text-anchor="start" class="dashboard-muted" font-weight="400">high</text>
-<rect x="575.00" y="583.00" width="77.00" height="8.00" rx="2" class="agent-dsh" opacity="1"><title>deepseek-v4-pro · high · 工作: 2</title></rect>
-<text x="1072" y="589" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="600">2</text>
-<text x="28" y="652" font-size="14" text-anchor="start" class="dashboard-muted" font-weight="400">待规划 2 · 进行中 2 · 已完成 7 · 已取消 1 · 已归档 16 · 未知 2</text>
+<text x="44" y="145" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">暂无记录</text>
 </g>
 </svg>
