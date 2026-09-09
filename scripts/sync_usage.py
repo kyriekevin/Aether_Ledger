@@ -16,6 +16,7 @@ from typing import Callable
 
 import multica_usage
 import collect_statistics
+import issue_activity
 import usage_ccusage
 import usage_dsh
 import usage_git
@@ -147,6 +148,18 @@ def _sync(
         except Exception as error:
             failures.add("statistics")
             print(f"statistics: status=failed error={type(error).__name__}", file=sys.stderr)
+
+    if include_statistics:
+        try:
+            activity = issue_activity.collect(machine_dir)
+            if activity is not None:
+                if activity["status"] != "ok":
+                    failures.add("issue activity")
+                if not no_push:
+                    usage_git.git_push(machine)
+        except Exception as error:
+            failures.add("issue activity")
+            print(f"issue activity: status=failed error={type(error).__name__}", file=sys.stderr)
 
     # Workspace-wide task metadata is optional and runs AFTER publishing tokens.
     # Existing task history stays readable when this opt-in is not used.
