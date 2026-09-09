@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1506" viewBox="0 0 1180 1506" role="img" aria-labelledby="title">
+<title id="title">模型分配与变化</title>
+  <style>
+    .dashboard-background { fill: #eff1f5; }
+    .dashboard-panel { fill: #e6e9ef; }
+    .dashboard-primary { fill: #4c4f69; }
+    .dashboard-secondary { fill: #5c5f77; }
+    .dashboard-muted { fill: #6c6f85; }
+    .dashboard-accent { fill: #179299; }
+    .dashboard-border { stroke: #ccd0da; }
+    .agent-claude { fill: #fe640b; }
+    .agent-codex { fill: #1e66f5; }
+    .agent-traex { fill: #8839ef; }
+    .agent-dsh { fill: #ea76cb; }
+    .agent-legacy { fill: #6c6f85; }
+    .series-0 { fill: #1e66f5; }
+    .series-1 { fill: #fe640b; }
+    .series-2 { fill: #40a02b; }
+    .series-3 { fill: #8839ef; }
+    .series-other { fill: #9ca0b0; }
+    .signal-level-1 { fill: #179299; fill-opacity: 0.22; }
+    .signal-level-2 { fill: #179299; fill-opacity: 0.45; }
+    .signal-level-3 { fill: #179299; fill-opacity: 0.68; }
+    .signal-level-4 { fill: #179299; }
+    .component-input { fill: #40a02b; }
+    .component-output { fill: #df8e1d; }
+    .component-cache-write { fill: #179299; }
+    .component-cache-read { fill: #7287fd; }
+    .heatmap-level-0 { fill: #ccd0da; }
+    .heatmap-level-1 { fill: #179299; fill-opacity: 0.25; }
+    .heatmap-level-2 { fill: #179299; fill-opacity: 0.5; }
+    .heatmap-level-3 { fill: #179299; fill-opacity: 0.75; }
+    .heatmap-level-4 { fill: #179299; }
+    @media (prefers-color-scheme: dark) {
+      .dashboard-background { fill: #1e1e2e; }
+      .dashboard-panel { fill: #181825; }
+      .dashboard-primary { fill: #cdd6f4; }
+      .dashboard-secondary { fill: #bac2de; }
+      .dashboard-muted { fill: #a6adc8; }
+      .dashboard-accent { fill: #94e2d5; }
+      .dashboard-border { stroke: #313244; }
+      .agent-claude { fill: #fab387; }
+      .agent-codex { fill: #89b4fa; }
+      .agent-traex { fill: #cba6f7; }
+      .agent-dsh { fill: #f5c2e7; }
+      .agent-legacy { fill: #a6adc8; }
+      .series-0 { fill: #89b4fa; }
+      .series-1 { fill: #fab387; }
+      .series-2 { fill: #a6e3a1; }
+      .series-3 { fill: #cba6f7; }
+      .series-other { fill: #7f849c; }
+      .signal-level-1 { fill: #94e2d5; fill-opacity: 0.22; }
+      .signal-level-2 { fill: #94e2d5; fill-opacity: 0.45; }
+      .signal-level-3 { fill: #94e2d5; fill-opacity: 0.68; }
+      .signal-level-4 { fill: #94e2d5; }
+      .component-input { fill: #a6e3a1; }
+      .component-output { fill: #f9e2af; }
+      .component-cache-write { fill: #94e2d5; }
+      .component-cache-read { fill: #b4befe; }
+      .heatmap-level-0 { fill: #313244; }
+      .heatmap-level-1 { fill: #94e2d5; fill-opacity: 0.25; }
+      .heatmap-level-2 { fill: #94e2d5; fill-opacity: 0.5; }
+      .heatmap-level-3 { fill: #94e2d5; fill-opacity: 0.75; }
+      .heatmap-level-4 { fill: #94e2d5; }
+    }
+  </style>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}</style>
+<rect width="1180" height="1506" rx="22" class="dashboard-background"/>
+<g transform="translate(40,0)">
+<text x="28" y="39" font-size="24" text-anchor="start" class="dashboard-primary" font-weight="600">模型分配与变化</text>
+<text x="1072" y="37" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">2026-09-08</text>
+<text x="28" y="73" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">工作：实色 · 个人：浅色</text>
+<text x="1072" y="73" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">近 28 天: 3.3B tokens</text>
+<text x="44" y="112" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">模型</text>
+<text x="390" y="112" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">前 28 天</text>
+<text x="705" y="112" font-size="16" text-anchor="start" class="dashboard-muted" font-weight="400">近 28 天</text>
+<text x="1072" y="112" font-size="16" text-anchor="end" class="dashboard-muted" font-weight="400">变化</text>
+<line x1="28" y1="126" x2="1072" y2="126" class="dashboard-border"/>
+<rect x="28.00" y="141.00" width="4.00" height="18.00" rx="2" class="agent-codex" opacity="1"></rect>
+<text x="43" y="156" font-size="18" text-anchor="start" class="agent-codex" font-weight="600">Codex</text>
+<text x="1072" y="156" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">1.0B → 2.4B tokens</text>
+<text x="44" y="193" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-sol</text>
+<text x="630" y="192" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">906.6M</text>
+<rect x="390.00" y="199.00" width="77.16" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.6-sol · 工作: 518,202,617</title></rect>
+<rect x="467.16" y="199.00" width="57.82" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.6-sol · 个人: 388,362,775</title></rect>
+<text x="945" y="192" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">1.6B</text>
+<rect x="705.00" y="199.00" width="198.54" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.6-sol · 工作: 1,333,439,592</title></rect>
+<rect x="903.54" y="199.00" width="41.46" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.6-sol · 个人: 278,461,461</title></rect>
+<text x="1072" y="193" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+78%</text>
+<text x="44" y="235" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-6-astra</text>
+<text x="630" y="234" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="234" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">646.8M</text>
+<rect x="705.00" y="241.00" width="96.31" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-6-astra · 工作: 646,833,554</title></rect>
+<text x="1072" y="235" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="277" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.5</text>
+<text x="630" y="276" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">124.7M</text>
+<rect x="390.00" y="283.00" width="9.43" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.5 · 工作: 63,349,418</title></rect>
+<rect x="399.43" y="283.00" width="9.13" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.5 · 个人: 61,330,481</title></rect>
+<text x="945" y="276" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">138.7M</text>
+<rect x="705.00" y="283.00" width="18.00" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.5 · 工作: 120,924,772</title></rect>
+<rect x="723.00" y="283.00" width="2.65" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.5 · 个人: 17,823,967</title></rect>
+<text x="1072" y="277" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+11%</text>
+<text x="44" y="319" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-terra</text>
+<text x="630" y="318" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="318" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">39.7M</text>
+<rect x="705.00" y="325.00" width="1.82" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.6-terra · 工作: 12,209,326</title></rect>
+<rect x="706.82" y="325.00" width="4.10" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.6-terra · 个人: 27,538,210</title></rect>
+<text x="1072" y="319" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="361" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-luna</text>
+<text x="630" y="360" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">837.9K</text>
+<rect x="390.00" y="367.00" width="0.12" height="8.00" rx="2" class="agent-codex" opacity="1"><title>gpt-5.6-luna · 工作: 791,716</title></rect>
+<rect x="390.12" y="367.00" width="0.01" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.6-luna · 个人: 46,173</title></rect>
+<text x="945" y="360" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">918.1K</text>
+<rect x="705.00" y="367.00" width="0.14" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.6-luna · 个人: 918,057</title></rect>
+<text x="1072" y="361" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+10%</text>
+<text x="44" y="403" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.3-codex-spark</text>
+<text x="630" y="402" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="402" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">286.4K</text>
+<rect x="705.00" y="409.00" width="0.04" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>gpt-5.3-codex-spark · 个人: 286,370</title></rect>
+<text x="1072" y="403" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="445" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">未归因</text>
+<text x="630" y="444" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">14.5M</text>
+<rect x="390.00" y="451.00" width="2.16" height="8.00" rx="2" class="agent-codex" opacity="0.35"><title>未归因 · 个人: 14,519,897</title></rect>
+<text x="945" y="444" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="1072" y="445" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<line x1="28" y1="468" x2="1072" y2="468" class="dashboard-border"/>
+<rect x="28.00" y="483.00" width="4.00" height="18.00" rx="2" class="agent-claude" opacity="1"></rect>
+<text x="43" y="498" font-size="18" text-anchor="start" class="agent-claude" font-weight="600">Claude Code</text>
+<text x="1072" y="498" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">623.4M → 680.8M tokens</text>
+<text x="44" y="535" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-opus-5</text>
+<text x="630" y="534" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">321.2M</text>
+<rect x="390.00" y="541.00" width="186.35" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-opus-5 · 工作: 321,160,911</title></rect>
+<text x="945" y="534" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">413.6M</text>
+<rect x="705.00" y="541.00" width="240.00" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-opus-5 · 工作: 413,629,289</title></rect>
+<text x="1072" y="535" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+29%</text>
+<text x="44" y="577" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-fable-5</text>
+<text x="630" y="576" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">263.9M</text>
+<rect x="390.00" y="583.00" width="153.10" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-fable-5 · 工作: 263,864,582</title></rect>
+<text x="945" y="576" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">199.0M</text>
+<rect x="705.00" y="583.00" width="115.46" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-fable-5 · 工作: 198,990,945</title></rect>
+<text x="1072" y="577" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-25%</text>
+<text x="44" y="619" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-fable-5-1</text>
+<text x="630" y="618" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="618" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">39.6M</text>
+<rect x="705.00" y="625.00" width="22.98" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-fable-5-1 · 工作: 39,600,603</title></rect>
+<text x="1072" y="619" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="661" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-sonnet-5</text>
+<text x="630" y="660" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">35.3M</text>
+<rect x="390.00" y="667.00" width="20.46" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-sonnet-5 · 工作: 35,261,567</title></rect>
+<text x="945" y="660" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">28.2M</text>
+<rect x="705.00" y="667.00" width="16.38" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-sonnet-5 · 工作: 28,233,531</title></rect>
+<text x="1072" y="661" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-20%</text>
+<text x="44" y="703" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-haiku-4-5-20251001</text>
+<text x="630" y="702" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">82.4K</text>
+<rect x="390.00" y="709.00" width="0.05" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-haiku-4-5-20251001 · 工作: 82,361</title></rect>
+<text x="945" y="702" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">323.0K</text>
+<rect x="705.00" y="709.00" width="0.19" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-haiku-4-5-20251001 · 工作: 323,020</title></rect>
+<text x="1072" y="703" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+292%</text>
+<text x="44" y="745" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">agnes-2.0-flash</text>
+<text x="630" y="744" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">1.9M</text>
+<rect x="390.00" y="751.00" width="1.09" height="8.00" rx="2" class="agent-claude" opacity="0.35"><title>agnes-2.0-flash · 个人: 1,883,260</title></rect>
+<text x="945" y="744" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="1072" y="745" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<text x="44" y="787" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-opus-4-8</text>
+<text x="630" y="786" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">632.0K</text>
+<rect x="390.00" y="793.00" width="0.37" height="8.00" rx="2" class="agent-claude" opacity="1"><title>claude-opus-4-8 · 工作: 631,950</title></rect>
+<text x="945" y="786" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="1072" y="787" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<text x="44" y="829" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">nvidia/nemotron-3-ultra-550b-a5…</text>
+<text x="630" y="828" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">469.9K</text>
+<rect x="390.00" y="835.00" width="0.27" height="8.00" rx="2" class="agent-claude" opacity="0.35"><title>nvidia/nemotron-3-ultra-550b-a55b:free · 个人: 469,915</title></rect>
+<text x="945" y="828" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="1072" y="829" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<line x1="28" y1="852" x2="1072" y2="852" class="dashboard-border"/>
+<rect x="28.00" y="867.00" width="4.00" height="18.00" rx="2" class="agent-traex" opacity="1"></rect>
+<text x="43" y="882" font-size="18" text-anchor="start" class="agent-traex" font-weight="600">TRAEX</text>
+<text x="1072" y="882" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">82.8M → 156.1M tokens</text>
+<text x="44" y="919" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.5</text>
+<text x="630" y="918" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">4.1M</text>
+<rect x="390.00" y="925.00" width="7.86" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.5 · 工作: 4,054,711</title></rect>
+<text x="945" y="918" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">123.8M</text>
+<rect x="705.00" y="925.00" width="240.00" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.5 · 工作: 123,750,269</title></rect>
+<text x="1072" y="919" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+2952%</text>
+<text x="44" y="961" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">claude-opus-4-8</text>
+<text x="630" y="960" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">38.4M</text>
+<rect x="390.00" y="967.00" width="74.46" height="8.00" rx="2" class="agent-traex" opacity="1"><title>claude-opus-4-8 · 工作: 38,391,715</title></rect>
+<text x="945" y="960" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">27.4M</text>
+<rect x="705.00" y="967.00" width="53.13" height="8.00" rx="2" class="agent-traex" opacity="1"><title>claude-opus-4-8 · 工作: 27,397,225</title></rect>
+<text x="1072" y="961" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-29%</text>
+<text x="44" y="1003" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">deepseek-v4-pro</text>
+<text x="630" y="1002" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">3.7M</text>
+<rect x="390.00" y="1009.00" width="7.22" height="8.00" rx="2" class="agent-traex" opacity="1"><title>deepseek-v4-pro · 工作: 3,724,623</title></rect>
+<text x="945" y="1002" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">4.1M</text>
+<rect x="705.00" y="1009.00" width="7.90" height="8.00" rx="2" class="agent-traex" opacity="1"><title>deepseek-v4-pro · 工作: 4,074,509</title></rect>
+<text x="1072" y="1003" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">+9%</text>
+<text x="44" y="1045" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gemini-3-flash-preview</text>
+<text x="630" y="1044" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">12.2M</text>
+<rect x="390.00" y="1051.00" width="23.67" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gemini-3-flash-preview · 工作: 12,204,713</title></rect>
+<text x="945" y="1044" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">358.8K</text>
+<rect x="705.00" y="1051.00" width="0.70" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gemini-3-flash-preview · 工作: 358,848</title></rect>
+<text x="1072" y="1045" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-97%</text>
+<text x="44" y="1087" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">deepseek-v4-flash</text>
+<text x="630" y="1086" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">1.7M</text>
+<rect x="390.00" y="1093.00" width="3.23" height="8.00" rx="2" class="agent-traex" opacity="1"><title>deepseek-v4-flash · 工作: 1,666,804</title></rect>
+<text x="945" y="1086" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">270.8K</text>
+<rect x="705.00" y="1093.00" width="0.53" height="8.00" rx="2" class="agent-traex" opacity="1"><title>deepseek-v4-flash · 工作: 270,776</title></rect>
+<text x="1072" y="1087" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-84%</text>
+<text x="44" y="1129" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-terra</text>
+<text x="630" y="1128" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="1128" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">153.1K</text>
+<rect x="705.00" y="1135.00" width="0.30" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.6-terra · 工作: 153,070</title></rect>
+<text x="1072" y="1129" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="1171" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">seed-2.1-turbo</text>
+<text x="630" y="1170" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="1170" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">32.5K</text>
+<rect x="705.00" y="1177.00" width="0.06" height="8.00" rx="2" class="agent-traex" opacity="1"><title>seed-2.1-turbo · 工作: 32,478</title></rect>
+<text x="1072" y="1171" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="1213" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-sol</text>
+<text x="630" y="1212" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">22.1M</text>
+<rect x="390.00" y="1219.00" width="42.87" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.6-sol · 工作: 22,103,964</title></rect>
+<text x="945" y="1212" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">24.6K</text>
+<rect x="705.00" y="1219.00" width="0.05" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.6-sol · 工作: 24,582</title></rect>
+<text x="1072" y="1213" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<text x="44" y="1255" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">gpt-5.6-luna</text>
+<text x="630" y="1254" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">631.5K</text>
+<rect x="390.00" y="1261.00" width="1.22" height="8.00" rx="2" class="agent-traex" opacity="1"><title>gpt-5.6-luna · 工作: 631,487</title></rect>
+<text x="945" y="1254" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="1072" y="1255" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">-100%</text>
+<line x1="28" y1="1278" x2="1072" y2="1278" class="dashboard-border"/>
+<rect x="28.00" y="1293.00" width="4.00" height="18.00" rx="2" class="agent-dsh" opacity="1"></rect>
+<text x="43" y="1308" font-size="18" text-anchor="start" class="agent-dsh" font-weight="600">DSH</text>
+<text x="1072" y="1308" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">0 → 39.6M tokens</text>
+<text x="44" y="1345" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">deepseek-v4-flash</text>
+<text x="630" y="1344" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="1344" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">33.4M</text>
+<rect x="705.00" y="1351.00" width="14.75" height="8.00" rx="2" class="agent-dsh" opacity="1"><title>deepseek-v4-flash · 工作: 2,053,673</title></rect>
+<rect x="719.75" y="1351.00" width="225.25" height="8.00" rx="2" class="agent-dsh" opacity="0.35"><title>deepseek-v4-flash · 个人: 31,368,130</title></rect>
+<text x="1072" y="1345" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="1387" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">deepseek-v4-pro</text>
+<text x="630" y="1386" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="1386" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">6.2M</text>
+<rect x="705.00" y="1393.00" width="44.26" height="8.00" rx="2" class="agent-dsh" opacity="1"><title>deepseek-v4-pro · 工作: 6,164,202</title></rect>
+<text x="1072" y="1387" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="44" y="1429" font-size="15" text-anchor="start" class="dashboard-primary" font-weight="400">minimax-m3</text>
+<text x="630" y="1428" font-size="15" text-anchor="end" class="dashboard-muted" font-weight="400">—</text>
+<text x="945" y="1428" font-size="15" text-anchor="end" class="dashboard-primary" font-weight="400">14.8K</text>
+<rect x="705.00" y="1435.00" width="0.11" height="8.00" rx="2" class="agent-dsh" opacity="1"><title>minimax-m3 · 工作: 14,775</title></rect>
+<text x="1072" y="1429" font-size="14" text-anchor="end" class="dashboard-muted" font-weight="400">新增</text>
+<text x="28" y="1489" font-size="13" text-anchor="start" class="dashboard-muted" font-weight="400">各 harness 组内，前后期共用比例尺</text>
+</g>
+</svg>

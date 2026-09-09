@@ -19,69 +19,34 @@
 > 本仓库以公开为前提设计。账本只保存匿名化聚合数据——绝不记录提示词、会话、仓库名称、
 > 主机名、用户名或工作目录。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex、TRAE CLI 与 DSH，自己开的和 Multica 派出去跑的
-都算，并让这些活动清晰可见。
-历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
-Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
+工作和个人任务在 Multica 中成为 issue，再派发给按 **harness × model × effort** 配置的 agent。
+这份账本记录这些组合，以及实际消耗的算力。
 
 ## 活动
 
-![Aether Ledger 活动面板](assets/token-activity.svg)
+![Token 活动](assets/token-activity.svg)
 
-金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
-token 总量大于零的自然日累计。
+Token 包含缓存读取；金额是 API 等价成本估算，并非订阅账单。
 
-## 拓扑
+## Issue 分派
 
-![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
+![按 harness 分组的 issue 分派](assets/agent-dispatch-zh.svg)
 
-![Aether Ledger 算力拓扑历史](assets/token-topology-history.svg)
+每个 harness 一组，只展示已分派 issue 的配置，相同 model/effort 组合合并。数量包含当前快照
+中的全部 issue 状态，目前仅采集工作环境。这是当前分派，不是历史执行归因。
 
-拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker；历史图用前 4 周与近 4 周对照，展示每个环境的
-周度总量与 harness 组合如何变化。
+## 模型分配与变化
 
-## 分配
+![按 harness 分组的模型用量与前后期对比](assets/model-matrix-zh.svg)
 
-![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
+每行模型并排比较前 28 天与近 28 天。两张图中 harness 颜色一致，实色代表工作，浅色代表个人；
+Issue 横条全图同尺，用量横条按 harness 分别缩放、组内前后期同尺。只列任一时期有记录的组合，“新增”表示前期没有记录到用量。
+用量图仅含工作和个人，热力图还包含历史环境。
 
-![Aether Ledger 模型分配历史](assets/compute-allocation-history.svg)
+用量包含手动和 Multica 执行。历史汇总仍将 model 与 effort 分开保存，因此这些 token 没有
+归到上面的具体 agent 配置。
 
-当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
-堆叠，展示各 harness 内部的模型迁移。
-
-## 运行
-
-![Aether Ledger 运行概况](assets/runtime-profile.svg)
-
-![Aether Ledger 运行历史](assets/runtime-history.svg)
-
-当前图展示各 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
-峰值。历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、
-高度和位置表达，不再依赖颜色深浅。effort 从各 harness 自己的 session 日志读取；Fast 和额度是
-Codex 的字段，Claude 的日志里没有对应物。
-
-## 账本
-
-适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、
-`devbox`）和匿名的临时 `trail` 节点组织。
-
-## 工作原理
-
-```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  定时同步，自己开的和 Multica 派出去跑的都采
-        ▼
-usage/YYYY-MM-DD ── 当天聚合提交持续写入
-        │  Asia/Shanghai 跨日后触发 rollover
-        ▼
-main ── squash merge 当天数据 + 重新渲染面板
-        │
-        └─→ 删除已完成分支，创建当天新分支
-```
-
-当天用量只写入日期分支；`main` 只接收 rollover workflow 合入的完整天。人工改动一律走
-PR，并以 `make verify` 作为交付门槛。
+[模型历史、effort、Fast、额度与指标口径](docs/dashboard-details_zh-CN.md)
 
 ## 文档导航
 

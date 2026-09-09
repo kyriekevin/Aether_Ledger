@@ -19,72 +19,37 @@
 > Public by design. The ledger keeps anonymized aggregates only — no prompts, sessions,
 > repository names, hostnames, usernames, or working directories are ever recorded.
 
-Aether Ledger records how I use Claude Code, Codex, TRAE CLI, and DSH—launched by hand or sent out
-by Multica—and makes that activity visible.
-Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
-Tokens are not skill points; they are the compute resources I spend while turning ideas into
-useful work.
+Work and personal tasks become issues in Multica. I dispatch them to agents configured as
+**harness × model × effort**. This ledger tracks those combinations and the compute they use.
 
 ## Activity
 
-![Aether Ledger activity dashboard](assets/token-activity.svg)
+![Token activity](assets/token-activity.svg)
 
-Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
-bill. Active days count every calendar day with a positive token total.
+Token use includes cache reads. Costs are API-equivalent estimates, not subscription bills.
 
-## Topology
+## Issue allocation
 
-![Aether Ledger recent compute topology](assets/token-topology.svg)
+![Issue allocation grouped by harness](assets/agent-dispatch.svg)
 
-![Aether Ledger compute topology history](assets/token-topology-history.svg)
+One group per harness, showing only configurations with assigned issues. Identical model/effort
+configurations are combined. Counts include all issue states in the current snapshot; currently
+only Work is collected. This is current assignment, not historical execution attribution.
 
-Topology shows which active agents serve each public environment over the latest 30 days.
-The history view compares the previous four weeks with the latest four weeks, showing how each
-environment's weekly total and harness mix changed.
-`Development` combines persistent devboxes with on-demand GPU trail workers.
+## Model allocation & change
 
-## Allocation
+![Model use and period comparison grouped by harness](assets/model-matrix.svg)
 
-![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
+Each model row compares the previous and latest 28 days. Harness colors stay the same across
+both charts; solid bars represent Work and light bars Personal. Issue bars share one scale; usage bars share a scale within each harness
+across both periods. Only combinations observed in either period are shown; New means no prior-period
+usage was recorded. The usage view covers Work and Personal; the heatmap also includes legacy
+environments.
 
-![Aether Ledger model allocation history](assets/compute-allocation-history.svg)
+Usage includes direct and Multica execution. Model and effort are still separate in historical
+aggregates, so these tokens are not attributed to the agent configurations above.
 
-The current view keeps the trailing 30-day model mix; the history view compares four weekly model
-stacks with the preceding four, using absolute Top 3 + Other values within each harness.
-
-## Runtime
-
-![Aether Ledger runtime profile](assets/runtime-profile.svg)
-
-![Aether Ledger runtime history](assets/runtime-history.svg)
-
-The current view shows the latest 30-day effort mix across every harness, and Codex's Fast
-share and latest seven-day quota peak. The history view uses smaller weekly effort stacks, a Fast
-trajectory, and weekly seven-day quota peak bars, so magnitude comes from length, height, and
-position rather than color intensity. Effort is read from every harness's own session logs; Fast
-and quota are Codex fields, and no equivalent exists in Claude's logs.
-
-## Ledger
-
-The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,
-`work`, and `devbox`) plus anonymized ephemeral `trail` workers.
-
-## How it works
-
-```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  scheduled sync, launched by hand or by Multica
-        ▼
-usage/YYYY-MM-DD ── intraday aggregate commits
-        │  daily rollover, after Asia/Shanghai midnight
-        ▼
-main ── squash-merged day + regenerated dashboards
-        │
-        └─→ completed branch deleted, today's branch created
-```
-
-Usage lands throughout the day on the dated branch; `main` only receives completed days from the
-rollover workflow. Human changes go through pull requests gated by `make verify`.
+[Model history, effort, Fast, quota, and metric definitions](docs/dashboard-details.md)
 
 ## Documentation
 
