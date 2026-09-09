@@ -70,6 +70,12 @@ def collect(machine_dir: Path, *, cache_root: Path | None = None, now=None,
         pricing, models = load_pricing(root / "config/official-pricing.json"), allowed_models(root)
         if published.exists() and not any(journal.metadata(source) for source in SOURCES):
             raise MissingStatisticsJournal("private journal has no source metadata")
+        prior = json.loads(published.read_text()) if published.exists() else {}
+        prior_runs = sum(row["total"] for row in (prior.get("multica") or {}).get("days", {}).values())
+        # Check before fetching: newly discovered runs must not hide a restored
+        # journal that has lost previously published identities.
+        if not reconcile and journal.db.execute("SELECT COUNT(*) FROM runs").fetchone()[0] < prior_runs:
+            raise StatisticsRegression("run journal is behind the published snapshot")
         results = {}
         for source in SOURCES:
             meta = journal.metadata(source)
@@ -107,11 +113,11 @@ def collect(machine_dir: Path, *, cache_root: Path | None = None, now=None,
                     new = snapshot["sources"].get(source, {}).get("days", {}).get(day)
                     if new is None or any(new["totals"][k] < row["totals"][k] for k in ("calls", "totalTokens")):
                         raise StatisticsRegression("private journal is behind the published snapshot")
-            if prior.get("multica"):
-                for day, old in prior["multica"]["days"].items():
-                    new = (snapshot["multica"] or {}).get("days", {}).get(day)
-                    if new is None or new["total"] < old["total"]:
-                        raise StatisticsRegression("run journal is behind the published snapshot")
+            # A stable run identity may move from creation day to start day.
+            # Daily decreases are legitimate; loss of retained runs is not.
+            new_runs = sum(row["total"] for row in (snapshot["multica"] or {}).get("days", {}).values())
+            if new_runs < prior_runs:
+                raise StatisticsRegression("run journal is behind the published snapshot")
         _atomic_write_json(machine_dir / "statistics.json", snapshot)
         return snapshot
     finally:

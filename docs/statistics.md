@@ -97,6 +97,8 @@ The available run API has no immutable configuration/usage-total snapshot, and t
 statistics-export endpoint denied access. Therefore `runConfiguration` and `runUsage` remain
 unactivated. Future activation requires an independent source/verification contract.
 
+Queued runs may move from creation day to start day. Publication checks retained run totals before fetching and after aggregation, rather than requiring each day to grow. Successful zero-run days are exported; they become valid only after a positive day activates the metric and both the day and next day were scanned successfully. Missing scan days remain absent.
+
 ## Rollout and recovery
 
 After the change has landed through a PR, install on **each** durable machine:

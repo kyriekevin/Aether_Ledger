@@ -127,7 +127,10 @@ def export_runs(journal, today):
         candidates = [r for r in by_session[fact["session"]] if r["started"] <= fact["at"] <= r["ended"]]
         if len(candidates) == 1:
             linked[candidates[0]["key"]].append(fact)
-    days = {}
+    # Successful scans provide evidence of zero activity. Unobserved dates
+    # remain absent; validMetrics additionally requires next-day closure.
+    days = {day: {key: 0 for key in RUN_COUNTS} for day in meta["successDays"]
+            if meta["collectionStarted"] <= day <= min(today.isoformat(), meta["lastAttempt"])}
     for run in runs:
         if run["day"] > today.isoformat():
             continue
@@ -154,7 +157,8 @@ def export_runs(journal, today):
         values["validMetrics"] = []
         for name, definition in meta["metrics"].items():
             start = definition["eligibleFrom"]
-            if closed and start is not None and day >= start and checks[name]:
+            observed = values["total"] > 0 or (definition["effectiveFrom"] is not None and day >= definition["effectiveFrom"])
+            if closed and start is not None and day >= start and checks[name] and observed:
                 values["validMetrics"].append(name)
                 if definition["effectiveFrom"] is None:
                     definition["effectiveFrom"] = day

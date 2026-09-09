@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +16,7 @@ import audit_public
 import collect_statistics
 import statistics_readers as readers
 from statistics_store import Journal
+from statistics_multica import collect_runs
 from usage_schema import SHANGHAI
 
 
@@ -84,3 +86,46 @@ class PipelineTests(unittest.TestCase):
         errors = audit_public.audit_tree(self.root)
         self.assertTrue(any("invalid public statistics" in e for e in errors))
         self.assertTrue(any("private measurement journals" in e for e in errors))
+
+    def test_cross_day_run_migration_publishes_and_lost_journal_still_fails(self):
+        run = {"id": "run-1", "runtime_id": "runtime", "status": "queued",
+               "created_at": "2026-09-10T09:00:00+08:00"}
+        def api(args):
+            if args[:2] == ["runtime", "list"]:
+                return [{"id": "runtime", "provider": "codex", "custom_name": "work-device"}]
+            if args[:2] == ["issue", "list"]:
+                return {"issues": [{"id": "issue"}], "has_more": False}
+            if args[:2] == ["agent", "list"]:
+                return []
+            return [run]
+        def collect_api(journal, role, roles, now, **kwargs):
+            collect_runs(journal, role, {"work-device": "work"}, now, api, **kwargs)
+        config = self.root / "multica.json"
+        config.write_text('{}')
+        with ExitStack() as stack:
+            for name in ("codex", "claude", "dsh"):
+                stack.enter_context(patch.object(readers, name, return_value=readers.Reading()))
+            stack.enter_context(patch.object(collect_statistics, "multica_dsh_roots_readonly", return_value=[]))
+            stack.enter_context(patch.object(collect_statistics.usage_sources, "multica_codex_session_roots", return_value=[]))
+            stack.enter_context(patch.object(collect_statistics.usage_sources, "dsh_session_roots", return_value=[]))
+            stack.enter_context(patch.object(collect_statistics.multica_usage, "CONFIG_FILE", config))
+            stack.enter_context(patch.object(collect_statistics.multica_usage, "load_runtime_roles", return_value={}))
+            stack.enter_context(patch.object(collect_statistics, "collect_runs", side_effect=collect_api))
+            def collect(day):
+                return collect_statistics.collect(self.machine, cache_root=self.cache,
+                    now=datetime(2026, 9, day, 18, tzinfo=SHANGHAI))
+            first = collect(10)
+            self.assertEqual(first["multica"]["days"]["2026-09-10"]["total"], 1)
+            run.update(status="running", started_at="2026-09-11T09:00:00+08:00")
+            second = collect(11)
+            self.assertEqual(second["multica"]["days"]["2026-09-10"]["total"], 0)
+            self.assertEqual(second["multica"]["days"]["2026-09-11"]["total"], 1)
+            collect(12)  # Publication remains healthy on the next scan.
+            published = (self.machine / "statistics.json").read_bytes()
+            journal = Journal(self.cache / "work.sqlite3")
+            with journal.db:
+                journal.db.execute("DELETE FROM runs")
+            journal.close()
+            with self.assertRaises(collect_statistics.StatisticsRegression):
+                collect(13)  # API still has a run; fetching must not mask journal loss.
+            self.assertEqual((self.machine / "statistics.json").read_bytes(), published)

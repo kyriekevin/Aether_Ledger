@@ -229,6 +229,30 @@ class JournalTests(JournalFixture):
         f["speed"] = "unknown"
         self.assertIsNone(estimate(f, pricing))
 
+    def test_run_zero_days_require_positive_activation_and_successful_closure(self):
+        run = {"key": "run", "harness": "codex", "session": None, "day": "2026-09-11",
+               "started": "2026-09-11T09:00:00+08:00", "ended": "2026-09-11T10:00:00+08:00", "status": "completed"}
+        meta = {"collectionStarted": "2026-09-09",
+                "successDays": ["2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-13", "2026-09-15"],
+                "lastAttempt": "2026-09-15", "status": "ok"}
+        with self.j.db:
+            self.j.save_meta("multica-runs", meta)
+            self.j.db.execute("INSERT INTO runs VALUES (?,?)", (run["key"], json.dumps(run)))
+        result = export_runs(self.j, date(2026, 9, 15))
+        self.assertEqual(result["days"]["2026-09-10"]["validMetrics"], [])
+        self.assertEqual(result["metrics"]["runs"]["effectiveFrom"], "2026-09-11")
+        self.assertEqual(result["days"]["2026-09-12"]["total"], 0)
+        self.assertEqual(set(result["days"]["2026-09-12"]["validMetrics"]), {"runs", "runDuration"})
+        self.assertEqual(result["days"]["2026-09-13"]["validMetrics"], [])
+        self.assertNotIn("2026-09-14", result["days"])
+        self.assertEqual(result["days"]["2026-09-15"]["validMetrics"], [])
+        meta = self.j.metadata("multica-runs")
+        meta["status"] = "failed"
+        with self.j.db:
+            self.j.save_meta("multica-runs", meta)
+        result = export_runs(self.j, date(2026, 9, 15))
+        self.assertTrue(all(not row["validMetrics"] for row in result["days"].values()))
+
     def test_run_duration_has_a_separate_activation_gate(self):
         run = {"key": "run", "harness": "codex", "session": None, "day": "2026-09-10",
                "started": "2026-09-10T09:00:00+08:00", "ended": None, "status": "completed"}
