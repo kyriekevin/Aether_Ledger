@@ -514,6 +514,11 @@ Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
 先让它交出当天分支，所以它要么停在 `main`，要么停在主人正在做的事情上，那里没有今天的
 数据。单独固定在 `main` 的 clone 按设计最多会落后一天。
 
+## 分版本统计
+
+新的可选计量日志、逐指标生效日期、Work/Personal 独立启用与恢复规则见[统计契约](statistics_zh-CN.md)。
+在后续切换视图之前，现有看板输入保持不变。
+
 ## 活动面板
 
 `scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、

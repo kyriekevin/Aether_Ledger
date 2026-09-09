@@ -22,6 +22,7 @@ from install_launchd import (  # noqa: E402
     reload_agent,
     remove_legacy_agent,
     render_template,
+    statistics_setting,
 )
 
 
@@ -45,6 +46,20 @@ class InstallLaunchdTests(unittest.TestCase):
         git(repo, "add", "README.md")
         git(repo, "commit", "-m", "base")
         return repo
+
+    def test_reinstall_preserves_statistics_unless_explicitly_disabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "agent.plist"
+            self.assertFalse(statistics_setting(path, None))
+            path.write_bytes(plistlib.dumps({"ProgramArguments": ["sync_usage.py", "--include-statistics"]}))
+            self.assertTrue(statistics_setting(path, None))
+            self.assertFalse(statistics_setting(path, False))
+
+    def test_statistics_is_an_explicit_installer_option(self):
+        base = plistlib.loads(render_template(Path("/tmp/home"), Path("/tmp/repo")).encode())
+        enabled = plistlib.loads(render_template(Path("/tmp/home"), Path("/tmp/repo"), statistics=True).encode())
+        self.assertNotIn("--include-statistics", base["ProgramArguments"])
+        self.assertIn("--include-statistics", enabled["ProgramArguments"])
 
     def test_creates_writer_on_the_existing_daily_branch(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

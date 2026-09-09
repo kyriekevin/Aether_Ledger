@@ -56,6 +56,26 @@ class PipelineTests(unittest.TestCase):
         path = self.root / "data/work" / usage_schema.AGENT_STORES[name]
         return json.loads(path.read_text())
 
+    def test_statistics_failure_happens_after_token_publication(self):
+        order = []
+        self.push.side_effect = lambda _: order.append("tokens")
+        def fail(*args, **kwargs):
+            order.append("statistics")
+            raise ValueError("private details")
+        with patch.object(sync_usage.collect_statistics, "collect", side_effect=fail), redirect_stderr(io.StringIO()) as errors:
+            result = sync_usage._sync("data/work", no_push=False, include_statistics=True)
+        self.assertEqual(result, 1)
+        self.assertEqual(order, ["tokens", "statistics"])
+        self.assertNotIn("private details", errors.getvalue())
+        self.assertEqual(self.stored("codex")["2026-09-07"]["totalTokens"], 22)
+
+    def test_personal_statistics_use_personal_directory(self):
+        with patch.object(sync_usage.collect_statistics, "collect", return_value={"sources": {}, "multica": None}) as collect:
+            result = sync_usage._sync("data/personal", no_push=False, include_statistics=True)
+        self.assertEqual(result, 0)
+        collect.assert_called_once_with(self.root / "data/personal")
+        self.assertEqual(self.push.call_count, 2)
+
     def test_each_reader_reaches_its_own_store(self):
         self.assertEqual(sync_usage._sync("data/work", no_push=True), 0)
         for name, tokens in {"claude": 11, "codex": 22, "opencode": 33,
