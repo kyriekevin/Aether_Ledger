@@ -19,72 +19,60 @@
 > Public by design. The ledger keeps anonymized aggregates only — no prompts, sessions,
 > repository names, hostnames, usernames, or working directories are ever recorded.
 
-Aether Ledger records how I use Claude Code, Codex, TRAE CLI, and DSH—launched by hand or sent out
-by Multica—and makes that activity visible.
-Historical OpenCode-launched usage remains in the ledger as a legacy harness bucket.
-Tokens are not skill points; they are the compute resources I spend while turning ideas into
-useful work.
+Work and personal tasks become issues in Multica. I dispatch them to agents configured as
+**harness × model × effort**. This ledger tracks those combinations and the compute they use.
 
 ## Activity
 
-![Aether Ledger activity dashboard](assets/token-activity.svg)
+![Token activity](assets/token-activity.svg)
 
-Costs are API-equivalent estimates based on the captured model usage, not an actual subscription
-bill. Active days count every calendar day with a positive token total.
+Full history across all environments. Tokens include cache reads; costs are API-equivalent estimates.
 
-## Topology
+## Work
 
-![Aether Ledger recent compute topology](assets/token-topology.svg)
+### Task assignment and compute
 
-![Aether Ledger compute topology history](assets/token-topology-history.svg)
+![Work issue assignment and model combinations](assets/readme-work-execution-en.svg)
 
-Topology shows which active agents serve each public environment over the latest 30 days.
-The history view compares the previous four weeks with the latest four weeks, showing how each
-environment's weekly total and harness mix changed.
-`Development` combines persistent devboxes with on-demand GPU trail workers.
+Current issue assignments are grouped by harness. Token bars show **harness × model × effort**
+on common verified dates, using one scale. Assignment and usage cover different time windows.
 
-## Allocation
+### Task progress
 
-![Aether Ledger compute allocation dashboard](assets/compute-allocation.svg)
+![Work human comments and task groups](assets/readme-work-process-en.svg)
 
-![Aether Ledger model allocation history](assets/compute-allocation-history.svg)
+Watch for sustained changes in human participation. Comments include clarification and decisions,
+not just corrections. The distribution counts retained lifetime comments on current issues;
+parent, child and standalone tasks have different ages and responsibilities.
 
-The current view keeps the trailing 30-day model mix; the history view compares four weekly model
-stacks with the preceding four, using absolute Top 3 + Other values within each harness.
+<details>
+<summary>Work trends: tokens, execution amplification and workflow returns</summary>
 
-## Runtime
+![Work usage and process trends](assets/readme-work-trends-en.svg)
 
-![Aether Ledger runtime profile](assets/runtime-profile.svg)
+More runs per triggering comment can prompt a check of dispatch and runtime conditions.
+Review returns can prompt a check of task scope. Neither is a quality or failure score.
+Each chart uses its own scale; a missing day or absent ratio denominator is marked with a dash.
 
-![Aether Ledger runtime history](assets/runtime-history.svg)
+</details>
 
-The current view shows the latest 30-day effort mix across every harness, and Codex's Fast
-share and latest seven-day quota peak. The history view uses smaller weekly effort stacks, a Fast
-trajectory, and weekly seven-day quota peak bars, so magnitude comes from length, height, and
-position rather than color intensity. Effort is read from every harness's own session logs; Fast
-and quota are Codex fields, and no equivalent exists in Claude's logs.
+<details>
+<summary>Personal: assignment, compute and task progress</summary>
 
-## Ledger
+![Personal issue assignment and model combinations](assets/readme-personal-execution-en.svg)
 
-The public-safe aggregates live under [`data/`](data/), grouped by durable role (`personal`,
-`work`, and `devbox`) plus anonymized ephemeral `trail` workers.
+![Personal human comments and task groups](assets/readme-personal-process-en.svg)
 
-## How it works
+![Personal usage and process trends](assets/readme-personal-trends-en.svg)
 
-```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  scheduled sync, launched by hand or by Multica
-        ▼
-usage/YYYY-MM-DD ── intraday aggregate commits
-        │  daily rollover, after Asia/Shanghai midnight
-        ▼
-main ── squash-merged day + regenerated dashboards
-        │
-        └─→ completed branch deleted, today's branch created
-```
+Personal uses its own machine's snapshots and verified dates, with the same definitions as Work.
 
-Usage lands throughout the day on the dated branch; `main` only receives completed days from the
-rollover workflow. Human changes go through pull requests gated by `make verify`.
+</details>
+
+New statistics begin at their effective dates; missing collection is never counted as zero.
+Chat share and per-issue tokens are omitted until reliable aggregates exist.
+
+[Metric definitions and historical panels](docs/dashboard-details.md) · [Issue activity](docs/issue-activity.md)
 
 ## Documentation
 

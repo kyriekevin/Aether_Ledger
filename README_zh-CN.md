@@ -19,69 +19,57 @@
 > 本仓库以公开为前提设计。账本只保存匿名化聚合数据——绝不记录提示词、会话、仓库名称、
 > 主机名、用户名或工作目录。
 
-Aether Ledger 记录我如何使用 Claude Code、Codex、TRAE CLI 与 DSH，自己开的和 Multica 派出去跑的
-都算，并让这些活动清晰可见。
-历史上经 OpenCode 启动的用量仍保留在账本中，但统一归入 Legacy harness。
-Token 不是技能点，而是我把想法转化为有价值成果时所投入的算力资源。
+工作和个人任务在 Multica 中成为 issue，再派发给按 **harness × model × effort** 配置的 agent。
+这份账本记录这些组合，以及实际消耗的算力。
 
-## 活动
+## 使用节奏
 
-![Aether Ledger 活动面板](assets/token-activity.svg)
+![Token 活动](assets/token-activity.svg)
 
-金额是根据已记录模型用量估算的 API 等价成本，并非实际订阅账单。Active days 按所有
-token 总量大于零的自然日累计。
+保留所有环境的完整历史。Token 包含缓存读取；金额是 API 等价成本估算。
 
-## 拓扑
+## 工作
 
-![Aether Ledger 近期算力拓扑](assets/token-topology.svg)
+### 任务分配与算力
 
-![Aether Ledger 算力拓扑历史](assets/token-topology-history.svg)
+![工作的 Issue 分配与模型组合](assets/readme-work-execution-zh.svg)
 
-拓扑图展示最近 30 天里各公开环境由哪些活跃 agent 提供算力。`Development` 合并常驻
-开发机与按需申请的 GPU trail worker；历史图用前 4 周与近 4 周对照，展示每个环境的
-周度总量与 harness 组合如何变化。
+当前 Issue 分配按 harness 合并；Token 横条展示共同有效日期内的 **harness × model × effort**
+组合，统一比例尺。任务分配与用量分别标明日期。
 
-## 分配
+### 任务推进
 
-![Aether Ledger 算力分配面板](assets/compute-allocation.svg)
+![工作的人工评论与任务分组](assets/readme-work-process-zh.svg)
 
-![Aether Ledger 模型分配历史](assets/compute-allocation-history.svg)
+观察人工参与是否持续增加。评论包含澄清、决策与补充，不等于纠错轮次。
+分布统计当前 Issue 保留的累计评论；父任务、子任务和独立任务的年龄与职责不同，不能直接比较优劣。
 
-当前图保留最近 30 日模型组合；历史图用近 4 周与此前 4 周的绝对量 Top 3 + Other 周度
-堆叠，展示各 harness 内部的模型迁移。
+<details>
+<summary>展开工作趋势：Token、执行放大与流程回流</summary>
 
-## 运行
+![工作的用量与任务流程趋势](assets/readme-work-trends-zh.svg)
 
-![Aether Ledger 运行概况](assets/runtime-profile.svg)
+每条触发评论对应更多执行时，可检查派发与运行环境；Review 回流增加时，可检查任务范围。
+这些指标不直接代表质量或失败。各图独立比例尺；缺失日期、比值无分母时用短横线标记。
 
-![Aether Ledger 运行历史](assets/runtime-history.svg)
+</details>
 
-当前图展示各 harness 最近 30 天的 effort 组合，以及 Codex 的 Fast 占比和最近一天的 7 天额度
-峰值。历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线和每周 7 天额度峰值柱，让数值通过长度、
-高度和位置表达，不再依赖颜色深浅。effort 从各 harness 自己的 session 日志读取；Fast 和额度是
-Codex 的字段，Claude 的日志里没有对应物。
+<details>
+<summary>展开个人数据：任务分配、算力与任务推进</summary>
 
-## 账本
+![个人的 Issue 分配与模型组合](assets/readme-personal-execution-zh.svg)
 
-适合公开的聚合数据统一收敛在 [`data/`](data/) 下，以长期角色（`personal`、`work`、
-`devbox`）和匿名的临时 `trail` 节点组织。
+![个人的人工评论与任务分组](assets/readme-personal-process-zh.svg)
 
-## 工作原理
+![个人的用量与任务流程趋势](assets/readme-personal-trends-zh.svg)
 
-```text
-Claude Code · Codex · TRAE CLI · DSH
-        │  定时同步，自己开的和 Multica 派出去跑的都采
-        ▼
-usage/YYYY-MM-DD ── 当天聚合提交持续写入
-        │  Asia/Shanghai 跨日后触发 rollover
-        ▼
-main ── squash merge 当天数据 + 重新渲染面板
-        │
-        └─→ 删除已完成分支，创建当天新分支
-```
+个人数据取自个人机器的快照与有效日期，指标口径与工作数据相同。
 
-当天用量只写入日期分支；`main` 只接收 rollover workflow 合入的完整天。人工改动一律走
-PR，并以 `make verify` 作为交付门槛。
+</details>
+
+新统计从各自生效日期开始，漏采不当成零值。Chat 占比、每 Issue Token 暂无可靠汇总，暂不展示。
+
+[指标口径与历史图表](docs/dashboard-details_zh-CN.md) · [Issue 活动统计](docs/issue-activity_zh-CN.md)
 
 ## 文档导航
 

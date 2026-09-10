@@ -623,8 +623,8 @@ Work, Personal, and Development, so bar height preserves each environment's tota
 shows harness substitution. Allocation history uses absolute Top 3 model + Other stacks within
 each harness. Missing model coverage stays blank or gray rather than being plotted as zero.
 
-The README therefore reads as activity, then current/history pairs for topology, allocation, and
-runtime. The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
+The README retains activity and adds issue-to-agent configuration allocation and a harness/model
+period comparison. Collection, dates, and all diagnostic charts are in [Dashboard details](dashboard-details.md). The runtime snapshot uses lengths and exact values for effort, Fast, and the latest day's
 seven-day quota peak. Its history uses smaller weekly effort stacks, a Fast trajectory, and weekly
 seven-day quota peak bars. Effort covers every harness; Fast and quota are Codex-only, so a single
 quota series is centred on each week rather than paired against an empty slot. Color identifies a harness or effort category while geometry shows
