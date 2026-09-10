@@ -40,4 +40,3 @@ def read_model(root: Path) -> dict:
             assignmentDate=(statistics.get('multica') or {}).get('assignment', {}).get('asOf')
                 if (statistics.get('multica') or {}).get('assignment') else None)
     return result
-
