@@ -1,63 +1,62 @@
 #!/usr/bin/env -S uv run --script
-"""Build a self-contained review artifact; never writes generated ledger stores."""
+"""Generate static README review copies, optionally with marked fictional data."""
 from __future__ import annotations
 import argparse
-import json
+from datetime import date, timedelta
 from pathlib import Path
-from dashboard_story import statistics_assignment
-from render_dashboard import aggregate_daily, render_svg
+import shutil
+from readme_data import read_model
+from readme_dashboard import panels
 
 
-def read_model(root: Path) -> dict:
-    result = {}
-    for role in ('work', 'personal'):
-        path = root / 'data' / role / 'statistics.json'
-        statistics = json.loads(path.read_text()) if path.exists() else {}
-        sources = statistics.get('sources', {})
-        # Include every published source in the coverage intersection. Unready
-        # sources must not silently disappear and make partial usage look whole.
-        valid_sets = []
-        for source in sources.values():
-            start = source['metrics']['modelEffort']['effectiveFrom']
-            valid_sets.append({d for d, row in source['days'].items()
-                               if start and d >= start and 'modelEffort' in row['validMetrics']
-                               and source['status'] == 'ok'})
-        common = sorted(set.intersection(*valid_sets)) if valid_sets else []
-        days = {}
-        for day in common:
-            rows = {}
-            for source, payload in sources.items():
-                harness = source.removesuffix('-multica')
-                for row in payload['days'][day]['combinations']:
-                    key = (harness, row['model'], row['effort'])
-                    rows[key] = rows.get(key, 0) + row['totalTokens']
-            days[day] = [dict(harness=h, model=m, effort=e, tokens=n)
-                         for (h, m, e), n in rows.items() if n]
-        activity_path = root / 'data' / role / 'issue-activity.json'
-        activity = json.loads(activity_path.read_text()) if activity_path.exists() else None
-        assignment = statistics_assignment(root)
-        result[role] = dict(days=days, sources=list(sources), activity=activity,
-            assignment=[r for r in (assignment or {}).get('configurations', [])
-                        if r['role'] == role and sum(r['issues'].values())],
-            assignmentDate=(statistics.get('multica') or {}).get('assignment', {}).get('asOf')
-                if (statistics.get('multica') or {}).get('assignment') else None)
+def example_model():
+    """Fictional layout fixture. Never written to data/ or used by production."""
+    result={}
+    configs=[('codex','gpt-6-astra','low',110),('codex','gpt-6-astra','medium',80),
+             ('claude','claude-opus-4-6','xhigh',44),('traex','gpt-5.5','medium',36),
+             ('dsh','deepseek-v4-pro','high',12)]
+    for role,scale in [('work',1),('personal',.37)]:
+        days={};events={}
+        for i in range(28):
+            d=(date(2026,8,1)+timedelta(days=i)).isoformat()
+            days[d]=[dict(harness=h,model=m,effort=e,tokens=round(n*100000*scale*(.4+((i*7+j*3)%11)/10)))
+                     for j,(h,m,e,n) in enumerate(configs)]
+            human=round((5+(i*3)%17)*scale)
+            events[d]=dict(valid=True,humanComments=human,humanTriggeredRuns=human+(8 if i%5==0 else 1),
+                           triggeringHumanComments=human,reviewReturns=3 if i%6==0 else 0,reopens=1 if i%10==0 else 0)
+        groups={g:dict(zip(['zero','oneTwo','threeFive','sixTen','elevenPlus'],ns))
+                for g,ns in [('standalone',[6,9,7,3,2]),('parent',[1,2,2,3,4]),('child',[9,7,2,1,0])]}
+        result[role]=dict(days=days,sources=['codex','claude','traex','dsh'],
+            assignment=[dict(harness=h,model=m,effort=e,issues={'done':round((20-i*3)*scale)}) for i,(h,m,e,n) in enumerate(configs)],
+            assignmentDate='2026-08-28',activity=dict(status='ok',lastSuccess='2026-08-29',
+            metrics={'activity':{'effectiveFrom':'2026-08-01'}},days=events,
+            current={'available':True,'humanCommentDistribution':groups}))
     return result
 
 
-def build(root: Path, output: Path):
-    totals = aggregate_daily(root)
-    last = max(totals)
-    heatmap = render_svg(totals, last)
-    template = (root / 'scripts' / 'readme_preview.html').read_text()
-    payload = json.dumps(read_model(root), ensure_ascii=True).replace('<', '\\u003c')
-    text = template.replace('__LEDGER_DATA__', payload).replace('__HEATMAP__', heatmap)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(text)
+def build(root, output, example=False):
+    # Preview copies must not overwrite the checkout or its public assets.
+    if output.resolve().is_relative_to(root.resolve()):
+        raise ValueError('preview output must be outside the repository')
+    assets=output/'assets';assets.mkdir(parents=True,exist_ok=True)
+    for name,svg in panels(example_model() if example else read_model(root)):
+        if example:
+            mark='布局示例 · 虚构数据' if name.endswith('-zh.svg') else 'LAYOUT EXAMPLE · FICTIONAL DATA'
+            svg=svg.replace('</svg>',f'<text x="480" y="15" text-anchor="middle" font-size="10" fill="#df8e1d">{mark}</text>\n</svg>')
+        (assets/name).write_text(svg)
+    shutil.copyfile(root/'assets/token-activity.svg',assets/'token-activity.svg')
+    for name,notice in [('README.md','Layout example: new panels use fictional data; the heatmap uses real history.'),
+                        ('README_zh-CN.md','布局示例：新面板使用虚构数据；热力图使用真实历史。')]:
+        text=(root/name).read_text()
+        if example:
+            text='> **'+notice+'**\n\n'+text
+        (output/name).write_text(text)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[1])
-    parser.add_argument('--output', type=Path, required=True)
-    args = parser.parse_args()
-    build(args.root, args.output)
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root',type=Path,default=Path(__file__).resolve().parents[1])
+    parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--example',action='store_true')
+    args=parser.parse_args()
+    build(args.root,args.output,args.example)

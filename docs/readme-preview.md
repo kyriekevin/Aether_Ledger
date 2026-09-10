@@ -1,15 +1,28 @@
-# README candidate preview
+# Static README preview
 
 [简体中文](readme-preview_zh-CN.md)
 
-Generate a self-contained local review artifact:
+The candidate uses only Markdown, static SVG images and native `<details>` sections. Work is
+expanded by default; supplementary Work trends and Personal data are collapsed. There are no
+scripted filters, buttons or dynamic charts. English and Chinese have equivalent layouts.
+
+Regenerate the real assets with `uv run python scripts/render_dashboard.py`. `make verify`
+checks their freshness. The production renderer only reads public repository aggregates.
+
+For a separate visual review copy:
 
 ```sh
-uv run python scripts/readme_preview.py --output /tmp/aether-readme-preview.html
+uv run python scripts/readme_preview.py --output /tmp/aether-readme-static
+uv run python scripts/readme_preview.py --output /tmp/aether-readme-example --example
 ```
 
-Open the HTML in a browser. It defaults to real public aggregates. The optional **Layout example** uses fictional data for execution and task-process panels; the full-history heatmap always uses the real ledger. No collection, installation, publishing or ledger mutation occurs.
+Each output contains both READMEs and their images. The example puts an explicit fictional-data
+label on every new chart and on the document; the full-history heatmap remains real. It cannot
+write inside the checkout. No preview data enters the ledger. Render the Markdown with raw HTML
+enabled to inspect the native disclosure sections, or view it in a GitHub-compatible renderer.
 
-The preview separates Work and Personal and lets reviewers switch composition/trend, time window, task-process metric and structural task group. English and Chinese share the same data. Execution totals use the intersection of valid model/effort dates across all published sources for that role. The date window ends at the latest available valid date, which is shown explicitly. Missing days stay missing. Issue activity has its own valid-date window; assignment and comment distributions are current snapshots, unaffected by the period control.
-
-This is an interaction prototype for README review. GitHub README images do not run these controls. Static defaults and expandable alternatives will be selected after visual review. Chat share, per-issue tokens and human interaction turns remain omitted because reliable public aggregates are unavailable. No health score is inferred.
+Execution uses common verified model/effort dates across all published sources for each role.
+Each 28-day window ends at the latest available valid date; gaps remain missing. Issue activity
+uses its own effective dates. Assignment and comment distributions are current snapshots.
+The three task groups share a bar scale but have unmatched ages and responsibilities. Comment
+counts, execution amplification and workflow returns are observations, not quality scores.

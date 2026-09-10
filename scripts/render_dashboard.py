@@ -1954,6 +1954,8 @@ def main() -> int:
             ),
         ),
     )
+    from readme_dashboard import generate as generate_readme
+    outputs = (*outputs, *generate_readme(args.root, check=args.check))
     for output, changed in outputs:
         if args.check and changed:
             print(f"stale dashboard: {output}")

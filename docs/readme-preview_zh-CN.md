@@ -1,15 +1,25 @@
-# README 候选预览
+# README 静态预览
 
 [English](readme-preview.md)
 
-生成可独立打开的本地评审文件：
+候选版只使用 Markdown、静态 SVG 图片和原生 `<details>` 折叠区。默认展开工作数据，
+补充工作趋势和个人数据收在折叠区。没有脚本筛选、按钮或动态图表，中英文布局对应。
+
+运行 `uv run python scripts/render_dashboard.py` 重新生成真实图表，`make verify`
+会检查图片是否最新。正式渲染器只读取仓库公开汇总。
+
+生成独立的视觉评审副本：
 
 ```sh
-uv run python scripts/readme_preview.py --output /tmp/aether-readme-preview.html
+uv run python scripts/readme_preview.py --output /tmp/aether-readme-static
+uv run python scripts/readme_preview.py --output /tmp/aether-readme-example --example
 ```
 
-用浏览器打开 HTML，默认展示真实公开汇总。可选的「布局示例」在执行和任务推进面板使用虚构数据；完整历史热力图始终使用真实账本。此操作不会采集、安装、发布或修改账本。
+每份输出包含中英文 README 和引用图片。示例版在每张新图及文档开头明确标注虚构数据，
+完整历史热力图仍为真实数据。输出不能位于仓库内，示例数据不会进入账本。
+用支持原生 HTML 的 Markdown 渲染器查看折叠效果，或用兼容 GitHub 的渲染器预览。
 
-预览将工作与个人分开，可切换组合／趋势、时间窗口、任务推进指标和任务结构分组。中英文使用相同数据。执行用量取该角色所有已发布来源的 Model × Effort 共同有效日期；时间窗口截至最近可用的有效日，并明确显示日期。缺失日期不补零。Issue 活动使用独立的有效日期窗口；分配与评论分布是当前快照，不受时间窗口按钮影响。
-
-这是供 README 评审的交互原型。GitHub README 图片不能运行这些按钮；静态默认视图和可展开的备选图会在视觉确认后选择。Chat 占比、每 Issue Token 和人工交互轮次尚无可靠公开汇总，因此暂不展示，也不推断健康分数。
+执行用量取每个角色所有已发布来源共同有效的 Model × Effort 日期。28 天窗口截至最近可用的
+有效日，缺失日期保持缺失。Issue 活动使用独立的生效日期；分配与评论分布是当前快照。
+三类任务的横条共用比例尺，但任务年龄与职责不同。评论数、执行放大与流程回流是观察指标，
+不代表质量分数。

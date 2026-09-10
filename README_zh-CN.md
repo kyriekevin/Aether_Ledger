@@ -22,28 +22,54 @@
 工作和个人任务在 Multica 中成为 issue，再派发给按 **harness × model × effort** 配置的 agent。
 这份账本记录这些组合，以及实际消耗的算力。
 
-## 活动
+## 使用节奏
 
 ![Token 活动](assets/token-activity.svg)
 
-Token 包含缓存读取；金额是 API 等价成本估算，并非订阅账单。
+保留所有环境的完整历史。Token 包含缓存读取；金额是 API 等价成本估算。
 
-## Issue 分派
+## 工作
 
-![按 harness 分组的 Issue 分派](assets/agent-dispatch-zh.svg)
+### 任务分配与算力
 
-读取每台机器的当前分派记录，按 harness 和 model × effort 分组，只展示已有分派的组合。
-工作和个人各自提供自己的记录，快照日期分别显示。
+![工作的 Issue 分配与模型组合](assets/readme-work-execution-zh.svg)
 
-## Harness × Model × Effort
+当前 Issue 分配按 harness 合并；Token 横条展示共同有效日期内的 **harness × model × effort**
+组合，统一比例尺。任务分配与用量分别标明日期。
 
-![已验证的模型与 effort 用量](assets/model-matrix-zh.svg)
+### 任务推进
 
-只使用指标生效后的有效日期。实色代表工作，浅色代表个人；图中列出已覆盖来源，取这些来源的
-共同有效日期。连续积累 56 个有效日后才显示前后期对比，此前只显示已观测用量。
-漏采不会当成零值，热力图继续保留完整历史。
+![工作的人工评论与任务分组](assets/readme-work-process-zh.svg)
 
-[模型历史、effort、Fast、额度与指标口径](docs/dashboard-details_zh-CN.md)
+观察人工参与是否持续增加。评论包含澄清、决策与补充，不等于纠错轮次。
+分布统计当前 Issue 保留的累计评论；父任务、子任务和独立任务的年龄与职责不同，不能直接比较优劣。
+
+<details>
+<summary>展开工作趋势：Token、执行放大与流程回流</summary>
+
+![工作的用量与任务流程趋势](assets/readme-work-trends-zh.svg)
+
+每条触发评论对应更多执行时，可检查派发与运行环境；Review 回流增加时，可检查任务范围。
+这些指标不直接代表质量或失败。各图独立比例尺；缺失日期、比值无分母时用短横线标记。
+
+</details>
+
+<details>
+<summary>展开个人数据：任务分配、算力与任务推进</summary>
+
+![个人的 Issue 分配与模型组合](assets/readme-personal-execution-zh.svg)
+
+![个人的人工评论与任务分组](assets/readme-personal-process-zh.svg)
+
+![个人的用量与任务流程趋势](assets/readme-personal-trends-zh.svg)
+
+个人数据取自个人机器的快照与有效日期，指标口径与工作数据相同。
+
+</details>
+
+新统计从各自生效日期开始，漏采不当成零值。Chat 占比、每 Issue Token 暂无可靠汇总，暂不展示。
+
+[指标口径与历史图表](docs/dashboard-details_zh-CN.md) · [Issue 活动统计](docs/issue-activity_zh-CN.md)
 
 ## 文档导航
 

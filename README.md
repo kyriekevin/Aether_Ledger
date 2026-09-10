@@ -26,25 +26,53 @@ Work and personal tasks become issues in Multica. I dispatch them to agents conf
 
 ![Token activity](assets/token-activity.svg)
 
-Token use includes cache reads. Costs are API-equivalent estimates, not subscription bills.
+Full history across all environments. Tokens include cache reads; costs are API-equivalent estimates.
 
-## Issue allocation
+## Work
 
-![Issue allocation grouped by harness](assets/agent-dispatch.svg)
+### Task assignment and compute
 
-Current assignments from each machine, grouped by harness and model × effort. Only assigned
-combinations appear. Work and Personal contribute their own rows; snapshot dates are shown separately.
+![Work issue assignment and model combinations](assets/readme-work-execution-en.svg)
 
-## Harness × Model × Effort
+Current issue assignments are grouped by harness. Token bars show **harness × model × effort**
+on common verified dates, using one scale. Assignment and usage cover different time windows.
 
-![Verified model and effort usage](assets/model-matrix.svg)
+### Task progress
 
-Only verified days after each metric takes effect are included. Solid bars represent Work;
-light bars represent Personal. The chart lists its covered sources and uses their common valid days.
-A previous-period comparison appears after 56 consecutive valid days; until then, only observed
-usage is shown. Missing collection is never treated as zero. The heatmap keeps its full history.
+![Work human comments and task groups](assets/readme-work-process-en.svg)
 
-[Model history, effort, Fast, quota, and metric definitions](docs/dashboard-details.md)
+Watch for sustained changes in human participation. Comments include clarification and decisions,
+not just corrections. The distribution counts retained lifetime comments on current issues;
+parent, child and standalone tasks have different ages and responsibilities.
+
+<details>
+<summary>Work trends: tokens, execution amplification and workflow returns</summary>
+
+![Work usage and process trends](assets/readme-work-trends-en.svg)
+
+More runs per triggering comment can prompt a check of dispatch and runtime conditions.
+Review returns can prompt a check of task scope. Neither is a quality or failure score.
+Each chart uses its own scale; a missing day or absent ratio denominator is marked with a dash.
+
+</details>
+
+<details>
+<summary>Personal: assignment, compute and task progress</summary>
+
+![Personal issue assignment and model combinations](assets/readme-personal-execution-en.svg)
+
+![Personal human comments and task groups](assets/readme-personal-process-en.svg)
+
+![Personal usage and process trends](assets/readme-personal-trends-en.svg)
+
+Personal uses its own machine's snapshots and verified dates, with the same definitions as Work.
+
+</details>
+
+New statistics begin at their effective dates; missing collection is never counted as zero.
+Chat share and per-issue tokens are omitted until reliable aggregates exist.
+
+[Metric definitions and historical panels](docs/dashboard-details.md) · [Issue activity](docs/issue-activity.md)
 
 ## Documentation
 
