@@ -29,6 +29,7 @@ def row(tokens):
 class PipelineTests(unittest.TestCase):
     def setUp(self):
         self.stack = ExitStack()
+        self.activity = self.stack.enter_context(patch.object(sync_usage.issue_activity, "collect", return_value=None))
         self.addCleanup(self.stack.close)
         self.root = Path(self.stack.enter_context(tempfile.TemporaryDirectory()))
         self.stack.enter_context(patch.object(usage_schema, "DATA_REPO_DIR", self.root))
@@ -75,6 +76,13 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(result, 0)
         collect.assert_called_once_with(self.root / "data/personal")
         self.assertEqual(self.push.call_count, 2)
+
+    def test_activity_failure_does_not_block_token_or_statistics_publication(self):
+        self.activity.side_effect = ValueError("private issue content")
+        with patch.object(sync_usage.collect_statistics, "collect", return_value={"sources": {}, "multica": None}), redirect_stderr(io.StringIO()) as errors:
+            self.assertEqual(sync_usage._sync("data/work", no_push=False, include_statistics=True), 1)
+        self.assertEqual(self.push.call_count, 2)
+        self.assertNotIn("private issue content", errors.getvalue())
 
     def test_each_reader_reaches_its_own_store(self):
         self.assertEqual(sync_usage._sync("data/work", no_push=True), 0)

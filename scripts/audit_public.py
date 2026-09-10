@@ -319,6 +319,16 @@ def audit_tree(root: Path) -> list[str]:
                 _validate_store_schema(parsed, relative, issues)
         elif relative == Path(MULTICA_TASK_STORE) and parsed_ok:
             _validate_multica_schema(parsed, relative, issues)
+        elif path.name == "issue-activity.json" and parsed_ok:
+            from issue_activity import validate
+            try:
+                if len(relative.parts) != 3 or relative.parts[0] != "data" or relative.parts[1] not in DURABLE_NODES:
+                    raise ValueError("invalid activity location")
+                validate(parsed)
+                if parsed["role"] != relative.parts[1]:
+                    raise ValueError("activity role mismatch")
+            except (ValueError, TypeError, KeyError):
+                issues.append(f"{relative}: invalid public issue activity")
         elif path.name == "statistics.json" and parsed_ok:
             from collect_statistics import allowed_models
             from statistics_schema import validate

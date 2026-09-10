@@ -714,3 +714,5 @@ uv run --script scripts/compact_trails.py --dry-run
 - 工作区不干净时，自动日期切换会停止，不会把改动带入另一天。
 - rollover 失败时会保留源分支，也不会基于过期的 `main` 创建当天分支。
 - 规范 JSON 损坏时，面板生成会失败，不会静默发布不完整聚合。
+
+同一可选统计计划也会采集 Issue 评论、执行关联和状态事件。隐私、范围、生效及恢复规则见 [Issue 活动采集](issue-activity_zh-CN.md)。

@@ -813,3 +813,5 @@ completed source read alone is not evidence of publication.
 - A failed rollover keeps the source branch and does not create today from stale `main`.
 - A malformed canonical JSON store makes dashboard generation fail instead of silently publishing
   an incomplete aggregate.
+
+Issue comments, execution links and workflow events are collected by the same opt-in statistics schedule. See [Issue activity collection](issue-activity.md) for privacy, scope, validity and recovery.
