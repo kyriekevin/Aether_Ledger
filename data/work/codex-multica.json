@@ -413,10 +413,10 @@
     "models": {
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 560000,
-        "inputTokens": 76371,
-        "outputTokens": 4655,
-        "totalTokens": 641026
+        "cacheReadTokens": 1013120,
+        "inputTokens": 85093,
+        "outputTokens": 10515,
+        "totalTokens": 1108728
       }
     },
     "quota": {
@@ -428,14 +428,14 @@
     "routing": {
       "efforts": {
         "high": {
-          "calls": 10,
-          "reasoningCalls": 10,
-          "reasoningOutputTokens": 1016,
-          "totalTokens": 641026
+          "calls": 15,
+          "reasoningCalls": 15,
+          "reasoningOutputTokens": 1440,
+          "totalTokens": 1108728
         }
       }
     },
-    "totalCost": 1.5564600000000002,
-    "totalTokens": 641026
+    "totalCost": 2.3898,
+    "totalTokens": 1108728
   }
 }
