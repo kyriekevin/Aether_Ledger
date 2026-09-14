@@ -1,351 +1,63 @@
 # 运维说明
 
-[English](operations.md) | [简体中文](operations_zh-CN.md)
+[English](operations.md)
 
-## 数据来源与留存
+## 采集范围
 
-每台写入设备通过 `ccusage daily --json --by-agent` 读取本地用量，并把准确的 agent 明细
-分别写入 Claude、Codex 与 OpenCode 数据文件。模型名只作为明细保留，不再用于推断调用端：
-因此 Claude Code 经 cc-switch 等路由器调用的模型仍归入 Claude，同时保留真实模型名。
-Codex 的 `image_gen` PNG 会按本地文件修改时间单独计数，因为它们不会作为 LLM token
-事件出现。
+账本从本地会话日志采集每天的 token 和 API 等价成本，不查询 Multica 任务、issue、agent 或评论，也不采集 effort 和 quota。定价和校正仍需要模型名称及输入、输出、缓存 token 明细。
 
-TRAE CLI（traex）继续使用独立采集路径。它是 Codex 的一个分支，会以相同的
-`rollout-*.jsonl` 会话格式写入
-`~/.trae/cli`（而非 `~/.codex`）。`ccusage` 没有 `trae` agent，但其 `codex` 读取器认
-`CODEX_HOME`，因此每台写入设备会额外跑一次只读的 `ccusage codex daily`，结果记入独立的
-`traex.json`，且完全不触碰真实的 `~/.codex` 树。TRAE CLI 记录的模型名带大写
-（`GPT-5.5`、`Gemini-3-Flash-Preview`），因此采集前会
-先把 traex 会话镜像到一个临时 `CODEX_HOME`，仅对其中的 `"model"` 字段做归一化，真实的
-`~/.trae/cli` 树不会被写入。归一化做两件事：转小写以匹配共享价格表；并把 TRAE CLI
-的匿名 Claude 别名（`openrouter-1o`/`2o`/`3o`，含
-`__max` 变体）解析为其背后的真实 Anthropic Opus slug（`claude-opus-4-6`/`4-7`/`4-8`），使其也能
-定价。此外还会把 TRAE 的 Gemini 短配置名（`gemini-3.1-pro`、`gemini-3-flash`）合并到其模型
-元数据记录的官方 preview slug，使新旧会话进入同一个累计模型桶。
-
-DeepSeek Harness（dsh）直接读它自己的日志：ccusage 没有 `dsh` agent，无法像 traex 借用 Codex
-读取器那样借用。一个 dsh harness home 下每个会话有一份追加写的 JSONL 事件日志，位于
-`<root>/<project>/<session>/session.jsonl[.zstd]`。采集器用 `session` 生成仅在内存中存在的去重键，
-用 `request/header` 和 `request/context` 确定后续调用的模型，并从 `assistant/message` 读取单次调用的
-token 计数。
-dsh 的计数彼此不重叠——`inputTokens` 不含命中缓存的输入，缓存读写单独上报——所以四项相加就是
-计费总量，与 ccusage 采集的几个 store 是同一套口径。普通运行的数据写入 `dsh.json`，按官方 standard 价格
-计算；dsh 不记录优先级 tier，没有可用的乘数。effort 取自 header 的 `reasoningEffort`：dsh 的
-`off` 记为本仓库的 `none`；它的 `minimal` 在本仓库没有对应档位，因此不记 effort 桶，而不是并入
-`low`。
-
-会话日志通常经 Zstandard 压缩，形式是每个持久化批次一个可独立解码的 frame 拼接而成。采集器优先
-用 Python 自带的 `compression.zstd`（3.14+），否则调本地 `zstd` 二进制。在钉死的 3.11 下永远
-是后者；进程内那条分支是留给将来抬高钉子用的，两者对同一份文件返回相同的前缀。能解出来的部分
-照常保留，并报告有多少份日志没有解到结尾。保留半份是安全的：frame 只追加不重写，
-每轮又是拿整个文件重算当天，所以半份读取会被完整读取取代，而不是相加。
-
-没解到结尾最常见的原因就是活跃会话最后一个还没写完的 frame。采集器不声称能把它和损坏的 frame
-区分开——也确实做不到：zstd 对单字节损坏会报出七种不同消息，其中一种和活跃会话一模一样是
-`premature end`；而 frame 边界也无法靠扫描魔数确定，因为那四个字节同样会出现在压缩负载内部。
-所以这个计数不附带原因推断。真正的信号是：没有 dsh 会话在跑，这个计数却一直不归零，那就是
-真的损坏了。两种解码器都没有的机器会报告有多少份日志完全读不了，并保持累计 store 不变——和
-ccusage 抓取失败时的行为一致。
-
-解码在第一个解不开的 frame 处停下，不会跳过它继续往后读。对最常见的那种原因来说，torn frame
-后面本来就没有东西可丢。真正有代价的是文件中间的 frame 损坏：它后面的批次要等到文件被修复或
-轮转掉才会被读到。在那之前，按天的高水位合并会让已记录的那些天保持不动，账本是停住而不是掉
-下去。这就是不去猜 frame 边界所接受的代价——早先的版本猜过，而那次猜测正是让完好 frame 变得
-解不开的原因。
-
-Multica 是编排器而不是 harness：它在自己的 workspace 里驱动 Claude Code、Codex、TRAE CLI 和
-dsh，这些用量属于对应 CLI 的 store。它跑的 Claude 和 TRAE 本来就写进 `~/.claude/projects` 和
-`~/.trae/cli/sessions`，无需额外处理。Codex 和 dsh 是例外：Multica 的 Codex rollout 既可能进入
-共享目录 `~/.codex/multica-sessions`，直接 chat 时也可能只留在任务私有的
-`codex-home/sessions` 或 `codex-home/archived_sessions` 中。这些日志不在普通 Codex 的
-`~/.codex/sessions` 下。
-采集器读取共享树，并从 `MULTICA_TASK_WORKSPACES_ROOT` 下发现任务私有目录，按包含 session ID 的 rollout 文件名去重
-（实时副本冲突时取较大的一份），再通过一个临时 `CODEX_HOME` 用同一个 Codex 读取器读取，写进独立的
-store `codex-multica.json`。Multica 还会把 dsh 日志放到
-`~/.multica/profiles/<profile>/dsh-sessions`。`dsh-multica.json` 始终只绑定一棵 profile 日志树：
-只发现一棵时自动选择，并把选择写入 `~/.config/token-activity/multica_dsh_profile`；首次绑定前发现
-多棵时，由 `MULTICA_DSH_PROFILE` 指定一个 profile 目录名。绑定的目录消失或配置改指另一棵树时，
-采集器会保留已有高水位并拒绝换源，不会把同一个 store 静默复用给另一个 profile。这个选择与
-`MULTICA_PROFILE` 相互独立，因为 API 任务采集和本地 DSH 执行可能使用不同 profile。
-
-既然这些 token 已经通过各自的 harness 进入账本，就不再向 Multica API 要 token 总量——那会把同一份
-工作数两遍，而且两个测量还对不上（2026-08-31 API 报 21.63M，本地 rollout 解析出 21.50M）。只有
-Multica 知道的是它下发的工作形态，所以 `data/multica.json` 只记这个：按天、按公开角色、按 agent，
-多少个 run 结束了、怎么结束的、跑了多久。审计会拒绝这个文件里出现 `usage` 段——重新引入重复计数
-就是长那个样子。
-
-这个 store 放在 data 根目录而不是某个节点标签下，因为一次 API 调用覆盖所有 runtime；由单台配置过的
-机器采集，保证一个文件只有一个写入者。定时 token 同步不再查询任务元数据。
-需要刷新时，按[手动同步](#manual-sync)示例添加 `--include-multica-tasks`：脚本先尝试发布 token
-数据，再查询 API，并单独尝试发布任务数据。推送失败不会阻止后续 API 步骤。已有任务历史保留，
-只有 `work` writer 会执行这项操作。还需配置：
-`~/.config/token-activity/multica_runtime_roles.json` 必须把每个 runtime 的自定义名映射到 `work`、
-`personal` 或 `devbox`。没有这个文件的机器什么都不采，而不是去猜；provider 不在已知集合里的 runtime
-会在 stderr 上报出来，而不是静默跳过——provider 字符串一旦改名，静默跳过看起来就和"这个 provider
-没干活"一模一样。
-
-Multica 的私有启动参数统一放在 `~/.config/token-activity/multica.json`；复制
-`config/multica.example.json` 后替换占位值。installer 只接受 `profile`、`workspaceId`、
-`dshProfile` 和 `taskWorkspacesRoot` 四个字段，校验后写入 launchd 环境。其中
-`taskWorkspacesRoot` 是 Multica 任务工作区的本地父目录。采集器按 `codex-home` 结构发现日志，
-不依赖任务名称或嵌套层数；找到 harness home 后停止向下搜索，并跳过 Git 和依赖目录。
-profile、任务和 harness 目录的符号链接会继续遍历；按目录的实际身份避免重复读取。
-只有不穿过其他有效 home 就能到达的 home 声明才成为来源，已排除的缓存声明不会遮挡独立任务路径。
-互相矛盾的循环 home 别名会明确报错，不会猜测应采集哪些目录。
-即使通过别名进入 harness home，其中缓存的嵌套 home 也不会成为采集来源。
-显式配置的根目录不存在时会报错。它用于收集没有汇入共享树
-的直接 chat rollout。生成的 plist 不是第二份配置源，不应再手工修改。
-
-run 按开始时间归日（上海时区），且只统计已终结的 run：还在跑的 run 没有时长，下次还会以另一个状态
-被重新统计。每次采集中每个 run 和 issue 只计一次：workspace 边写边读时 issue 分页会重叠，同一个 run
-也可能挂在两个 issue 下。重复计数不会破坏算术关系——它同时给 `total` 和某一个结局各加一——所以下游
-什么都发现不了，而合并又会把这个虚高的总数变成永久的高水位。按天合并时保留"看得更全"的那次观测，理由和 token store 的高水位一样——已完成的 run 其
-日期、状态、时长都不会再变，所以数字变小只意味着这次抓取看到的比 store 里已知的少，而这正是
-workspace 清理旧 issue 之后会发生的事。
-
-比较的粒度是整组计数，不是逐个字段取大。逐字段取大会让 `completed` 来自一次抓取、`failed` 来自
-另一次，而这两个数从来没有描述同一批 run：两个 completed 的 run 被清理、两个 failed 的 run 落到
-同一天，逐字段取大就会得出"总数 2、结局 4"——一个从未发生过的日子，而且审计会直接拒绝。总数相同时按时长更长的那组胜出，因为终结的 run 可能在
-`completed_at` 写入之前就被返回，否则那个 0 会被永久保留。取总数更大的那一组，内部一致性由构造
-保证；代价是某天被清理又填入新 run 时，记录的是较大的那一次单独
-观测而不是两次之和。这样会少算，但方向是诚实的：两次抓取的重叠程度未知，相加等于凭空造出 run，
-而少算只是漏掉。
-
-CLI 一次只回答一个 profile、一个 workspace，而没有 issue 的 profile 返回的是空列表而不是报错，所以
-指错了地方和"这天没干活"长得一模一样。工作不在 CLI 默认 profile 时，设置 `MULTICA_PROFILE`（以及
-`MULTICA_WORKSPACE_ID`，这个 CLI 自己会读）；`--profile` 是全局 flag，放在子命令后面会被拒绝，所以
-采集器把它放在最前面。如果找到了 runtime 却一个终结 run 都没有，会在 stderr 上说出来，而不是静默
-写入一个空的天。另外两台服务器对同一个 provider 的叫法不一致——TRAE CLI 在一台上是 `traecli`，
-另一台上是 `traex`——所以两个都映射到 `traex` 这个 agent。
-
-之所以单开 store 而不是把数加进当天的 Codex 或 dsh 条目：累计合并按天保留存量与新观测中较大的
-那个，这条高水位规则是用来防止会话轮转导致历史缩水的，而它成立的前提是每个存量数字只描述
-一个固定来源。先把两棵树加起来，max() 比较的就是构成会变的和——某天 Multica 的 rollout 被清理、
-标准树却继续涨过了原来的合计，较大的那个和胜出，被清理那棵树的份额就没了，既没有信号，后续
-也没有任何一次运行能把它找回来。一棵树一个 store，每个高水位标记才名副其实；渲染时
-`AGENT_BUCKETS` 再把 `codex-multica` 归回 `codex`、把 `dsh-multica` 归回 `dsh`，所以没有任何一张图会把它们显示成独立 harness。
-这样也隔离了抓取失败：空结果什么都不合并，而合并成一份时，`--reconcile-since` 会拿只有半棵树
-的观测覆盖掉当天的 Codex。
-
-与 traex 路径不同，如果一行里每个模型都有未变更的官方费率，这条
-路径会保留 ccusage 自己算的金额——ccusage 仍然知道其中哪些调用走了优先级 tier、哪些越过了长上
-下文阈值，而按天汇总的数据说不出这些。
-
-<a id="ccusage-runtime-upgrade"></a>
-
-Astra 计价要求 ccusage 认识单次请求的 272K 阈值。稳定版 20.0.20 内嵌的快照仍较旧，
-账本使用单独缓存的上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`。
-先安装 Rust（macOS 可运行 `brew install rust`），再在每台写入设备上运行：
-
-```sh
-uv run python scripts/ccusage_runtime.py --install
-uv run python scripts/ccusage_runtime.py --check
-```
-
-读取真实会话前，执行器会用模拟请求验证低于、等于和超过 272K 的计价，包括缓存输入和已记录的
-Fast 模式。**每台写入设备必须在启用更新后的 writer 前完成安装和验证。**
-不兼容的版本会停止所有依赖 ccusage 的新增采集，不仅是 Astra；已有存储继续保留。
-如果固定版本缓存不存在，也允许通过验证的系统 `ccusage`。
-Fable 5.1 和 Astra 的价格分别从账本首次记录的 2026-09-03、2026-09-07 生效。
-更新进入 writer 后，下次同步可补算此前未计价的记录。直接运行 `ccusage` 仍使用系统安装版。
-
-Token 价格只来自 `config/official-pricing.json`。同步调用 ccusage 时强制使用 `--offline`，并注入
-由该表生成的 override，因此 LiteLLM 在线表和 models.dev 都不能再改变已存金额。ccusage 仍负责
-逐请求识别 Codex Fast/standard 与长上下文，仓库负责提供费率。未进入表的模型，以及
-`gpt-5.3-codex-spark` 这类没有公开官方 API token 价的模型，只计 token、金额按 0。这是 API
-等价估算，不是订阅账单；此时写入 `costSource: "unpriced"`。如果后续价格表加入对该日期生效的
-官方价格，下一轮同步即使 token 未增长，也可以替换这笔暂记金额。
-
-从厂商第一方来源刷新价格：
-
-```sh
-uv run --script scripts/update_pricing.py
-uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
-```
-
-第一条命令只读，同时会发现所有长期节点和 trail 数据中已有的模型名。应用前检查输出中的
-`CHANGE`、`UNPRICED` 与 `UNSUPPORTED`。官方页面抓取或解析失败时脚本直接失败，不会回退到代理商。
-`effectiveFrom` 表示该次抓取的价格从仓库哪一天开始适用，不代表模型公开发布日期。初始条目使用
-各模型在仓库中首次出现的日期。
-DeepSeek、Google Gemini、Kimi 和 MiniMax 均直接读取各自 canonical API 定价页。已登记的 Gemini
-模型在 TRAE 标示的 200K 上下文上限内使用标准文本/图片价格；采集到的 token 桶不包含音频和
-Google 缓存存储时长费用。DeepSeek 的每日汇总没有保留请求时刻，因此官方价格分峰谷档时，仓库按
-未打折的峰时价格做保守的 API 等价估算。对于有独立长上下文档位的 OpenAI 模型，只有仓库确认
-当前固定 ccusage 版本认识该模型的请求级切档阈值时才允许加入；否则输出 `UNSUPPORTED`，不会静默
-套用 ccusage 的通用 200K fallback。
-
-每日 rollover 只有在 main 已推送、完成的 usage 分支已删除、当天分支已创建后，才运行
-`update_pricing.py --require-observed-prices`。如果已观测到的公开 provider 模型没有生效中的已审核
-费率，本次 rollover workflow 会明确标红，但不会阻塞或丢弃 usage 快照；内部及明确不支持的模型族
-只做提示。新增费率仍必须走人工审核 PR，因为生效日期决定历史补价范围；定时审计本身绝不写价格表。
-Kimi 与 Gemini 解析器会从各自官方家族页面发现模型 ID，因此未来 Kimi K3 或 Gemini 新变体在首次
-产生记录后会自动暴露，不再依赖人工维护硬编码模型名单。
-
-`main` 要求 GitHub Actions 中名为 `checks` 的检查通过；检查失败或缺失都会阻止 PR 合并和人工
-直推。daily rollover 是唯一的直写者：它先审计完成日快照，把同一个候选 SHA 发布到临时分支，再
-用 `checks: write` 为该 SHA 写入成功的 `checks`，之后才推进 `main`。随后仍保持原有的故障安全
-顺序：推进 `main`、删除已完成 usage 分支、删除临时候选分支、创建当天 usage 分支。这样人工改动
-与自动收口共用同一门禁，同时不会把自动 writer 锁死。
-
-本地 Claude/Codex 会话日志会轮转。每日观测一旦进入本仓库，`sync_usage.py` 会为每台
-设备、每个 agent 和每个日期保留观测到的最高 token 总量。成本跟随胜出的 token 观测。
-若模型累计值保留了当前计价观察中已缺失的 token，费用就不完整，合并行会标为 `unpriced`。
-按日汇总无法还原缺失请求的费用，后续完整读取可以补算。
-某天已有官方计价结果时，同一 token 高水位下金额不再改变。需要有意修正历史时使用 `--reconcile-since`。
-`unpriced` 暂记是例外，拿到官方价格后允许补价。没有模型明细的旧 Claude 日期无法可靠复算，
-因此保留原金额，不猜模型。
-
-新设备只能恢复其本地日志中仍然存在的日期。
-
-## 采集模块职责
-
-`sync_usage.py` 负责命令参数、来源调度、状态报告和发布。具体实现按职责拆分：
-
-| 模块 | 职责 |
+| 数据文件 | 来源 |
 | --- | --- |
-| `usage_schema.py` | 公开存储名称、token 辅助函数和模型别名 |
-| `usage_sources.py` | 会话发现、来源绑定、去重和临时 Codex home |
-| `usage_ccusage.py` | ccusage 报告转换和仓库价格计算 |
-| `usage_dsh.py` | DSH 事件读取和压缩日志解码 |
-| `usage_telemetry.py` | 可选的 effort、速度、reasoning 和 quota 统计 |
-| `usage_store.py` | 累计合并和原子写入 |
-| `usage_git.py` | writer 身份、共享锁、日期分支和发布 |
+| `claude.json` | ccusage 读取 Claude 日志，包括写入同一日志目录的 Multica、Trae 启动的 Claude 会话 |
+| `codex.json` | ccusage 读取普通 Codex 日志 |
+| `codex-multica.json` | 发现 Multica 共享及任务私有的 Codex 日志目录后，交给 ccusage 读取 |
+| `opencode.json` | ccusage 读取 OpenCode 日志 |
+| `traex.json` | ccusage 的 Codex 解析器读取 TRAE CLI 目录，并统一模型名称 |
+| `dsh.json` | 本地 DSH JSONL 及压缩日志 |
+| `dsh-multica.json` | 已绑定 Multica profile 的 DSH 日志 |
 
-读取模块不依赖命令入口或面板渲染器。数据文件名、公开 schema、独立 writer 和 T+1 rollover
-保持兼容。Multica 任务元数据留在 `multica_usage.py`，按需开启。ccusage 运行器仍要求通过计价验证；
-验证失败会报告采集失败，不会静默视为没有新增用量。
+每个来源保留独立累计文件，避免混用累计上限。Multica Codex 日志发现会先对复制的 rollout 去重，再交给 ccusage；DSH 按会话和步骤去重。删除这些发现逻辑会漏算用量。
 
-## 前置条件
+私有来源配置位于 `~/.config/token-activity/multica.json`，模板见 [`config/multica.example.json`](../config/multica.example.json)。`dshProfile` 选择 DSH profile，`taskWorkspacesRoot` 指向任务私有 Codex 日志的上级目录。为兼容已有配置，仍接受 `profile` 和 `workspaceId`，但不会调用任务 API。DSH 在 `~/.config/token-activity/multica_dsh_profile` 保存来源绑定；更换时需主动校正数据，避免混合两个累计来源。
 
-- 安装 Homebrew 的 macOS
-- `uv`
-- 系统 `ccusage`，以及通过[计价验证](#ccusage-runtime-upgrade)的运行器；版本号本身不够
-- Rust/Cargo，用于构建尚未安装的固定版本 ccusage 运行器
-- `zstd`，用于在固定的 Python 3.11 下解码 DSH 压缩日志
-- Git，以及本仓库的已认证推送权限
-- `work` 与 `personal` 写入设备上已认证的 GitHub CLI（`gh`），用于 rollover 恢复
-- Claude Code、Codex、OpenCode、TRAE CLI（traex）或 DeepSeek Harness（dsh）的本地用量日志
+## 安装
 
-安装命令行依赖：
+Python 固定为 3.11。在 macOS 安装依赖并校验 ccusage：
 
 ```sh
 brew install uv ccusage gh rust zstd
 uv run python scripts/ccusage_runtime.py --install
 uv run python scripts/ccusage_runtime.py --check
-```
-
-从包含运行器安装脚本的完整 checkout 执行以上命令。每台写入设备都应在每日分支开始使用新代码前
-完成安装和验证。缓存的二进制不在 Git 中，安装它不会改变当前 usage 分支。
-代码何时切换见[定时同步](#定时同步)中的 T+1 说明。
-
-命令入口使用同目录下的 Python 模块，不依赖第三方 Python 包；入口各自带着 `requires-python = ">=3.11"`，所以没有项目文件也没有 lock 文件。
-但只有这个下限并不能确定解释器：`uv` 会挑满足下限的、已装的最新版本，开发机、CI 和 rollover
-运行器挑到的可能各不相同，而两个 workflow 都没传 `python-version`。`.python-version` 把三处
-统一钉在 3.11——就是脚本声明的下限，跑的就是它声称支持的版本。所有 `make` 目标都走 `uv`，
-这个钉子才真正覆盖得到。
-
-## 设备身份
-
-长期设备使用三个有意公开的角色标签之一：`work`、`personal` 或 `devbox`。为当前
-checkout 配置对应标签：
-
-```sh
 mkdir -p ~/.config/token-activity
 printf 'personal\n' > ~/.config/token-activity/node_name
+make install
+make health
 ```
 
-临时 trail worker 设置 `CC_USAGE_TRAIL=1`，也可以将其设为稳定的 worker ID。生产脚本
-只会保存不透明的 `data/trail/node-<12 位十六进制>` 路径，不会保存原始值：稳定 worker ID
-以其 SHA-256 摘要落盘，而 `CC_USAGE_TRAIL=1` 会随机铸造一次 ID 并保存在
-`~/.config/token-activity/trail_id`。
+按设备用途选择公开标签 `work`、`personal` 或 `devbox`。Git 需有推送权限；`work` 和 `personal` 采集端还需要已登录的 `gh`，用于恢复错过的每日归档。
 
-这个文件就是该 worker 的身份。它以前由主机名派生，而主机名会漂移：`$HOME` 持久但主机名
-变化的 worker 会以全新节点身份回来，把已经上报过的日子再传一遍；而折叠死亡 pod 是相加的，
-于是那些天被翻倍。
+<a id="ccusage-runtime-upgrade"></a>
 
-**升级一台已经在某个 `node-…` 目录下有数据的 worker 时，请先做这一步**，否则它下次同步会
-铸造新 ID 并把原目录变成孤儿：
-
-```sh
-mkdir -p ~/.config/token-activity
-printf 'node-0123456789ab\n' > ~/.config/token-activity/trail_id   # 填它已有的目录名
-```
-
-全新 worker 不需要任何操作 —— 找不到文件就自己铸造。文件存在但格式不对时会直接中止，
-而不是覆盖掉一个正在使用的身份。
+ccusage 必须通过 272K 请求边界以下、恰好等于及以上的合成定价检查，覆盖缓存输入和 Fast 模式。安装器在本地缓存构建固定上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`，也接受通过检查的系统版本。每台采集设备升级前都要校验：检查失败会停止所有依赖 ccusage 的采集，但保留已有数据。终端里的普通 `ccusage` 命令不受影响。
 
 ## 定时同步
 
-仓库附带的 launchd agent 会在每小时的 0、15、30、45 分运行。先让日常开发 checkout
-离开当前 `usage/YYYY-MM-DD` 分支并更新 `main`，再安装：
+launchd 在每小时第 0、15、30、45 分钟运行。`make install` 创建或复用 `~/.cache/aether-ledger/writer` 独立 worktree，将路径和私有环境变量写入定时配置，再重新加载。可通过 `scripts/install_launchd.py --writer-worktree PATH` 指定位置。开发目录切换分支不会改变定时采集代码。
 
-```sh
-git switch main
-git pull --ff-only
-make install
-```
+采集端先获取 Git 锁、同步当日分支，再读取各来源、合并累计文件并提交数据。一处来源失败会保留该来源数据，其余来源继续发布，最终返回 1。空来源可能表示没有活动、没有配置或日志缺失，不一定是错误；应同时检查 `latest_day` 和 `today_tokens`。
 
-安装器会创建 linked、仅供 launchd 使用的 Git worktree：
-`~/.cache/aether-ledger/writer`，并把该路径写入 agent。当天 usage 分支已存在时，writer
-直接检出它；尚不存在时则从 `main` detached 启动，由原有 rollover guard 决定何时建分支。
-源 checkout 不能仍占用当天 usage 分支，因为同一个本地分支只能被一个 worktree 检出。
-可用 `--writer-worktree PATH` 改写默认位置。
+新代码随下一个日期分支生效。切换日期后本轮立即结束，下一轮才执行新代码。合并到 `main` 不会更新当日正在运行的采集端。旧的 `--include-statistics` 和 `--include-multica-tasks` 参数仍可传入，但不再执行额外采集，以免已有定时配置中断 token 同步。重新安装会移除这些参数，`make health` 会提示旧配置。
 
-writer 固定使用每日分支创建时继承的代码，白天新合入 `main` 的修改不会 merge 进当天 usage
-分支。writer 切到次日分支后会在读取用量前结束本轮，下一次调用再从新代码快照启动。这样定时
-提交仍然只包含数据，开发目录的切分支和 dirty files 也不会影响 launchd。linked worktree 仍
-共享 Git 元数据；其他 worktree 并发执行 fetch、pull 或 rebase 时，某一轮仍可能 defer，下一轮
-定时任务会自动重试。refs 同样共享：writer 每次 fetch 后会把本地 `main` 快进到 `origin/main`，
-但 Git 不允许移动别的 worktree 正在检出的分支，所以源 checkout 停在 `main` 时这个 ref 归它，
-只有在那边手动 `git pull` 才会往前走。重复运行安装器会复用已注册的 writer worktree 并重新加载
-agent。
-
-安装器会迁移已有且获准的 `machine_name`，随后卸载并删除旧的
-`com.kyriekevin.cc-cx-usage-data` agent。它会原子写入并重新加载当前 agent，让调度变更
-立即生效，同时避免新旧定时任务一起运行。
-
-安装后运行 `make health`。它会检查依赖、本机配置、launchd 环境和 writer 脚本路径，但不会打印私有
-配置值。配置了 Multica 工作区后，还会报告发现的目录数、去重后的 rollout 数和最新文件修改时间。
-检查使用的是执行命令所在 checkout 的代码，不能据此确认已安装 writer 已切到该版本、
-计价验证通过或同步数据已发布。
-
-日志位置：
-
-- `~/Library/Logs/aether-ledger/sync.log`
-- `~/Library/Logs/aether-ledger/sync.err.log`
-
-正常运行会在 stdout 写入开始和结束记录；未捕获异常可能导致缺少结束记录。
-来源摘要给出观察到的日期数、最新用量日期和今日 token。这些是累计合并前的读取结果；
-`latest_mtime` 是文件修改时间，不是最后一个 token 事件的时间。
-
-| 信号 | 含义与下一步检查 |
-| --- | --- |
-| 来源 `status=ok` | 返回了至少一条每日记录，也可能只有历史数据。继续看 `latest_day` 和 `today_tokens`。 |
-| 来源 `status=empty` | 没有返回记录；无法单独区分空闲、日志不存在或来源未配置。 |
-| 来源或遥测 `status=failed` | 捕获到读取异常。普通同步仍会合并其他成功读取的 token 并尝试发布，进程返回 1。 |
-| DSH 不可读或部分读取警告 | 读取器可能返回已解码部分或空记录，不抛异常；仅有该警告不会使退出码变为 1。 |
-| `status=lock-busy` 或分支推迟消息 | 本轮没有采集，返回 0。检查下一次定时运行。 |
-| `sync run finished exit=0` | 没有被记录的采集失败；不保证所有来源完整，也不保证 Git 发布成功。 |
-| `git add/commit/push failed` | 检查 stderr 和 Git 状态；这些辅助函数没有把失败退出码传回同步入口。 |
-| Multica 任务失败 | token 发布尝试之后，可选 API 步骤失败，进程返回 1。 |
-
-`make health` 中的发现结果也使用 `status=ok`／`empty`，此处只表示是否找到文件，
-不表示已经解析出用量。文件数不能作为采集成功的证据。
-
-<a id="manual-sync"></a>
+日志位于 `~/Library/Logs/aether-ledger/sync.log` 和 `sync.err.log`。健康检查覆盖依赖、配置、已安装脚本路径和来源发现，但不证明定价检查通过或数据已经推送。
 
 ### 手动同步
 
-安装器会把私有 `multica.json` 配置写入 launchd 环境。在终端直接运行 `sync_usage.py`，
-**不会**加载该文件，也不会继承已安装 agent 的环境。先用 `make health` 检查配置是否一致，
-再用下面的示例复用已安装的命令和环境。它也适用于自定义 writer 路径，并排除终端中
-`CODEX_HOME` 等变量的干扰。writer 必须已包含这些选项；PR 合入 `main` 不会更新当天分支。
+终端不会继承 launchd 的私有来源配置。使用已安装的命令、工作目录和环境运行：
 
 ```sh
-uv run python - --include-multica-tasks <<'PYTHON'
+uv run python - <<'PYTHON'
 import plistlib
 import subprocess
-import sys
 from pathlib import Path
 
 plist = Path.home() / "Library/LaunchAgents/com.kyriekevin.aether-ledger.plist"
@@ -353,366 +65,44 @@ with plist.open("rb") as stream:
     agent = plistlib.load(stream)
 command = agent["ProgramArguments"]
 script = next(Path(arg) for arg in command if Path(arg).name == "sync_usage.py")
-result = subprocess.run(
-    [*command, *sys.argv[1:]],
-    cwd=script.parent.parent,
-    env=agent["EnvironmentVariables"],
-)
+result = subprocess.run(command, cwd=script.parent.parent, env=agent["EnvironmentVariables"])
 raise SystemExit(result.returncode)
 PYTHON
 ```
 
-这条命令会写入累计数据并尝试提交、推送，不是预览；运行时仍遵守 writer 锁和分支检查。
-删除第一行的 `--include-multica-tasks`，就是普通 token 同步；换成 `--help`，则只查看
-已安装 CLI 的帮助，不执行同步。任务采集还需要 `work` 角色和 runtime 角色映射；
-即使传了开关，映射文件不存在时也会静默跳过任务刷新。
+该命令会写入并尝试推送。`--no-push` 仍会写本地累计文件，只跳过分支切换、提交和推送，不是预演。只读检查可使用 `--help`、`make health`、日志和 `git status`。`--reconcile-since YYYY-MM-DD` 允许从指定日期起接受更低的观测值，仅用于主动校正。
 
-| 选项 | 作用 |
-| --- | --- |
-| 无选项 | 读取并合并 token store，随后尝试在日期分支提交、推送。 |
-| `--include-multica-tasks` | token 发布尝试之后，再请求工作区任务元数据；不会新增定时任务。 |
-| `--no-push` | 仍会写入所执行脚本所在 checkout 的 store；跳过切分支、提交和推送，**不是 dry run**。 |
-| `--reconcile-since YYYY-MM-DD` | 允许指定日期起的 token、费用、模型和遥测统计下降；仅供人工修正，见[恢复](#恢复)。 |
+## 定价与数据
 
-只读诊断可查看 `make health`、日志、`git status --short --branch` 和已安装 CLI 的 `--help`。
-不要用 `--no-push` 代替只读检查。
+数据位于 `data/{work,personal,devbox}/` 或 `data/trail/`，JSON 以日期为键。每天保存 `totalTokens`、`totalCost`，以及来源可提供的模型 token 明细；定价来源标记不完整或尚未定价的观测。只有上述七类 token 文件计入热力图，其余保留数据仍接受公开数据审计。
 
-### Git 并发访问
-
-在这个 checkout 里跑 Git 的不止写入脚本一个进程：还有 `compact_trails.py`，以及人手
-开的终端、编辑器和 linked worktree——后三者不受下面这把锁约束。下游的飞书签名推送器
-曾经也会 pull 同一个工作区，而它的 launchd `WatchPaths` 监听的正是写入脚本产出的那几
-个数据文件，所以写入动作本身就会把它叫醒，二者必然重叠；它贡献了下面这个竞态里最大
-的一份，现在已经完全不跑 Git 了（见下）。Git 对一个工作区没有跨进程锁：并发 fetch 会互相
-截断重写 `.git/FETCH_HEAD`，表现为 `fatal: Cannot rebase onto multiple branches.`；
-远端 ref 更新会丢失 compare-and-swap（`cannot lock ref ... is at X but expected Y`）；
-并发 fetch 还可能更新当前检出分支的 ref，随后 `pull` 会在另一个进程眼皮底下试图快进
-工作树。
-
-因此所有在本 checkout 里执行 Git 的进程都要获取同一把建议锁
-`~/.cache/aether-ledger/git.lock`：
-
-- 写入脚本（`sync_usage.py`）最多等待 60 秒，拿不到就跳过本轮。本地 store 是累积的，
-  只要后续有一轮能跑起来，跳过就不丢数据。它在整个运行期间持锁（包括 `ccusage`），
-  所以那次调用必须自带超时——无限挂起会把锁永久攥住，饿死这个 checkout 里的其他进程。
-- `compact_trails.py` 同样获取这把锁，`--dry-run` 也不例外，因为它在汇报前也会 pull。
-  它是人工触发的，所以拿不到锁就直接报错退出，不重试。
-- 签名推送器完全不跑 Git，只读写入脚本上一轮落盘的内容，最多滞后一个写入周期。它以前
-  会在这里 fetch + rebase，但这毫无收益（它没有自己的提交需要重放），却让它成了上面那个
-  FETCH_HEAD 竞态最大的来源。它仍然最多等待 30 秒并在读取数据文件的整个过程中持锁：
-  写入脚本是逐个替换各 agent 的 JSON 文件的，不持锁读取可能读到新旧混合的一份——只有
-  持锁才能真正杜绝这一点。等不到锁时它会直接读，并校验读取前后所有 store 的 mtime
-  没有变动，不满足就重试几次。这个校验弱于锁：它能发现"读取期间正在写"的写入方，但
-  发现不了"停在自己两次文件替换之间"的写入方，那种情况下某个 agent 的 store 会比另一个
-  新一代。之所以不整轮跳过：持续竞争下签名可能永远不更新，而求和值上一代的偏差下一轮
-  就会自行纠正。
-
-以后新增任何读写这个 checkout 的进程，都必须获取同一把锁。
-
-## 每日分支生命周期
-
-写入设备使用 Asia/Shanghai 自然日对应的 `usage/YYYY-MM-DD`。多台设备可以推送到同一
-分支，因为它们分别拥有独立目录；生产脚本会在推送竞争时通过 rebase 重试。
-
-`.github/workflows/daily-rollover.yml` 会在午夜后运行，并在 30 分钟后进行一次幂等重试：
-
-1. 找出所有早于今天的 `usage/YYYY-MM-DD` 分支。
-2. 按日期顺序将每个完整日期 squash 到 `main`。
-3. 重新生成活动面板，并为每个日期创建一个快照提交。
-4. 对即将落地的全部内容重新执行公开数据审计、活动面板时效检查、提交身份审计与空白字符检查。
-5. 推送 `main`，仅删除已经成功发布的日期分支。
-6. 从更新后的 `main` 创建当天分支。
-
-第 4 步是这些提交唯一的关卡。该推送使用 `GITHUB_TOKEN` 认证，而用该 token 推送不会再触发新的
-workflow run，因此 `verify.yml` 根本看不到它们。这里同时也是坏合并仍可挽回的最后时机，因为第 5 步会
-立刻删除日期分支。该步失败时 `main` 保持不变、日期分支完整保留，下一次定时任务会重试。
-
-第 3 步特意不带 `--as-of`：渲染器从数据推导日期，第 4 步也以同样方式校验，两者不可能不一致。若在
-此固定日历日，则无活动的一天会被渲染成最新一列，而检查期望的是最后一个有活动的日期；这个偏差会
-让每次重试都失败，日期分支被永久滞留，当天分支也永远建不出来——由于写入设备在旧日期分支尚存时
-拒绝创建当天分支，整条同步链路会因此停摆。现在空闲的一天只是不产生快照提交。
-
-如果功能 PR 意外带入了活跃 usage 分支中较早的生成数据快照，squash 可能会在两边实际
-属于同一条累计历史时仍报告冲突。只有当每个冲突路径都是规范生成数据文件，并且能够证明
-`main` 的版本曾原样出现在 usage 分支分叉后的历史中时，rollover 才采用 usage 分支的最终
-版本。其他数据冲突、仅在分叉前匹配的旧版本或生成数据范围以外的冲突仍会安全失败，等待
-人工检查。
-
-如果 GitHub Actions 延迟，写入设备不会在仍存在旧 usage 分支时创建当天分支，而是
-正常退出并在下一次定时同步时追赶。这样可以避免当天分支基于缺少前一日最终数据的
-`main` 创建。
-
-每次成功 fetch 后，写入设备还会在不存在本地独立提交时快进本地 `main`。已完成的远端
-usage 分支消失后，只有当本地分支"没有任何属于它自己的东西"时才会删除本地副本，需要
-同时满足两个条件：它的 `data/` 与 `origin/main` 上当日的日结快照一致；并且相对于它从
-`main` 分叉出去的那个提交，它没有引入 `data/` 之外的任何改动。第二个条件特意与分叉点
-比较，而不是与日结快照比较——如果拿整棵树去比快照，那么分叉之后才合入 `main` 的代码或
-文档提交（仓库尚在演进期这很常见）都会被算成差异，把分支永久钉住。数据未发布、在
-`data/` 之外留下净改动、或被其他 worktree 检出的分支都会保留，并各自打印对应日志；
-比较本身失败（Git 报错）时同样保留，并与"存在差异"分开报告。
-
-两个条件比的都是最终文件树而非提交历史，因为 squash 合并根本没留下可判定的祖先关系。
-所以如果某个分支自己的提交互相抵消了（改了又还原、空提交），它会被判定为"没有自己的
-东西"而删除。`git branch -D` 会连同该分支的 reflog 一起删掉，那些提交此后只剩下其他
-引用还能够到它们（比如 HEAD 的 reflog——前提是这个分支曾在本地被检出过）；一旦没有
-任何引用指向它们，就会在 Git 清理（gc/prune）时被回收。
-
-workflow 也支持手动触发。并发组会阻止 rollover 重叠运行；每次扫描全部旧日期分支，
-因此第二次定时触发和手动恢复都是幂等且安全的。
-
-具有定时同步的 `work` 与 `personal` 写入设备同时充当 GitHub scheduler 之外的
-watchdog。00:50 宽限期后，它们会在正常的 15 分钟同步中检查是否仍存在旧 usage 分支；
-如果存在，就使用本机已认证的 `gh` 会话 dispatch rollover workflow。workflow 的并发锁
-保证两台设备同时发起恢复也是安全的。手动或 workload 触发的 `devbox` 与临时 `trail`
-写入设备不承担 watchdog。恢复请求失败时会在同步日志中产生明确错误，并在下一次定时
-同步时重试。
-
-## 持续集成
-
-`.github/workflows/verify.yml` 在每个 PR、每次推送 `main` 以及手动触发时执行交付前检查清单，权限仅为
-`contents: read`。PR 上的过期任务会被新提交取消；其余任务按 commit 分组，因此彼此既不取消也不排队。
-
-它看不到每日 rollover：那次推送用 `GITHUB_TOKEN` 认证，不会再触发新的 workflow run，这正是
-rollover 必须在推送前自行校验的原因。实际上 CI 覆盖的是 PR 本身，以及每个 PR 在 `main` 上产生的
-合并提交。
-
-| 检查 | 拦截 |
-| --- | --- |
-| `unittest discover -s tests` | 生产脚本、渲染器与 rollover 回归 |
-| `audit_public.py` | 身份与路径泄露、超出 schema 的字段 |
-| `render_dashboard.py --check` | 与已提交数据不匹配的 SVG |
-| `py_compile scripts/*.py` | 无测试覆盖脚本中的语法错误 |
-| `git diff --check` | 行尾空白与残留冲突标记 |
-| `audit_public.py --history` | 携带个人邮箱的新提交 |
-
-后两项针对本次提交区间执行，而不是工作区——全新 checkout 的工作区是干净的。PR 上的区间是 base
-提交到分支 tip，而不是到 `HEAD`：`HEAD` 是 GitHub 合成的 merge commit，其作者是账号主邮箱且用完
-即弃，审计它会导致每个 PR 都报泄露。push 上的区间从上一个 tip 开始。当不存在可用 base 时——分支
-首次推送、force-push 覆盖了原 tip、手动触发——两项区间检查会跳过并明确说明，而不是退化成只看一个
-提交、给出并不存在的覆盖假象。
-
-提交身份审计特意限定区间：它要拦住新的泄露，同时不因早于该检查的历史提交而失败。
-
-usage 提交不会开 PR，只落在 `usage/YYYY-MM-DD` 上，因此把 push 触发限制在 `main` 就足以让
-15 分钟一次的同步不进入 CI，无需额外路径过滤。
-
-## 提交约定
-
-人工改动使用 Conventional Commit，并带聚焦的 scope，例如
-`docs(readme): explain the activity ledger`。自动写入使用
-`chore(data): sync node-<digest> usage`；`main` 上的每日 squash 提交为
-`chore(data): finalize YYYY-MM-DD snapshot`。Trail 压缩同样使用 `chore(data)` scope。
-本地与 Kubernetes 写入脚本会强制使用公开安全的
-`Aether Ledger <noreply@github.com>` 身份创建自动提交，因此不依赖、也不会暴露宿主机的
-Git 身份。rollover workflow 则使用 GitHub Actions bot 身份。
-
-## 下游消费者
-
-`main` 只包含已经结束的每日快照。需要日内数据的消费者（例如飞书签名推送器）要读 writer
-自己的 worktree——默认 `~/.cache/aether-ledger/writer`，被 `--writer-worktree` 改过就以那里
-为准——因为只有它跟着当天 usage 分支走。源 checkout 不能替代：安装 writer worktree 前必须
-先让它交出当天分支，所以它要么停在 `main`，要么停在主人正在做的事情上，那里没有今天的
-数据。单独固定在 `main` 的 clone 按设计最多会落后一天。
-
-## 分版本统计
-
-新的可选计量日志、逐指标生效日期、Work/Personal 独立启用与恢复规则见[统计契约](statistics_zh-CN.md)。
-在后续切换视图之前，现有看板输入保持不变。
-
-## 活动面板
-
-`scripts/render_dashboard.py` 在 `data/` 中扫描名为 `claude.json`、`codex.json`、
-`codex-multica.json`、`dsh-multica.json`、`opencode.json`、`traex.json` 或 `dsh.json` 的规范文件，并明确排除 `codex_by_repo.json` 等文件。
-
-活动 SVG 包含：
-
-- 最近一次完整快照、本月、累计和峰值的 token 与 API 等价成本；
-- Active days，即聚合 token 总量大于零的自然日数量；
-- 最近 53 周的每日 token 热力图。
-
-拓扑 SVG 交叉展示公开环境角色与最近 30 天活跃的 agent；每个 harness 沿用历史图中的同一
-色相，行内颜色强度表达它在该环境中的占比；
-历史上经 OpenCode 启动的用量归入 `Legacy`。
-最近 30 天窗口与活动 SVG 使用同一个已完成快照作为截止日期。图中将常驻 `devbox` 与
-按需 GPU `trail`
-合并为 `Development`，但底层数据仍分开保存以服务采集与运维；不透明 trail node ID
-不会进入生成资源。
-
-拓扑和分配都将最近 30 日截面与独立的 8 周历史图配对。两张历史图使用相同的连续周桶，并
-明确分成前 4 周与近 4 周。拓扑历史在 Work、Personal、Development 内使用绝对周度堆叠，
-柱高保留环境总量，颜色展示 harness 替换；分配历史在每个 harness 内使用绝对量的 Top 3 模型
-+ Other 堆叠。缺少模型覆盖的周保持为空白或灰色，不会被画成零。
-
-因此 README 的阅读顺序是活动，然后依次查看拓扑、分配和运行的当前/历史配对。运行截面用长度
-与明确数值展示 effort、Fast 和最近一天的 7 天额度峰值；历史图使用更小的周度 effort 堆叠柱、Fast 轨迹线
-和每周 7 天额度峰值柱。effort 覆盖所有 harness，Fast 和额度只有 Codex 有，因此额度只有一条序列，
-按周居中而不是和一个空位配对。颜色只标识 harness 或 effort 类别，数值大小交给几何位置表达，与其他
-历史图的视觉逻辑一致。
-
-Claude assistant 事件提供 effort，支持的模型还会提供 `thinking_tokens`。当前 Claude 环境不能
-选择 Fast，因此不采集、不展示只有 standard 的速度字段；Claude 日志也没有 Codex 式额度字段。Claude 确实会报额度，但只报给 `statusLine.command`，而读那一路要包住用户本来就在跑的 status line，这层包装做不到完全透明，所以不采也不画 Claude 额度。
-Codex 提供 effort、reasoning、速度与额度。TRAE 是司内提供的 CLI，并非模型厂商，也不天然等于
-低价平替；图中只如实展示其背后的模型组合。兼容版本的 TRAE 使用 Codex rollout 格式，因此
-采集器也会在日志确实提供时读取 effort、速度、reasoning 与额度聚合。缺失的历史遥测明确显示
-为不可用，不会从 token 总量或金额反推。Reasoning 强度只在各 harness 内部解释，不跨厂商比较。
-
-七张 dashboard SVG 都通过 `prefers-color-scheme` 使用 Catppuccin Latte 与 Mocha 配色，
-并适配 GitHub 的浅色与深色主题。
-
-只有 rollover workflow 会提交共享 SVG。各设备写入脚本只提交自己的数据目录，从而
-避免多台设备并发推送时发生生成文件冲突。
-
-颜色强度按分布四分位数计算，而不是线性缩放，因此 trail workload 产生巨大峰值时，
-普通日期仍然可见。发布的 SVG 包含聚合 token、分配视图中的模型名称，以及活动视图中的
-API 等价成本；它们不包含设备身份、路径、提示词、会话或仓库级数据。
-
-## 公开数据边界
-
-提交数据仅限 `data/` 下按日期聚合的用量，使用公开长期角色 `work`、`personal`、
-`devbox`，或临时 worker 的不透明 ID。生产脚本不会持久化工作目录、仓库名称、提示词、
-会话标识、用户名或主机名。公开数据审计会忽略并禁止 `codex_by_repo.json` 等仓库级导出。
-
-发布或修改数据生产脚本前运行：
+价格来自 `config/official-pricing.json`。ccusage 离线运行，使用生成的价格覆盖文件，同时保留按请求识别 Fast 和长上下文的能力，以正确计费。缺少官方价格的模型仍计入 token，暂记零成本并标注 `costSource: "unpriced"`。后续补入适用于该日期的价格后，即使 token 不变也可修正成本。这里统计的是 API 等价成本，不是订阅账单。
 
 ```sh
-uv run --script scripts/audit_public.py
+uv run --script scripts/update_pricing.py
+uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 ```
 
-每日 workflow 在合并 usage 分支前也会执行同一审计，CI 也会在每个 PR 上执行。
+正常累计合并可防止日志缺失或轮转导致已有观测减少。修改采集器时需保留模型明细、来源隔离、定价来源和校正行为。不要手改生成的数据文件。
 
-提交元数据同样是公开的。请将本地身份固定为 no-reply 邮箱：
+## 分支与验证
 
-```sh
-git config user.email "<id>+<username>@users.noreply.github.com"
-```
+高频提交进入按 Asia/Shanghai 日期命名的 `usage/YYYY-MM-DD`。每日工作流 squash 合并已结束日期、重新生成 `assets/token-activity.svg`、校验并推送 `main`，然后删除已完成分支、创建当日分支。必须保留该顺序，让发布失败时仍有来源分支可恢复。采集端可请求补跑错过的每日归档。
 
-仅设置本地配置并不够。从网页端 squash 合并时，GitHub 会把作者改写为账号的主邮箱，因此还必须启用
-**Settings → Emails → Keep my email address private**，否则每次合并 PR 都会重新公开该邮箱。
-审计某个区间：
+人工修改通过 PR 提交，使用 Conventional Commit 标题和 no-reply 邮箱。交付前运行 `make verify`，覆盖测试、公开数据审计、热力图新鲜度、Python 编译和空白检查。CI 还检查整个传入提交范围及作者邮箱。GitHub squash 合并也需启用邮箱隐私。只有每日工作流直接推送 `main`。
 
-```sh
-uv run --script scripts/audit_public.py --history origin/main..HEAD
-```
+用 `uv run --script scripts/render_dashboard.py` 重新生成热力图。它汇总所有标准 token 文件，以最新有活动的日期为终点，展示每日活动及 token、cost 汇总。`--check` 只校验，不写文件。
 
-## 数据结构
+需要日内数据的下游应读取独立采集 worktree 的标准文件，或远端当日分支；`main` 只包含已结束日期。确认发布时需对比实际远端分支，不能只凭本地 upstream 引用、退出码 0 或来源读取完成。
 
-Claude 条目包含每日 token、原始 API 等价成本，以及按模型拆分的 token：
+## 临时节点与恢复
 
-```json
-{
-  "2026-04-07": {
-    "totalTokens": 8946720,
-    "totalCost": 0.44,
-    "costSource": "official",
-    "models": {
-      "claude-opus-5": {
-        "totalTokens": 8946720,
-        "inputTokens": 100,
-        "outputTokens": 20,
-        "cacheCreationTokens": 2000,
-        "cacheReadTokens": 8944600
-      }
-    }
-  }
-}
-```
+临时节点使用 `CC_USAGE_TRAIL=1` 生成持久匿名 ID，也可提供稳定的节点 ID，采集器会对其哈希。本地 `~/.config/token-activity/trail_id` 应跨重启保留。迁移节点时沿用已有身份，重新生成可能让同一份用量以第二个名字上传。身份文件无效时停止采集，不会静默生成新身份。
 
-详细 `models` 字段自此向后写入；`ccusage` 已轮转掉会话的历史日期保留原有的「仅总量」结构和旧金额。
+压缩前先运行 `uv run --script scripts/compact_trails.py --dry-run`。仅在一个采集端执行压缩：最新数据距今超过七天的非活跃节点会累计到 `data/trail/rollup`，并在同一个提交里移除原节点目录。
 
-Codex 条目还可以包含按模型拆分的 token 和图片计数：
+校正前先保存累计文件副本，确认来源完整。明确的采集失败会在写入前中止校正，但空来源和部分读取的 DSH 日志仍可能缺数据。读取中没有出现的日期保留原值，出现的日期则可能被调低。该选项影响所有采集文件，也无法重建缺失日志。
 
-```json
-{
-  "2026-04-20": {
-    "totalTokens": 248347,
-    "totalCost": 0.6163031,
-    "models": {
-      "gpt-5.3-codex": {"totalTokens": 248347}
-    },
-    "imageCount": 0
-  }
-}
-```
+推送失败会留下本地提交供下次重试；脏文件阻止日期切换；每日归档失败会保留已结束分支；标准 JSON 损坏会阻止热力图生成。重试前检查已安装采集端的分支、代码版本、来源摘要及错误日志。
 
-只要 ccusage 能拆分，新观测就会为每个 harness 的每个模型保留四类 token。Codex session
-事件还会贡献匿名的路由与额度遥测；Claude assistant 事件贡献 effort 与 thinking 遥测；兼容的
-TRAE session 事件在确实提供时贡献与 Codex 相同的路由字段：
-
-```json
-{
-  "routing": {
-    "efforts": {
-      "low": {
-        "calls": 12,
-        "totalTokens": 840000,
-        "reasoningCalls": 12,
-        "reasoningOutputTokens": 42000
-      }
-    },
-    "speeds": {
-      "fast": {"calls": 3, "totalTokens": 210000}
-    }
-  },
-  "quota": {
-    "windows": {"300": 64.0, "10080": 37.0},
-    "limitReached": false
-  }
-}
-```
-
-`calls` 统计 session 遥测中观测到的模型调用，并不等于用户对话轮次。
-Codex 遥测遇到重复的累计用量事件时，只计一次调用，同时保留更新后的 quota；普通 Codex
-遥测也读取归档会话。这次修改不会自动改写历史上已累计的重复调用数。
-
-`reasoningCalls` 统计
-harness 明确给出 reasoning 或 thinking token 字段的调用，包括字段明确为零的情况，避免把
-缺失遥测算成零。Routing token 来自
-session 事件流，不能当作独立采集的每日主账覆盖率。额度窗口 key 是匿名的分钟数。
-Message 与 session 标识只在内存中用于去重，绝不写入仓库。历史总量仍然有效，但源日志
-轮转后不会补出 component 或 routing 明细。旧条目可能仍保留原来的 `turns` 字段，其含义
-同样是模型调用次数。
-
-OpenCode 使用相同的按日期结构，也可以包含每个模型的汇总；其调用端归属同样直接来自
-`--by-agent` 明细，而不是模型家族。
-
-dsh（`dsh.json` 和 `dsh-multica.json`）使用相同的按日期结构；当会话 header 给出本仓库会渲染的
-effort 档位时，还会带 `routing.efforts`。两个 store 在所有面板中都会合并为 DeepSeek Harness；
-分开存储只是为了让两棵源日志树各自保持可靠的高水位。
-
-traex（`traex.json`）使用与 Codex 相同的按日期结构，代表司内的 TRAE CLI；其中记录的模型名
-才描述该 harness 背后实际提供的能力。价格不会假设 Fast tier，已登记模型按官方 standard
-价格计算，未知模型只贡献 token、金额按 0。若某个 TRAE 版本输出 Codex-compatible 路由字段，
-采集器会保存其匿名聚合，否则保持不可用。
-
-## Trail 压缩
-
-只在一台写入设备上运行 `scripts/compact_trails.py`。最新数据早于七天前的 pod 会被累加
-到 `data/trail/rollup`，并在同一个提交中删除。每个临时 pod 目录代表独立 worker，
-因此 token、模型 component 和 routing 计数使用加法聚合；额度窗口保留观测到的最高压力。
-
-始终先预览：
-
-```sh
-uv run --script scripts/compact_trails.py --dry-run
-```
-
-## 恢复
-
-用量停增时，先看来源摘要和 stderr，再确认已安装 writer 的分支、版本。先修复来源配置或
-运行器验证问题，再重跑普通同步；保留的 `unpriced` 记录可能由后续完整读取补算。
-重试无法恢复已经删除或轮转掉的日志。
-
-只有在需要有意修正历史、保留了原 store 副本并确认来源完整后，才使用 `--reconcile-since`。
-采集阶段报告失败时，该模式会在写入前中止；但 `empty` 来源和 DSH 部分读取警告不算这类失败。
-本次完全没读到的日期保留旧值，读到了的日期则可能被部分读取的较低值覆盖。
-该选项作用于全部已采集 store，而非单个指标，也不能恢复缺失历史；已有 `imageCount` 仍取最大值。
-
-发布结果需要单独确认：在 writer 中查看 `git status --short --branch`，并将 HEAD 与远端
-实际日期分支的 tip 比较。本地 upstream ref 可能过期，退出码 0 或来源读取完成都不能证明发布成功。
-
-- 数据推送失败时，本地提交会保留；下一次同步会在切换日期前重试。
-- 工作区不干净时，自动日期切换会停止，不会把改动带入另一天。
-- rollover 失败时会保留源分支，也不会基于过期的 `main` 创建当天分支。
-- 规范 JSON 损坏时，面板生成会失败，不会静默发布不完整聚合。
-
-同一可选统计计划也会采集 Issue 评论、执行关联和状态事件。隐私、范围、生效及恢复规则见 [Issue 活动采集](issue-activity_zh-CN.md)。
+仓库公开发布。不得提交提示词、原始会话导出、仓库名、主机名、用户名、用户绝对路径、会话标识或私有日志数据库。所有保留快照继续接受公开数据校验。

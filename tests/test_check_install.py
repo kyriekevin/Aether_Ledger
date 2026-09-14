@@ -94,6 +94,16 @@ class CheckInstallTests(unittest.TestCase):
             (home / "workspaces").rmdir()
             self.assertIn("configured Multica workspace root is missing", installation_issues(home))
 
+    @patch("check_install.shutil.which", return_value="/bin/example")
+    def test_reports_retired_schedule_flags(self, _which) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            home = self.make_home(Path(directory))
+            path = home / "Library/LaunchAgents" / f"{LABEL}.plist"
+            config = plistlib.loads(path.read_bytes())
+            config["ProgramArguments"].append("--include-statistics")
+            path.write_bytes(plistlib.dumps(config))
+            self.assertIn("retired collection flags are installed; run make install", installation_issues(home))
+
 
 if __name__ == "__main__":
     unittest.main()

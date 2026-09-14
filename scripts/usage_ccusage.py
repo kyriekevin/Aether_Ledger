@@ -27,8 +27,6 @@ CCUSAGE_CMD = [*CCUSAGE_RUNNER, "daily", "--json", "--by-agent"]
 
 CCUSAGE_TIMEOUT_SECONDS = 180
 
-CODEX_IMAGE_GEN_DIR = Path.home() / ".codex" / "generated_images"
-
 TRAEX_CODEX_HOME = Path.home() / ".trae" / "cli"
 
 CCUSAGE_CODEX_CMD = [*CCUSAGE_RUNNER, "codex", "daily", "--json"]
@@ -36,26 +34,6 @@ CCUSAGE_CODEX_CMD = [*CCUSAGE_RUNNER, "codex", "daily", "--json"]
 _SESSION_MODEL_RE = re.compile(r'("model"\s*:\s*")([^"]+)(")')
 
 _KNOWN_UNPRICED_PREFIXES = ("openrouter-", "seed-", "doubao-", "qwen-")
-
-
-def count_codex_image_files_per_day() -> dict[str, int]:
-    """Count Codex-generated PNG files per local date (by mtime).
-
-    Why: ccusage's codex daily JSON only captures LLM token_count events. The
-    built-in image_gen tool (gpt-image-2) doesn't surface as a model, so its
-    cost is silently dropped. PNGs on disk are 1:1 with billable generations.
-    """
-    counts: dict[str, int] = {}
-    if not CODEX_IMAGE_GEN_DIR.exists():
-        return counts
-    for path in CODEX_IMAGE_GEN_DIR.rglob("*.png"):
-        try:
-            mtime = path.stat().st_mtime
-        except OSError:
-            continue
-        d = datetime.fromtimestamp(mtime).date().isoformat()
-        counts[d] = counts.get(d, 0) + 1
-    return counts
 
 
 def _breakdown_tokens(m: dict) -> int:
@@ -78,11 +56,6 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
       - 每个 modelBreakdowns[] 给到 per-model cost + 四类 tokens,但没有
         per-model totalTokens,需要把四类相加。
 
-    Codex 桶额外带:
-      - filesystem-derived imageCount (ccusage 无法捕获 gpt-image-2 计费)
-      - per-model {totalTokens} 映射,供下游 debug
-      - raw API-equiv cost,/fast 乘数和 image_gen 价格留给 pusher 在展示侧应用。
-
     其余 ccusage 支持的 agent 不属于本仓库的三个 store，保持忽略。
     """
     config_day = datetime.now(usage_schema.SHANGHAI).date()
@@ -97,12 +70,10 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
             timeout=CCUSAGE_TIMEOUT_SECONDS,
         )
     raw = json.loads(out.stdout).get("daily", [])
-    fs_image_counts = count_codex_image_files_per_day()
 
     cc_daily: list[dict] = []
     cx_daily: list[dict] = []
     op_daily: list[dict] = []
-    seen_codex_dates: set[str] = set()
     destinations = {"claude": cc_daily, "codex": cx_daily, "opencode": op_daily}
     for row in raw:
         d = row["period"]
@@ -135,30 +106,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
                 "models": models, "costTrusted": True,
                 "costSource": "official" if fully_priced else "unpriced",
             }
-            if agent == "codex":
-                entry["imageCount"] = fs_image_counts.get(d, 0)
-                seen_codex_dates.add(d)
             destination.append(entry)
-
-    # Edge case: PNG 存在但 ccusage 那天的 session 已被 rotate — 补一个 stub 让
-    # imageCount 仍能进入 cumulative store。
-    for d, cnt in fs_image_counts.items():
-        if d in seen_codex_dates:
-            continue
-        try:
-            if date.fromisoformat(d) < since:
-                continue
-        except ValueError:
-            continue
-        cx_daily.append({
-            "date": d, "totalTokens": 0, "totalCost": 0.0,
-            "models": {}, "imageCount": cnt,
-            # Says nothing about that day's tokens — ccusage no longer has the
-            # session at all. Only imageCount is real, so reconciliation, which
-            # otherwise lets a fetch overwrite history downward, must not read
-            # these zeros as "the day turned out to be empty".
-            "tokensObserved": False,
-        })
 
     return cc_daily, cx_daily, op_daily
 

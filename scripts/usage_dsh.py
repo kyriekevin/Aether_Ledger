@@ -12,7 +12,6 @@ from typing import Iterable, Iterator
 
 import usage_schema
 import usage_sources
-import usage_telemetry
 from pricing import active_rate, load_pricing, standard_cost
 
 
@@ -20,7 +19,6 @@ DSH_SESSION_LOG_NAMES = ("session.jsonl", "session.jsonl.zstd")
 
 DSH_DECODE_TIMEOUT_SECONDS = 30
 
-_DSH_EFFORT_ALIASES = {"off": "none"}
 
 
 def _whole_lines(text: str) -> str:
@@ -139,15 +137,6 @@ def _event_day_from_millis(raw: object) -> date | None:
         return None
 
 
-def _normalise_dsh_effort(raw: object) -> str | None:
-    """One dsh reasoning level as this repository spells it, or None."""
-    if not isinstance(raw, str):
-        return None
-    level = raw.strip().lower()
-    level = _DSH_EFFORT_ALIASES.get(level, level)
-    return level if level in usage_schema.EFFORT_LEVELS else None
-
-
 def collect_dsh_daily_since(
     since: date, roots: Iterable[Path] | None = None
 ) -> list[dict]:
@@ -185,7 +174,6 @@ def collect_dsh_daily_since(
             partial += 1
         session_id: str | None = None
         model: str | None = None
-        effort: str | None = None
         for line_number, line in enumerate(text.splitlines()):
             try:
                 event = json.loads(line)
@@ -209,7 +197,6 @@ def collect_dsh_daily_since(
                 config = header.get("config") if isinstance(header, dict) else None
                 if isinstance(config, dict):
                     model = _dsh_model(config.get("model")) or model
-                    effort = _normalise_dsh_effort(config.get("reasoningEffort"))
                 continue
             if kind == "request/context":
                 model = _dsh_model(data.get("model")) or model
@@ -254,20 +241,11 @@ def collect_dsh_daily_since(
                 raw_seq if isinstance(raw_seq, (int, float)) else 0,
                 tokens,
             )
-            raw_reasoning = usage.get("reasoningTokens")
-            candidate = (
-                priority, day, model, effort, breakdown,
-                usage_schema._token_value(raw_reasoning),
-                isinstance(raw_reasoning, (int, float))
-                and not isinstance(raw_reasoning, bool),
-            )
+            candidate = (priority, day, model, breakdown)
             if identity not in messages or priority >= messages[identity][0]:
                 messages[identity] = candidate
 
-    for (
-        _priority, day, model, effort, breakdown, reasoning,
-        reasoning_observed,
-    ) in messages.values():
+    for _priority, day, model, breakdown in messages.values():
         tokens = sum(breakdown.values())
         bucket = daily.setdefault(day.isoformat(), {}).setdefault(
             "models", {}
@@ -275,12 +253,6 @@ def collect_dsh_daily_since(
         bucket["totalTokens"] += tokens
         for key, value in breakdown.items():
             bucket[key] += value
-        if effort is not None:
-            usage_telemetry._add_routing_bucket(
-                daily, day, "efforts", effort, tokens,
-                reasoning_tokens=reasoning,
-                reasoning_observed=reasoning_observed,
-            )
     if unreadable:
         print(
             f"dsh: {unreadable} session log(s) could not be read at all and were "
@@ -347,8 +319,6 @@ def _dsh_entries(daily: dict[str, dict]) -> list[dict]:
             "costTrusted": True,
             "costSource": "official" if fully_priced else "unpriced",
         }
-        if payload.get("routing"):
-            entry["routing"] = payload["routing"]
         entries.append(entry)
     if unpriced_days:
         print(

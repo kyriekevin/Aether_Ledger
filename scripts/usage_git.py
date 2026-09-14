@@ -591,13 +591,6 @@ def git_push(machine: str) -> None:
         _try_push()  # republish stranded commit; continue regardless of result
 
     paths = [machine + "/"]
-    # The Multica aggregate sits outside every machine directory because it
-    # describes the workspace rather than one machine; stage it only when its
-    # designated writer is the one committing.
-    if Path(machine).name == usage_schema.MULTICA_TASK_WRITER and (
-        usage_schema.DATA_REPO_DIR / usage_schema.MULTICA_TASK_STORE
-    ).exists():
-        paths.append(usage_schema.MULTICA_TASK_STORE)
     add = _git(["add", *paths])
     if add.returncode != 0:
         print(f"git add failed: {add.stderr.strip()}", file=sys.stderr)

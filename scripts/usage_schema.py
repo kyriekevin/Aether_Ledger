@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -51,36 +51,10 @@ def _normalise_model(name: str) -> str:
     return _MODEL_ALIASES.get(lowered, lowered)
 
 
-def _event_day(raw: object) -> date | None:
-    """Convert one session timestamp to the repository's calendar day."""
-    if not isinstance(raw, str):
-        return None
-    try:
-        timestamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if timestamp.tzinfo is not None:
-        timestamp = timestamp.astimezone(SHANGHAI)
-    return timestamp.date()
-
-
 def _token_value(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return 0
     return max(0, int(value))
 
 
-def _normalise_speed(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    return {
-        "default": "standard",
-        "priority": "fast",
-        "standard": "standard",
-        "fast": "fast",
-    }.get(value.lower())
-
 SHANGHAI = ZoneInfo("Asia/Shanghai")
-
-MULTICA_TASK_STORE = "data/multica.json"
-MULTICA_TASK_WRITER = "work"
