@@ -7,14 +7,12 @@
 
 from __future__ import annotations
 
-import json
 import plistlib
 import shutil
 import sys
 from pathlib import Path
 
 from install_launchd import LABEL, load_multica_environment
-from multica_usage import load_runtime_roles
 from usage_sources import multica_codex_session_roots, codex_source_summary
 
 REQUIRED_BINARIES = ("uv", "ccusage", "zstd")
@@ -48,13 +46,6 @@ def installation_issues(home: Path = Path.home()) -> list[str]:
     if workspace_root is not None and not Path(workspace_root).is_dir():
         issues.append("configured Multica workspace root is missing")
 
-    roles_path = home / ".config" / "token-activity" / "multica_runtime_roles.json"
-    if roles_path.exists():
-        try:
-            load_runtime_roles(roles_path)
-        except (OSError, json.JSONDecodeError, ValueError):
-            issues.append("multica_runtime_roles.json is invalid")
-
     expected_dsh_profile = expected_environment.get("MULTICA_DSH_PROFILE")
     binding_path = home / ".config" / "token-activity" / "multica_dsh_profile"
     if expected_dsh_profile is not None and binding_path.exists():
@@ -78,8 +69,8 @@ def installation_issues(home: Path = Path.home()) -> list[str]:
         if environment.get(variable) != expected_environment.get(variable):
             issues.append(f"launchd environment differs from multica.json: {variable}")
     arguments = plist.get("ProgramArguments", [])
-    if "--include-multica-tasks" in arguments and not roles_path.exists():
-        issues.append("multica_runtime_roles.json is missing")
+    if any(flag in arguments for flag in ("--include-statistics", "--include-multica-tasks")):
+        issues.append("retired collection flags are installed; run make install")
     script = next((Path(arg) for arg in arguments if Path(arg).name == "sync_usage.py"), None)
     if script is None or script.name != "sync_usage.py" or not script.is_file():
         issues.append("launchd writer script is missing")

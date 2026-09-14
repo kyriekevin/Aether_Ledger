@@ -4,9 +4,13 @@ from __future__ import annotations
 import math
 from datetime import date, timedelta
 
-from statistics_readers import COMPONENTS
-from statistics_store import COUNTS, METRICS, SOURCES
-from statistics_multica import RUN_COUNTS, RUN_METRIC_VERSIONS, STATUSES
+COMPONENTS = ("inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens")
+COUNTS = ("calls", "identifiedCalls", "totalTokens", *COMPONENTS, "pricedCalls")
+METRICS = ("usage", "modelEffort", "speed", "cost", "quota")
+SOURCES = {"codex": "codex", "codex-multica": "codex", "claude": "claude", "traex": "traex", "dsh": "dsh", "dsh-multica": "dsh"}
+RUN_METRIC_VERSIONS = {"runs": 1, "runDuration": 1, "runConfiguration": 1, "runUsage": 1}
+STATUSES = ("completed", "failed", "cancelled", "running", "queued", "unknown")
+RUN_COUNTS = ("total", *STATUSES, "durationSeconds", "durationKnownRuns", "linkedRuns", "linkedCalls", "linkedTokens")
 from usage_schema import EFFORT_LEVELS, SPEED_LEVELS
 
 DIAGNOSTICS = {"invalidTimestamp", "invalidTokens", "missingComponents", "inconsistentTokens", "invalidJson", "unreadable", "incompleteLog", "missingIdentity", "sourceOverlap", "collectionFailed", "ambiguousCounter", "foreignThread"}
@@ -157,7 +161,7 @@ def validate(value, models):
         if runs["assignmentStatus"] not in {"ok", "failed", "unavailable"}:
             raise ValueError("invalid assignment status")
         if runs["assignment"] is not None:
-            from multica_dispatch import validate_snapshot
+            from metadata_schema import validate_snapshot
             validate_snapshot(runs["assignment"], models | {"default"})
             if runs["assignment"]["asOf"] > runs["lastAttempt"]:
                 raise ValueError("future assignment snapshot")

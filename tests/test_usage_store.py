@@ -24,7 +24,6 @@ import usage_git
 import usage_schema
 import usage_sources
 import usage_store
-import usage_telemetry
 import sync_usage  # noqa: E402
 import update_pricing  # noqa: E402
 
@@ -49,8 +48,8 @@ class SharedStoreCoverageTests(unittest.TestCase):
         """
         written = set(usage_schema.AGENT_STORES.values())
         self.assertEqual(
-            set(usage_schema.AGENT_STORES), set(render_dashboard.AGENT_BUCKETS),
-            "every written store needs a dashboard bucket to render under",
+            set(usage_schema.AGENT_STORES), set(render_dashboard.AGENT_ORDER),
+            "every written store needs a dashboard source to aggregate",
         )
         self.assertEqual(set(compact_trails.AGENT_FILES), written)
         self.assertEqual(set(audit_public.AGENT_FILES), written)
@@ -619,184 +618,6 @@ class RoutingTelemetryTests(unittest.TestCase):
         path.write_text("\n".join(json.dumps(event) for event in events) + "\n")
         return path
 
-    def test_codex_events_become_effort_speed_and_quota_buckets(self) -> None:
-        self.write_jsonl("2026/08/15/rollout.jsonl", [
-            {
-                "type": "event_msg", "timestamp": "2026-08-15T01:00:00Z",
-                "payload": {
-                    "type": "thread_settings_applied",
-                    "thread_settings": {
-                        "reasoning_effort": "low", "service_tier": "priority",
-                    },
-                },
-            },
-            {
-                "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
-                "payload": {
-                    "type": "token_count",
-                    "info": {"last_token_usage": {
-                        "total_tokens": 100, "reasoning_output_tokens": 20,
-                    }},
-                    "rate_limits": {
-                        "primary": {"window_minutes": 300, "used_percent": 40},
-                        "secondary": {
-                            "window_minutes": 10080, "used_percent": 12,
-                        },
-                        "rate_limit_reached_type": None,
-                    },
-                },
-            },
-            {
-                "type": "event_msg", "timestamp": "2026-08-15T02:00:00Z",
-                "payload": {
-                    "type": "thread_settings_applied",
-                    "thread_settings": {
-                        "reasoning_effort": "medium", "service_tier": "default",
-                    },
-                },
-            },
-            {
-                "type": "event_msg", "timestamp": "2026-08-15T02:01:00Z",
-                "payload": {
-                    "type": "token_count",
-                    "info": {"last_token_usage": {
-                        "total_tokens": 200, "reasoning_output_tokens": 50,
-                    }},
-                    "rate_limits": {
-                        "primary": {"window_minutes": 300, "used_percent": 80},
-                        "rate_limit_reached_type": "primary",
-                    },
-                },
-            },
-        ])
-        telemetry = usage_telemetry.collect_codex_routing_since(
-            date(2026, 8, 15), self.root
-        )["2026-08-15"]
-        self.assertEqual(
-            telemetry["routing"]["efforts"],
-            {
-                "low": {
-                    "calls": 1, "totalTokens": 100,
-                    "reasoningCalls": 1,
-                    "reasoningOutputTokens": 20,
-                },
-                "medium": {
-                    "calls": 1, "totalTokens": 200,
-                    "reasoningCalls": 1,
-                    "reasoningOutputTokens": 50,
-                },
-            },
-        )
-        self.assertEqual(telemetry["routing"]["speeds"]["fast"]["totalTokens"], 100)
-        self.assertEqual(
-            telemetry["routing"]["speeds"]["standard"]["totalTokens"], 200
-        )
-        self.assertEqual(telemetry["quota"]["windows"], {"300": 80.0, "10080": 12.0})
-        self.assertTrue(telemetry["quota"]["limitReached"])
-        self.assertNotIn("session", json.dumps(telemetry).lower())
-
-    def test_one_tree_per_call_ignores_its_siblings(self) -> None:
-        """Multica's rollouts belong to their own store, not to this tree's.
-
-        Collecting several trees into one result would make the caller responsible
-        for proving they are disjoint — a precondition nothing enforces once a
-        symlink or a nested path is involved. One tree per call removes the
-        question, so a sibling tree must contribute nothing here.
-        """
-        event = {
-            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
-            "payload": {
-                "type": "token_count",
-                "info": {"last_token_usage": {"total_tokens": 100}},
-            },
-        }
-        settings = {
-            "type": "event_msg", "timestamp": "2026-08-15T01:00:00Z",
-            "payload": {
-                "type": "thread_settings_applied",
-                "thread_settings": {"reasoning_effort": "high"},
-            },
-        }
-        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [settings, event])
-        self.write_jsonl(
-            "multica-sessions/p_x/w/r/2026/08/15/rollout.jsonl", [settings, event]
-        )
-        daily = usage_telemetry.collect_codex_routing_since(
-            date(2026, 1, 1), self.root / "sessions"
-        )
-        bucket = daily["2026-08-15"]["routing"]["efforts"]["high"]
-        self.assertEqual(bucket["calls"], 1)
-        self.assertEqual(bucket["totalTokens"], 100)
-
-    def test_a_single_directory_is_still_accepted(self) -> None:
-        self.write_jsonl("sessions/2026/08/15/rollout.jsonl", [{
-            "type": "turn_context", "timestamp": "2026-08-15T01:00:00Z",
-            "payload": {"effort": "low"},
-        }, {
-            "type": "event_msg", "timestamp": "2026-08-15T01:01:00Z",
-            "payload": {
-                "type": "token_count",
-                "info": {"last_token_usage": {"total_tokens": 7}},
-            },
-        }])
-        daily = usage_telemetry.collect_codex_routing_since(
-            date(2026, 1, 1), self.root / "sessions"
-        )
-        self.assertEqual(
-            daily["2026-08-15"]["routing"]["efforts"]["low"]["totalTokens"], 7
-        )
-
-    def test_claude_stream_updates_are_deduplicated_before_routing_totals(self) -> None:
-        self.write_jsonl("project/session.jsonl", [
-            {
-                "type": "assistant", "timestamp": "2026-08-15T01:00:00Z",
-                "effort": "low",
-                "message": {
-                    "id": "private-message-a",
-                    "usage": {
-                        "speed": "standard", "input_tokens": 10,
-                        "output_tokens_details": {"thinking_tokens": 2},
-                    },
-                },
-            },
-            {
-                "type": "assistant", "timestamp": "2026-08-15T01:00:01Z",
-                "effort": "low",
-                "message": {
-                    "id": "private-message-a",
-                    "usage": {
-                        "speed": "standard", "input_tokens": 20,
-                        "cache_read_input_tokens": 10,
-                        "output_tokens_details": {"thinking_tokens": 4},
-                    },
-                },
-            },
-            {
-                "type": "assistant", "timestamp": "2026-08-15T02:00:00Z",
-                "effort": "xhigh",
-                "message": {
-                    "id": "private-message-b",
-                    "usage": {
-                        "speed": "standard", "output_tokens": 20,
-                        "output_tokens_details": {"thinking_tokens": 8},
-                    },
-                },
-            },
-        ])
-        telemetry = usage_telemetry.collect_claude_routing_since(
-            date(2026, 8, 15), self.root
-        )["2026-08-15"]["routing"]
-        self.assertEqual(telemetry["efforts"]["low"], {
-            "calls": 1, "totalTokens": 30,
-            "reasoningCalls": 1, "reasoningOutputTokens": 4,
-        })
-        self.assertEqual(telemetry["efforts"]["xhigh"], {
-            "calls": 1, "totalTokens": 20,
-            "reasoningCalls": 1, "reasoningOutputTokens": 8,
-        })
-        self.assertNotIn("speeds", telemetry)
-        self.assertNotIn("private-message", json.dumps(telemetry))
-
 
 class ReconcileTests(unittest.TestCase):
     """The high-water rule is right on the schedule and wrong after an upgrade."""
@@ -957,9 +778,7 @@ class OfficialPricingFetchTests(unittest.TestCase):
             captured["cmd"] = cmd
             return completed
 
-        with patch.object(sync_usage.subprocess, "run", side_effect=fake_run), \
-                patch.object(usage_ccusage, "count_codex_image_files_per_day",
-                             return_value={}):
+        with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
             cc, cx, op = usage_ccusage.fetch_daily_since(date(2026, 1, 1))
         self.captured = captured
         return {
@@ -1600,7 +1419,7 @@ class DshSessionTests(unittest.TestCase):
             date(2024, 1, 1), (self.root, copied_root)
         )[0]
         self.assertEqual(entry["totalTokens"], 10)
-        self.assertEqual(entry["routing"]["efforts"]["high"]["calls"], 1)
+        self.assertNotIn("routing", entry)
         self.assertNotIn("same-session", json.dumps(entry))
 
     def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
@@ -1631,31 +1450,6 @@ class DshSessionTests(unittest.TestCase):
         self.assertEqual(entry["costSource"], "unpriced")
         self.assertIn("glm-5.1", err.getvalue())
 
-    def test_effort_is_recorded_only_for_levels_this_repository_renders(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "off", [
-            self.header(1, millis, "deepseek-v4-flash", effort="off"),
-            self.message(2, millis, {
-                "inputTokens": 10, "outputTokens": 0, "reasoningTokens": 4,
-            }),
-        ])
-        self.write_session("proj", "high", [
-            self.header(1, millis, "deepseek-v4-flash", effort="high"),
-            self.message(2, millis, {"inputTokens": 20, "outputTokens": 0}),
-        ])
-        # `minimal` has no counterpart in EFFORT_LEVELS, so it records no bucket
-        # rather than being folded into a neighbouring level.
-        self.write_session("proj", "minimal", [
-            self.header(1, millis, "deepseek-v4-flash", effort="minimal"),
-            self.message(2, millis, {"inputTokens": 30, "outputTokens": 0}),
-        ])
-        efforts = self.collect()[0]["routing"]["efforts"]
-        self.assertEqual(set(efforts), {"none", "high"})
-        self.assertEqual(efforts["none"]["calls"], 1)
-        self.assertEqual(efforts["none"]["reasoningOutputTokens"], 4)
-        self.assertEqual(efforts["high"]["totalTokens"], 20)
-        # The unrecorded level's tokens still reach the day's total.
-        self.assertEqual(self.collect()[0]["totalTokens"], 60)
 
     def test_days_split_on_the_shanghai_calendar(self) -> None:
         # 2026-08-20T23:30 and 2026-08-21T00:30, Asia/Shanghai.

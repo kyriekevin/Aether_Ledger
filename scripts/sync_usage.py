@@ -14,16 +14,12 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Callable
 
-import multica_usage
-import collect_statistics
-import issue_activity
 import usage_ccusage
 import usage_dsh
 import usage_git
 import usage_schema
 import usage_sources
 import usage_store
-import usage_telemetry
 
 
 READ_ERRORS = (OSError, ValueError, subprocess.SubprocessError, KeyError, TypeError)
@@ -73,24 +69,6 @@ def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
             ), failures,
         ),
     }
-    # Optional dimensions cannot discard a successfully read token observation.
-    telemetry = {
-        "claude": lambda: usage_telemetry.collect_claude_routing_since(
-            since, usage_telemetry.CLAUDE_PROJECTS_DIR,
-        ),
-        "codex": lambda: usage_telemetry.collect_codex_routing_since(
-            since, [usage_sources.CODEX_SESSION_DIR,
-                    usage_sources.CODEX_SESSION_DIR.parent / "archived_sessions"],
-        ),
-        "codex-multica": lambda: usage_telemetry.collect_codex_routing_since(since, multica_roots),
-        "traex": lambda: usage_telemetry.collect_codex_routing_since(
-            since, usage_ccusage.TRAEX_CODEX_HOME / "sessions",
-        ),
-    }
-    for name, fetch in telemetry.items():
-        if observations[name]:
-            details = _read(name + " telemetry", fetch, failures, empty={})
-            usage_telemetry._attach_telemetry(observations[name], details)
     today = datetime.now(usage_schema.SHANGHAI).date().isoformat()
     for name, rows in observations.items():
         failed = name in failures or ("ccusage" in failures and name in {"claude", "codex", "opencode"})
@@ -103,8 +81,6 @@ def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
 
 def _sync(
     machine: str, *, no_push: bool, reconcile_since: date | None = None,
-    include_multica_tasks: bool = False,
-    include_statistics: bool = False,
 ) -> int:
     now = datetime.now(usage_schema.SHANGHAI)
     if not no_push:
@@ -134,45 +110,6 @@ def _sync(
     if not no_push:
         usage_git.git_push(machine)
 
-    # The new statistics journal is opt-in and independently published. A new
-    # parser/API failure must not block the legacy token publication above.
-    if include_statistics:
-        try:
-            statistics = collect_statistics.collect(machine_dir)
-            if any(s["status"] in {"partial", "failed"} for s in statistics["sources"].values()):
-                failures.add("statistics")
-            if statistics["multica"] and (statistics["multica"]["status"] == "failed" or statistics["multica"]["assignmentStatus"] == "failed"):
-                failures.add("statistics multica")
-            if not no_push:
-                usage_git.git_push(machine)
-        except Exception as error:
-            failures.add("statistics")
-            print(f"statistics: status=failed error={type(error).__name__}", file=sys.stderr)
-
-    if include_statistics:
-        try:
-            activity = issue_activity.collect(machine_dir)
-            if activity is not None:
-                if activity["status"] != "ok":
-                    failures.add("issue activity")
-                if not no_push:
-                    usage_git.git_push(machine)
-        except Exception as error:
-            failures.add("issue activity")
-            print(f"issue activity: status=failed error={type(error).__name__}", file=sys.stderr)
-
-    # Workspace-wide task metadata is optional and runs AFTER publishing tokens.
-    # Existing task history stays readable when this opt-in is not used.
-    if include_multica_tasks and Path(machine).name == usage_schema.MULTICA_TASK_WRITER:
-        try:
-            changed = multica_usage.collect_if_configured(
-                store_path=usage_schema.DATA_REPO_DIR / usage_schema.MULTICA_TASK_STORE,
-            )
-            if changed and not no_push:
-                usage_git.git_push(machine)
-        except Exception as error:
-            failures.add("multica tasks")
-            print(f"multica tasks: status=failed error={type(error).__name__}", file=sys.stderr)
     return 1 if failures else 0
 
 
@@ -182,10 +119,9 @@ def main() -> int:
                         help="update local data without switching branches, committing, or pushing")
     parser.add_argument("--reconcile-since", metavar="YYYY-MM-DD", type=date.fromisoformat,
                         help="accept lower counts from this date; manual use only")
-    parser.add_argument("--include-statistics", action="store_true",
-                        help="collect versioned statistics and per-machine Multica runs after tokens publish")
-    parser.add_argument("--include-multica-tasks", action="store_true",
-                        help="also refresh optional workspace task metadata after publishing tokens")
+    # Existing launchd plists may still pass these until the next installation.
+    parser.add_argument("--include-statistics", "--include-multica-tasks",
+                        action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     print("sync run started", flush=True)
     machine = usage_git.resolve_machine()
@@ -193,9 +129,7 @@ def main() -> int:
         if not acquired:
             print("sync run finished status=lock-busy", flush=True)
             return 0
-        status = _sync(machine, no_push=args.no_push, reconcile_since=args.reconcile_since,
-                       include_multica_tasks=args.include_multica_tasks,
-                       include_statistics=args.include_statistics)
+        status = _sync(machine, no_push=args.no_push, reconcile_since=args.reconcile_since)
     print(f"sync run finished exit={status}", flush=True)
     return status
 
