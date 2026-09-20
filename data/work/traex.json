@@ -550,5 +550,19 @@
     },
     "totalCost": 0.165949,
     "totalTokens": 57295
+  },
+  "2026-09-20": {
+    "costSource": "official",
+    "models": {
+      "claude-opus-4-8": {
+        "cacheCreationTokens": 973429,
+        "cacheReadTokens": 24648714,
+        "inputTokens": 455,
+        "outputTokens": 280858,
+        "totalTokens": 25903456
+      }
+    },
+    "totalCost": 25.43201325,
+    "totalTokens": 25903456
   }
 }
