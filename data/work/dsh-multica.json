@@ -78,5 +78,19 @@
     },
     "totalCost": 0.0,
     "totalTokens": 537720
+  },
+  "2026-09-21": {
+    "costSource": "unpriced",
+    "models": {
+      "qwen3.7-max": {
+        "cacheCreationTokens": 105669,
+        "cacheReadTokens": 493884,
+        "inputTokens": 42,
+        "outputTokens": 18848,
+        "totalTokens": 618443
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 618443
   }
 }
