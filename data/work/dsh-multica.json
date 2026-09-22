@@ -92,5 +92,19 @@
     },
     "totalCost": 0.0,
     "totalTokens": 618443
+  },
+  "2026-09-22": {
+    "costSource": "unpriced",
+    "models": {
+      "kimi-k3": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 267776,
+        "inputTokens": 57539,
+        "outputTokens": 7206,
+        "totalTokens": 332521
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 332521
   }
 }
