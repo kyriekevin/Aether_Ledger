@@ -564,5 +564,19 @@
     },
     "totalCost": 25.43201325,
     "totalTokens": 25903456
+  },
+  "2026-09-23": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 516096,
+        "inputTokens": 114709,
+        "outputTokens": 7519,
+        "totalTokens": 638324
+      }
+    },
+    "totalCost": 1.057163,
+    "totalTokens": 638324
   }
 }
