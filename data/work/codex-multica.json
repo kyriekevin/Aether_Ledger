@@ -782,20 +782,20 @@
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 123904,
-        "inputTokens": 76183,
-        "outputTokens": 725,
-        "totalTokens": 200812
+        "cacheReadTokens": 128768,
+        "inputTokens": 131995,
+        "outputTokens": 955,
+        "totalTokens": 261718
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 46039296,
-        "inputTokens": 856652,
-        "outputTokens": 112373,
-        "totalTokens": 47008321
+        "cacheReadTokens": 50765824,
+        "inputTokens": 877712,
+        "outputTokens": 120571,
+        "totalTokens": 51764107
       }
     },
-    "totalCost": 0.464617,
-    "totalTokens": 47209133
+    "totalCost": 0.753009,
+    "totalTokens": 52025825
   }
 }
