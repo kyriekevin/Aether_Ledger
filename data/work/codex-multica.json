@@ -789,13 +789,13 @@
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 87462784,
-        "inputTokens": 1537648,
-        "outputTokens": 169080,
-        "totalTokens": 89169512
+        "cacheReadTokens": 89736448,
+        "inputTokens": 1541872,
+        "outputTokens": 170638,
+        "totalTokens": 91448958
       }
     },
     "totalCost": 0.753009,
-    "totalTokens": 89431230
+    "totalTokens": 91710676
   }
 }
