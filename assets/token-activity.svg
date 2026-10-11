@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="410" viewBox="0 0 1180 410" role="img" aria-labelledby="title desc">
-  <title id="title">AI compute activity through 2026-10-10</title>
-  <desc id="desc">$34.8K API-equivalent lifetime cost and 26.7B lifetime tokens across 158 active days; peak 699M tokens on 2026-10-10.</desc>
+  <title id="title">AI compute activity through 2026-10-11</title>
+  <desc id="desc">$34.8K API-equivalent lifetime cost and 27.4B lifetime tokens across 159 active days; peak 711M tokens on 2026-10-10.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
     .dashboard-panel { fill: #e6e9ef; }
@@ -31,23 +31,23 @@
   </style>
   <rect class="dashboard-background" width="1180" height="410" rx="22"/>
   <rect class="dashboard-border" x="16" y="18" width="1148" height="112" rx="18" fill="none" stroke-width="2"/>
-  <text class="dashboard-accent" x="130.8" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">699M tokens</text>
-  <text class="dashboard-primary" x="130.8" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$12.61</text>
-  <text class="dashboard-muted" x="130.8" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Oct 10</text>
+  <text class="dashboard-accent" x="130.8" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">692M tokens</text>
+  <text class="dashboard-primary" x="130.8" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$0.75</text>
+  <text class="dashboard-muted" x="130.8" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Oct 11</text>
   <line class="dashboard-border" x1="245.6" y1="36" x2="245.6" y2="112" stroke-width="1"/>
-  <text class="dashboard-accent" x="360.4" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">2.1B tokens</text>
-  <text class="dashboard-primary" x="360.4" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$163</text>
+  <text class="dashboard-accent" x="360.4" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">2.8B tokens</text>
+  <text class="dashboard-primary" x="360.4" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$164</text>
   <text class="dashboard-muted" x="360.4" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Month · Oct</text>
   <line class="dashboard-border" x1="475.2" y1="36" x2="475.2" y2="112" stroke-width="1"/>
-  <text class="dashboard-accent" x="590.0" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">26.7B tokens</text>
+  <text class="dashboard-accent" x="590.0" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">27.4B tokens</text>
   <text class="dashboard-primary" x="590.0" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$34.8K</text>
   <text class="dashboard-muted" x="590.0" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Lifetime</text>
   <line class="dashboard-border" x1="704.8" y1="36" x2="704.8" y2="112" stroke-width="1"/>
-  <text class="dashboard-accent" x="819.6" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">699M tokens</text>
-  <text class="dashboard-primary" x="819.6" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$12.61</text>
+  <text class="dashboard-accent" x="819.6" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">711M tokens</text>
+  <text class="dashboard-primary" x="819.6" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$12.68</text>
   <text class="dashboard-muted" x="819.6" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Oct 10</text>
   <line class="dashboard-border" x1="934.4" y1="36" x2="934.4" y2="112" stroke-width="1"/>
-  <text class="dashboard-primary" x="1049.2" y="66" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">158 days</text>
+  <text class="dashboard-primary" x="1049.2" y="66" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">159 days</text>
   <text class="dashboard-muted" x="1049.2" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Active days</text>
   <text class="dashboard-primary" x="16" y="174" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="500">Compute activity</text>
   <text class="dashboard-muted" x="16" y="231" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Mon</text>
@@ -855,7 +855,7 @@
   <rect class="heatmap-level-3" x="798" y="278" width="16" height="16" rx="4" data-date="2026-06-25" data-tokens="156071061" data-level="3">
     <title>2026-06-25: 156M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="798" y="298" width="16" height="16" rx="4" data-date="2026-06-26" data-tokens="139127643" data-level="3">
+  <rect class="heatmap-level-2" x="798" y="298" width="16" height="16" rx="4" data-date="2026-06-26" data-tokens="139127643" data-level="2">
     <title>2026-06-26: 139M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="798" y="318" width="16" height="16" rx="4" data-date="2026-06-27" data-tokens="0" data-level="0">
@@ -942,7 +942,7 @@
   <rect class="heatmap-level-3" x="878" y="298" width="16" height="16" rx="4" data-date="2026-07-24" data-tokens="156236265" data-level="3">
     <title>2026-07-24: 156M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="318" width="16" height="16" rx="4" data-date="2026-07-25" data-tokens="231832640" data-level="4">
+  <rect class="heatmap-level-3" x="878" y="318" width="16" height="16" rx="4" data-date="2026-07-25" data-tokens="231832640" data-level="3">
     <title>2026-07-25: 232M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="878" y="338" width="16" height="16" rx="4" data-date="2026-07-26" data-tokens="100995944" data-level="2">
@@ -1173,8 +1173,11 @@
   <rect class="heatmap-level-4" x="1098" y="298" width="16" height="16" rx="4" data-date="2026-10-09" data-tokens="604795892" data-level="4">
     <title>2026-10-09: 605M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1098" y="318" width="16" height="16" rx="4" data-date="2026-10-10" data-tokens="698929818" data-level="4">
-    <title>2026-10-10: 699M tokens</title>
+  <rect class="heatmap-level-4" x="1098" y="318" width="16" height="16" rx="4" data-date="2026-10-10" data-tokens="711398275" data-level="4">
+    <title>2026-10-10: 711M tokens</title>
+  </rect>
+  <rect class="heatmap-level-4" x="1098" y="338" width="16" height="16" rx="4" data-date="2026-10-11" data-tokens="692094274" data-level="4">
+    <title>2026-10-11: 692M tokens</title>
   </rect>
   <text class="dashboard-muted" x="58" y="385" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Less</text>
   <rect class="heatmap-level-0" x="92" y="373" width="16" height="16" rx="4"/>
