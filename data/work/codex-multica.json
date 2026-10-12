@@ -789,13 +789,27 @@
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 674166784,
-        "inputTokens": 15679998,
-        "outputTokens": 1985774,
-        "totalTokens": 691832556
+        "cacheReadTokens": 694101760,
+        "inputTokens": 15833871,
+        "outputTokens": 2011922,
+        "totalTokens": 711947553
       }
     },
     "totalCost": 0.753009,
-    "totalTokens": 692094274
+    "totalTokens": 712209271
+  },
+  "2026-10-12": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 972399744,
+        "inputTokens": 19333668,
+        "outputTokens": 3297753,
+        "totalTokens": 995031165
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 995031165
   }
 }
