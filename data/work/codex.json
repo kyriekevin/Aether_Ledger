@@ -4616,7 +4616,7 @@
         "totalTokens": 9979966
       }
     },
-    "totalCost": 1.171801,
+    "totalCost": 1.7579365,
     "totalTokens": 10829942
   },
   "2026-10-10": {
@@ -4660,5 +4660,26 @@
     },
     "totalCost": 0.94671,
     "totalTokens": 18188713
+  },
+  "2026-10-14": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 608768,
+        "inputTokens": 61116,
+        "outputTokens": 2206,
+        "totalTokens": 672090
+      },
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3426816,
+        "inputTokens": 97654,
+        "outputTokens": 6122,
+        "totalTokens": 3530592
+      }
+    },
+    "totalCost": 1.69036,
+    "totalTokens": 4202682
   }
 }
