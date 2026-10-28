@@ -14,11 +14,12 @@ AGENT_STORES = {
     "claude": "claude.json",
     "codex": "codex.json",
     "codex-multica": "codex-multica.json",
-    "dsh-multica": "dsh-multica.json",
-    "opencode": "opencode.json",
     "traex": "traex.json",
-    "dsh": "dsh.json",
 }
+
+# Stores of sources that are no longer collected. A writer deletes its own copy,
+# so one an older writer recreated on a day branch is removed on the next run.
+RETIRED_STORES = ("dsh.json", "dsh-multica.json", "opencode.json")
 
 EFFORT_LEVELS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
 

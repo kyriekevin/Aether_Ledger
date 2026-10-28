@@ -169,8 +169,8 @@ def merge_with_cumulative(
         ):
             merged["totalCost"] = prev["totalCost"]
             cost_source = prev.get("costSource")
-        # Carry per-model token breakdown when present (claude/codex/opencode all
-        # supply it now). Each model needs the same high-water protection as the
+        # Carry per-model token breakdown when present (claude and codex
+        # both supply it now). Each model needs the same high-water protection as the
         # row total: session rotation can shrink one model even while another
         # grows enough for the fresh row total to win.
         # While reconciling the fetch is authoritative even when it breaks the day

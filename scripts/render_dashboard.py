@@ -22,16 +22,12 @@ from zoneinfo import ZoneInfo
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
 AGENT_FILES = frozenset({
-    "claude.json", "codex.json", "codex-multica.json", "dsh-multica.json",
-    "opencode.json", "traex.json", "dsh.json",
+    "claude.json", "codex.json", "codex-multica.json", "traex.json",
 })
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 ROLE_ORDER = ("work", "personal", "devbox", "trail")
-AGENT_ORDER = (
-    "claude", "codex", "codex-multica", "opencode", "traex", "dsh",
-    "dsh-multica",
-)
+AGENT_ORDER = ("claude", "codex", "codex-multica", "traex")
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 WIDTH = 1180
 CARD_X = 16

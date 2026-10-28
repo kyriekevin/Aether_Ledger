@@ -46,8 +46,8 @@ def _breakdown_tokens(m: dict) -> int:
     )
 
 
-def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
-    """一次 ccusage daily --by-agent，拆出 (cc_daily, cx_daily, op_daily)。
+def fetch_daily_since(since: date) -> tuple[list[dict], list[dict]]:
+    """一次 ccusage daily --by-agent，拆出 (cc_daily, cx_daily)。
 
     v20+ schema:
       - 日期字段 `period`(v18 是 `date`)
@@ -56,7 +56,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
       - 每个 modelBreakdowns[] 给到 per-model cost + 四类 tokens,但没有
         per-model totalTokens,需要把四类相加。
 
-    其余 ccusage 支持的 agent 不属于本仓库的三个 store，保持忽略。
+    其余 ccusage 支持的 agent 不属于本仓库的两个 store，保持忽略。
     """
     config_day = datetime.now(usage_schema.SHANGHAI).date()
     pricing = load_pricing()
@@ -73,8 +73,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
 
     cc_daily: list[dict] = []
     cx_daily: list[dict] = []
-    op_daily: list[dict] = []
-    destinations = {"claude": cc_daily, "codex": cx_daily, "opencode": op_daily}
+    destinations = {"claude": cc_daily, "codex": cx_daily}
     for row in raw:
         d = row["period"]
         for agent_row in row.get("agents", []):
@@ -108,7 +107,7 @@ def fetch_daily_since(since: date) -> tuple[list[dict], list[dict], list[dict]]:
             }
             destination.append(entry)
 
-    return cc_daily, cx_daily, op_daily
+    return cc_daily, cx_daily
 
 
 @contextmanager

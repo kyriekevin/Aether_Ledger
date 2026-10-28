@@ -15,13 +15,18 @@ from pathlib import Path
 
 GENERATED_STORE = re.compile(
     r"^data/(?:work|personal|devbox)/"
-    r"(?:claude|codex|codex-multica|dsh-multica|opencode|traex|dsh|statistics|issue-activity)\.json$"
+    r"(?:claude|codex|codex-multica|traex|statistics|issue-activity)\.json$"
     r"|^data/trail/[^/]+/"
-    r"(?:claude|codex|codex-multica|dsh-multica|opencode|traex|dsh)\.json$"
+    r"(?:claude|codex|codex-multica|traex)\.json$"
     # The Multica task aggregate is machine-independent, so it sits at the data
     # root rather than under a node label — but it is regenerated the same way
     # and squashes under the same rule.
     r"|^data/multica\.json$"
+)
+# Stores of sources that are no longer collected. A day branch cut before their
+# removal can still touch them, so a squash deletes them instead of refusing.
+RETIRED_STORE = re.compile(
+    r"^data/(?:work|personal|devbox|trail/[^/]+)/(?:dsh|dsh-multica|opencode)\.json$"
 )
 
 
@@ -54,10 +59,25 @@ def branch_contains_blob_after(branch: str, fork: str, path: str, blob: str) -> 
     return any(blob_at(commit, path) == blob for commit in history.stdout.splitlines())
 
 
+def drop_retired_stores() -> bool:
+    listed = git("ls-files", "--", "data", capture=True)
+    if listed.returncode != 0:
+        return False
+    for path in listed.stdout.splitlines():
+        if RETIRED_STORE.fullmatch(path):
+            if git("rm", "-q", "-f", "--", path).returncode != 0:
+                return False
+            print(f"removed retired store from {path}")
+    return True
+
+
 def squash(branch: str) -> bool:
     merged = git("merge", "--squash", branch)
     if merged.returncode == 0:
-        return True
+        if drop_retired_stores():
+            return True
+        git("reset", "--merge")
+        return False
 
     conflicts = git("diff", "--name-only", "--diff-filter=U", capture=True)
     paths = conflicts.stdout.splitlines() if conflicts.returncode == 0 else []
@@ -69,6 +89,8 @@ def squash(branch: str) -> bool:
     fork_point = fork.stdout.strip() if fork.returncode == 0 else ""
     unsafe: list[str] = []
     for path in paths:
+        if RETIRED_STORE.fullmatch(path):
+            continue
         main_blob = blob_at("HEAD", path)
         if (
             not GENERATED_STORE.fullmatch(path)
@@ -88,6 +110,12 @@ def squash(branch: str) -> bool:
         return False
 
     for path in paths:
+        if RETIRED_STORE.fullmatch(path):
+            if git("rm", "-q", "-f", "--", path).returncode != 0:
+                git("reset", "--merge")
+                return False
+            print(f"resolved retired-store conflict from {branch}: {path}")
+            continue
         if git("checkout", "--theirs", "--", path).returncode != 0:
             git("reset", "--merge")
             return False
@@ -95,6 +123,9 @@ def squash(branch: str) -> bool:
             git("reset", "--merge")
             return False
         print(f"resolved stale generated-store conflict from {branch}: {path}")
+    if not drop_retired_stores():
+        git("reset", "--merge")
+        return False
     return True
 
 

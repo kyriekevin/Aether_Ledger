@@ -10,8 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator
 
-MULTICA_DSH_PROFILE_FILE = Path.home() / ".config" / "token-activity" / "multica_dsh_profile"
-
 CODEX_SESSION_DIR = Path.home() / ".codex" / "sessions"
 
 MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
@@ -19,112 +17,6 @@ MULTICA_CODEX_SESSION_DIR = Path.home() / ".codex" / "multica-sessions"
 MULTICA_TASK_WORKSPACES_ROOT = Path(
     os.environ.get("MULTICA_TASK_WORKSPACES_ROOT", "").strip()
 ) if os.environ.get("MULTICA_TASK_WORKSPACES_ROOT", "").strip() else None
-
-DSH_HOME = Path(os.environ.get("DSH_HOME", "").strip() or Path.home() / ".dsh")
-
-MULTICA_HOME = Path(
-    os.environ.get("MULTICA_HOME", "").strip() or Path.home() / ".multica"
-)
-
-MULTICA_DSH_PROFILE = os.environ.get("MULTICA_DSH_PROFILE", "").strip() or None
-
-
-def dsh_session_roots(home: Path = DSH_HOME) -> tuple[Path, ...]:
-    """The session tree under one dsh harness home, or nothing when absent.
-
-    A tuple rather than a single path so a caller reads the same shape whether or
-    not the home exists. See DSH_HOME for why only the default tree is read.
-    """
-    default = home / "sessions"
-    return (default,) if default.is_dir() else ()
-
-
-def multica_dsh_session_roots(
-    home: Path = MULTICA_HOME,
-    profile: str | None = MULTICA_DSH_PROFILE,
-    binding_file: Path = MULTICA_DSH_PROFILE_FILE,
-) -> tuple[Path, ...]:
-    """The one Multica profile tree assigned to dsh-multica.json."""
-    profiles = home / "profiles"
-    bound = _read_multica_dsh_profile(binding_file)
-    if profile is not None and bound is not None and profile != bound:
-        raise ValueError(
-            f"dsh-multica.json is bound to Multica profile {bound!r}; refusing "
-            f"to switch it to MULTICA_DSH_PROFILE={profile!r}"
-        )
-    selected_profile = bound or profile
-    if selected_profile is not None:
-        _validate_multica_dsh_profile(selected_profile)
-        selected = profiles / selected_profile / "dsh-sessions"
-        if not selected.is_dir():
-            raise ValueError(
-                f"bound Multica DSH profile {selected_profile!r} has no "
-                "dsh-sessions tree; keeping the stored high-water"
-            )
-        if bound is None:
-            persisted = _bind_multica_dsh_profile(binding_file, selected_profile)
-            if persisted != selected_profile:
-                raise ValueError(
-                    f"dsh-multica.json was concurrently bound to {persisted!r}; "
-                    f"refusing to collect {selected_profile!r}"
-                )
-        return (selected,)
-    if not profiles.is_dir():
-        return ()
-    candidates = tuple(sorted(
-        path for path in profiles.glob("*/dsh-sessions") if path.is_dir()
-    ))
-    if len(candidates) > 1:
-        raise ValueError(
-            "multiple Multica profiles have dsh-sessions trees; set "
-            "MULTICA_DSH_PROFILE so dsh-multica.json keeps one fixed source"
-        )
-    if not candidates:
-        return ()
-    selected_profile = candidates[0].parent.name
-    persisted = _bind_multica_dsh_profile(binding_file, selected_profile)
-    if persisted != selected_profile:
-        raise ValueError(
-            f"dsh-multica.json was concurrently bound to {persisted!r}; "
-            f"refusing to collect {selected_profile!r}"
-        )
-    return candidates
-
-
-def _validate_multica_dsh_profile(profile: str) -> None:
-    if Path(profile).name != profile or profile in {"", ".", ".."}:
-        raise ValueError("Multica DSH profile must be one profile directory name")
-
-
-def _read_multica_dsh_profile(path: Path) -> str | None:
-    try:
-        profile = path.read_text(encoding="utf-8").strip()
-    except FileNotFoundError:
-        return None
-    _validate_multica_dsh_profile(profile)
-    return profile
-
-
-def _bind_multica_dsh_profile(path: Path, profile: str) -> str:
-    """Atomically bind dsh-multica.json to one local Multica profile."""
-    _validate_multica_dsh_profile(profile)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
-            stream.write(profile + "\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        try:
-            os.link(tmp, path)
-        except FileExistsError:
-            persisted = _read_multica_dsh_profile(path)
-            if persisted is None:  # pragma: no cover - link says it exists
-                raise OSError(f"cannot read concurrently created {path}")
-            return persisted
-    finally:
-        os.unlink(tmp)
-    return profile
 
 
 def _workspace_codex_homes(root: Path) -> list[Path]:

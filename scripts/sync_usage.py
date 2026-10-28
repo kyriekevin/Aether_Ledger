@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Callable
 
 import usage_ccusage
-import usage_dsh
 import usage_git
 import usage_schema
 import usage_sources
@@ -39,9 +38,9 @@ def _read(name: str, fetch: Callable, failures: set[str], empty=None):
 def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
     """Read all sources once; each result retains its own cumulative store."""
     failures: set[str] = set()
-    claude, codex, opencode = _read(
+    claude, codex = _read(
         "ccusage", lambda: usage_ccusage.fetch_daily_since(since), failures,
-        empty=([], [], []),
+        empty=([], []),
     )
     multica_roots = _read(
         "codex-multica", usage_sources.multica_codex_session_roots, failures,
@@ -51,7 +50,7 @@ def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
                         failures, empty="status=failed")
         print(f"codex-multica discovery: {summary}")
     observations = {
-        "claude": claude, "codex": codex, "opencode": opencode,
+        "claude": claude, "codex": codex,
         "codex-multica": _read(
             "codex-multica",
             lambda: usage_ccusage.fetch_multica_codex_daily(since, multica_roots),
@@ -62,16 +61,10 @@ def collect_usage(since: date) -> tuple[dict[str, list[dict]], set[str]]:
                 since, usage_ccusage.TRAEX_CODEX_HOME, lowercase_models=True,
             ), failures,
         ),
-        "dsh": _read("dsh", lambda: usage_dsh.collect_dsh_daily_since(since), failures),
-        "dsh-multica": _read(
-            "dsh-multica", lambda: usage_dsh.collect_dsh_daily_since(
-                since, usage_sources.multica_dsh_session_roots(),
-            ), failures,
-        ),
     }
     today = datetime.now(usage_schema.SHANGHAI).date().isoformat()
     for name, rows in observations.items():
-        failed = name in failures or ("ccusage" in failures and name in {"claude", "codex", "opencode"})
+        failed = name in failures or ("ccusage" in failures and name in {"claude", "codex"})
         state = "failed" if failed else "ok" if rows else "empty"
         tokens = sum(row["totalTokens"] for row in rows if row["date"] == today)
         latest = max((row["date"] for row in rows), default="none")
@@ -107,6 +100,8 @@ def _sync(
         usage_store.merge_with_cumulative(
             observations[name], machine_dir / filename, reconcile_since=reconcile_since,
         )
+    for filename in usage_schema.RETIRED_STORES:
+        (machine_dir / filename).unlink(missing_ok=True)
     if not no_push:
         usage_git.git_push(machine)
 

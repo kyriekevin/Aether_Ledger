@@ -11,21 +11,18 @@
 | `claude.json` | ccusage 读取 Claude 日志，包括写入同一日志目录的 Multica、Trae 启动的 Claude 会话 |
 | `codex.json` | ccusage 读取普通 Codex 日志 |
 | `codex-multica.json` | 发现 Multica 共享及任务私有的 Codex 日志目录后，交给 ccusage 读取 |
-| `opencode.json` | ccusage 读取 OpenCode 日志 |
 | `traex.json` | ccusage 的 Codex 解析器读取 TRAE CLI 目录，并统一模型名称 |
-| `dsh.json` | 本地 DSH JSONL 及压缩日志 |
-| `dsh-multica.json` | 已绑定 Multica profile 的 DSH 日志 |
 
-每个来源保留独立累计文件，避免混用累计上限。Multica Codex 日志发现会先对复制的 rollout 去重，再交给 ccusage；DSH 按会话和步骤去重。删除这些发现逻辑会漏算用量。
+每个来源保留独立累计文件，避免混用累计上限。Multica Codex 日志发现会先对复制的 rollout 去重，再交给 ccusage，删除这些发现逻辑会漏算用量。DSH 和 OpenCode 已不再采集，对应数据文件已移除。
 
-私有来源配置位于 `~/.config/token-activity/multica.json`，模板见 [`config/multica.example.json`](../config/multica.example.json)。`dshProfile` 选择 DSH profile，`taskWorkspacesRoot` 指向任务私有 Codex 日志的上级目录。为兼容已有配置，仍接受 `profile` 和 `workspaceId`，但不会调用任务 API。DSH 在 `~/.config/token-activity/multica_dsh_profile` 保存来源绑定；更换时需主动校正数据，避免混合两个累计来源。
+私有来源配置位于 `~/.config/token-activity/multica.json`，模板见 [`config/multica.example.json`](../config/multica.example.json)。`taskWorkspacesRoot` 指向任务私有 Codex 日志的上级目录。为兼容已有配置，仍接受 `profile` 和 `workspaceId`，但不会调用任务 API。残留的 `dshProfile` 会被忽略。
 
 ## 安装
 
 Python 固定为 3.11。在 macOS 安装依赖并校验 ccusage：
 
 ```sh
-brew install uv ccusage gh rust zstd
+brew install uv ccusage gh rust
 uv run python scripts/ccusage_runtime.py --install
 uv run python scripts/ccusage_runtime.py --check
 mkdir -p ~/.config/token-activity
@@ -152,7 +149,7 @@ uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 
 压缩前先运行 `uv run --script scripts/compact_trails.py --dry-run`。仅在一个采集端执行压缩：最新数据距今超过七天的非活跃节点会累计到 `data/trail/rollup`，并在同一个提交里移除原节点目录。
 
-校正前先保存累计文件副本，确认来源完整。明确的采集失败会在写入前中止校正，但空来源和部分读取的 DSH 日志仍可能缺数据。读取中没有出现的日期保留原值，出现的日期则可能被调低。该选项影响所有采集文件，也无法重建缺失日志。
+校正前先保存累计文件副本，确认来源完整。明确的采集失败会在写入前中止校正，但空来源仍可能缺数据。读取中没有出现的日期保留原值，出现的日期则可能被调低。该选项影响所有采集文件，也无法重建缺失日志。
 
 推送失败会留下本地提交供下次重试；脏文件阻止日期切换；每日归档失败会保留已结束分支；标准 JSON 损坏会阻止热力图生成。重试前检查已安装采集端的分支、代码版本、来源摘要及错误日志。
 

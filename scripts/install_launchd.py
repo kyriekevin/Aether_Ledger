@@ -27,9 +27,10 @@ SHANGHAI = ZoneInfo("Asia/Shanghai")
 MULTICA_CONFIG_KEYS = {
     "profile": "MULTICA_PROFILE",
     "workspaceId": "MULTICA_WORKSPACE_ID",
-    "dshProfile": "MULTICA_DSH_PROFILE",
     "taskWorkspacesRoot": "MULTICA_TASK_WORKSPACES_ROOT",
 }
+# Keys of retired sources, accepted and ignored so existing configs still load.
+RETIRED_MULTICA_CONFIG_KEYS = frozenset({"dshProfile"})
 
 
 def load_multica_environment(home: Path) -> dict[str, str]:
@@ -43,7 +44,7 @@ def load_multica_environment(home: Path) -> dict[str, str]:
         raise ValueError(f"cannot read {path}: {type(error).__name__}") from error
     if not isinstance(payload, dict):
         raise ValueError(f"{path} must contain a JSON object")
-    unknown = set(payload).difference(MULTICA_CONFIG_KEYS)
+    unknown = set(payload).difference(MULTICA_CONFIG_KEYS, RETIRED_MULTICA_CONFIG_KEYS)
     if unknown:
         raise ValueError(f"{path} has unknown keys: {', '.join(sorted(unknown))}")
     environment = {}
