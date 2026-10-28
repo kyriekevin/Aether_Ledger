@@ -15,7 +15,6 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 import audit_public  # noqa: E402
-import compact_trails  # noqa: E402
 import render_dashboard  # noqa: E402
 import squash_usage_branch  # noqa: E402
 import usage_ccusage
@@ -28,16 +27,12 @@ import update_pricing  # noqa: E402
 
 
 class SharedStoreCoverageTests(unittest.TestCase):
-    def test_trail_compaction_covers_traex(self) -> None:
-        self.assertIn("traex.json", compact_trails.AGENT_FILES)
-
     def test_every_writable_store_is_registered_everywhere(self) -> None:
         """A store the writer creates but a consumer ignores is a silent hole.
 
         A store missing from any consumer fails quietly: audit_public would never
-        schema-check it, render_dashboard would drop it from every chart,
-        compact_trails would strand it in expired trail pods, and
-        squash_usage_branch would treat its conflicts as human work. Each of those fails quietly, so they are
+        schema-check it, render_dashboard would drop it from every chart, and
+        squash_usage_branch would treat its conflicts as human work. So they are
         asserted together against the writer rather than one at a time.
 
         The expected set is read out of `sync_usage.AGENT_STORES` rather than
@@ -50,7 +45,6 @@ class SharedStoreCoverageTests(unittest.TestCase):
             set(usage_schema.AGENT_STORES), set(render_dashboard.AGENT_ORDER),
             "every written store needs a dashboard source to aggregate",
         )
-        self.assertEqual(set(compact_trails.AGENT_FILES), written)
         self.assertEqual(set(audit_public.AGENT_FILES), written)
         self.assertEqual(set(render_dashboard.AGENT_FILES), written)
         self.assertEqual(set(update_pricing.AGENT_FILES), written)
@@ -58,61 +52,6 @@ class SharedStoreCoverageTests(unittest.TestCase):
             self.assertRegex(
                 f"data/work/{name}", squash_usage_branch.GENERATED_STORE
             )
-            self.assertRegex(
-                f"data/trail/node-0123456789ab/{name}",
-                squash_usage_branch.GENERATED_STORE,
-            )
-
-    def test_trail_compaction_preserves_allocation_telemetry(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            rollups = {"codex.json": {}}
-            for index, (tokens, quota) in enumerate(((100, 40.0), (200, 75.0))):
-                pod = root / f"pod-{index}"
-                pod.mkdir()
-                (pod / "codex.json").write_text(json.dumps({
-                    "2026-08-01": {
-                        "totalTokens": tokens,
-                        "totalCost": 1.0,
-                        "models": {
-                            "gpt-example": {
-                                "totalTokens": tokens,
-                                "inputTokens": tokens // 2,
-                                "cacheReadTokens": tokens // 2,
-                            }
-                        },
-                        "routing": {
-                            "efforts": {
-                                "low": {
-                                    "turns": 1,
-                                    "totalTokens": tokens,
-                                    "reasoningCalls": 1,
-                                    "reasoningOutputTokens": 5,
-                                }
-                            }
-                        },
-                        "quota": {
-                            "windows": {"300": quota},
-                            "limitReached": index == 1,
-                        },
-                    }
-                }))
-                with patch.object(compact_trails, "AGENT_FILES", ("codex.json",)):
-                    compact_trails._fold_pod_into(rollups, pod)
-
-            day = rollups["codex.json"]["2026-08-01"]
-            self.assertEqual(day["totalTokens"], 300)
-            self.assertEqual(day["models"]["gpt-example"]["inputTokens"], 150)
-            self.assertEqual(day["routing"]["efforts"]["low"]["calls"], 2)
-            self.assertEqual(
-                day["routing"]["efforts"]["low"]["reasoningCalls"], 2
-            )
-            self.assertEqual(
-                day["routing"]["efforts"]["low"]["reasoningOutputTokens"], 10
-            )
-            self.assertEqual(day["quota"]["windows"], {"300": 75.0})
-            self.assertTrue(day["quota"]["limitReached"])
-
 
 class MergeWithCumulativeTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -665,93 +604,6 @@ class ReconcileTests(unittest.TestCase):
         )
 
 
-class TrailIdentityTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.id_file = Path(self._tmp.name) / "trail_id"
-        p = patch.object(usage_git, "TRAIL_ID_FILE", self.id_file)
-        p.start()
-        self.addCleanup(p.stop)
-
-    def resolve(self) -> str:
-        with patch.dict(usage_git.os.environ, {usage_git.TRAIL_ENV: "1"}):
-            return usage_git.resolve_machine()
-
-    def test_the_identity_is_minted_once_and_reused(self) -> None:
-        first = self.resolve()
-        self.assertTrue(usage_git.NODE_ID_RE.fullmatch(first.rsplit("/", 1)[-1]))
-        self.assertEqual(first, self.resolve())
-        self.assertEqual(first.rsplit("/", 1)[-1], self.id_file.read_text().strip())
-
-    def test_nothing_about_the_host_is_consulted(self) -> None:
-        """The hostname dependency is what let one machine become eight nodes."""
-        source = Path(sync_usage.__file__).read_text()
-        self.assertNotIn("gethostname", source)
-
-    def test_a_fresh_worker_mints_its_own(self) -> None:
-        first = self.resolve()
-        self.id_file.unlink()
-        self.assertNotEqual(first, self.resolve())
-
-    def test_an_existing_folder_can_be_adopted(self) -> None:
-        self.id_file.write_text("node-f4c49af3ff34\n")
-        self.assertEqual(self.resolve(), "data/trail/node-f4c49af3ff34")
-
-    def test_a_corrupt_file_stops_the_run_rather_than_reminting(self) -> None:
-        """Reminting over a damaged identity orphans the folder it points at."""
-        self.id_file.write_text("../../etc\n")
-        with self.assertRaises(SystemExit):
-            self.resolve()
-        self.assertEqual(self.id_file.read_text(), "../../etc\n")
-
-    def test_a_half_written_file_stops_the_run(self) -> None:
-        self.id_file.write_text("node-f4c49a")
-        with self.assertRaises(SystemExit):
-            self.resolve()
-
-    def test_an_empty_file_stops_the_run(self) -> None:
-        """Emptiness is an unusable value, not a second kind of absence.
-
-        Treating it as absent means minting, failing to link over the file that
-        is already there, and reading the same emptiness again — forever.
-        """
-        self.id_file.write_text("")
-        with self.assertRaises(SystemExit):
-            self.resolve()
-
-    def test_a_whitespace_only_file_stops_the_run(self) -> None:
-        self.id_file.write_text("   \n")
-        with self.assertRaises(SystemExit):
-            self.resolve()
-
-    def test_an_id_minted_concurrently_is_adopted(self) -> None:
-        """Two first runs must converge, not split the history across two folders."""
-        real = usage_git.os.link
-        def link_after_someone_else_won(src, dst):
-            Path(dst).write_text("node-aaaabbbbcccc\n")
-            return real(src, dst)
-        with patch.object(usage_git.os, "link", link_after_someone_else_won):
-            self.assertEqual(self.resolve(), "data/trail/node-aaaabbbbcccc")
-
-    def test_a_partial_id_is_never_visible_to_a_reader(self) -> None:
-        """The file appears only once fully written, so a racing reader can't see half."""
-        seen = []
-        real = usage_git.os.link
-        def record_then_link(src, dst):
-            seen.append(Path(src).read_text())
-            return real(src, dst)
-        with patch.object(usage_git.os, "link", record_then_link):
-            minted = self.resolve().rsplit("/", 1)[-1]
-        self.assertEqual(seen, [minted + "\n"])
-
-    def test_an_explicit_identity_still_hashes(self) -> None:
-        with patch.dict(usage_git.os.environ, {usage_git.TRAIL_ENV: "worker-7"}):
-            machine = usage_git.resolve_machine()
-        self.assertEqual(machine, f"data/trail/{usage_git._opaque_node_id('worker-7')}")
-        self.assertFalse(self.id_file.exists())
-
-
 class OfficialPricingFetchTests(unittest.TestCase):
     """fetch_daily_since accepts only repository-owned official model prices."""
 
@@ -1091,62 +943,6 @@ class LowercasedCodexHomeTests(unittest.TestCase):
             )
         self.assertIsNotNone(seen["home"])
         self.assertNotEqual(seen["home"], str(self.home))
-
-
-class IdenticalSourceTests(unittest.TestCase):
-    """The guard that stands between a duplicated worker and an additive fold."""
-
-    def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.trail = Path(self._tmp.name)
-
-    def pod(self, name: str, days: dict[str, int]) -> Path:
-        d = self.trail / name
-        d.mkdir()
-        (d / "codex.json").write_text(
-            json.dumps({k: {"totalTokens": v, "totalCost": 1.0} for k, v in days.items()})
-        )
-        return d
-
-    def clashes(self) -> list[tuple[str, str, str, str, int]]:
-        return compact_trails._identical_sources(sorted(self.trail.iterdir()))
-
-    def test_distinct_pods_do_not_clash(self) -> None:
-        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 100})
-        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 200})
-        self.assertEqual(self.clashes(), [])
-
-    def test_two_pods_repeating_a_day_clash(self) -> None:
-        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 100})
-        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 100})
-        self.assertEqual(
-            self.clashes(),
-            [("codex.json", "2026-08-01", "node-aaaaaaaaaaaa", "node-bbbbbbbbbbbb", 100)],
-        )
-
-    def test_a_clash_between_later_pods_is_not_hidden_by_the_first(self) -> None:
-        """Keying on (file, date) alone compared b and c only against a, and missed them."""
-        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 999})
-        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 100})
-        self.pod("node-cccccccccccc", {"2026-08-01": 100})
-        self.assertEqual(
-            self.clashes(),
-            [("codex.json", "2026-08-01", "node-bbbbbbbbbbbb", "node-cccccccccccc", 100)],
-        )
-
-    def test_every_copy_beyond_the_first_is_reported(self) -> None:
-        for n in ("node-aaaaaaaaaaaa", "node-bbbbbbbbbbbb", "node-cccccccccccc"):
-            self.pod(n, {"2026-08-01": 100})
-        self.assertEqual(
-            [c[3] for c in self.clashes()],
-            ["node-bbbbbbbbbbbb", "node-cccccccccccc"],
-        )
-
-    def test_a_day_both_pods_recorded_as_zero_is_not_a_clash(self) -> None:
-        self.pod("node-aaaaaaaaaaaa", {"2026-08-01": 0})
-        self.pod("node-bbbbbbbbbbbb", {"2026-08-01": 0})
-        self.assertEqual(self.clashes(), [])
 
 
 class ReconcileStubTests(unittest.TestCase):

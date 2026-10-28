@@ -80,8 +80,8 @@ class DailyBranchTests(unittest.TestCase):
 
     def test_usage_commit_subject_is_conventional_and_stable(self) -> None:
         self.assertEqual(
-            usage_git.usage_commit_message("data/trail/node-a1b2c3d4e5f6"),
-            "chore(data): sync node-a1b2c3d4e5f6 usage",
+            usage_git.usage_commit_message("data/devbox"),
+            "chore(data): sync devbox usage",
         )
         self.assertEqual(
             usage_git.usage_commit_message("data/personal"),
@@ -565,10 +565,10 @@ class SquashUsageBranchTests(unittest.TestCase):
 
     def test_retired_store_created_on_the_branch_is_not_merged(self) -> None:
         self.git("switch", "-qc", "usage/2026-08-07")
-        trail = self.repo / "data/trail/node-0123456789ab"
-        trail.mkdir(parents=True)
-        (trail / "opencode.json").write_text("{}\n")
-        (trail / "codex.json").write_text("{}\n")
+        devbox = self.repo / "data/devbox"
+        devbox.mkdir(parents=True)
+        (devbox / "opencode.json").write_text("{}\n")
+        (devbox / "codex.json").write_text("{}\n")
         self.git("add", ".")
         self.git("commit", "-qm", "old writer")
         self.git("switch", "-q", "main")
@@ -576,8 +576,8 @@ class SquashUsageBranchTests(unittest.TestCase):
         self.assertTrue(self.squash())
 
         self.assertEqual(
-            self.git("ls-files", "data/trail").stdout,
-            "data/trail/node-0123456789ab/codex.json\n",
+            self.git("ls-files", "data/devbox").stdout,
+            "data/devbox/codex.json\n",
         )
 
 

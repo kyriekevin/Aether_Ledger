@@ -26,7 +26,7 @@ AGENT_FILES = frozenset({
 })
 IGNORED_PARTS = frozenset({".git", ".venv", "__pycache__"})
 SHANGHAI = ZoneInfo("Asia/Shanghai")
-ROLE_ORDER = ("work", "personal", "devbox", "trail")
+ROLE_ORDER = ("work", "personal", "devbox")
 AGENT_ORDER = ("claude", "codex", "codex-multica", "traex")
 LEVEL_CLASSES = tuple(f"heatmap-level-{level}" for level in range(5))
 WIDTH = 1180

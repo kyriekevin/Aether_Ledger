@@ -126,16 +126,17 @@ switching, commits and pushes. It is not a dry run. `--help`, `make health`, log
 are suitable for read-only inspection. `--reconcile-since YYYY-MM-DD` accepts lower observations
 from that date and is reserved for intentional corrections.
 
-### Linux and ephemeral workers
+### Linux workers
 
 launchd, `make install`, and `make health` are macOS-only. On Linux, `make health` reports the
-missing launchd agent, and a trail writer also fails its `node_name` check; both are expected.
+missing launchd agent; that is expected.
 Install uv, Rust, and Git push access, then build and check the ccusage runtime as in
 [Setup](#setup). `gh` is needed only by `work` and `personal` writers.
 
-Ephemeral workers write as a trail (`CC_USAGE_TRAIL=1`). If the home directory may not survive a
-worker change, keep a copy of `~/.config/token-activity/trail_id` elsewhere and restore it before
-the first sync; see [Trail workers and recovery](#trail-workers-and-recovery).
+A Linux worker writes as the `devbox` role: `printf 'devbox\n' > ~/.config/token-activity/node_name`.
+Run one writer per role at a time. A replacement worker reuses the same role, so a worker change
+needs no identity migration; restore `node_name` before the first sync if the home directory was
+lost. Usage recorded before the change is kept, because stores only accept higher observations.
 
 Create the writer worktree from today's branch, or from `main` when that branch does not exist yet:
 
@@ -151,7 +152,7 @@ the starter is safe to call repeatedly:
 
 ```sh
 #!/usr/bin/env bash
-export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+export TZ=Asia/Shanghai
 LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
 mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
 exec 9>~/.cache/aether-ledger/loop.lock
@@ -172,9 +173,9 @@ an agent session-start hook.
 
 ## Pricing and stores
 
-Stores are date-keyed JSON objects under `data/{work,personal,devbox}/` or `data/trail/`.
+Stores are date-keyed JSON objects under `data/{work,personal,devbox}/`.
 Each day contains `totalTokens`, `totalCost`, and model-level token components where available.
-Pricing provenance marks incomplete or unpriced observations. Only the seven canonical token
+Pricing provenance marks incomplete or unpriced observations. Only the four canonical token
 store names contribute to the heatmap; other retained data is still audited.
 
 Rates come from `config/official-pricing.json`. ccusage runs offline with generated overrides,
@@ -212,16 +213,7 @@ For intraday consumers, read the dedicated writer's canonical stores or the curr
 branch. `main` contains completed days. Compare with the actual remote tip to verify publication;
 a local upstream ref, exit 0, or completed source read alone is insufficient evidence.
 
-## Trail workers and recovery
-
-Ephemeral workers use `CC_USAGE_TRAIL=1` to mint a persistent opaque ID, or supply a stable worker
-ID that is hashed. The local `~/.config/token-activity/trail_id` must survive restarts. Preserve an
-existing identity when migrating a worker; reminting can upload the same usage under a second name.
-Invalid identity files stop collection rather than silently creating another identity.
-
-Preview `uv run --script scripts/compact_trails.py --dry-run` before compaction. Run compaction
-on one writer only: inactive worker stores older than seven days are added into `data/trail/rollup`
-and removed in the same commit.
+## Recovery
 
 Before reconciliation, preserve a copy of the stores and confirm source completeness. Reported
 collection failures abort reconciliation before writes, but empty sources

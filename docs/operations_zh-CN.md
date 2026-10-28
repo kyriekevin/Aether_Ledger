@@ -87,11 +87,11 @@ PYTHON
 
 该命令会写入并尝试推送。`--no-push` 仍会写本地累计文件，只跳过分支切换、提交和推送，不是预演。只读检查可使用 `--help`、`make health`、日志和 `git status`。`--reconcile-since YYYY-MM-DD` 允许从指定日期起接受更低的观测值，仅用于主动校正。
 
-### Linux 与临时节点
+### Linux 节点
 
-launchd、`make install` 和 `make health` 只适用于 macOS。在 Linux 上，`make health` 会报告缺少 launchd 定时任务；临时节点还会报告 `node_name` 检查失败，两者都属正常。安装 uv、Rust，并确保 Git 有推送权限，再按[安装](#安装)一节构建并检查 ccusage。只有 `work` 和 `personal` 采集端需要 `gh`。
+launchd、`make install` 和 `make health` 只适用于 macOS。在 Linux 上，`make health` 会报告缺少 launchd 定时任务，属正常现象。安装 uv、Rust，并确保 Git 有推送权限，再按[安装](#安装)一节构建并检查 ccusage。只有 `work` 和 `personal` 采集端需要 `gh`。
 
-临时节点以临时身份采集（`CC_USAGE_TRAIL=1`）。如果更换节点后主目录可能丢失，把 `~/.config/token-activity/trail_id` 另存一份，并在第一次同步前恢复，详见[临时节点与恢复](#临时节点与恢复)。
+Linux 节点以 `devbox` 角色采集：`printf 'devbox\n' > ~/.config/token-activity/node_name`。同一角色同一时间只运行一个采集端。更换节点时沿用同一角色，无需迁移身份；如果主目录丢失，在第一次同步前恢复 `node_name` 即可。更换前已记录的用量会保留，因为累计文件只接受更高的观测值。
 
 从当日分支创建采集 worktree；当日分支尚不存在时，从 `main` 创建：
 
@@ -106,7 +106,7 @@ git worktree add --track -b "$day" ~/.cache/aether-ledger/writer "origin/$day" \
 
 ```sh
 #!/usr/bin/env bash
-export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+export TZ=Asia/Shanghai
 LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
 mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
 exec 9>~/.cache/aether-ledger/loop.lock
@@ -122,7 +122,7 @@ done
 
 ## 定价与数据
 
-数据位于 `data/{work,personal,devbox}/` 或 `data/trail/`，JSON 以日期为键。每天保存 `totalTokens`、`totalCost`，以及来源可提供的模型 token 明细；定价来源标记不完整或尚未定价的观测。只有上述七类 token 文件计入热力图，其余保留数据仍接受公开数据审计。
+数据位于 `data/{work,personal,devbox}/`，JSON 以日期为键。每天保存 `totalTokens`、`totalCost`，以及来源可提供的模型 token 明细；定价来源标记不完整或尚未定价的观测。只有上述四类 token 文件计入热力图，其余保留数据仍接受公开数据审计。
 
 价格来自 `config/official-pricing.json`。ccusage 离线运行，使用生成的价格覆盖文件，同时保留按请求识别 Fast 和长上下文的能力，以正确计费。缺少官方价格的模型仍计入 token，暂记零成本并标注 `costSource: "unpriced"`。后续补入适用于该日期的价格后，即使 token 不变也可修正成本。这里统计的是 API 等价成本，不是订阅账单。
 
@@ -143,11 +143,7 @@ uv run --script scripts/update_pricing.py --apply --effective-from YYYY-MM-DD
 
 需要日内数据的下游应读取独立采集 worktree 的标准文件，或远端当日分支；`main` 只包含已结束日期。确认发布时需对比实际远端分支，不能只凭本地 upstream 引用、退出码 0 或来源读取完成。
 
-## 临时节点与恢复
-
-临时节点使用 `CC_USAGE_TRAIL=1` 生成持久匿名 ID，也可提供稳定的节点 ID，采集器会对其哈希。本地 `~/.config/token-activity/trail_id` 应跨重启保留。迁移节点时沿用已有身份，重新生成可能让同一份用量以第二个名字上传。身份文件无效时停止采集，不会静默生成新身份。
-
-压缩前先运行 `uv run --script scripts/compact_trails.py --dry-run`。仅在一个采集端执行压缩：最新数据距今超过七天的非活跃节点会累计到 `data/trail/rollup`，并在同一个提交里移除原节点目录。
+## 恢复
 
 校正前先保存累计文件副本，确认来源完整。明确的采集失败会在写入前中止校正，但空来源仍可能缺数据。读取中没有出现的日期保留原值，出现的日期则可能被调低。该选项影响所有采集文件，也无法重建缺失日志。
 

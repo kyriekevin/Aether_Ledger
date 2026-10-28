@@ -2,7 +2,7 @@
 
 - This repository is designed to be public. Never commit usernames, hostnames, absolute user
   paths, repository names, session identifiers, prompts, or raw session exports.
-- Treat `data/{work,personal,devbox}/{claude,codex,codex-multica,traex}.json` and `data/trail/**` as generated cumulative stores.
+- Treat `data/{work,personal,devbox}/{claude,codex,codex-multica,traex}.json` as generated cumulative stores.
   Do not hand-edit them.
 - Retained statistics and task metadata under `data/` are generated snapshots. Do not hand-edit
   them or commit their private journals. They do not contribute to token totals.

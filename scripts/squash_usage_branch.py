@@ -16,8 +16,6 @@ from pathlib import Path
 GENERATED_STORE = re.compile(
     r"^data/(?:work|personal|devbox)/"
     r"(?:claude|codex|codex-multica|traex|statistics|issue-activity)\.json$"
-    r"|^data/trail/[^/]+/"
-    r"(?:claude|codex|codex-multica|traex)\.json$"
     # The Multica task aggregate is machine-independent, so it sits at the data
     # root rather than under a node label — but it is regenerated the same way
     # and squashes under the same rule.
@@ -26,7 +24,7 @@ GENERATED_STORE = re.compile(
 # Stores of sources that are no longer collected. A day branch cut before their
 # removal can still touch them, so a squash deletes them instead of refusing.
 RETIRED_STORE = re.compile(
-    r"^data/(?:work|personal|devbox|trail/[^/]+)/(?:dsh|dsh-multica|opencode)\.json$"
+    r"^data/(?:work|personal|devbox)/(?:dsh|dsh-multica|opencode)\.json$"
 )
 
 
