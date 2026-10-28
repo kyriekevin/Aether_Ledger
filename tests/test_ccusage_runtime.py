@@ -31,6 +31,19 @@ class RuntimeVerificationTests(unittest.TestCase):
         )):
             ccusage_runtime.verify("ccusage")
 
+    def test_probes_every_long_context_model(self):
+        probed = []
+
+        def run(command, **_kwargs):
+            config = Path(command[command.index("--config") + 1])
+            probed.extend(json.loads(config.read_text())["defaults"]["pricingOverrides"])
+            return self.output([1.15001, 1.87, 3.71502, 7.43004])
+
+        with patch.object(ccusage_runtime.subprocess, "run", side_effect=run):
+            ccusage_runtime.verify("ccusage")
+        self.assertEqual(probed, ccusage_runtime.long_context_models())
+        self.assertIn("gpt-6-sol", probed)
+
     def test_empty_report_is_not_a_successful_probe(self):
         with patch.object(ccusage_runtime.subprocess, "run", return_value=self.output([])):
             with self.assertRaises(ValueError):

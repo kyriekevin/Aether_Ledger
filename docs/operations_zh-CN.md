@@ -38,7 +38,25 @@ make health
 
 <a id="ccusage-runtime-upgrade"></a>
 
-ccusage 必须通过 272K 请求边界以下、恰好等于及以上的合成定价检查，覆盖缓存输入和 Fast 模式。安装器在本地缓存构建固定上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`，也接受通过检查的系统版本。每台采集设备升级前都要校验：检查失败会停止所有依赖 ccusage 的采集，但保留已有数据。终端里的普通 `ccusage` 命令不受影响。
+### ccusage 运行时
+
+| 项目 | 当前值 |
+| --- | --- |
+| 版本 | `20.0.35+7a063a0`（v20.0.35 之后 16 个提交，2026-10-18） |
+| 上游提交 | `7a063a09103184391dede2d6285b32a75903d328` |
+| 安装位置 | `~/.cache/aether-ledger/ccusage/<revision>/ccusage` |
+| 已校验长上下文模型 | `config/official-pricing.json` 中的 `ccusage.longContextModels` |
+
+固定版本写在 `scripts/ccusage_runtime.py` 的 `REVISION`，并记录为定价表的 `ccusage.verifiedRevision`，测试保证两者一致。安装器在本地缓存中用 `cargo` 构建该版本。它是上游最后一个把 models.dev 快照放在源码树里的版本，长上下文边界由版本本身决定，不会在构建时下载。
+
+ccusage 从内嵌快照读取每个模型的长上下文边界，价格覆盖文件无法设置该边界；快照中没有的模型会退回 200K。因此 `--check` 和 `--install` 会对 `longContextModels` 中的每个模型，分别在 272K 请求边界以下、恰好等于及以上做合成定价检查，覆盖缓存输入和 Fast 模式。系统自带的 ccusage 只有通过同样检查才会被使用。检查失败会停止所有依赖 ccusage 的采集，但保留已有数据。终端里的普通 `ccusage` 命令不受影响。
+
+升级步骤：
+
+1. 选择一个上游版本，其 models.dev 快照为每个新增长上下文模型提供官方边界。
+2. 更新 `scripts/ccusage_runtime.py` 中的 `REVISION` 和 `VERSION`、定价表中的 `verifiedRevision` 和 `minimumVersion`，以及本表和英文文档。
+3. 把模型加入 `longContextModels`，再运行 `--install` 和 `--check`。`update_pricing.py` 报告长上下文定价 `UNSUPPORTED` 的模型尚未覆盖。
+4. 新代码进入采集端之前，在每台采集设备运行 `--install`。二进制缓存按版本区分，采集端换到新版本却没有对应二进制时，检查会失败，所有依赖 ccusage 的采集会停止，直到完成安装。
 
 ## 定时同步
 

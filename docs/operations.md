@@ -48,11 +48,39 @@ access; the `work` and `personal` writers also need authenticated `gh` for rollo
 
 <a id="ccusage-runtime-upgrade"></a>
 
-The ccusage runtime must pass synthetic pricing probes below, at, and above the 272K request
-boundary, including cached input and Fast mode. The installer builds pinned upstream revision
-`98a1b6a88292ef00153508874a33685a81eac1e6` in a local cache. A compatible system runner is also
-accepted. Verify on every writing device before upgrading its writer: a failed probe stops all
-ccusage-backed collection while preserving stored data. Ordinary shell `ccusage` remains unchanged.
+### ccusage runtime
+
+| Item | Current value |
+| --- | --- |
+| Version | `20.0.35+7a063a0` (v20.0.35 plus 16 commits, 2026-10-18) |
+| Upstream revision | `7a063a09103184391dede2d6285b32a75903d328` |
+| Installed binary | `~/.cache/aether-ledger/ccusage/<revision>/ccusage` |
+| Long-context models verified | `ccusage.longContextModels` in `config/official-pricing.json` |
+
+The revision is pinned in `scripts/ccusage_runtime.py` (`REVISION`) and recorded as
+`ccusage.verifiedRevision` in the pricing table; a test keeps the two equal. The installer builds it
+with `cargo` in a local cache. It is the last upstream revision whose models.dev snapshot lives in
+the source tree, so long-context boundaries are fixed by the revision rather than fetched at build
+time.
+
+ccusage takes each model's long-context boundary from that embedded snapshot; pricing overrides
+cannot set it, and a model the snapshot lacks falls back to 200K. `--check` and `--install`
+therefore probe every model in `longContextModels` below, at, and above the 272K request boundary,
+including cached input and Fast mode. A compatible system runner is accepted only if it passes the
+same probes. A failed probe stops all ccusage-backed collection while preserving stored data.
+Ordinary shell `ccusage` remains unchanged.
+
+To upgrade:
+
+1. Pick an upstream revision whose models.dev snapshot gives each new long-context model its
+   official boundary.
+2. Update `REVISION` and `VERSION` in `scripts/ccusage_runtime.py`, `verifiedRevision` and
+   `minimumVersion` in the pricing table, this table, and the Chinese copy.
+3. Add the models to `longContextModels`, then run `--install` and `--check`. An
+   `update_pricing.py` model reported as `UNSUPPORTED` for long-context pricing is not covered yet.
+4. Run `--install` on every writing device before the new code reaches its writer. The binary
+   cache is keyed by revision, so a writer that picks up the new revision without that binary
+   fails its probe and stops ccusage-backed collection until the install runs.
 
 ## Scheduled sync
 
