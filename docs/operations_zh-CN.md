@@ -38,7 +38,25 @@ make health
 
 <a id="ccusage-runtime-upgrade"></a>
 
-ccusage 必须通过 272K 请求边界以下、恰好等于及以上的合成定价检查，覆盖缓存输入和 Fast 模式。安装器在本地缓存构建固定上游版本 `98a1b6a88292ef00153508874a33685a81eac1e6`，也接受通过检查的系统版本。每台采集设备升级前都要校验：检查失败会停止所有依赖 ccusage 的采集，但保留已有数据。终端里的普通 `ccusage` 命令不受影响。
+### ccusage 运行时
+
+| 项目 | 当前值 |
+| --- | --- |
+| 版本 | `20.0.35+7a063a0`（v20.0.35 之后 16 个提交，2026-10-18） |
+| 上游提交 | `7a063a09103184391dede2d6285b32a75903d328` |
+| 安装位置 | `~/.cache/aether-ledger/ccusage/<revision>/ccusage` |
+| 已校验长上下文模型 | `config/official-pricing.json` 中的 `ccusage.longContextModels` |
+
+固定版本写在 `scripts/ccusage_runtime.py` 的 `REVISION`，并记录为定价表的 `ccusage.verifiedRevision`，测试保证两者一致。安装器在本地缓存中用 `cargo` 构建该版本。它是上游最后一个把 models.dev 快照放在源码树里的版本，长上下文边界由版本本身决定，不会在构建时下载。
+
+ccusage 从内嵌快照读取每个模型的长上下文边界，价格覆盖文件无法设置该边界；快照中没有的模型会退回 200K。因此 `--check` 和 `--install` 会对 `longContextModels` 中的每个模型，分别在 272K 请求边界以下、恰好等于及以上做合成定价检查，覆盖缓存输入和 Fast 模式。系统自带的 ccusage 只有通过同样检查才会被使用。检查失败会停止所有依赖 ccusage 的采集，但保留已有数据。终端里的普通 `ccusage` 命令不受影响。
+
+升级步骤：
+
+1. 选择一个上游版本，其 models.dev 快照为每个新增长上下文模型提供官方边界。
+2. 更新 `scripts/ccusage_runtime.py` 中的 `REVISION` 和 `VERSION`、定价表中的 `verifiedRevision` 和 `minimumVersion`，以及本表和英文文档。
+3. 把模型加入 `longContextModels`，再运行 `--install` 和 `--check`。`update_pricing.py` 报告长上下文定价 `UNSUPPORTED` 的模型尚未覆盖。
+4. 新代码进入采集端之前，在每台采集设备运行 `--install`。二进制缓存按版本区分，采集端换到新版本却没有对应二进制时，检查会失败，所有依赖 ccusage 的采集会停止，直到完成安装。
 
 ## 定时同步
 
@@ -71,6 +89,39 @@ PYTHON
 ```
 
 该命令会写入并尝试推送。`--no-push` 仍会写本地累计文件，只跳过分支切换、提交和推送，不是预演。只读检查可使用 `--help`、`make health`、日志和 `git status`。`--reconcile-since YYYY-MM-DD` 允许从指定日期起接受更低的观测值，仅用于主动校正。
+
+### Linux 与临时节点
+
+launchd、`make install` 和 `make health` 只适用于 macOS。在 Linux 上，`make health` 会报告缺少 launchd 定时任务；临时节点还会报告 `node_name` 检查失败，两者都属正常。安装 uv、Rust，并确保 Git 有推送权限，再按[安装](#安装)一节构建并检查 ccusage。只有 `work` 和 `personal` 采集端需要 `gh`。
+
+临时节点以临时身份采集（`CC_USAGE_TRAIL=1`）。如果更换节点后主目录可能丢失，把 `~/.config/token-activity/trail_id` 另存一份，并在第一次同步前恢复，详见[临时节点与恢复](#临时节点与恢复)。
+
+从当日分支创建采集 worktree；当日分支尚不存在时，从 `main` 创建：
+
+```sh
+day="usage/$(TZ=Asia/Shanghai date +%F)"
+git fetch origin
+git worktree add --track -b "$day" ~/.cache/aether-ledger/writer "origin/$day" \
+  || git worktree add --detach ~/.cache/aether-ledger/writer origin/main
+```
+
+用与 launchd 相同节奏的循环运行采集。锁保证每个节点只有一个循环，启动脚本可以重复调用：
+
+```sh
+#!/usr/bin/env bash
+export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
+mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
+exec 9>~/.cache/aether-ledger/loop.lock
+flock -n 9 || exit 0
+cd ~/.cache/aether-ledger/writer || exit 1
+while true; do
+  timeout 1200 uv run --script scripts/sync_usage.py >> "$LOG_FILE" 2>&1
+  sleep $(( 900 - $(date +%s) % 900 + 5 ))
+done
+```
+
+以脱离终端的方式启动，例如 `setsid nohup bash loop.sh >/dev/null 2>&1 &`。循环必须使用与被统计 agent 相同的 `CLAUDE_CONFIG_DIR` 和 `CODEX_HOME`，ccusage 依靠这两个变量找到日志；否则这些来源会返回空，而不是报错。如果推送使用专用密钥，还需设置 `GIT_SSH_COMMAND`。节点被回收时循环会被终止，因此需要在每个新节点上重新调用启动脚本，例如放在 shell profile 或 agent 的会话启动 hook 中。
 
 ## 定价与数据
 

@@ -1,8 +1,11 @@
-"""Run a ccusage build verified for Astra's per-request pricing boundary.
+"""Run a ccusage build verified for OpenAI's per-request 272K pricing boundary.
 
-The stable 20.0.20 snapshot predates Astra. Until a release includes it, a
-source build of the pinned upstream revision is installed separately from the
-system package. No session files or third-party binaries enter this repository.
+ccusage takes each model's long-context boundary from its embedded models.dev
+snapshot, and pricing overrides cannot set it. A model the snapshot lacks falls
+back to 200K, so every model in ``longContextModels`` is probed on both sides of
+272K before the build is trusted. A source build of the pinned upstream
+revision is installed separately from the system package. No session files or
+third-party binaries enter this repository.
 """
 from __future__ import annotations
 
@@ -14,12 +17,28 @@ import subprocess
 import sys
 import tempfile
 
-REVISION = "98a1b6a88292ef00153508874a33685a81eac1e6"
+REVISION = "7a063a09103184391dede2d6285b32a75903d328"
+VERSION = "20.0.35+" + REVISION[:7]
 SOURCE = "https://github.com/ccusage/ccusage.git"
 BINARY = Path.home() / ".cache" / "aether-ledger" / "ccusage" / REVISION / "ccusage"
+PRICING_PATH = Path(__file__).resolve().parents[1] / "config" / "official-pricing.json"
+
+
+def long_context_models() -> list[str]:
+    table = json.loads(PRICING_PATH.read_text(encoding="utf-8"))
+    return list(table["ccusage"]["longContextModels"])
 
 
 def verify(binary: str) -> None:
+    """Prove the 272K boundary and Fast pricing for every long-context model."""
+    models = long_context_models()
+    if not models:
+        raise ValueError("no long-context models to verify")
+    for model in models:
+        _verify_model(binary, model)
+
+
+def _verify_model(binary: str, model: str) -> None:
     """Exercise both sides of 272K and Fast using synthetic, isolated logs."""
     with tempfile.TemporaryDirectory(prefix="aether-pricing-probe-") as raw:
         root = Path(raw)
@@ -36,13 +55,13 @@ def verify(binary: str) -> None:
                      "total_tokens": input_tokens + 1000}
             events = [
                 {"timestamp": day + "T12:00:00.000Z", "type": "turn_context",
-                 "payload": {"model": "gpt-6-astra"}},
+                 "payload": {"model": model}},
                 {"timestamp": day + "T12:00:01.000Z", "type": "event_msg",
                  "payload": {"type": "thread_settings_applied", "thread_settings": {
                      "service_tier": "priority" if speed == "fast" else "default"}}},
                 {"timestamp": day + "T12:01:00.000Z", "type": "event_msg",
                  "payload": {"type": "token_count", "info": {
-                     "model": "gpt-6-astra", "last_token_usage": usage,
+                     "model": model, "last_token_usage": usage,
                      "total_token_usage": usage}}},
             ]
             (sessions / f"rollout-{index}.jsonl").write_text(
@@ -54,7 +73,7 @@ def verify(binary: str) -> None:
             expected[day] = cost * (2 if speed == "fast" else 1)
         config = root / "pricing.json"
         config.write_text(json.dumps({"defaults": {"pricingOverrides": {
-            "gpt-6-astra": {
+            model: {
                 "inputCostPerToken": 10e-6, "outputCostPerToken": 50e-6,
                 "cacheReadInputTokenCost": 1e-6, "cacheCreationInputTokenCost": 12.5e-6,
                 "inputCostPerTokenAbove200kTokens": 20e-6,
@@ -75,7 +94,7 @@ def verify(binary: str) -> None:
         if actual.keys() != expected.keys() or any(
             abs(actual[day] - cost) > 1e-6 for day, cost in expected.items()
         ):
-            raise ValueError("ccusage failed Astra 272K/Fast pricing verification")
+            raise ValueError(f"ccusage failed {model} 272K/Fast pricing verification")
 
 
 def install() -> None:
@@ -92,7 +111,7 @@ def install() -> None:
         subprocess.run(
             ["cargo", "build", "--locked", "--release", "-p", "ccusage",
              "--features", "fetch-litellm-pricing"], cwd=source / "rust",
-            env={**os.environ, "CCUSAGE_VERSION": "20.0.20+" + REVISION[:7]}, check=True,
+            env={**os.environ, "CCUSAGE_VERSION": VERSION}, check=True,
         )
         built = source / "rust" / "target" / "release" / "ccusage"
         verify(str(built))
@@ -105,17 +124,18 @@ def install() -> None:
 def main() -> int:
     if sys.argv[1:] == ["--install"]:
         install()
-        print("Installed and verified ccusage " + REVISION[:7])
+        print("Installed and verified ccusage " + VERSION)
         return 0
     binary = str(BINARY) if BINARY.exists() else "ccusage"
     try:
         verify(binary)
     except (ValueError, OSError, subprocess.SubprocessError, KeyError) as exc:
-        print("Astra-capable ccusage required; run uv run python "
+        print("272K-capable ccusage required; run uv run python "
               "scripts/ccusage_runtime.py --install. " + str(exc), file=sys.stderr)
         return 1
     if sys.argv[1:] == ["--check"]:
-        print("Astra 272K and Fast pricing verified")
+        print(f"ccusage {VERSION} 272K and Fast pricing verified for "
+              + ", ".join(long_context_models()))
         return 0
     os.execvp(binary, [binary, *sys.argv[1:]])
     return 0

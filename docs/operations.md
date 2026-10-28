@@ -48,11 +48,39 @@ access; the `work` and `personal` writers also need authenticated `gh` for rollo
 
 <a id="ccusage-runtime-upgrade"></a>
 
-The ccusage runtime must pass synthetic pricing probes below, at, and above the 272K request
-boundary, including cached input and Fast mode. The installer builds pinned upstream revision
-`98a1b6a88292ef00153508874a33685a81eac1e6` in a local cache. A compatible system runner is also
-accepted. Verify on every writing device before upgrading its writer: a failed probe stops all
-ccusage-backed collection while preserving stored data. Ordinary shell `ccusage` remains unchanged.
+### ccusage runtime
+
+| Item | Current value |
+| --- | --- |
+| Version | `20.0.35+7a063a0` (v20.0.35 plus 16 commits, 2026-10-18) |
+| Upstream revision | `7a063a09103184391dede2d6285b32a75903d328` |
+| Installed binary | `~/.cache/aether-ledger/ccusage/<revision>/ccusage` |
+| Long-context models verified | `ccusage.longContextModels` in `config/official-pricing.json` |
+
+The revision is pinned in `scripts/ccusage_runtime.py` (`REVISION`) and recorded as
+`ccusage.verifiedRevision` in the pricing table; a test keeps the two equal. The installer builds it
+with `cargo` in a local cache. It is the last upstream revision whose models.dev snapshot lives in
+the source tree, so long-context boundaries are fixed by the revision rather than fetched at build
+time.
+
+ccusage takes each model's long-context boundary from that embedded snapshot; pricing overrides
+cannot set it, and a model the snapshot lacks falls back to 200K. `--check` and `--install`
+therefore probe every model in `longContextModels` below, at, and above the 272K request boundary,
+including cached input and Fast mode. A compatible system runner is accepted only if it passes the
+same probes. A failed probe stops all ccusage-backed collection while preserving stored data.
+Ordinary shell `ccusage` remains unchanged.
+
+To upgrade:
+
+1. Pick an upstream revision whose models.dev snapshot gives each new long-context model its
+   official boundary.
+2. Update `REVISION` and `VERSION` in `scripts/ccusage_runtime.py`, `verifiedRevision` and
+   `minimumVersion` in the pricing table, this table, and the Chinese copy.
+3. Add the models to `longContextModels`, then run `--install` and `--check`. An
+   `update_pricing.py` model reported as `UNSUPPORTED` for long-context pricing is not covered yet.
+4. Run `--install` on every writing device before the new code reaches its writer. The binary
+   cache is keyed by revision, so a writer that picks up the new revision without that binary
+   fails its probe and stops ccusage-backed collection until the install runs.
 
 ## Scheduled sync
 
@@ -100,6 +128,50 @@ This writes and attempts publication. `--no-push` still writes local stores, but
 switching, commits and pushes. It is not a dry run. `--help`, `make health`, logs and `git status`
 are suitable for read-only inspection. `--reconcile-since YYYY-MM-DD` accepts lower observations
 from that date and is reserved for intentional corrections.
+
+### Linux and ephemeral workers
+
+launchd, `make install`, and `make health` are macOS-only. On Linux, `make health` reports the
+missing launchd agent, and a trail writer also fails its `node_name` check; both are expected.
+Install uv, Rust, and Git push access, then build and check the ccusage runtime as in
+[Setup](#setup). `gh` is needed only by `work` and `personal` writers.
+
+Ephemeral workers write as a trail (`CC_USAGE_TRAIL=1`). If the home directory may not survive a
+worker change, keep a copy of `~/.config/token-activity/trail_id` elsewhere and restore it before
+the first sync; see [Trail workers and recovery](#trail-workers-and-recovery).
+
+Create the writer worktree from today's branch, or from `main` when that branch does not exist yet:
+
+```sh
+day="usage/$(TZ=Asia/Shanghai date +%F)"
+git fetch origin
+git worktree add --track -b "$day" ~/.cache/aether-ledger/writer "origin/$day" \
+  || git worktree add --detach ~/.cache/aether-ledger/writer origin/main
+```
+
+Run the writer in a loop that matches the launchd schedule. The lock keeps one loop per worker, so
+the starter is safe to call repeatedly:
+
+```sh
+#!/usr/bin/env bash
+export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
+mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
+exec 9>~/.cache/aether-ledger/loop.lock
+flock -n 9 || exit 0
+cd ~/.cache/aether-ledger/writer || exit 1
+while true; do
+  timeout 1200 uv run --script scripts/sync_usage.py >> "$LOG_FILE" 2>&1
+  sleep $(( 900 - $(date +%s) % 900 + 5 ))
+done
+```
+
+Start it detached, for example with `setsid nohup bash loop.sh >/dev/null 2>&1 &`. The loop must
+see the same `CLAUDE_CONFIG_DIR` and `CODEX_HOME` as the agents it measures, because ccusage reads
+those variables to find their logs; otherwise those sources come back empty rather than failing.
+Set `GIT_SSH_COMMAND` too if pushes use a dedicated key. A worker that is reclaimed kills the loop,
+so call the starter again from something that runs on each new worker, such as a shell profile or
+an agent session-start hook.
 
 ## Pricing and stores
 
