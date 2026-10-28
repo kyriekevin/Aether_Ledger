@@ -21,6 +21,7 @@ import os
 import re
 import tempfile
 import urllib.request
+from collections.abc import Iterator
 from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
@@ -70,10 +71,81 @@ def parse_anthropic(markdown: str, as_of: date) -> dict[str, dict]:
             "input": values[0], "cacheWrite": values[1],
             "cacheRead": values[3], "output": values[4],
         }
-    for name in ("Claude Opus 5", "Claude Opus 4.8"):
+    for name in ("Claude Opus 5.5", "Claude Opus 5", "Claude Opus 4.8"):
         if name in candidates:
             candidates[name]["fastMultiplier"] = 2.0
     return candidates
+
+
+def _tables(markdown: str) -> list[list[dict[str, str]]]:
+    """Markdown tables in page order, each row keyed by its lower-cased header."""
+    tables: list[list[dict[str, str]]] = []
+    header: list[str] | None = None
+    for line in markdown.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("|"):
+            header = None
+            continue
+        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        if header is None:
+            header = [cell.lower() for cell in cells]
+            tables.append([])
+        elif "---" not in stripped and len(cells) == len(header):
+            tables[-1].append(dict(zip(header, cells)))
+    return tables
+
+
+def _openai_rate(row: dict[str, str]) -> dict | None:
+    """Price one OpenAI row by column name, so reordered columns stay correct."""
+
+    def value(*names: str) -> float | None:
+        for name in names:
+            if name in row:
+                return _money(row[name])
+        return None
+
+    def first_write(prefix: str) -> float | None:
+        # Columns keep page order: the first write column is the shortest TTL,
+        # which is what the reviewed rates have always recorded as cacheWrite.
+        for name, cell in row.items():
+            if name.startswith(prefix) and "write" in name:
+                return _money(cell)
+        return None
+
+    input_price = value("short context input", "input")
+    output = value("short context output", "output")
+    if input_price is None or output is None:
+        return None
+    rate = {
+        "input": input_price,
+        "cacheRead": value("short context cached input", "cached input") or input_price,
+        "cacheWrite": first_write("short context") or input_price,
+        "output": output,
+    }
+    long_input = value("long context input")
+    long_output = value("long context output")
+    if long_input is not None and long_output is not None:
+        rate.update({
+            "longContextThreshold": 272000,
+            "longInput": long_input,
+            "longCacheRead": value("long context cached input") or long_input,
+            "longCacheWrite": first_write("long context") or long_input,
+            "longOutput": long_output,
+        })
+    return rate
+
+
+def _openai_rows(markdown: str, category: str | None = None) -> Iterator[tuple[str, dict]]:
+    for table in _tables(markdown):
+        for row in table:
+            if category is not None and row.get("category") != category:
+                continue
+            model = row.get("model", "").split(" ", 1)[0]
+            if not model.startswith("gpt-"):
+                continue
+            rate = _openai_rate(row)
+            if rate is not None:
+                yield model, rate
 
 
 def parse_openai(markdown: str, _as_of: date) -> dict[str, dict]:
@@ -81,54 +153,33 @@ def parse_openai(markdown: str, _as_of: date) -> dict[str, dict]:
     standard = markdown.split("### Standard pricing data", 1)[-1].split(
         "### Batch pricing data", 1
     )[0]
-    for row in _rows(standard):
-        if len(row) != 9 or not row[0].startswith("gpt-"):
-            continue
-        model = row[0].split(" ", 1)[0]
-        values = [_money(cell) for cell in row[1:]]
-        if values[0] is None or values[3] is None:
-            continue
-        rate = {
-            "input": values[0], "cacheRead": values[1] or values[0],
-            "cacheWrite": values[2] or values[0], "output": values[3],
-        }
-        if values[4] is not None:
-            rate.update({
-                "longContextThreshold": 272000,
-                "longInput": values[4], "longCacheRead": values[5] or values[4],
-                "longCacheWrite": values[6] or values[4], "longOutput": values[7],
-            })
-        candidates[model] = rate
+    candidates.update(_openai_rows(standard))
 
-    specialized = markdown.split("Specialized models", 1)[1]
-    for marker in ("\nFast mode\n", "### Fast pricing data"):
-        specialized = specialized.split(marker, 1)[0]
-    for row in _rows(specialized):
-        if len(row) == 5 and row[0] == "Codex" and row[1].startswith("gpt-"):
-            values = [_money(cell) for cell in row[2:]]
-            if any(value is None for value in values):
-                continue
-            candidates[row[1]] = {
-                "input": values[0], "cacheRead": values[1],
-                "cacheWrite": values[0], "output": values[2],
-            }
+    specialized = markdown.split("Specialized models", 1)[-1] if (
+        "Specialized models" in markdown
+    ) else ""
+    specialized, *specialized_fast = re.split(
+        r"\n\s*Fast(?: mode)?\s*\n|### Fast pricing data", specialized, maxsplit=1
+    )
+    candidates.update(_openai_rows(specialized, category="Codex"))
 
     fast_parts = markdown.split("### Fast pricing data", 1)
     fast = (
         re.split(r"\n#{2,3} ", fast_parts[1], maxsplit=1)[0]
         if len(fast_parts) == 2 else ""
     )
-    fast_input: dict[str, float] = {}
-    for row in _rows(fast):
-        if len(row) == 9 and row[0].startswith("gpt-"):
-            value = _money(row[1])
-            if value is not None:
-                fast_input[row[0].split(" ", 1)[0]] = value
+    fast_input = {model: rate["input"] for model, rate in _openai_rows(fast)}
+    if specialized_fast:
+        section = re.split(r"\n#{1,2} ", specialized_fast[0], maxsplit=1)[0]
+        fast_input.update(
+            (model, rate["input"])
+            for model, rate in _openai_rows(section, category="Codex")
+        )
     for model, rate in candidates.items():
         if model in fast_input and rate["input"]:
-            rate["fastMultiplier"] = fast_input[model] / rate["input"]
+            rate["fastMultiplier"] = round(fast_input[model] / rate["input"], 6)
     if "gpt-5.3-codex" in candidates:
-        candidates["gpt-5.3-codex"]["fastMultiplier"] = 2.0
+        candidates["gpt-5.3-codex"].setdefault("fastMultiplier", 2.0)
     return candidates
 
 
@@ -203,44 +254,101 @@ def parse_deepseek(page: str, _as_of: date) -> dict[str, dict]:
 
 
 def parse_kimi(page: str, _as_of: date) -> dict[str, dict]:
-    """Read Kimi ``DocTable`` rows serialized into the official HTML pages."""
+    """Read Kimi ``DocTable`` rows serialized into the official pricing page.
+
+    Columns are Model, Input (cache miss), Output and Cached Input; models that
+    bill cache writes by TTL add the 5m and 1h write prices, of which the 5m
+    default is recorded.
+    """
     candidates: dict[str, dict] = {}
-    rows = re.compile(
-        r"rows:\[\[\`(kimi-[^`]+)\`,\`1M tokens\`,(.*?)\]\]\}\)",
-        re.DOTALL,
-    )
-    prices = re.compile(
-        r"children:\[\`\$\`,\`([0-9]+(?:\.[0-9]+)?)\`\]"
-    )
-    for model, row in rows.findall(page):
-        values = prices.findall(row)
-        if len(values) < 3:
+    rows = re.compile(r"children:`(kimi-[^`]+)`\}\),((?:`[^`]*`,?)+)\]")
+    for model, cells in rows.findall(page):
+        values = [_money(cell) for cell in re.findall(r"`([^`]*)`", cells)]
+        if len(values) < 3 or any(value is None for value in values[:3]):
             continue
-        cache_hit, cache_miss, output = values[:3]
-        cache_read = float(cache_hit)
-        input_price = float(cache_miss)
-        output_price = float(output)
+        input_price, output_price, cache_read = values[:3]
+        cache_write = values[3] if len(values) > 3 and values[3] is not None else input_price
         candidates[model] = {
             "input": input_price, "output": output_price,
-            "cacheWrite": input_price, "cacheRead": cache_read,
+            "cacheWrite": cache_write, "cacheRead": cache_read,
         }
     return candidates
 
 
+def _last_money(value: str) -> float | None:
+    """The billed price of a cell that may show a struck list price first."""
+    matches = re.findall(r"\$([0-9]+(?:\.[0-9]+)?)", value)
+    return float(matches[-1]) if matches else None
+
+
 def parse_minimax(page: str, _as_of: date) -> dict[str, dict]:
+    """Read MiniMax text-model rows from the pay-as-you-go page.
+
+    Columns are found by header; without a cache-write column the input price
+    stands in. The first table to list a model is the Standard tab, and later
+    Priority tabs repeat it at a premium, so repeats are skipped. Prompt-size
+    tiers become a long-context rate, which the update reports as unsupported
+    until the pinned ccusage version knows that boundary.
+    """
     parser = _HtmlTableRows()
     parser.feed(page)
-    candidates: dict[str, dict] = {}
+    tiers: dict[str, dict[str, dict]] = {}
+    thresholds: dict[str, int] = {}
+    seen_in_earlier_tables: set[tuple[str, str]] = set()
+    seen_in_table: set[tuple[str, str]] = set()
+    columns: dict[str, int] | None = None
     for row in parser.rows:
-        if len(row) != 5 or not row[0].startswith("MiniMax-M"):
+        if row and row[0].startswith("Model"):
+            seen_in_earlier_tables |= seen_in_table
+            seen_in_table = set()
+            columns = {}
+            for index, cell in enumerate(row):
+                lowered = cell.lower()
+                for key, marker in (
+                    ("input", "input"), ("output", "output"),
+                    ("cacheRead", "read"), ("cacheWrite", "write"),
+                ):
+                    if lowered.startswith(marker) or (
+                        key.startswith("cache") and marker in lowered
+                    ):
+                        columns.setdefault(key, index)
+            if "input" not in columns or "output" not in columns:
+                columns = None
             continue
-        values = [_money(cell) for cell in row[1:]]
-        if any(value is None for value in values):
+        if columns is None or not row:
             continue
-        candidates[row[0].lower()] = {
-            "input": values[0], "output": values[1],
-            "cacheRead": values[2], "cacheWrite": values[3],
+        name = re.match(r"MiniMax-M[A-Za-z0-9.\-]+", row[0])
+        if name is None or len(row) <= max(columns.values()):
+            continue
+        model = name.group(0).lower()
+        bound = re.search(r"([≤>])\s*(\d+)k", row[0])
+        tier = "long" if bound and bound.group(1) == ">" else "short"
+        if (model, tier) in seen_in_earlier_tables:
+            continue
+        seen_in_table.add((model, tier))
+        values = {key: _last_money(row[index]) for key, index in columns.items()}
+        if values["input"] is None or values["output"] is None:
+            continue
+        tiers.setdefault(model, {})[tier] = {
+            "input": values["input"], "output": values["output"],
+            "cacheRead": values.get("cacheRead") or values["input"],
+            "cacheWrite": values.get("cacheWrite") or values["input"],
         }
+        if bound:
+            thresholds[model] = int(bound.group(2)) * 1000
+    candidates: dict[str, dict] = {}
+    for model, rates in tiers.items():
+        if "short" not in rates:
+            continue
+        rate = dict(rates["short"])
+        if "long" in rates:
+            long = rates["long"]
+            rate.update({
+                "longContextThreshold": thresholds[model],
+                "longInput": long["input"], "longOutput": long["output"],
+                "longCacheRead": long["cacheRead"], "longCacheWrite": long["cacheWrite"],
+            })
+        candidates[model] = rate
     return candidates
 
 
@@ -293,20 +401,6 @@ def fetch_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "Aether-Ledger/1"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return html.unescape(response.read().decode("utf-8"))
-
-
-def fetch_provider_text(provider: str, source: dict[str, str]) -> str:
-    """Fetch one provider source, expanding Kimi's model-price index."""
-    page = fetch_text(source["fetchUrl"])
-    if provider != "kimi":
-        return page
-    links = sorted(set(re.findall(
-        r"\((https://platform\.kimi\.ai/docs/pricing/chat-k[^)]+?\.md)\)",
-        page,
-    )))
-    if not links:
-        return page
-    return "\n".join(fetch_text(link.removesuffix(".md")) for link in links)
 
 
 def observed_models() -> set[str]:
@@ -382,7 +476,7 @@ def main(argv: list[str] | None = None) -> int:
     candidates = {}
     for provider, source in pricing["sources"].items():
         parsed = PARSERS[provider](
-            fetch_provider_text(provider, source), args.as_of
+            fetch_text(source["fetchUrl"]), args.as_of
         )
         if not parsed:
             raise RuntimeError(f"no prices parsed from {provider}'s official source")
