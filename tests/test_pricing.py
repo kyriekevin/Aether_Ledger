@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import json
 import sys
 import unittest
@@ -124,6 +125,20 @@ class OfficialPageParserTests(unittest.TestCase):
             "Claude Opus 5",
         )
 
+    def test_anthropic_parser_marks_opus_fast_mode(self) -> None:
+        source = """
+| Model | Base Input Tokens | 5m Cache Writes | 1h Cache Writes | Cache Hits & Refreshes | Output Tokens |
+| --- | --- | --- | --- | --- | --- |
+| Claude Opus 5.5 | $4 / MTok | $5 / MTok | $8 / MTok | $0.20 / MTok<sup>2</sup> | $20 / MTok |
+| Claude Sonnet 5.5 | $2 / MTok | $2.50 / MTok | $4 / MTok | $0.10 / MTok<sup>2</sup> | $10 / MTok |
+"""
+        rates = update_pricing.parse_anthropic(source, date(2026, 10, 28))
+        self.assertEqual(rates["Claude Opus 5.5"], {
+            "input": 4.0, "cacheWrite": 5.0, "cacheRead": 0.2, "output": 20.0,
+            "fastMultiplier": 2.0,
+        })
+        self.assertNotIn("fastMultiplier", rates["Claude Sonnet 5.5"])
+
     def test_anthropic_parser_ignores_cancelled_sonnet_rate(self) -> None:
         source = """
 | Model | Base Input Tokens | 5m Cache Writes | 1h Cache Writes | Cache Hits & Refreshes | Output Tokens |
@@ -159,6 +174,57 @@ Fast mode
         self.assertEqual(rate["longContextThreshold"], 272000)
         self.assertEqual(rate["longOutput"], 45.0)
         self.assertEqual(rate["fastMultiplier"], 2.0)
+
+    def test_openai_parser_reads_columns_by_header(self) -> None:
+        source = """
+### Standard pricing data
+| Model | Short context input | Short context output | Short context cached input | Short context 30m write | Short context 12h write | Long context input | Long context output | Long context cached input | Long context 30m write | Long context 12h write |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gpt-6-sol | $2.00 | $10.00 | $0.20 | $2.50 | $5.00 | $4.00 | $15.00 | $0.40 | $5.00 | $10.00 |
+| gpt-5.5 (<272K context length) | $5.00 | $30.00 | $0.50 | - | - | $10.00 | $45.00 | $1.00 | - | - |
+
+| Model | Input | Output | Cached input |
+| --- | --- | --- | --- |
+| gpt-5.4-mini | $0.75 | $4.50 | $0.075 |
+### Batch pricing data
+| Model | Input | Output | Cached input |
+| --- | --- | --- | --- |
+| gpt-5.4-mini | $0.375 | $2.25 | $0.0375 |
+### Fast pricing data
+| Model | Short context input | Short context output | Short context cached input | Short context 30m write | Short context 12h write | Long context input | Long context output | Long context cached input | Long context 30m write | Long context 12h write |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| gpt-6-sol | $4.00 | $20.00 | $0.40 | $5.00 | $10.00 | $8.00 | $30.00 | $0.80 | $10.00 | $20.00 |
+| gpt-5.5 (<272K context length) | $12.50 | $75.00 | $1.25 | - | - | - | - | - | - | - |
+### Ultrafast pricing data
+Specialized models
+Standard
+### Grouped Pricing Table data
+| Category | Model | Input | Output | Cached input |
+| --- | --- | --- | --- | --- |
+| ChatGPT | chat-latest | $5.00 | $30.00 | $0.50 |
+| Codex | gpt-5.3-codex | $1.75 | $14.00 | $0.175 |
+Fast
+### Grouped Pricing Table data
+| Category | Model | Input | Output | Cached input |
+| --- | --- | --- | --- | --- |
+| Codex | gpt-5.3-codex | $3.50 | $28.00 | $0.35 |
+"""
+        rates = update_pricing.parse_openai(source, date(2026, 10, 28))
+        self.assertEqual(rates["gpt-6-sol"], {
+            "input": 2.0, "output": 10.0, "cacheRead": 0.2, "cacheWrite": 2.5,
+            "longContextThreshold": 272000, "longInput": 4.0, "longOutput": 15.0,
+            "longCacheRead": 0.4, "longCacheWrite": 5.0, "fastMultiplier": 2.0,
+        })
+        self.assertEqual(rates["gpt-5.5"]["cacheWrite"], 5.0)
+        self.assertEqual(rates["gpt-5.5"]["fastMultiplier"], 2.5)
+        self.assertEqual(rates["gpt-5.4-mini"], {
+            "input": 0.75, "output": 4.5, "cacheRead": 0.075, "cacheWrite": 0.75,
+        })
+        self.assertEqual(rates["gpt-5.3-codex"], {
+            "input": 1.75, "output": 14.0, "cacheRead": 0.175, "cacheWrite": 1.75,
+            "fastMultiplier": 2.0,
+        })
+        self.assertNotIn("chat-latest", rates)
 
     def test_openai_parser_reads_every_specialized_codex_row(self) -> None:
         source = """
@@ -213,55 +279,47 @@ Fast mode
         self.assertEqual(rates["deepseek-v4-flash"]["input"], 0.44)
         self.assertEqual(rates["deepseek-v4-pro"]["output"], 3.96)
 
-    def test_kimi_parser_discovers_models_from_the_official_index(self) -> None:
-        source = r'''
-rows:[[`kimi-k2.5`,`1M tokens`,_jsxs(_Fragment,{children:[`$`,`0.10`]}),_jsxs(_Fragment,{children:[`$`,`0.60`]}),_jsxs(_Fragment,{children:[`$`,`3.00`]}),`262,144 tokens`]]})
-rows:[[`kimi-k3`,`1M tokens`,_jsxs(_Fragment,{children:[`$`,`0.30`]}),_jsxs(_Fragment,{children:[`$`,`3.00`]}),_jsxs(_Fragment,{children:[`$`,`15.00`]}),`1,048,576 tokens`]]})
-'''
-        rates = update_pricing.parse_kimi(source, date(2026, 8, 11))
-        rate = rates["kimi-k2.5"]
-        self.assertEqual(
-            rate,
-            {"input": 0.6, "output": 3.0, "cacheWrite": 0.6, "cacheRead": 0.1},
-        )
-        self.assertEqual(rates["kimi-k3"]["output"], 15.0)
-
-    def test_kimi_fetch_discovers_current_and_future_pricing_pages(self) -> None:
-        index = """
-- [Kimi K3](https://platform.kimi.ai/docs/pricing/chat-k3.md)
-- [Kimi K2.5](https://platform.kimi.ai/docs/pricing/chat-k25.md)
+    def test_kimi_parser_reads_doc_table_rows_by_column(self) -> None:
+        source = r"""
+columns:[{title:`Model`},{title:`Input`},{title:`Output`},{title:`Cached Input`},{title:`5m write`},{title:`1h write`}],rows:[[_jsx(_components.a,{href:`/guide/kimi-k3-quickstart`,children:`kimi-k3`}),`$3.00 / MTok`,`$15.00 / MTok`,`$0.30 / MTok`,`$3.00 / MTok`,`$6.00 / MTok`],[_jsx(_components.a,{href:`/guide/kimi-next`,children:`kimi-next`}),`$1.00 / MTok`,`$5.00 / MTok`,`$0.10 / MTok`,`$1.25 / MTok`,`$2.00 / MTok`]]})
+columns:[{title:`Model`},{title:`Input`},{title:`Output`},{title:`Cached Input`}],rows:[[_jsx(_components.a,{href:`/guide/kimi-k2-6-quickstart`,children:`kimi-k2.6`}),`$0.95 / MTok`,`$4.00 / MTok`,`$0.16 / MTok`]]})
 """
-        with patch.object(
-            update_pricing,
-            "fetch_text",
-            side_effect=[index, "K2.5 HTML", "K3 HTML"],
-        ) as fetch:
-            page = update_pricing.fetch_provider_text(
-                "kimi", {"fetchUrl": "https://platform.kimi.ai/docs/llms.txt"}
-            )
-        self.assertEqual(page, "K2.5 HTML\nK3 HTML")
+        rates = update_pricing.parse_kimi(source, date(2026, 10, 28))
         self.assertEqual(
-            [call.args[0] for call in fetch.call_args_list],
-            [
-                "https://platform.kimi.ai/docs/llms.txt",
-                "https://platform.kimi.ai/docs/pricing/chat-k25",
-                "https://platform.kimi.ai/docs/pricing/chat-k3",
-            ],
+            rates["kimi-k3"],
+            {"input": 3.0, "output": 15.0, "cacheWrite": 3.0, "cacheRead": 0.3},
+        )
+        # The 5m write column, not the input price, sets cacheWrite.
+        self.assertEqual(rates["kimi-next"]["cacheWrite"], 1.25)
+        self.assertEqual(
+            rates["kimi-k2.6"],
+            {"input": 0.95, "output": 4.0, "cacheWrite": 0.95, "cacheRead": 0.16},
         )
 
-    def test_minimax_parser_reads_pay_as_you_go_table(self) -> None:
+    def test_minimax_parser_reads_standard_tab_billed_prices(self) -> None:
         source = """
-<table><tbody><tr><td>MiniMax-M2.7</td><td>$0.3 / M tokens</td>
-<td>$1.2 / M tokens</td><td>$0.06 / M tokens</td>
-<td>$0.375 / M tokens</td></tr></tbody></table>
+<table><tr><th>Model</th><th>Input$ / M tokens</th><th>Output$ / M tokens</th><th>Prompt caching Read$ / M tokens</th></tr>
+<tr><td>MiniMax-M3.1-Flash</td><td>$0.15</td><td>$0.60</td><td>$0.015</td></tr></table>
+<table><tr><th>Model</th><th>Input$ / M tokens</th><th>Output$ / M tokens</th><th>Prompt caching Read$ / M tokens</th></tr>
+<tr><td>MiniMax-M3<br/>&le; 512k input tokens</td><td><del>$0.60</del> $0.30</td><td><del>$2.40</del> $1.20</td><td><del>$0.12</del> $0.06</td></tr>
+<tr><td>MiniMax-M3<br/>&gt; 512k input tokens</td><td><del>$1.20</del> $0.60</td><td><del>$4.80</del> $2.40</td><td><del>$0.24</del> $0.12</td></tr></table>
+<table><tr><th>Model</th><th>Input$ / M tokens</th><th>Output$ / M tokens</th><th>Prompt caching Read$ / M tokens</th></tr>
+<tr><td>MiniMax-M3<br/>&le; 512k input tokens</td><td><del>$0.90</del> $0.45</td><td><del>$3.60</del> $1.80</td><td><del>$0.18</del> $0.09</td></tr></table>
+<table><tr><th>Model / API</th><th>Spec</th><th>Output Videoper second</th><th>Input Videoper second</th></tr>
+<tr><td>MiniMax-H3-Regeneration</td><td>768P</td><td>$0.05</td><td>$0.05</td></tr></table>
 """
-        rate = update_pricing.parse_minimax(source, date(2026, 8, 11))[
-            "minimax-m2.7"
-        ]
-        self.assertEqual(
-            rate,
-            {"input": 0.3, "output": 1.2, "cacheWrite": 0.375, "cacheRead": 0.06},
+        rates = update_pricing.parse_minimax(
+            html.unescape(source), date(2026, 10, 28)
         )
+        self.assertEqual(sorted(rates), ["minimax-m3", "minimax-m3.1-flash"])
+        self.assertEqual(
+            rates["minimax-m3.1-flash"],
+            {"input": 0.15, "output": 0.6, "cacheRead": 0.015, "cacheWrite": 0.15},
+        )
+        m3 = rates["minimax-m3"]
+        self.assertEqual((m3["input"], m3["output"], m3["cacheRead"]), (0.3, 1.2, 0.06))
+        self.assertEqual(m3["longContextThreshold"], 512000)
+        self.assertEqual((m3["longInput"], m3["longOutput"]), (0.6, 2.4))
 
     def test_google_parser_reads_traex_models_standard_tiers(self) -> None:
         source = """
@@ -313,6 +371,39 @@ rows:[[`kimi-k3`,`1M tokens`,_jsxs(_Fragment,{children:[`$`,`0.30`]}),_jsxs(_Fra
         ):
             status = update_pricing.main([
                 "--require-observed-prices", "--as-of", "2026-08-11",
+            ])
+        self.assertEqual(status, 1)
+
+    def test_daily_audit_fails_for_an_observed_unverified_long_context_model(self) -> None:
+        table = {
+            "schemaVersion": 1,
+            "unit": "perMillionTokens",
+            "ccusage": {"longContextModels": []},
+            "sources": {"minimax": {"fetchUrl": "https://example.invalid"}},
+            "models": {},
+        }
+        with (
+            patch.object(update_pricing, "load_pricing", return_value=table),
+            patch.object(update_pricing, "fetch_text", return_value="pricing"),
+            patch.object(update_pricing, "observed_models", return_value={"minimax-next"}),
+            patch.object(
+                update_pricing, "ccusage_long_context_supported", return_value=False
+            ),
+            patch.dict(
+                update_pricing.PARSERS,
+                {"minimax": lambda _source, _day: {
+                    "minimax-next": {
+                        "input": 1.0, "output": 2.0,
+                        "cacheWrite": 1.0, "cacheRead": 0.1,
+                        "longContextThreshold": 512000,
+                        "longInput": 2.0, "longOutput": 4.0,
+                        "longCacheWrite": 2.0, "longCacheRead": 0.2,
+                    }
+                }},
+            ),
+        ):
+            status = update_pricing.main([
+                "--require-observed-prices", "--as-of", "2026-10-28",
             ])
         self.assertEqual(status, 1)
 
