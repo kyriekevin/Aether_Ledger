@@ -184,9 +184,16 @@
     "totalTokens": 7607618
   },
   "2026-05-19": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 30,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 11838464,
+        "inputTokens": 1517312,
+        "outputTokens": 8301,
+        "totalTokens": 13364077
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 71594112,
@@ -219,12 +226,19 @@
       }
     },
     "totalCost": 185.0261775,
-    "totalTokens": 78010540
+    "totalTokens": 91374617
   },
   "2026-05-20": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 11,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 13118080,
+        "inputTokens": 2337810,
+        "outputTokens": 13745,
+        "totalTokens": 15469635
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 61067008,
@@ -269,12 +283,19 @@
       }
     },
     "totalCost": 177.39810999999997,
-    "totalTokens": 67816756
+    "totalTokens": 83286391
   },
   "2026-05-21": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 32,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 23125888,
+        "inputTokens": 6680346,
+        "outputTokens": 17478,
+        "totalTokens": 29823712
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 110477056,
@@ -313,7 +334,7 @@
       }
     },
     "totalCost": 310.8146075,
-    "totalTokens": 122790494
+    "totalTokens": 152614206
   },
   "2026-05-22": {
     "costSource": "official",
@@ -348,8 +369,15 @@
     "totalTokens": 6365574
   },
   "2026-05-23": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 50304,
+        "inputTokens": 23078,
+        "outputTokens": 510,
+        "totalTokens": 73892
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 10884864,
@@ -382,7 +410,7 @@
       }
     },
     "totalCost": 32.79923,
-    "totalTokens": 11921161
+    "totalTokens": 11995053
   },
   "2026-05-24": {
     "costSource": "official",
@@ -458,6 +486,13 @@
         "outputTokens": 17822,
         "totalTokens": 1791866
       },
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7933056,
+        "inputTokens": 3353282,
+        "outputTokens": 11309,
+        "totalTokens": 11297647
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 137588736,
@@ -502,7 +537,7 @@
       }
     },
     "totalCost": 140.147968,
-    "totalTokens": 151450032
+    "totalTokens": 162747679
   },
   "2026-05-27": {
     "costSource": "official",
@@ -567,8 +602,15 @@
     "totalTokens": 12084112
   },
   "2026-05-29": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 110208,
+        "inputTokens": 99751,
+        "outputTokens": 951,
+        "totalTokens": 210910
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 13416960,
@@ -601,7 +643,7 @@
       }
     },
     "totalCost": 51.4540875,
-    "totalTokens": 15353526
+    "totalTokens": 15564436
   },
   "2026-05-30": {
     "costSource": "official",
@@ -635,8 +677,15 @@
     "totalTokens": 4139763
   },
   "2026-05-31": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 92032,
+        "inputTokens": 62619,
+        "outputTokens": 468,
+        "totalTokens": 155119
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 37803264,
@@ -669,12 +718,19 @@
       }
     },
     "totalCost": 137.66839249999998,
-    "totalTokens": 42746199
+    "totalTokens": 42901318
   },
   "2026-06-01": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 26,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 30525440,
+        "inputTokens": 5084234,
+        "outputTokens": 19156,
+        "totalTokens": 35628830
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 170226816,
@@ -707,12 +763,19 @@
       }
     },
     "totalCost": 441.52087000000006,
-    "totalTokens": 184852209
+    "totalTokens": 220481039
   },
   "2026-06-02": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 24,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 470784,
+        "inputTokens": 117824,
+        "outputTokens": 1279,
+        "totalTokens": 589887
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 16975488,
@@ -745,7 +808,7 @@
       }
     },
     "totalCost": 57.7894225,
-    "totalTokens": 18926313
+    "totalTokens": 19516200
   },
   "2026-06-03": {
     "costSource": "official",
@@ -780,8 +843,15 @@
     "totalTokens": 9180943
   },
   "2026-06-04": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 147072,
+        "inputTokens": 33432,
+        "outputTokens": 823,
+        "totalTokens": 181327
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 18752896,
@@ -814,12 +884,19 @@
       }
     },
     "totalCost": 67.02987,
-    "totalTokens": 20940981
+    "totalTokens": 21122308
   },
   "2026-06-05": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 4,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7040,
+        "inputTokens": 7068,
+        "outputTokens": 140,
+        "totalTokens": 14248
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 8332544,
@@ -858,7 +935,7 @@
       }
     },
     "totalCost": 44.494155000000006,
-    "totalTokens": 10291557
+    "totalTokens": 10305805
   },
   "2026-06-06": {
     "costSource": "official",
@@ -925,8 +1002,15 @@
     "totalTokens": 9821209
   },
   "2026-06-08": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 8059136,
+        "inputTokens": 389523,
+        "outputTokens": 7969,
+        "totalTokens": 8456628
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 51719424,
@@ -965,12 +1049,19 @@
       }
     },
     "totalCost": 145.3832175,
-    "totalTokens": 56732439
+    "totalTokens": 65189067
   },
   "2026-06-09": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 5,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 200448,
+        "inputTokens": 41261,
+        "outputTokens": 946,
+        "totalTokens": 242655
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 4675840,
@@ -1003,7 +1094,7 @@
       }
     },
     "totalCost": 25.189750000000004,
-    "totalTokens": 5883491
+    "totalTokens": 6126146
   },
   "2026-06-10": {
     "costSource": "official",
@@ -1106,8 +1197,15 @@
     "totalTokens": 321015
   },
   "2026-06-15": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7040,
+        "inputTokens": 11812,
+        "outputTokens": 62,
+        "totalTokens": 18914
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 12670464,
@@ -1141,7 +1239,7 @@
       }
     },
     "totalCost": 56.4261925,
-    "totalTokens": 15042778
+    "totalTokens": 15061692
   },
   "2026-06-16": {
     "costSource": "official",
@@ -1175,8 +1273,15 @@
     "totalTokens": 1600836
   },
   "2026-06-17": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9088,
+        "inputTokens": 4361,
+        "outputTokens": 183,
+        "totalTokens": 13632
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 235264,
@@ -1215,11 +1320,18 @@
       }
     },
     "totalCost": 2.9376175,
-    "totalTokens": 405327
+    "totalTokens": 418959
   },
   "2026-06-18": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 291584,
+        "inputTokens": 87925,
+        "outputTokens": 1753,
+        "totalTokens": 381262
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 1928064,
@@ -1252,7 +1364,7 @@
       }
     },
     "totalCost": 8.88383,
-    "totalTokens": 2327079
+    "totalTokens": 2708341
   },
   "2026-06-19": {
     "costSource": "official",
@@ -1348,8 +1460,15 @@
     "totalTokens": 2081108
   },
   "2026-06-22": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 596352,
+        "inputTokens": 187122,
+        "outputTokens": 1304,
+        "totalTokens": 784778
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 42395776,
@@ -1382,11 +1501,18 @@
       }
     },
     "totalCost": 125.40917000000002,
-    "totalTokens": 46710402
+    "totalTokens": 47495180
   },
   "2026-06-23": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4350592,
+        "inputTokens": 612070,
+        "outputTokens": 5887,
+        "totalTokens": 4968549
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 61602304,
@@ -1425,11 +1551,18 @@
       }
     },
     "totalCost": 185.76668,
-    "totalTokens": 68746728
+    "totalTokens": 73715277
   },
   "2026-06-24": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1493760,
+        "inputTokens": 305367,
+        "outputTokens": 3903,
+        "totalTokens": 1803030
+      },
       "gpt-5.4-mini": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 3961216,
@@ -1475,11 +1608,18 @@
       }
     },
     "totalCost": 193.5772634,
-    "totalTokens": 80719587
+    "totalTokens": 82522617
   },
   "2026-06-25": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2707328,
+        "inputTokens": 124306,
+        "outputTokens": 2945,
+        "totalTokens": 2834579
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 16311552,
@@ -1512,11 +1652,18 @@
       }
     },
     "totalCost": 45.1503275,
-    "totalTokens": 17808648
+    "totalTokens": 20643227
   },
   "2026-06-26": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7877504,
+        "inputTokens": 566195,
+        "outputTokens": 6649,
+        "totalTokens": 8450348
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 54822784,
@@ -1549,17 +1696,17 @@
       }
     },
     "totalCost": 133.25376749999998,
-    "totalTokens": 58729112
+    "totalTokens": 67179460
   },
   "2026-06-29": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.4": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 207616,
-        "inputTokens": 99208,
-        "outputTokens": 6861,
-        "totalTokens": 313685
+        "cacheReadTokens": 5944960,
+        "inputTokens": 551082,
+        "outputTokens": 15125,
+        "totalTokens": 6511167
       },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -1599,11 +1746,18 @@
       }
     },
     "totalCost": 155.6010405,
-    "totalTokens": 73972300
+    "totalTokens": 80169782
   },
   "2026-06-30": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6329728,
+        "inputTokens": 492038,
+        "outputTokens": 6667,
+        "totalTokens": 6828433
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 37505152,
@@ -1636,11 +1790,18 @@
       }
     },
     "totalCost": 105.17906500000001,
-    "totalTokens": 41071052
+    "totalTokens": 47899485
   },
   "2026-07-01": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 155648,
+        "inputTokens": 36268,
+        "outputTokens": 643,
+        "totalTokens": 192559
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 2648320,
@@ -1673,11 +1834,18 @@
       }
     },
     "totalCost": 17.2428625,
-    "totalTokens": 3598812
+    "totalTokens": 3791371
   },
   "2026-07-02": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 212096,
+        "inputTokens": 57315,
+        "outputTokens": 1652,
+        "totalTokens": 271063
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 1953792,
@@ -1716,11 +1884,18 @@
       }
     },
     "totalCost": 14.091790000000003,
-    "totalTokens": 2752871
+    "totalTokens": 3023934
   },
   "2026-07-03": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 888448,
+        "inputTokens": 126056,
+        "outputTokens": 2774,
+        "totalTokens": 1017278
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 11731968,
@@ -1759,11 +1934,18 @@
       }
     },
     "totalCost": 41.851485000000004,
-    "totalTokens": 13519775
+    "totalTokens": 14537053
   },
   "2026-07-06": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 469504,
+        "inputTokens": 161793,
+        "outputTokens": 1208,
+        "totalTokens": 632505
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 17296640,
@@ -1802,12 +1984,19 @@
       }
     },
     "totalCost": 81.28205000000001,
-    "totalTokens": 21068200
+    "totalTokens": 21700705
   },
   "2026-07-07": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 8,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4842112,
+        "inputTokens": 520824,
+        "outputTokens": 4161,
+        "totalTokens": 5367097
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 63163648,
@@ -1852,12 +2041,19 @@
       }
     },
     "totalCost": 196.21888499999997,
-    "totalTokens": 71120294
+    "totalTokens": 76487391
   },
   "2026-07-08": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 4,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 247296,
+        "inputTokens": 58998,
+        "outputTokens": 1286,
+        "totalTokens": 307580
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 48403712,
@@ -1890,11 +2086,18 @@
       }
     },
     "totalCost": 127.40200249999998,
-    "totalTokens": 52940536
+    "totalTokens": 53248116
   },
   "2026-07-09": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1165312,
+        "inputTokens": 163276,
+        "outputTokens": 2582,
+        "totalTokens": 1331170
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 11054976,
@@ -1927,12 +2130,19 @@
       }
     },
     "totalCost": 34.9855575,
-    "totalTokens": 12472033
+    "totalTokens": 13803203
   },
   "2026-07-10": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 7,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9069440,
+        "inputTokens": 1217986,
+        "outputTokens": 9954,
+        "totalTokens": 10297380
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 20212864,
@@ -1982,7 +2192,7 @@
       }
     },
     "totalCost": 117.3426135,
-    "totalTokens": 57677186
+    "totalTokens": 67974566
   },
   "2026-07-13": {
     "costSource": "official",
@@ -2051,8 +2261,15 @@
     "totalTokens": 800252
   },
   "2026-07-15": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 630656,
+        "inputTokens": 174803,
+        "outputTokens": 1668,
+        "totalTokens": 807127
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 630656,
@@ -2107,12 +2324,19 @@
       }
     },
     "totalCost": 40.1775635,
-    "totalTokens": 15653775
+    "totalTokens": 16460902
   },
   "2026-07-16": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 2,
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7436928,
+        "inputTokens": 861819,
+        "outputTokens": 11773,
+        "totalTokens": 8310520
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 7436928,
@@ -2157,11 +2381,18 @@
       }
     },
     "totalCost": 88.1433605,
-    "totalTokens": 42790019
+    "totalTokens": 51100539
   },
   "2026-07-17": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7029248,
+        "inputTokens": 618023,
+        "outputTokens": 8555,
+        "totalTokens": 7655826
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 7029248,
@@ -2206,11 +2437,18 @@
       }
     },
     "totalCost": 71.0099225,
-    "totalTokens": 37301467
+    "totalTokens": 44957293
   },
   "2026-07-20": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1321088,
+        "inputTokens": 482364,
+        "outputTokens": 2347,
+        "totalTokens": 1805799
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 1321088,
@@ -2255,11 +2493,18 @@
       }
     },
     "totalCost": 87.274749,
-    "totalTokens": 42314811
+    "totalTokens": 44120610
   },
   "2026-07-21": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3070336,
+        "inputTokens": 756532,
+        "outputTokens": 5996,
+        "totalTokens": 3832864
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 3070336,
@@ -2304,11 +2549,18 @@
       }
     },
     "totalCost": 79.450766,
-    "totalTokens": 35959449
+    "totalTokens": 39792313
   },
   "2026-07-22": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 401920,
+        "inputTokens": 46235,
+        "outputTokens": 824,
+        "totalTokens": 448979
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 401920,
@@ -2359,7 +2611,7 @@
       }
     },
     "totalCost": 80.7174875,
-    "totalTokens": 37211829
+    "totalTokens": 37660808
   },
   "2026-07-23": {
     "costSource": "official",
@@ -2470,8 +2722,15 @@
     "totalTokens": 364649
   },
   "2026-07-27": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 959872,
+        "inputTokens": 59315,
+        "outputTokens": 2425,
+        "totalTokens": 1021612
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 959872,
@@ -2520,11 +2779,18 @@
       }
     },
     "totalCost": 8.0544555,
-    "totalTokens": 6320392
+    "totalTokens": 7342004
   },
   "2026-07-29": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
+      "gpt-5.4": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 202240,
+        "inputTokens": 51039,
+        "outputTokens": 1725,
+        "totalTokens": 255004
+      },
       "gpt-5.5": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 202240,
@@ -2579,7 +2845,7 @@
       }
     },
     "totalCost": 67.58946949999999,
-    "totalTokens": 30600594
+    "totalTokens": 30855598
   },
   "2026-07-30": {
     "costSource": "official",
@@ -2660,9 +2926,16 @@
     "totalTokens": 1071689
   },
   "2026-08-03": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 74240,
+        "inputTokens": 32665,
+        "outputTokens": 548,
+        "totalTokens": 107453
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 74240,
         "inputTokens": 32665,
@@ -2712,12 +2985,19 @@
       }
     },
     "totalCost": 2.669094,
-    "totalTokens": 1679097
+    "totalTokens": 1786550
   },
   "2026-08-04": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9728,
+        "inputTokens": 10676,
+        "outputTokens": 190,
+        "totalTokens": 20594
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 9728,
         "inputTokens": 10676,
@@ -2771,12 +3051,19 @@
       }
     },
     "totalCost": 18.590498,
-    "totalTokens": 6635207
+    "totalTokens": 6655801
   },
   "2026-08-05": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 440576,
+        "inputTokens": 85925,
+        "outputTokens": 2405,
+        "totalTokens": 528906
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 440576,
         "inputTokens": 85925,
@@ -2836,12 +3123,19 @@
       }
     },
     "totalCost": 66.39127049999999,
-    "totalTokens": 47992467
+    "totalTokens": 48521373
   },
   "2026-08-06": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4715520,
+        "inputTokens": 443652,
+        "outputTokens": 6383,
+        "totalTokens": 5165555
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 4715520,
         "inputTokens": 443652,
@@ -2891,10 +3185,10 @@
       }
     },
     "totalCost": 101.97369,
-    "totalTokens": 93612323
+    "totalTokens": 98777878
   },
   "2026-08-07": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 24,
     "models": {
       "gpt-5.5": {
@@ -2906,10 +3200,10 @@
       },
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 222720,
-        "inputTokens": 91521,
-        "outputTokens": 2583,
-        "totalTokens": 316824
+        "cacheReadTokens": 11594240,
+        "inputTokens": 1045403,
+        "outputTokens": 9481,
+        "totalTokens": 12649124
       },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
@@ -2958,7 +3252,7 @@
       }
     },
     "totalCost": 69.16333468,
-    "totalTokens": 38150662
+    "totalTokens": 50482962
   },
   "2026-08-09": {
     "costSource": "official",
@@ -2991,9 +3285,16 @@
     "totalTokens": 474892
   },
   "2026-08-10": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 14022656,
+        "inputTokens": 1156682,
+        "outputTokens": 12216,
+        "totalTokens": 15191554
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 14022656,
         "inputTokens": 1156682,
@@ -3041,13 +3342,20 @@
       }
     },
     "totalCost": 101.6520745,
-    "totalTokens": 84407313
+    "totalTokens": 99598867
   },
   "2026-08-11": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 2,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4970496,
+        "inputTokens": 882130,
+        "outputTokens": 12699,
+        "totalTokens": 5865325
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 4970496,
         "inputTokens": 882130,
@@ -3101,13 +3409,20 @@
       }
     },
     "totalCost": 84.194365,
-    "totalTokens": 56480595
+    "totalTokens": 62345920
   },
   "2026-08-12": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 31,
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1420288,
+        "inputTokens": 412290,
+        "outputTokens": 6869,
+        "totalTokens": 1839447
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 1420288,
         "inputTokens": 412290,
@@ -3157,7 +3472,7 @@
       }
     },
     "totalCost": 105.87696,
-    "totalTokens": 61127206
+    "totalTokens": 62966653
   },
   "2026-08-13": {
     "costSource": "official",
@@ -3197,7 +3512,7 @@
     "totalTokens": 16465423
   },
   "2026-08-14": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -3205,6 +3520,13 @@
         "inputTokens": 2786593,
         "outputTokens": 16148,
         "totalTokens": 15927605
+      },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5141760,
+        "inputTokens": 1184048,
+        "outputTokens": 10008,
+        "totalTokens": 6335816
       },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
@@ -3249,12 +3571,19 @@
       }
     },
     "totalCost": 215.65972449999998,
-    "totalTokens": 125385727
+    "totalTokens": 131721543
   },
   "2026-08-16": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 401408,
+        "inputTokens": 100939,
+        "outputTokens": 1747,
+        "totalTokens": 504094
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 401408,
         "inputTokens": 100939,
@@ -3308,10 +3637,10 @@
       }
     },
     "totalCost": 38.848472,
-    "totalTokens": 40527816
+    "totalTokens": 41031910
   },
   "2026-08-17": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 3,
     "models": {
       "gpt-5.5": {
@@ -3320,6 +3649,13 @@
         "inputTokens": 6018221,
         "outputTokens": 43455,
         "totalTokens": 48812652
+      },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 27288320,
+        "inputTokens": 3790973,
+        "outputTokens": 31770,
+        "totalTokens": 31111063
       },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
@@ -3375,12 +3711,19 @@
       }
     },
     "totalCost": 165.6454976,
-    "totalTokens": 181954032
+    "totalTokens": 213065095
   },
   "2026-08-18": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 5037056,
+        "inputTokens": 2322039,
+        "outputTokens": 12963,
+        "totalTokens": 7372058
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 5037056,
         "inputTokens": 2322039,
@@ -3441,12 +3784,19 @@
       }
     },
     "totalCost": 129.84674769999998,
-    "totalTokens": 164189091
+    "totalTokens": 171561149
   },
   "2026-08-19": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 54784,
+        "inputTokens": 64079,
+        "outputTokens": 1174,
+        "totalTokens": 120037
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 54784,
         "inputTokens": 64079,
@@ -3503,12 +3853,19 @@
       }
     },
     "totalCost": 26.2769225,
-    "totalTokens": 20750796
+    "totalTokens": 20870833
   },
   "2026-08-21": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 49920,
+        "inputTokens": 21108,
+        "outputTokens": 863,
+        "totalTokens": 71891
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 49920,
         "inputTokens": 21108,
@@ -3552,12 +3909,19 @@
       }
     },
     "totalCost": 5.736765,
-    "totalTokens": 2328867
+    "totalTokens": 2400758
   },
   "2026-08-24": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4343808,
+        "inputTokens": 1027386,
+        "outputTokens": 8642,
+        "totalTokens": 5379836
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 4343808,
         "inputTokens": 1027386,
@@ -3605,12 +3969,19 @@
       }
     },
     "totalCost": 170.15915850000002,
-    "totalTokens": 109082434
+    "totalTokens": 114462270
   },
   "2026-08-25": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2176000,
+        "inputTokens": 1184090,
+        "outputTokens": 5408,
+        "totalTokens": 3365498
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 2176000,
         "inputTokens": 1184090,
@@ -3677,10 +4048,10 @@
       }
     },
     "totalCost": 111.56312210000002,
-    "totalTokens": 78699802
+    "totalTokens": 82065300
   },
   "2026-08-26": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "imageCount": 1,
     "models": {
       "gpt-5.5": {
@@ -3689,6 +4060,13 @@
         "inputTokens": 1277451,
         "outputTokens": 4130,
         "totalTokens": 3480109
+      },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 430336,
+        "inputTokens": 316798,
+        "outputTokens": 2449,
+        "totalTokens": 749583
       },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
@@ -3750,12 +4128,19 @@
       }
     },
     "totalCost": 270.30879649999997,
-    "totalTokens": 135919872
+    "totalTokens": 136669455
   },
   "2026-08-27": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 582912,
+        "inputTokens": 270428,
+        "outputTokens": 1988,
+        "totalTokens": 855328
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 582912,
         "inputTokens": 270428,
@@ -3810,12 +4195,19 @@
       }
     },
     "totalCost": 98.310954,
-    "totalTokens": 66898910
+    "totalTokens": 67754238
   },
   "2026-08-28": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 54016,
+        "inputTokens": 28978,
+        "outputTokens": 1005,
+        "totalTokens": 83999
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 54016,
         "inputTokens": 28978,
@@ -3870,7 +4262,7 @@
       }
     },
     "totalCost": 24.517980000000005,
-    "totalTokens": 11710507
+    "totalTokens": 11794506
   },
   "2026-08-30": {
     "costSource": "official",
@@ -3926,9 +4318,16 @@
     "totalTokens": 3389601
   },
   "2026-08-31": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1770240,
+        "inputTokens": 157823,
+        "outputTokens": 4186,
+        "totalTokens": 1932249
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 1770240,
         "inputTokens": 157823,
@@ -3976,12 +4375,19 @@
       }
     },
     "totalCost": 13.399942,
-    "totalTokens": 16996503
+    "totalTokens": 18928752
   },
   "2026-09-01": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 14793984,
+        "inputTokens": 1716009,
+        "outputTokens": 44285,
+        "totalTokens": 16554278
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 14793984,
         "inputTokens": 1716009,
@@ -4042,12 +4448,19 @@
       }
     },
     "totalCost": 320.72022310000006,
-    "totalTokens": 233417189
+    "totalTokens": 249971467
   },
   "2026-09-02": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7492608,
+        "inputTokens": 698681,
+        "outputTokens": 16975,
+        "totalTokens": 8208264
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 7492608,
         "inputTokens": 698681,
@@ -4102,12 +4515,19 @@
       }
     },
     "totalCost": 234.29873890000002,
-    "totalTokens": 129159761
+    "totalTokens": 137368025
   },
   "2026-09-03": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 913152,
+        "inputTokens": 108203,
+        "outputTokens": 3203,
+        "totalTokens": 1024558
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 913152,
         "inputTokens": 108203,
@@ -4151,7 +4571,7 @@
       }
     },
     "totalCost": 14.319103300000002,
-    "totalTokens": 10954805
+    "totalTokens": 11979363
   },
   "2026-09-04": {
     "costSource": "official",
@@ -4190,7 +4610,7 @@
     "totalTokens": 784948
   },
   "2026-09-07": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -4199,12 +4619,19 @@
         "outputTokens": 10386,
         "totalTokens": 5308196
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4560384,
+        "inputTokens": 737426,
+        "outputTokens": 10386,
+        "totalTokens": 5308196
+      },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 54170880,
-        "inputTokens": 1937089,
-        "outputTokens": 158288,
-        "totalTokens": 56266257
+        "cacheReadTokens": 54236160,
+        "inputTokens": 1937423,
+        "outputTokens": 160107,
+        "totalTokens": 56333690
       }
     },
     "quota": {
@@ -4246,8 +4673,8 @@
         }
       }
     },
-    "totalCost": 116.997774,
-    "totalTokens": 61574453
+    "totalCost": 116.42229844,
+    "totalTokens": 66950082
   },
   "2026-09-08": {
     "costSource": "official",
@@ -4286,7 +4713,7 @@
     "totalTokens": 940169
   },
   "2026-09-09": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -4295,12 +4722,19 @@
         "outputTokens": 8975,
         "totalTokens": 6084686
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2258432,
+        "inputTokens": 616263,
+        "outputTokens": 5272,
+        "totalTokens": 2879967
+      },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 47049600,
-        "inputTokens": 1319864,
-        "outputTokens": 275461,
-        "totalTokens": 48644925
+        "cacheReadTokens": 47068544,
+        "inputTokens": 1738354,
+        "outputTokens": 279719,
+        "totalTokens": 49086617
       }
     },
     "quota": {
@@ -4339,7 +4773,7 @@
       }
     },
     "totalCost": 106.910027,
-    "totalTokens": 54729611
+    "totalTokens": 58051270
   },
   "2026-09-10": {
     "costSource": "unpriced",
@@ -4351,19 +4785,26 @@
         "outputTokens": 2878,
         "totalTokens": 2062038
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1124096,
+        "inputTokens": 234856,
+        "outputTokens": 2083,
+        "totalTokens": 1361035
+      },
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 6208640,
-        "inputTokens": 699063,
-        "outputTokens": 33754,
-        "totalTokens": 6941457
+        "cacheReadTokens": 6226816,
+        "inputTokens": 848674,
+        "outputTokens": 34594,
+        "totalTokens": 7110084
       },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 12886272,
-        "inputTokens": 625271,
-        "outputTokens": 45814,
-        "totalTokens": 13557357
+        "cacheReadTokens": 13074560,
+        "inputTokens": 824709,
+        "outputTokens": 52681,
+        "totalTokens": 13951950
       }
     },
     "quota": {
@@ -4400,17 +4841,17 @@
       }
     },
     "totalCost": 41.71569349999999,
-    "totalTokens": 22560852
+    "totalTokens": 24485107
   },
   "2026-09-11": {
     "costSource": "official",
     "models": {
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 455808,
-        "inputTokens": 75231,
-        "outputTokens": 2221,
-        "totalTokens": 533260
+        "cacheReadTokens": 475008,
+        "inputTokens": 150441,
+        "outputTokens": 5027,
+        "totalTokens": 630476
       }
     },
     "quota": {
@@ -4435,13 +4876,20 @@
         }
       }
     },
-    "totalCost": 2.6383360000000002,
-    "totalTokens": 533260
+    "totalCost": 4.461536,
+    "totalTokens": 630476
   },
   "2026-09-14": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 687616,
+        "inputTokens": 227180,
+        "outputTokens": 2589,
+        "totalTokens": 917385
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 687616,
         "inputTokens": 227180,
@@ -4457,10 +4905,10 @@
       },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 7202560,
-        "inputTokens": 343809,
-        "outputTokens": 32784,
-        "totalTokens": 7579153
+        "cacheReadTokens": 7221632,
+        "inputTokens": 415633,
+        "outputTokens": 34432,
+        "totalTokens": 7671697
       }
     },
     "quota": {
@@ -4497,13 +4945,20 @@
         }
       }
     },
-    "totalCost": 16.716301500000004,
-    "totalTokens": 9179272
+    "totalCost": 15.9408666,
+    "totalTokens": 10189201
   },
   "2026-09-17": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 236288,
+        "inputTokens": 151296,
+        "outputTokens": 2110,
+        "totalTokens": 389694
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 236288,
         "inputTokens": 151296,
@@ -4526,12 +4981,19 @@
       }
     },
     "totalCost": 42.333098500000006,
-    "totalTokens": 17982426
+    "totalTokens": 18372120
   },
   "2026-09-18": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 960512,
+        "inputTokens": 121377,
+        "outputTokens": 3263,
+        "totalTokens": 1085152
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 960512,
         "inputTokens": 121377,
@@ -4547,19 +5009,26 @@
       },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 7479296,
-        "inputTokens": 304603,
-        "outputTokens": 18753,
-        "totalTokens": 7802652
+        "cacheReadTokens": 7493760,
+        "inputTokens": 393975,
+        "outputTokens": 21678,
+        "totalTokens": 7909413
       }
     },
-    "totalCost": 25.7621645,
-    "totalTokens": 10001632
+    "totalCost": 24.773200080000002,
+    "totalTokens": 11193545
   },
   "2026-09-20": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 256256,
+        "inputTokens": 162369,
+        "outputTokens": 1360,
+        "totalTokens": 419985
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 256256,
         "inputTokens": 162369,
@@ -4575,10 +5044,10 @@
       }
     },
     "totalCost": 31.541226,
-    "totalTokens": 16163431
+    "totalTokens": 16583416
   },
   "2026-09-22": {
-    "costSource": "official",
+    "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
         "cacheCreationTokens": 0,
@@ -4587,21 +5056,35 @@
         "outputTokens": 131,
         "totalTokens": 30606
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 4864,
+        "inputTokens": 25611,
+        "outputTokens": 131,
+        "totalTokens": 30606
+      },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 2166784,
-        "inputTokens": 457220,
-        "outputTokens": 5758,
-        "totalTokens": 2629762
+        "cacheReadTokens": 2551936,
+        "inputTokens": 459311,
+        "outputTokens": 10508,
+        "totalTokens": 3021755
       }
     },
-    "totalCost": 12.891935,
-    "totalTokens": 2660368
+    "totalCost": 13.93126868,
+    "totalTokens": 3082967
   },
   "2026-10-08": {
     "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 710912,
+        "inputTokens": 134223,
+        "outputTokens": 4841,
+        "totalTokens": 849976
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 710912,
         "inputTokens": 134223,
@@ -4616,8 +5099,8 @@
         "totalTokens": 9979966
       }
     },
-    "totalCost": 1.7579365,
-    "totalTokens": 10829942
+    "totalCost": 3.4572751200000003,
+    "totalTokens": 11679918
   },
   "2026-10-10": {
     "costSource": "unpriced",
@@ -4629,16 +5112,23 @@
         "outputTokens": 3936,
         "totalTokens": 1466819
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 940544,
+        "inputTokens": 522339,
+        "outputTokens": 3936,
+        "totalTokens": 1466819
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 114509824,
-        "inputTokens": 1841273,
-        "outputTokens": 115815,
-        "totalTokens": 116466912
+        "cacheReadTokens": 115937536,
+        "inputTokens": 1841745,
+        "outputTokens": 133481,
+        "totalTokens": 117912762
       }
     },
-    "totalCost": 4.791824500000001,
-    "totalTokens": 117933731
+    "totalCost": 39.544209280000004,
+    "totalTokens": 120846400
   },
   "2026-10-12": {
     "costSource": "unpriced",
@@ -4650,21 +5140,35 @@
         "outputTokens": 322,
         "totalTokens": 146242
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 80128,
+        "inputTokens": 65792,
+        "outputTokens": 322,
+        "totalTokens": 146242
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 17033728,
-        "inputTokens": 964379,
-        "outputTokens": 44364,
-        "totalTokens": 18042471
+        "cacheReadTokens": 17213312,
+        "inputTokens": 964653,
+        "outputTokens": 50463,
+        "totalTokens": 18228428
       }
     },
-    "totalCost": 0.94671,
-    "totalTokens": 18188713
+    "totalCost": 8.94241232,
+    "totalTokens": 18520912
   },
   "2026-10-14": {
     "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 608768,
+        "inputTokens": 61116,
+        "outputTokens": 2206,
+        "totalTokens": 672090
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 608768,
         "inputTokens": 61116,
@@ -4679,13 +5183,20 @@
         "totalTokens": 3530592
       }
     },
-    "totalCost": 1.622494,
-    "totalTokens": 4202682
+    "totalCost": 1.25251072,
+    "totalTokens": 4874772
   },
   "2026-10-19": {
     "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 142336,
+        "inputTokens": 82951,
+        "outputTokens": 833,
+        "totalTokens": 226120
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 142336,
         "inputTokens": 82951,
@@ -4700,8 +5211,8 @@
         "totalTokens": 14485285
       }
     },
-    "totalCost": 0.5109130000000001,
-    "totalTokens": 14711405
+    "totalCost": 3.3941905200000004,
+    "totalTokens": 14937525
   },
   "2026-10-20": {
     "costSource": "unpriced",
@@ -4713,30 +5224,37 @@
         "outputTokens": 507,
         "totalTokens": 78196
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 55040,
+        "inputTokens": 22649,
+        "outputTokens": 507,
+        "totalTokens": 78196
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 4528512,
-        "inputTokens": 209762,
-        "outputTokens": 26312,
-        "totalTokens": 4764586
+        "cacheReadTokens": 4722048,
+        "inputTokens": 210555,
+        "outputTokens": 30490,
+        "totalTokens": 4963093
       }
     },
-    "totalCost": 0.155975,
-    "totalTokens": 4842782
+    "totalCost": 1.2044538000000002,
+    "totalTokens": 5119485
   },
   "2026-10-21": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 388224,
-        "inputTokens": 59502,
-        "outputTokens": 1386,
-        "totalTokens": 449112
+        "inputTokens": 409961,
+        "outputTokens": 5581,
+        "totalTokens": 803766
       }
     },
-    "totalCost": 0.0,
-    "totalTokens": 449112
+    "totalCost": 1.6364473999999998,
+    "totalTokens": 803766
   },
   "2026-10-22": {
     "costSource": "unpriced",
@@ -4748,16 +5266,23 @@
         "outputTokens": 32367,
         "totalTokens": 18187967
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 16481280,
+        "inputTokens": 1674320,
+        "outputTokens": 32367,
+        "totalTokens": 18187967
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 144032384,
-        "inputTokens": 1979118,
-        "outputTokens": 169584,
-        "totalTokens": 146181086
+        "cacheReadTokens": 145079808,
+        "inputTokens": 2039347,
+        "outputTokens": 186763,
+        "totalTokens": 147305918
       }
     },
-    "totalCost": 19.3379305,
-    "totalTokens": 164369053
+    "totalCost": 32.83681988,
+    "totalTokens": 183681852
   },
   "2026-10-23": {
     "costSource": "unpriced",
@@ -4769,16 +5294,23 @@
         "outputTokens": 5632,
         "totalTokens": 2144336
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1666176,
+        "inputTokens": 472528,
+        "outputTokens": 5632,
+        "totalTokens": 2144336
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 38604288,
-        "inputTokens": 857083,
-        "outputTokens": 79856,
-        "totalTokens": 39541227
+        "cacheReadTokens": 38861824,
+        "inputTokens": 857230,
+        "outputTokens": 85004,
+        "totalTokens": 39804058
       }
     },
-    "totalCost": 3.364688,
-    "totalTokens": 41685563
+    "totalCost": 7.429046720000001,
+    "totalTokens": 44092730
   },
   "2026-10-24": {
     "costSource": "unpriced",
@@ -4790,21 +5322,35 @@
         "outputTokens": 4722,
         "totalTokens": 2061614
       },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1745664,
+        "inputTokens": 311228,
+        "outputTokens": 4722,
+        "totalTokens": 2061614
+      },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 42077184,
-        "inputTokens": 1011206,
-        "outputTokens": 79849,
-        "totalTokens": 43168239
+        "cacheReadTokens": 42836352,
+        "inputTokens": 1012200,
+        "outputTokens": 89052,
+        "totalTokens": 43937604
       }
     },
-    "totalCost": 5.155201,
-    "totalTokens": 45229853
+    "totalCost": 21.76514832,
+    "totalTokens": 48060832
   },
   "2026-10-27": {
     "costSource": "unpriced",
     "models": {
       "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 24576,
+        "inputTokens": 25763,
+        "outputTokens": 421,
+        "totalTokens": 50760
+      },
+      "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 24576,
         "inputTokens": 25763,
@@ -4819,7 +5365,42 @@
         "totalTokens": 2705252
       }
     },
-    "totalCost": 0.3843325,
-    "totalTokens": 2756012
+    "totalCost": 1.35824104,
+    "totalTokens": 2806772
+  },
+  "2026-10-28": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.5": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1612416,
+        "inputTokens": 196031,
+        "outputTokens": 7832,
+        "totalTokens": 1816279
+      },
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1764992,
+        "inputTokens": 210373,
+        "outputTokens": 8769,
+        "totalTokens": 1984134
+      },
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7466240,
+        "inputTokens": 285899,
+        "outputTokens": 17694,
+        "totalTokens": 7769833
+      },
+      "traex/gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 0,
+        "inputTokens": 7172947,
+        "outputTokens": 24928,
+        "totalTokens": 7197875
+      }
+    },
+    "totalCost": 2.8153956000000004,
+    "totalTokens": 18768121
   }
 }

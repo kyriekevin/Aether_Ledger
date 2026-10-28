@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1180" height="410" viewBox="0 0 1180 410" role="img" aria-labelledby="title desc">
-  <title id="title">AI compute activity through 2026-10-27</title>
-  <desc id="desc">$34.8K API-equivalent lifetime cost and 29.4B lifetime tokens across 169 active days; peak 1B tokens on 2026-10-12.</desc>
+  <title id="title">AI compute activity through 2026-10-28</title>
+  <desc id="desc">$36K API-equivalent lifetime cost and 32.3B lifetime tokens across 173 active days; peak 1B tokens on 2026-10-12.</desc>
   <style>
     .dashboard-background { fill: #eff1f5; }
     .dashboard-panel { fill: #e6e9ef; }
@@ -31,23 +31,23 @@
   </style>
   <rect class="dashboard-background" width="1180" height="410" rx="22"/>
   <rect class="dashboard-border" x="16" y="18" width="1148" height="112" rx="18" fill="none" stroke-width="2"/>
-  <text class="dashboard-accent" x="130.8" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">42.6M tokens</text>
-  <text class="dashboard-primary" x="130.8" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$0.38</text>
-  <text class="dashboard-muted" x="130.8" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Oct 27</text>
+  <text class="dashboard-accent" x="130.8" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">70.4M tokens</text>
+  <text class="dashboard-primary" x="130.8" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$22.97</text>
+  <text class="dashboard-muted" x="130.8" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Latest · Oct 28</text>
   <line class="dashboard-border" x1="245.6" y1="36" x2="245.6" y2="112" stroke-width="1"/>
-  <text class="dashboard-accent" x="360.4" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">4.8B tokens</text>
-  <text class="dashboard-primary" x="360.4" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$205</text>
+  <text class="dashboard-accent" x="360.4" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">6.9B tokens</text>
+  <text class="dashboard-primary" x="360.4" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$1.4K</text>
   <text class="dashboard-muted" x="360.4" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Month · Oct</text>
   <line class="dashboard-border" x1="475.2" y1="36" x2="475.2" y2="112" stroke-width="1"/>
-  <text class="dashboard-accent" x="590.0" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">29.4B tokens</text>
-  <text class="dashboard-primary" x="590.0" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$34.8K</text>
+  <text class="dashboard-accent" x="590.0" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">32.3B tokens</text>
+  <text class="dashboard-primary" x="590.0" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$36K</text>
   <text class="dashboard-muted" x="590.0" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Lifetime</text>
   <line class="dashboard-border" x1="704.8" y1="36" x2="704.8" y2="112" stroke-width="1"/>
   <text class="dashboard-accent" x="819.6" y="52" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="600">1B tokens</text>
-  <text class="dashboard-primary" x="819.6" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$0.95</text>
+  <text class="dashboard-primary" x="819.6" y="78" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="500">$8.94</text>
   <text class="dashboard-muted" x="819.6" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Peak · Oct 12</text>
   <line class="dashboard-border" x1="934.4" y1="36" x2="934.4" y2="112" stroke-width="1"/>
-  <text class="dashboard-primary" x="1049.2" y="66" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">169 days</text>
+  <text class="dashboard-primary" x="1049.2" y="66" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="25" font-weight="600">173 days</text>
   <text class="dashboard-muted" x="1049.2" y="106" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14">Active days</text>
   <text class="dashboard-primary" x="16" y="174" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="500">Compute activity</text>
   <text class="dashboard-muted" x="16" y="231" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Mon</text>
@@ -569,7 +569,7 @@
   <rect class="heatmap-level-0" x="518" y="338" width="16" height="16" rx="4" data-date="2026-04-12" data-tokens="0" data-level="0">
     <title>2026-04-12: 0 tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="538" y="218" width="16" height="16" rx="4" data-date="2026-04-13" data-tokens="51804098" data-level="2">
+  <rect class="heatmap-level-1" x="538" y="218" width="16" height="16" rx="4" data-date="2026-04-13" data-tokens="51804098" data-level="1">
     <title>2026-04-13: 51.8M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="538" y="238" width="16" height="16" rx="4" data-date="2026-04-14" data-tokens="21629352" data-level="1">
@@ -659,13 +659,13 @@
   <rect class="heatmap-level-1" x="618" y="238" width="16" height="16" rx="4" data-date="2026-05-12" data-tokens="36066507" data-level="1">
     <title>2026-05-12: 36.1M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="618" y="258" width="16" height="16" rx="4" data-date="2026-05-13" data-tokens="51221526" data-level="2">
+  <rect class="heatmap-level-1" x="618" y="258" width="16" height="16" rx="4" data-date="2026-05-13" data-tokens="51221526" data-level="1">
     <title>2026-05-13: 51.2M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="618" y="278" width="16" height="16" rx="4" data-date="2026-05-14" data-tokens="169393247" data-level="3">
     <title>2026-05-14: 169M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="618" y="298" width="16" height="16" rx="4" data-date="2026-05-15" data-tokens="49060895" data-level="2">
+  <rect class="heatmap-level-1" x="618" y="298" width="16" height="16" rx="4" data-date="2026-05-15" data-tokens="49060895" data-level="1">
     <title>2026-05-15: 49.1M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="618" y="318" width="16" height="16" rx="4" data-date="2026-05-16" data-tokens="63360376" data-level="2">
@@ -677,19 +677,19 @@
   <rect class="heatmap-level-3" x="638" y="218" width="16" height="16" rx="4" data-date="2026-05-18" data-tokens="211286481" data-level="3">
     <title>2026-05-18: 211M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="638" y="238" width="16" height="16" rx="4" data-date="2026-05-19" data-tokens="136335447" data-level="2">
-    <title>2026-05-19: 136M tokens</title>
+  <rect class="heatmap-level-2" x="638" y="238" width="16" height="16" rx="4" data-date="2026-05-19" data-tokens="149699524" data-level="2">
+    <title>2026-05-19: 150M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="638" y="258" width="16" height="16" rx="4" data-date="2026-05-20" data-tokens="179833123" data-level="3">
-    <title>2026-05-20: 180M tokens</title>
+  <rect class="heatmap-level-3" x="638" y="258" width="16" height="16" rx="4" data-date="2026-05-20" data-tokens="195302758" data-level="3">
+    <title>2026-05-20: 195M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="638" y="278" width="16" height="16" rx="4" data-date="2026-05-21" data-tokens="385492990" data-level="4">
-    <title>2026-05-21: 385M tokens</title>
+  <rect class="heatmap-level-4" x="638" y="278" width="16" height="16" rx="4" data-date="2026-05-21" data-tokens="415316702" data-level="4">
+    <title>2026-05-21: 415M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="638" y="298" width="16" height="16" rx="4" data-date="2026-05-22" data-tokens="329977260" data-level="4">
     <title>2026-05-22: 330M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="638" y="318" width="16" height="16" rx="4" data-date="2026-05-23" data-tokens="253140091" data-level="4">
+  <rect class="heatmap-level-4" x="638" y="318" width="16" height="16" rx="4" data-date="2026-05-23" data-tokens="253213983" data-level="4">
     <title>2026-05-23: 253M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="638" y="338" width="16" height="16" rx="4" data-date="2026-05-24" data-tokens="163962597" data-level="3">
@@ -698,37 +698,37 @@
   <rect class="heatmap-level-4" x="658" y="218" width="16" height="16" rx="4" data-date="2026-05-25" data-tokens="420052598" data-level="4">
     <title>2026-05-25: 420M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="658" y="238" width="16" height="16" rx="4" data-date="2026-05-26" data-tokens="228654415" data-level="3">
-    <title>2026-05-26: 229M tokens</title>
+  <rect class="heatmap-level-3" x="658" y="238" width="16" height="16" rx="4" data-date="2026-05-26" data-tokens="239952062" data-level="3">
+    <title>2026-05-26: 240M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="658" y="258" width="16" height="16" rx="4" data-date="2026-05-27" data-tokens="75546704" data-level="2">
     <title>2026-05-27: 75.5M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="658" y="278" width="16" height="16" rx="4" data-date="2026-05-28" data-tokens="144880538" data-level="3">
+  <rect class="heatmap-level-2" x="658" y="278" width="16" height="16" rx="4" data-date="2026-05-28" data-tokens="144880538" data-level="2">
     <title>2026-05-28: 145M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="658" y="298" width="16" height="16" rx="4" data-date="2026-05-29" data-tokens="146312177" data-level="3">
-    <title>2026-05-29: 146M tokens</title>
+  <rect class="heatmap-level-2" x="658" y="298" width="16" height="16" rx="4" data-date="2026-05-29" data-tokens="146523087" data-level="2">
+    <title>2026-05-29: 147M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="658" y="318" width="16" height="16" rx="4" data-date="2026-05-30" data-tokens="44995572" data-level="1">
     <title>2026-05-30: 45M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="658" y="338" width="16" height="16" rx="4" data-date="2026-05-31" data-tokens="396448805" data-level="4">
-    <title>2026-05-31: 396M tokens</title>
+  <rect class="heatmap-level-4" x="658" y="338" width="16" height="16" rx="4" data-date="2026-05-31" data-tokens="396603924" data-level="4">
+    <title>2026-05-31: 397M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="678" y="218" width="16" height="16" rx="4" data-date="2026-06-01" data-tokens="465567694" data-level="4">
-    <title>2026-06-01: 466M tokens</title>
+  <rect class="heatmap-level-4" x="678" y="218" width="16" height="16" rx="4" data-date="2026-06-01" data-tokens="501196524" data-level="4">
+    <title>2026-06-01: 501M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="678" y="238" width="16" height="16" rx="4" data-date="2026-06-02" data-tokens="105002566" data-level="2">
-    <title>2026-06-02: 105M tokens</title>
+  <rect class="heatmap-level-2" x="678" y="238" width="16" height="16" rx="4" data-date="2026-06-02" data-tokens="105592453" data-level="2">
+    <title>2026-06-02: 106M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="678" y="258" width="16" height="16" rx="4" data-date="2026-06-03" data-tokens="74650388" data-level="2">
     <title>2026-06-03: 74.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="678" y="278" width="16" height="16" rx="4" data-date="2026-06-04" data-tokens="46987952" data-level="2">
-    <title>2026-06-04: 47M tokens</title>
+  <rect class="heatmap-level-1" x="678" y="278" width="16" height="16" rx="4" data-date="2026-06-04" data-tokens="47169279" data-level="1">
+    <title>2026-06-04: 47.2M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="678" y="298" width="16" height="16" rx="4" data-date="2026-06-05" data-tokens="129865055" data-level="2">
+  <rect class="heatmap-level-2" x="678" y="298" width="16" height="16" rx="4" data-date="2026-06-05" data-tokens="129879303" data-level="2">
     <title>2026-06-05: 130M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="678" y="318" width="16" height="16" rx="4" data-date="2026-06-06" data-tokens="161973353" data-level="3">
@@ -737,10 +737,10 @@
   <rect class="heatmap-level-3" x="678" y="338" width="16" height="16" rx="4" data-date="2026-06-07" data-tokens="178106790" data-level="3">
     <title>2026-06-07: 178M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="698" y="218" width="16" height="16" rx="4" data-date="2026-06-08" data-tokens="232358603" data-level="4">
-    <title>2026-06-08: 232M tokens</title>
+  <rect class="heatmap-level-3" x="698" y="218" width="16" height="16" rx="4" data-date="2026-06-08" data-tokens="240815231" data-level="3">
+    <title>2026-06-08: 241M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="698" y="238" width="16" height="16" rx="4" data-date="2026-06-09" data-tokens="151230359" data-level="3">
+  <rect class="heatmap-level-3" x="698" y="238" width="16" height="16" rx="4" data-date="2026-06-09" data-tokens="151473014" data-level="3">
     <title>2026-06-09: 151M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="698" y="258" width="16" height="16" rx="4" data-date="2026-06-10" data-tokens="13335759" data-level="1">
@@ -758,17 +758,17 @@
   <rect class="heatmap-level-0" x="698" y="338" width="16" height="16" rx="4" data-date="2026-06-14" data-tokens="0" data-level="0">
     <title>2026-06-14: 0 tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="718" y="218" width="16" height="16" rx="4" data-date="2026-06-15" data-tokens="170221782" data-level="3">
+  <rect class="heatmap-level-3" x="718" y="218" width="16" height="16" rx="4" data-date="2026-06-15" data-tokens="170240696" data-level="3">
     <title>2026-06-15: 170M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="718" y="238" width="16" height="16" rx="4" data-date="2026-06-16" data-tokens="116962494" data-level="2">
     <title>2026-06-16: 117M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="718" y="258" width="16" height="16" rx="4" data-date="2026-06-17" data-tokens="72501923" data-level="2">
+  <rect class="heatmap-level-2" x="718" y="258" width="16" height="16" rx="4" data-date="2026-06-17" data-tokens="72515555" data-level="2">
     <title>2026-06-17: 72.5M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="718" y="278" width="16" height="16" rx="4" data-date="2026-06-18" data-tokens="34118766" data-level="1">
-    <title>2026-06-18: 34.1M tokens</title>
+  <rect class="heatmap-level-1" x="718" y="278" width="16" height="16" rx="4" data-date="2026-06-18" data-tokens="34500028" data-level="1">
+    <title>2026-06-18: 34.5M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="718" y="298" width="16" height="16" rx="4" data-date="2026-06-19" data-tokens="150844584" data-level="3">
     <title>2026-06-19: 151M tokens</title>
@@ -779,20 +779,20 @@
   <rect class="heatmap-level-2" x="718" y="338" width="16" height="16" rx="4" data-date="2026-06-21" data-tokens="94730290" data-level="2">
     <title>2026-06-21: 94.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="738" y="218" width="16" height="16" rx="4" data-date="2026-06-22" data-tokens="191476853" data-level="3">
-    <title>2026-06-22: 191M tokens</title>
+  <rect class="heatmap-level-3" x="738" y="218" width="16" height="16" rx="4" data-date="2026-06-22" data-tokens="192261631" data-level="3">
+    <title>2026-06-22: 192M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="738" y="238" width="16" height="16" rx="4" data-date="2026-06-23" data-tokens="200822799" data-level="3">
-    <title>2026-06-23: 201M tokens</title>
+  <rect class="heatmap-level-3" x="738" y="238" width="16" height="16" rx="4" data-date="2026-06-23" data-tokens="205791348" data-level="3">
+    <title>2026-06-23: 206M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="738" y="258" width="16" height="16" rx="4" data-date="2026-06-24" data-tokens="217239209" data-level="3">
-    <title>2026-06-24: 217M tokens</title>
+  <rect class="heatmap-level-3" x="738" y="258" width="16" height="16" rx="4" data-date="2026-06-24" data-tokens="219042239" data-level="3">
+    <title>2026-06-24: 219M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="738" y="278" width="16" height="16" rx="4" data-date="2026-06-25" data-tokens="156071061" data-level="3">
-    <title>2026-06-25: 156M tokens</title>
+  <rect class="heatmap-level-3" x="738" y="278" width="16" height="16" rx="4" data-date="2026-06-25" data-tokens="158905640" data-level="3">
+    <title>2026-06-25: 159M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="738" y="298" width="16" height="16" rx="4" data-date="2026-06-26" data-tokens="139127643" data-level="2">
-    <title>2026-06-26: 139M tokens</title>
+  <rect class="heatmap-level-2" x="738" y="298" width="16" height="16" rx="4" data-date="2026-06-26" data-tokens="147577991" data-level="2">
+    <title>2026-06-26: 148M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="738" y="318" width="16" height="16" rx="4" data-date="2026-06-27" data-tokens="0" data-level="0">
     <title>2026-06-27: 0 tokens</title>
@@ -800,20 +800,20 @@
   <rect class="heatmap-level-1" x="738" y="338" width="16" height="16" rx="4" data-date="2026-06-28" data-tokens="203756" data-level="1">
     <title>2026-06-28: 204K tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="758" y="218" width="16" height="16" rx="4" data-date="2026-06-29" data-tokens="119775305" data-level="2">
-    <title>2026-06-29: 120M tokens</title>
+  <rect class="heatmap-level-2" x="758" y="218" width="16" height="16" rx="4" data-date="2026-06-29" data-tokens="125972787" data-level="2">
+    <title>2026-06-29: 126M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="758" y="238" width="16" height="16" rx="4" data-date="2026-06-30" data-tokens="49112395" data-level="2">
-    <title>2026-06-30: 49.1M tokens</title>
+  <rect class="heatmap-level-2" x="758" y="238" width="16" height="16" rx="4" data-date="2026-06-30" data-tokens="55940828" data-level="2">
+    <title>2026-06-30: 55.9M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="758" y="258" width="16" height="16" rx="4" data-date="2026-07-01" data-tokens="44152008" data-level="1">
-    <title>2026-07-01: 44.2M tokens</title>
+  <rect class="heatmap-level-1" x="758" y="258" width="16" height="16" rx="4" data-date="2026-07-01" data-tokens="44344567" data-level="1">
+    <title>2026-07-01: 44.3M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="758" y="278" width="16" height="16" rx="4" data-date="2026-07-02" data-tokens="26433104" data-level="1">
-    <title>2026-07-02: 26.4M tokens</title>
+  <rect class="heatmap-level-1" x="758" y="278" width="16" height="16" rx="4" data-date="2026-07-02" data-tokens="26704167" data-level="1">
+    <title>2026-07-02: 26.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="758" y="298" width="16" height="16" rx="4" data-date="2026-07-03" data-tokens="68148469" data-level="2">
-    <title>2026-07-03: 68.1M tokens</title>
+  <rect class="heatmap-level-2" x="758" y="298" width="16" height="16" rx="4" data-date="2026-07-03" data-tokens="69165747" data-level="2">
+    <title>2026-07-03: 69.2M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="758" y="318" width="16" height="16" rx="4" data-date="2026-07-04" data-tokens="0" data-level="0">
     <title>2026-07-04: 0 tokens</title>
@@ -821,20 +821,20 @@
   <rect class="heatmap-level-0" x="758" y="338" width="16" height="16" rx="4" data-date="2026-07-05" data-tokens="0" data-level="0">
     <title>2026-07-05: 0 tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="778" y="218" width="16" height="16" rx="4" data-date="2026-07-06" data-tokens="89734602" data-level="2">
-    <title>2026-07-06: 89.7M tokens</title>
+  <rect class="heatmap-level-2" x="778" y="218" width="16" height="16" rx="4" data-date="2026-07-06" data-tokens="90367107" data-level="2">
+    <title>2026-07-06: 90.4M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="778" y="238" width="16" height="16" rx="4" data-date="2026-07-07" data-tokens="164539993" data-level="3">
-    <title>2026-07-07: 165M tokens</title>
+  <rect class="heatmap-level-3" x="778" y="238" width="16" height="16" rx="4" data-date="2026-07-07" data-tokens="169907090" data-level="3">
+    <title>2026-07-07: 170M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="778" y="258" width="16" height="16" rx="4" data-date="2026-07-08" data-tokens="166101219" data-level="3">
+  <rect class="heatmap-level-3" x="778" y="258" width="16" height="16" rx="4" data-date="2026-07-08" data-tokens="166408799" data-level="3">
     <title>2026-07-08: 166M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="778" y="278" width="16" height="16" rx="4" data-date="2026-07-09" data-tokens="250099719" data-level="4">
-    <title>2026-07-09: 250M tokens</title>
+  <rect class="heatmap-level-4" x="778" y="278" width="16" height="16" rx="4" data-date="2026-07-09" data-tokens="251430889" data-level="4">
+    <title>2026-07-09: 251M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="778" y="298" width="16" height="16" rx="4" data-date="2026-07-10" data-tokens="89622830" data-level="2">
-    <title>2026-07-10: 89.6M tokens</title>
+  <rect class="heatmap-level-2" x="778" y="298" width="16" height="16" rx="4" data-date="2026-07-10" data-tokens="99920210" data-level="2">
+    <title>2026-07-10: 99.9M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="778" y="318" width="16" height="16" rx="4" data-date="2026-07-11" data-tokens="0" data-level="0">
     <title>2026-07-11: 0 tokens</title>
@@ -848,56 +848,56 @@
   <rect class="heatmap-level-1" x="798" y="238" width="16" height="16" rx="4" data-date="2026-07-14" data-tokens="13646599" data-level="1">
     <title>2026-07-14: 13.6M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="798" y="258" width="16" height="16" rx="4" data-date="2026-07-15" data-tokens="204733951" data-level="3">
-    <title>2026-07-15: 205M tokens</title>
+  <rect class="heatmap-level-3" x="798" y="258" width="16" height="16" rx="4" data-date="2026-07-15" data-tokens="205541078" data-level="3">
+    <title>2026-07-15: 206M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="798" y="278" width="16" height="16" rx="4" data-date="2026-07-16" data-tokens="44331674" data-level="1">
-    <title>2026-07-16: 44.3M tokens</title>
+  <rect class="heatmap-level-1" x="798" y="278" width="16" height="16" rx="4" data-date="2026-07-16" data-tokens="52642194" data-level="1">
+    <title>2026-07-16: 52.6M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="798" y="298" width="16" height="16" rx="4" data-date="2026-07-17" data-tokens="38702996" data-level="1">
-    <title>2026-07-17: 38.7M tokens</title>
+  <rect class="heatmap-level-1" x="798" y="298" width="16" height="16" rx="4" data-date="2026-07-17" data-tokens="46358822" data-level="1">
+    <title>2026-07-17: 46.4M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="798" y="318" width="16" height="16" rx="4" data-date="2026-07-18" data-tokens="187947083" data-level="3">
-    <title>2026-07-18: 188M tokens</title>
+  <rect class="heatmap-level-3" x="798" y="318" width="16" height="16" rx="4" data-date="2026-07-18" data-tokens="215028563" data-level="3">
+    <title>2026-07-18: 215M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="798" y="338" width="16" height="16" rx="4" data-date="2026-07-19" data-tokens="223770482" data-level="3">
-    <title>2026-07-19: 224M tokens</title>
+  <rect class="heatmap-level-3" x="798" y="338" width="16" height="16" rx="4" data-date="2026-07-19" data-tokens="243964202" data-level="3">
+    <title>2026-07-19: 244M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="818" y="218" width="16" height="16" rx="4" data-date="2026-07-20" data-tokens="178187450" data-level="3">
-    <title>2026-07-20: 178M tokens</title>
+  <rect class="heatmap-level-3" x="818" y="218" width="16" height="16" rx="4" data-date="2026-07-20" data-tokens="196097579" data-level="3">
+    <title>2026-07-20: 196M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="818" y="238" width="16" height="16" rx="4" data-date="2026-07-21" data-tokens="161521994" data-level="3">
-    <title>2026-07-21: 162M tokens</title>
+  <rect class="heatmap-level-3" x="818" y="238" width="16" height="16" rx="4" data-date="2026-07-21" data-tokens="183563610" data-level="3">
+    <title>2026-07-21: 184M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="818" y="258" width="16" height="16" rx="4" data-date="2026-07-22" data-tokens="219171594" data-level="3">
-    <title>2026-07-22: 219M tokens</title>
+  <rect class="heatmap-level-3" x="818" y="258" width="16" height="16" rx="4" data-date="2026-07-22" data-tokens="219620573" data-level="3">
+    <title>2026-07-22: 220M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="818" y="278" width="16" height="16" rx="4" data-date="2026-07-23" data-tokens="477377960" data-level="4">
-    <title>2026-07-23: 477M tokens</title>
+  <rect class="heatmap-level-4" x="818" y="278" width="16" height="16" rx="4" data-date="2026-07-23" data-tokens="565618148" data-level="4">
+    <title>2026-07-23: 566M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="818" y="298" width="16" height="16" rx="4" data-date="2026-07-24" data-tokens="156236265" data-level="3">
-    <title>2026-07-24: 156M tokens</title>
+  <rect class="heatmap-level-3" x="818" y="298" width="16" height="16" rx="4" data-date="2026-07-24" data-tokens="180399713" data-level="3">
+    <title>2026-07-24: 180M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="818" y="318" width="16" height="16" rx="4" data-date="2026-07-25" data-tokens="231832640" data-level="3">
-    <title>2026-07-25: 232M tokens</title>
+  <rect class="heatmap-level-4" x="818" y="318" width="16" height="16" rx="4" data-date="2026-07-25" data-tokens="270287673" data-level="4">
+    <title>2026-07-25: 270M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="818" y="338" width="16" height="16" rx="4" data-date="2026-07-26" data-tokens="100995944" data-level="2">
-    <title>2026-07-26: 101M tokens</title>
+  <rect class="heatmap-level-2" x="818" y="338" width="16" height="16" rx="4" data-date="2026-07-26" data-tokens="118448605" data-level="2">
+    <title>2026-07-26: 118M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="838" y="218" width="16" height="16" rx="4" data-date="2026-07-27" data-tokens="148000221" data-level="3">
-    <title>2026-07-27: 148M tokens</title>
+  <rect class="heatmap-level-3" x="838" y="218" width="16" height="16" rx="4" data-date="2026-07-27" data-tokens="160857769" data-level="3">
+    <title>2026-07-27: 161M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="838" y="238" width="16" height="16" rx="4" data-date="2026-07-28" data-tokens="188513502" data-level="3">
-    <title>2026-07-28: 189M tokens</title>
+  <rect class="heatmap-level-3" x="838" y="238" width="16" height="16" rx="4" data-date="2026-07-28" data-tokens="214902813" data-level="3">
+    <title>2026-07-28: 215M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="838" y="258" width="16" height="16" rx="4" data-date="2026-07-29" data-tokens="237740343" data-level="4">
+  <rect class="heatmap-level-3" x="838" y="258" width="16" height="16" rx="4" data-date="2026-07-29" data-tokens="237995347" data-level="3">
     <title>2026-07-29: 238M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="838" y="278" width="16" height="16" rx="4" data-date="2026-07-30" data-tokens="260878185" data-level="4">
     <title>2026-07-30: 261M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="838" y="298" width="16" height="16" rx="4" data-date="2026-07-31" data-tokens="172678469" data-level="3">
-    <title>2026-07-31: 173M tokens</title>
+  <rect class="heatmap-level-3" x="838" y="298" width="16" height="16" rx="4" data-date="2026-07-31" data-tokens="187389202" data-level="3">
+    <title>2026-07-31: 187M tokens</title>
   </rect>
   <rect class="heatmap-level-2" x="838" y="318" width="16" height="16" rx="4" data-date="2026-08-01" data-tokens="112377857" data-level="2">
     <title>2026-08-01: 112M tokens</title>
@@ -905,83 +905,83 @@
   <rect class="heatmap-level-2" x="838" y="338" width="16" height="16" rx="4" data-date="2026-08-02" data-tokens="64884454" data-level="2">
     <title>2026-08-02: 64.9M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="858" y="218" width="16" height="16" rx="4" data-date="2026-08-03" data-tokens="27634160" data-level="1">
-    <title>2026-08-03: 27.6M tokens</title>
+  <rect class="heatmap-level-1" x="858" y="218" width="16" height="16" rx="4" data-date="2026-08-03" data-tokens="28676693" data-level="1">
+    <title>2026-08-03: 28.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="858" y="238" width="16" height="16" rx="4" data-date="2026-08-04" data-tokens="348924858" data-level="4">
+  <rect class="heatmap-level-4" x="858" y="238" width="16" height="16" rx="4" data-date="2026-08-04" data-tokens="348945452" data-level="4">
     <title>2026-08-04: 349M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="858" y="258" width="16" height="16" rx="4" data-date="2026-08-05" data-tokens="620524028" data-level="4">
-    <title>2026-08-05: 621M tokens</title>
+  <rect class="heatmap-level-4" x="858" y="258" width="16" height="16" rx="4" data-date="2026-08-05" data-tokens="668078228" data-level="4">
+    <title>2026-08-05: 668M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="858" y="278" width="16" height="16" rx="4" data-date="2026-08-06" data-tokens="557780083" data-level="4">
-    <title>2026-08-06: 558M tokens</title>
+  <rect class="heatmap-level-4" x="858" y="278" width="16" height="16" rx="4" data-date="2026-08-06" data-tokens="707121255" data-level="4">
+    <title>2026-08-06: 707M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="858" y="298" width="16" height="16" rx="4" data-date="2026-08-07" data-tokens="65709890" data-level="2">
-    <title>2026-08-07: 65.7M tokens</title>
+  <rect class="heatmap-level-2" x="858" y="298" width="16" height="16" rx="4" data-date="2026-08-07" data-tokens="78042190" data-level="2">
+    <title>2026-08-07: 78M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="858" y="318" width="16" height="16" rx="4" data-date="2026-08-08" data-tokens="141273712" data-level="3">
+  <rect class="heatmap-level-2" x="858" y="318" width="16" height="16" rx="4" data-date="2026-08-08" data-tokens="141273712" data-level="2">
     <title>2026-08-08: 141M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="858" y="338" width="16" height="16" rx="4" data-date="2026-08-09" data-tokens="165483532" data-level="3">
     <title>2026-08-09: 165M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="878" y="218" width="16" height="16" rx="4" data-date="2026-08-10" data-tokens="191298378" data-level="3">
-    <title>2026-08-10: 191M tokens</title>
+  <rect class="heatmap-level-3" x="878" y="218" width="16" height="16" rx="4" data-date="2026-08-10" data-tokens="207010066" data-level="3">
+    <title>2026-08-10: 207M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="238" width="16" height="16" rx="4" data-date="2026-08-11" data-tokens="237109633" data-level="4">
-    <title>2026-08-11: 237M tokens</title>
+  <rect class="heatmap-level-3" x="878" y="238" width="16" height="16" rx="4" data-date="2026-08-11" data-tokens="242974958" data-level="3">
+    <title>2026-08-11: 243M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="258" width="16" height="16" rx="4" data-date="2026-08-12" data-tokens="637610515" data-level="4">
-    <title>2026-08-12: 638M tokens</title>
+  <rect class="heatmap-level-4" x="878" y="258" width="16" height="16" rx="4" data-date="2026-08-12" data-tokens="639449962" data-level="4">
+    <title>2026-08-12: 639M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="878" y="278" width="16" height="16" rx="4" data-date="2026-08-13" data-tokens="254453824" data-level="4">
     <title>2026-08-13: 254M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="298" width="16" height="16" rx="4" data-date="2026-08-14" data-tokens="443800838" data-level="4">
-    <title>2026-08-14: 444M tokens</title>
+  <rect class="heatmap-level-4" x="878" y="298" width="16" height="16" rx="4" data-date="2026-08-14" data-tokens="452497621" data-level="4">
+    <title>2026-08-14: 452M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="318" width="16" height="16" rx="4" data-date="2026-08-15" data-tokens="319788866" data-level="4">
-    <title>2026-08-15: 320M tokens</title>
+  <rect class="heatmap-level-4" x="878" y="318" width="16" height="16" rx="4" data-date="2026-08-15" data-tokens="323459767" data-level="4">
+    <title>2026-08-15: 323M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="878" y="338" width="16" height="16" rx="4" data-date="2026-08-16" data-tokens="238841556" data-level="4">
-    <title>2026-08-16: 239M tokens</title>
+  <rect class="heatmap-level-4" x="878" y="338" width="16" height="16" rx="4" data-date="2026-08-16" data-tokens="251988423" data-level="4">
+    <title>2026-08-16: 252M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="898" y="218" width="16" height="16" rx="4" data-date="2026-08-17" data-tokens="646259438" data-level="4">
-    <title>2026-08-17: 646M tokens</title>
+  <rect class="heatmap-level-4" x="898" y="218" width="16" height="16" rx="4" data-date="2026-08-17" data-tokens="686028171" data-level="4">
+    <title>2026-08-17: 686M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="898" y="238" width="16" height="16" rx="4" data-date="2026-08-18" data-tokens="284518447" data-level="4">
-    <title>2026-08-18: 285M tokens</title>
+  <rect class="heatmap-level-4" x="898" y="238" width="16" height="16" rx="4" data-date="2026-08-18" data-tokens="292185273" data-level="4">
+    <title>2026-08-18: 292M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="898" y="258" width="16" height="16" rx="4" data-date="2026-08-19" data-tokens="250164622" data-level="4">
-    <title>2026-08-19: 250M tokens</title>
+  <rect class="heatmap-level-4" x="898" y="258" width="16" height="16" rx="4" data-date="2026-08-19" data-tokens="252517633" data-level="4">
+    <title>2026-08-19: 253M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="898" y="278" width="16" height="16" rx="4" data-date="2026-08-20" data-tokens="19663961" data-level="1">
     <title>2026-08-20: 19.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="898" y="298" width="16" height="16" rx="4" data-date="2026-08-21" data-tokens="114998932" data-level="2">
-    <title>2026-08-21: 115M tokens</title>
+  <rect class="heatmap-level-2" x="898" y="298" width="16" height="16" rx="4" data-date="2026-08-21" data-tokens="117309287" data-level="2">
+    <title>2026-08-21: 117M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="898" y="318" width="16" height="16" rx="4" data-date="2026-08-22" data-tokens="11595639" data-level="1">
     <title>2026-08-22: 11.6M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="898" y="338" width="16" height="16" rx="4" data-date="2026-08-23" data-tokens="48057207" data-level="2">
+  <rect class="heatmap-level-1" x="898" y="338" width="16" height="16" rx="4" data-date="2026-08-23" data-tokens="48057207" data-level="1">
     <title>2026-08-23: 48.1M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="918" y="218" width="16" height="16" rx="4" data-date="2026-08-24" data-tokens="231542854" data-level="3">
-    <title>2026-08-24: 232M tokens</title>
+  <rect class="heatmap-level-3" x="918" y="218" width="16" height="16" rx="4" data-date="2026-08-24" data-tokens="236922690" data-level="3">
+    <title>2026-08-24: 237M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="918" y="238" width="16" height="16" rx="4" data-date="2026-08-25" data-tokens="117369618" data-level="2">
-    <title>2026-08-25: 117M tokens</title>
+  <rect class="heatmap-level-2" x="918" y="238" width="16" height="16" rx="4" data-date="2026-08-25" data-tokens="120735116" data-level="2">
+    <title>2026-08-25: 121M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="918" y="258" width="16" height="16" rx="4" data-date="2026-08-26" data-tokens="151399181" data-level="3">
-    <title>2026-08-26: 151M tokens</title>
+  <rect class="heatmap-level-3" x="918" y="258" width="16" height="16" rx="4" data-date="2026-08-26" data-tokens="152148764" data-level="3">
+    <title>2026-08-26: 152M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="918" y="278" width="16" height="16" rx="4" data-date="2026-08-27" data-tokens="103148102" data-level="2">
-    <title>2026-08-27: 103M tokens</title>
+  <rect class="heatmap-level-2" x="918" y="278" width="16" height="16" rx="4" data-date="2026-08-27" data-tokens="104064419" data-level="2">
+    <title>2026-08-27: 104M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="918" y="298" width="16" height="16" rx="4" data-date="2026-08-28" data-tokens="37326925" data-level="1">
-    <title>2026-08-28: 37.3M tokens</title>
+  <rect class="heatmap-level-1" x="918" y="298" width="16" height="16" rx="4" data-date="2026-08-28" data-tokens="37410924" data-level="1">
+    <title>2026-08-28: 37.4M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="918" y="318" width="16" height="16" rx="4" data-date="2026-08-29" data-tokens="16529708" data-level="1">
     <title>2026-08-29: 16.5M tokens</title>
@@ -989,17 +989,17 @@
   <rect class="heatmap-level-1" x="918" y="338" width="16" height="16" rx="4" data-date="2026-08-30" data-tokens="32206072" data-level="1">
     <title>2026-08-30: 32.2M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="938" y="218" width="16" height="16" rx="4" data-date="2026-08-31" data-tokens="54619873" data-level="2">
-    <title>2026-08-31: 54.6M tokens</title>
+  <rect class="heatmap-level-2" x="938" y="218" width="16" height="16" rx="4" data-date="2026-08-31" data-tokens="57716715" data-level="2">
+    <title>2026-08-31: 57.7M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="938" y="238" width="16" height="16" rx="4" data-date="2026-09-01" data-tokens="363766980" data-level="4">
-    <title>2026-09-01: 364M tokens</title>
+  <rect class="heatmap-level-4" x="938" y="238" width="16" height="16" rx="4" data-date="2026-09-01" data-tokens="380321258" data-level="4">
+    <title>2026-09-01: 380M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="938" y="258" width="16" height="16" rx="4" data-date="2026-09-02" data-tokens="292341881" data-level="4">
-    <title>2026-09-02: 292M tokens</title>
+  <rect class="heatmap-level-4" x="938" y="258" width="16" height="16" rx="4" data-date="2026-09-02" data-tokens="300550145" data-level="4">
+    <title>2026-09-02: 301M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="938" y="278" width="16" height="16" rx="4" data-date="2026-09-03" data-tokens="113362639" data-level="2">
-    <title>2026-09-03: 113M tokens</title>
+  <rect class="heatmap-level-2" x="938" y="278" width="16" height="16" rx="4" data-date="2026-09-03" data-tokens="114387197" data-level="2">
+    <title>2026-09-03: 114M tokens</title>
   </rect>
   <rect class="heatmap-level-1" x="938" y="298" width="16" height="16" rx="4" data-date="2026-09-04" data-tokens="17527513" data-level="1">
     <title>2026-09-04: 17.5M tokens</title>
@@ -1010,19 +1010,19 @@
   <rect class="heatmap-level-1" x="938" y="338" width="16" height="16" rx="4" data-date="2026-09-06" data-tokens="28642861" data-level="1">
     <title>2026-09-06: 28.6M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="958" y="218" width="16" height="16" rx="4" data-date="2026-09-07" data-tokens="504843908" data-level="4">
-    <title>2026-09-07: 505M tokens</title>
+  <rect class="heatmap-level-4" x="958" y="218" width="16" height="16" rx="4" data-date="2026-09-07" data-tokens="510219537" data-level="4">
+    <title>2026-09-07: 510M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="958" y="238" width="16" height="16" rx="4" data-date="2026-09-08" data-tokens="228386369" data-level="3">
     <title>2026-09-08: 228M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="958" y="258" width="16" height="16" rx="4" data-date="2026-09-09" data-tokens="264212936" data-level="4">
-    <title>2026-09-09: 264M tokens</title>
+  <rect class="heatmap-level-4" x="958" y="258" width="16" height="16" rx="4" data-date="2026-09-09" data-tokens="267534595" data-level="4">
+    <title>2026-09-09: 268M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="958" y="278" width="16" height="16" rx="4" data-date="2026-09-10" data-tokens="298261088" data-level="4">
-    <title>2026-09-10: 298M tokens</title>
+  <rect class="heatmap-level-4" x="958" y="278" width="16" height="16" rx="4" data-date="2026-09-10" data-tokens="300185343" data-level="4">
+    <title>2026-09-10: 300M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="958" y="298" width="16" height="16" rx="4" data-date="2026-09-11" data-tokens="226135702" data-level="3">
+  <rect class="heatmap-level-3" x="958" y="298" width="16" height="16" rx="4" data-date="2026-09-11" data-tokens="226232918" data-level="3">
     <title>2026-09-11: 226M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="958" y="318" width="16" height="16" rx="4" data-date="2026-09-12" data-tokens="0" data-level="0">
@@ -1031,32 +1031,32 @@
   <rect class="heatmap-level-1" x="958" y="338" width="16" height="16" rx="4" data-date="2026-09-13" data-tokens="11366367" data-level="1">
     <title>2026-09-13: 11.4M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="978" y="218" width="16" height="16" rx="4" data-date="2026-09-14" data-tokens="403449653" data-level="4">
-    <title>2026-09-14: 403M tokens</title>
+  <rect class="heatmap-level-4" x="978" y="218" width="16" height="16" rx="4" data-date="2026-09-14" data-tokens="404459582" data-level="4">
+    <title>2026-09-14: 404M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="978" y="238" width="16" height="16" rx="4" data-date="2026-09-15" data-tokens="373403139" data-level="4">
     <title>2026-09-15: 373M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="978" y="258" width="16" height="16" rx="4" data-date="2026-09-16" data-tokens="239076007" data-level="4">
+  <rect class="heatmap-level-3" x="978" y="258" width="16" height="16" rx="4" data-date="2026-09-16" data-tokens="239076007" data-level="3">
     <title>2026-09-16: 239M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="978" y="278" width="16" height="16" rx="4" data-date="2026-09-17" data-tokens="173408628" data-level="3">
-    <title>2026-09-17: 173M tokens</title>
+  <rect class="heatmap-level-3" x="978" y="278" width="16" height="16" rx="4" data-date="2026-09-17" data-tokens="173798322" data-level="3">
+    <title>2026-09-17: 174M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="978" y="298" width="16" height="16" rx="4" data-date="2026-09-18" data-tokens="180221944" data-level="3">
-    <title>2026-09-18: 180M tokens</title>
+  <rect class="heatmap-level-3" x="978" y="298" width="16" height="16" rx="4" data-date="2026-09-18" data-tokens="181413857" data-level="3">
+    <title>2026-09-18: 181M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="978" y="318" width="16" height="16" rx="4" data-date="2026-09-19" data-tokens="0" data-level="0">
     <title>2026-09-19: 0 tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="978" y="338" width="16" height="16" rx="4" data-date="2026-09-20" data-tokens="389946652" data-level="4">
+  <rect class="heatmap-level-4" x="978" y="338" width="16" height="16" rx="4" data-date="2026-09-20" data-tokens="390366637" data-level="4">
     <title>2026-09-20: 390M tokens</title>
   </rect>
   <rect class="heatmap-level-3" x="998" y="218" width="16" height="16" rx="4" data-date="2026-09-21" data-tokens="202487090" data-level="3">
     <title>2026-09-21: 202M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="998" y="238" width="16" height="16" rx="4" data-date="2026-09-22" data-tokens="560296577" data-level="4">
-    <title>2026-09-22: 560M tokens</title>
+  <rect class="heatmap-level-4" x="998" y="238" width="16" height="16" rx="4" data-date="2026-09-22" data-tokens="560719176" data-level="4">
+    <title>2026-09-22: 561M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="998" y="258" width="16" height="16" rx="4" data-date="2026-09-23" data-tokens="320063105" data-level="4">
     <title>2026-09-23: 320M tokens</title>
@@ -1103,56 +1103,56 @@
   <rect class="heatmap-level-2" x="1038" y="258" width="16" height="16" rx="4" data-date="2026-10-07" data-tokens="132295441" data-level="2">
     <title>2026-10-07: 132M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1038" y="278" width="16" height="16" rx="4" data-date="2026-10-08" data-tokens="622836560" data-level="4">
-    <title>2026-10-08: 623M tokens</title>
+  <rect class="heatmap-level-4" x="1038" y="278" width="16" height="16" rx="4" data-date="2026-10-08" data-tokens="623686536" data-level="4">
+    <title>2026-10-08: 624M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="1038" y="298" width="16" height="16" rx="4" data-date="2026-10-09" data-tokens="604795892" data-level="4">
     <title>2026-10-09: 605M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1038" y="318" width="16" height="16" rx="4" data-date="2026-10-10" data-tokens="711398275" data-level="4">
-    <title>2026-10-10: 711M tokens</title>
+  <rect class="heatmap-level-4" x="1038" y="318" width="16" height="16" rx="4" data-date="2026-10-10" data-tokens="714310944" data-level="4">
+    <title>2026-10-10: 714M tokens</title>
   </rect>
   <rect class="heatmap-level-4" x="1038" y="338" width="16" height="16" rx="4" data-date="2026-10-11" data-tokens="712209271" data-level="4">
     <title>2026-10-11: 712M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1058" y="218" width="16" height="16" rx="4" data-date="2026-10-12" data-tokens="1013720789" data-level="4">
+  <rect class="heatmap-level-4" x="1058" y="218" width="16" height="16" rx="4" data-date="2026-10-12" data-tokens="1014052988" data-level="4">
     <title>2026-10-12: 1B tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1058" y="238" width="16" height="16" rx="4" data-date="2026-10-13" data-tokens="234846122" data-level="4">
+  <rect class="heatmap-level-3" x="1058" y="238" width="16" height="16" rx="4" data-date="2026-10-13" data-tokens="234846122" data-level="3">
     <title>2026-10-13: 235M tokens</title>
   </rect>
-  <rect class="heatmap-level-4" x="1058" y="258" width="16" height="16" rx="4" data-date="2026-10-14" data-tokens="259546804" data-level="4">
-    <title>2026-10-14: 260M tokens</title>
+  <rect class="heatmap-level-4" x="1058" y="258" width="16" height="16" rx="4" data-date="2026-10-14" data-tokens="380027780" data-level="4">
+    <title>2026-10-14: 380M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="1058" y="278" width="16" height="16" rx="4" data-date="2026-10-15" data-tokens="153393842" data-level="3">
-    <title>2026-10-15: 153M tokens</title>
+  <rect class="heatmap-level-4" x="1058" y="278" width="16" height="16" rx="4" data-date="2026-10-15" data-tokens="448224806" data-level="4">
+    <title>2026-10-15: 448M tokens</title>
   </rect>
-  <rect class="heatmap-level-0" x="1058" y="298" width="16" height="16" rx="4" data-date="2026-10-16" data-tokens="0" data-level="0">
-    <title>2026-10-16: 0 tokens</title>
+  <rect class="heatmap-level-3" x="1058" y="298" width="16" height="16" rx="4" data-date="2026-10-16" data-tokens="247656275" data-level="3">
+    <title>2026-10-16: 248M tokens</title>
   </rect>
-  <rect class="heatmap-level-0" x="1058" y="318" width="16" height="16" rx="4" data-date="2026-10-17" data-tokens="0" data-level="0">
-    <title>2026-10-17: 0 tokens</title>
+  <rect class="heatmap-level-4" x="1058" y="318" width="16" height="16" rx="4" data-date="2026-10-17" data-tokens="281372289" data-level="4">
+    <title>2026-10-17: 281M tokens</title>
   </rect>
-  <rect class="heatmap-level-0" x="1058" y="338" width="16" height="16" rx="4" data-date="2026-10-18" data-tokens="0" data-level="0">
-    <title>2026-10-18: 0 tokens</title>
+  <rect class="heatmap-level-2" x="1058" y="338" width="16" height="16" rx="4" data-date="2026-10-18" data-tokens="90031530" data-level="2">
+    <title>2026-10-18: 90M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="1078" y="218" width="16" height="16" rx="4" data-date="2026-10-19" data-tokens="28393677" data-level="1">
-    <title>2026-10-19: 28.4M tokens</title>
+  <rect class="heatmap-level-4" x="1078" y="218" width="16" height="16" rx="4" data-date="2026-10-19" data-tokens="265255717" data-level="4">
+    <title>2026-10-19: 265M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="1078" y="238" width="16" height="16" rx="4" data-date="2026-10-20" data-tokens="39354493" data-level="1">
-    <title>2026-10-20: 39.4M tokens</title>
+  <rect class="heatmap-level-4" x="1078" y="238" width="16" height="16" rx="4" data-date="2026-10-20" data-tokens="331373906" data-level="4">
+    <title>2026-10-20: 331M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="1078" y="258" width="16" height="16" rx="4" data-date="2026-10-21" data-tokens="449112" data-level="1">
-    <title>2026-10-21: 449K tokens</title>
+  <rect class="heatmap-level-3" x="1078" y="258" width="16" height="16" rx="4" data-date="2026-10-21" data-tokens="196589178" data-level="3">
+    <title>2026-10-21: 197M tokens</title>
   </rect>
-  <rect class="heatmap-level-3" x="1078" y="278" width="16" height="16" rx="4" data-date="2026-10-22" data-tokens="164369053" data-level="3">
-    <title>2026-10-22: 164M tokens</title>
+  <rect class="heatmap-level-4" x="1078" y="278" width="16" height="16" rx="4" data-date="2026-10-22" data-tokens="337243922" data-level="4">
+    <title>2026-10-22: 337M tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="1078" y="298" width="16" height="16" rx="4" data-date="2026-10-23" data-tokens="44034239" data-level="1">
-    <title>2026-10-23: 44M tokens</title>
+  <rect class="heatmap-level-2" x="1078" y="298" width="16" height="16" rx="4" data-date="2026-10-23" data-tokens="75120991" data-level="2">
+    <title>2026-10-23: 75.1M tokens</title>
   </rect>
-  <rect class="heatmap-level-2" x="1078" y="318" width="16" height="16" rx="4" data-date="2026-10-24" data-tokens="45229853" data-level="2">
-    <title>2026-10-24: 45.2M tokens</title>
+  <rect class="heatmap-level-2" x="1078" y="318" width="16" height="16" rx="4" data-date="2026-10-24" data-tokens="56841749" data-level="2">
+    <title>2026-10-24: 56.8M tokens</title>
   </rect>
   <rect class="heatmap-level-0" x="1078" y="338" width="16" height="16" rx="4" data-date="2026-10-25" data-tokens="0" data-level="0">
     <title>2026-10-25: 0 tokens</title>
@@ -1160,8 +1160,11 @@
   <rect class="heatmap-level-0" x="1098" y="218" width="16" height="16" rx="4" data-date="2026-10-26" data-tokens="0" data-level="0">
     <title>2026-10-26: 0 tokens</title>
   </rect>
-  <rect class="heatmap-level-1" x="1098" y="238" width="16" height="16" rx="4" data-date="2026-10-27" data-tokens="42606967" data-level="1">
-    <title>2026-10-27: 42.6M tokens</title>
+  <rect class="heatmap-level-1" x="1098" y="238" width="16" height="16" rx="4" data-date="2026-10-27" data-tokens="52928200" data-level="1">
+    <title>2026-10-27: 52.9M tokens</title>
+  </rect>
+  <rect class="heatmap-level-2" x="1098" y="258" width="16" height="16" rx="4" data-date="2026-10-28" data-tokens="70358367" data-level="2">
+    <title>2026-10-28: 70.4M tokens</title>
   </rect>
   <text class="dashboard-muted" x="58" y="385" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="12">Less</text>
   <rect class="heatmap-level-0" x="92" y="373" width="16" height="16" rx="4"/>
