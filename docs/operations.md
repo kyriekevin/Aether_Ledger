@@ -129,6 +129,50 @@ switching, commits and pushes. It is not a dry run. `--help`, `make health`, log
 are suitable for read-only inspection. `--reconcile-since YYYY-MM-DD` accepts lower observations
 from that date and is reserved for intentional corrections.
 
+### Linux and ephemeral workers
+
+launchd, `make install`, and `make health` are macOS-only. On Linux, `make health` reports the
+missing launchd agent, and a trail writer also fails its `node_name` check; both are expected.
+Install uv, Rust, and Git push access, then build and check the ccusage runtime as in
+[Setup](#setup). `gh` is needed only by `work` and `personal` writers.
+
+Ephemeral workers write as a trail (`CC_USAGE_TRAIL=1`). If the home directory may not survive a
+worker change, keep a copy of `~/.config/token-activity/trail_id` elsewhere and restore it before
+the first sync; see [Trail workers and recovery](#trail-workers-and-recovery).
+
+Create the writer worktree from today's branch, or from `main` when that branch does not exist yet:
+
+```sh
+day="usage/$(TZ=Asia/Shanghai date +%F)"
+git fetch origin
+git worktree add --track -b "$day" ~/.cache/aether-ledger/writer "origin/$day" \
+  || git worktree add --detach ~/.cache/aether-ledger/writer origin/main
+```
+
+Run the writer in a loop that matches the launchd schedule. The lock keeps one loop per worker, so
+the starter is safe to call repeatedly:
+
+```sh
+#!/usr/bin/env bash
+export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
+mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
+exec 9>~/.cache/aether-ledger/loop.lock
+flock -n 9 || exit 0
+cd ~/.cache/aether-ledger/writer || exit 1
+while true; do
+  timeout 1200 uv run --script scripts/sync_usage.py >> "$LOG_FILE" 2>&1
+  sleep $(( 900 - $(date +%s) % 900 + 5 ))
+done
+```
+
+Start it detached, for example with `setsid nohup bash loop.sh >/dev/null 2>&1 &`. The loop must
+see the same `CLAUDE_CONFIG_DIR` and `CODEX_HOME` as the agents it measures, because ccusage reads
+those variables to find their logs; otherwise those sources come back empty rather than failing.
+Set `GIT_SSH_COMMAND` too if pushes use a dedicated key. A worker that is reclaimed kills the loop,
+so call the starter again from something that runs on each new worker, such as a shell profile or
+an agent session-start hook.
+
 ## Pricing and stores
 
 Stores are date-keyed JSON objects under `data/{work,personal,devbox}/` or `data/trail/`.

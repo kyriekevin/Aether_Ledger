@@ -90,6 +90,39 @@ PYTHON
 
 该命令会写入并尝试推送。`--no-push` 仍会写本地累计文件，只跳过分支切换、提交和推送，不是预演。只读检查可使用 `--help`、`make health`、日志和 `git status`。`--reconcile-since YYYY-MM-DD` 允许从指定日期起接受更低的观测值，仅用于主动校正。
 
+### Linux 与临时节点
+
+launchd、`make install` 和 `make health` 只适用于 macOS。在 Linux 上，`make health` 会报告缺少 launchd 定时任务；临时节点还会报告 `node_name` 检查失败，两者都属正常。安装 uv、Rust，并确保 Git 有推送权限，再按[安装](#安装)一节构建并检查 ccusage。只有 `work` 和 `personal` 采集端需要 `gh`。
+
+临时节点以临时身份采集（`CC_USAGE_TRAIL=1`）。如果更换节点后主目录可能丢失，把 `~/.config/token-activity/trail_id` 另存一份，并在第一次同步前恢复，详见[临时节点与恢复](#临时节点与恢复)。
+
+从当日分支创建采集 worktree；当日分支尚不存在时，从 `main` 创建：
+
+```sh
+day="usage/$(TZ=Asia/Shanghai date +%F)"
+git fetch origin
+git worktree add --track -b "$day" ~/.cache/aether-ledger/writer "origin/$day" \
+  || git worktree add --detach ~/.cache/aether-ledger/writer origin/main
+```
+
+用与 launchd 相同节奏的循环运行采集。锁保证每个节点只有一个循环，启动脚本可以重复调用：
+
+```sh
+#!/usr/bin/env bash
+export TZ=Asia/Shanghai CC_USAGE_TRAIL=1
+LOG_FILE="${LOG_FILE:-$HOME/.local/state/aether-ledger/sync.log}"
+mkdir -p "$(dirname "$LOG_FILE")" ~/.cache/aether-ledger
+exec 9>~/.cache/aether-ledger/loop.lock
+flock -n 9 || exit 0
+cd ~/.cache/aether-ledger/writer || exit 1
+while true; do
+  timeout 1200 uv run --script scripts/sync_usage.py >> "$LOG_FILE" 2>&1
+  sleep $(( 900 - $(date +%s) % 900 + 5 ))
+done
+```
+
+以脱离终端的方式启动，例如 `setsid nohup bash loop.sh >/dev/null 2>&1 &`。循环必须使用与被统计 agent 相同的 `CLAUDE_CONFIG_DIR` 和 `CODEX_HOME`，ccusage 依靠这两个变量找到日志；否则这些来源会返回空，而不是报错。如果推送使用专用密钥，还需设置 `GIT_SSH_COMMAND`。节点被回收时循环会被终止，因此需要在每个新节点上重新调用启动脚本，例如放在 shell profile 或 agent 的会话启动 hook 中。
+
 ## 定价与数据
 
 数据位于 `data/{work,personal,devbox}/` 或 `data/trail/`，JSON 以日期为键。每天保存 `totalTokens`、`totalCost`，以及来源可提供的模型 token 明细；定价来源标记不完整或尚未定价的观测。只有上述七类 token 文件计入热力图，其余保留数据仍接受公开数据审计。
