@@ -495,6 +495,16 @@ def main(argv: list[str] | None = None) -> int:
             else inferred_official_name(model, provider)
         )
         candidate = candidates[provider].get(official_name)
+        current = active_rate(model, args.as_of, pricing)
+        # Audit before any skip: an observed model stays unpriced whether its
+        # official row is absent or its tier is not yet verified in ccusage.
+        if (
+            args.require_observed_prices
+            and model in observed
+            and current is None
+            and not (entry and entry.get("unpricedReason"))
+        ):
+            missing_observed_price = True
         if candidate is not None and not ccusage_long_context_supported(
             model, candidate, pricing
         ):
@@ -503,14 +513,6 @@ def main(argv: list[str] | None = None) -> int:
                 "in the pinned ccusage version"
             )
             continue
-        current = active_rate(model, args.as_of, pricing)
-        if (
-            args.require_observed_prices
-            and model in observed
-            and current is None
-            and not (entry and entry.get("unpricedReason"))
-        ):
-            missing_observed_price = True
         comparable = None if current is None else {
             key: value for key, value in current.items() if key != "effectiveFrom"
         }

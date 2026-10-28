@@ -374,6 +374,39 @@ columns:[{title:`Model`},{title:`Input`},{title:`Output`},{title:`Cached Input`}
             ])
         self.assertEqual(status, 1)
 
+    def test_daily_audit_fails_for_an_observed_unverified_long_context_model(self) -> None:
+        table = {
+            "schemaVersion": 1,
+            "unit": "perMillionTokens",
+            "ccusage": {"longContextModels": []},
+            "sources": {"minimax": {"fetchUrl": "https://example.invalid"}},
+            "models": {},
+        }
+        with (
+            patch.object(update_pricing, "load_pricing", return_value=table),
+            patch.object(update_pricing, "fetch_text", return_value="pricing"),
+            patch.object(update_pricing, "observed_models", return_value={"minimax-next"}),
+            patch.object(
+                update_pricing, "ccusage_long_context_supported", return_value=False
+            ),
+            patch.dict(
+                update_pricing.PARSERS,
+                {"minimax": lambda _source, _day: {
+                    "minimax-next": {
+                        "input": 1.0, "output": 2.0,
+                        "cacheWrite": 1.0, "cacheRead": 0.1,
+                        "longContextThreshold": 512000,
+                        "longInput": 2.0, "longOutput": 4.0,
+                        "longCacheWrite": 2.0, "longCacheRead": 0.2,
+                    }
+                }},
+            ),
+        ):
+            status = update_pricing.main([
+                "--require-observed-prices", "--as-of", "2026-10-28",
+            ])
+        self.assertEqual(status, 1)
+
     def test_checked_in_pricing_is_valid_json(self) -> None:
         table = json.loads(pricing.PRICING_PATH.read_text())
         self.assertEqual(table["schemaVersion"], 1)
