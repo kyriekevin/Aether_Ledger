@@ -19,7 +19,6 @@ AGENT_FILES = frozenset({
     "claude.json", "codex.json", "codex-multica.json", "traex.json",
 })
 DURABLE_NODES = frozenset({"work", "personal", "devbox"})
-OPAQUE_NODE = re.compile(r"node-[0-9a-f]{12}")
 FORBIDDEN_TEXT = (
     re.compile("/" + r"Users/[^/\s]+/"),
     re.compile(r"[A-Za-z]:\\Users\\[^\\\s]+\\"),
@@ -306,10 +305,6 @@ def audit_tree(root: Path) -> list[str]:
                 len(parts) == 3
                 and parts[0] == "data"
                 and parts[1] in DURABLE_NODES
-            ) or (
-                len(parts) == 4
-                and parts[:2] == ("data", "trail")
-                and (OPAQUE_NODE.fullmatch(parts[2]) is not None or parts[2] == "rollup")
             )
             if not valid_node:
                 issues.append(f"{relative}: usage store is not under an approved node label")

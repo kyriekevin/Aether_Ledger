@@ -11,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from audit_public import _validate_store_schema, _walk_json  # noqa: E402
 import usage_git
-from usage_git import NODE_ID_RE, _opaque_node_id  # noqa: E402
 
 
 class PublicAuditTests(unittest.TestCase):
@@ -25,12 +24,6 @@ class PublicAuditTests(unittest.TestCase):
         self.assertEqual(len(issues), 2)
         self.assertTrue(any("'cwd'" in issue for issue in issues))
         self.assertTrue(any("'source'" in issue for issue in issues))
-
-    def test_node_ids_are_opaque_and_stable(self) -> None:
-        first = _opaque_node_id("worker-hostname")
-        self.assertEqual(first, _opaque_node_id("worker-hostname"))
-        self.assertRegex(first, NODE_ID_RE)
-        self.assertNotIn("worker", first)
 
     def test_store_schema_rejects_unapproved_metadata(self) -> None:
         issues: list[str] = []
@@ -140,21 +133,6 @@ class PublicAuditTests(unittest.TestCase):
         self.assertTrue(any("efforts.custom" in issue for issue in issues))
         self.assertTrue(any("weekly" in issue for issue in issues))
         self.assertTrue(any("account" in issue for issue in issues))
-
-    def test_trail_machine_path_never_contains_raw_identity(self) -> None:
-        raw = "worker-hostname-with-job-id"
-        previous = os.environ.get(usage_git.TRAIL_ENV)
-        try:
-            os.environ[usage_git.TRAIL_ENV] = raw
-            resolved = usage_git.resolve_machine()
-        finally:
-            if previous is None:
-                os.environ.pop(usage_git.TRAIL_ENV, None)
-            else:
-                os.environ[usage_git.TRAIL_ENV] = previous
-
-        self.assertRegex(resolved, r"^data/trail/node-[0-9a-f]{12}$")
-        self.assertNotIn(raw, resolved)
 
     def test_durable_machine_uses_approved_public_role(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

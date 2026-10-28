@@ -3,13 +3,9 @@
 from __future__ import annotations
 
 import fcntl
-import hashlib
 import os
-import re
-import secrets
 import subprocess
 import sys
-import tempfile
 import time
 from contextlib import contextmanager
 from datetime import date
@@ -27,102 +23,15 @@ DURABLE_NODES = frozenset({"work", "personal", "devbox"})
 
 ROLLOVER_WATCHDOG_NODES = frozenset({"work", "personal"})
 
-NODE_ID_RE = re.compile(r"node-[0-9a-f]{12}")
-
-TRAIL_ENV = "CC_USAGE_TRAIL"
-
-TRAIL_ID_FILE = CONFIG_DIR / "trail_id"
-
-
-def _opaque_node_id(raw: str) -> str:
-    return f"node-{hashlib.sha256(raw.encode('utf-8', 'replace')).hexdigest()[:12]}"
-
-
-def _minted_trail_node_id() -> str:
-    """This worker's folder name, minted once and then reused.
-
-    Deriving it from the hostname looked stable and was not: a box whose hostname
-    moves while its HOME persists comes back as a brand new node and re-uploads
-    every day it had already reported. One machine accumulated eight identities
-    that way, and compact_trails.py folds dead pods additively, so the same days
-    reached the signature up to six times over.
-
-    A minted ID cannot drift, and it still expresses what data/trail is for: a
-    genuinely fresh pod has a fresh HOME, finds no file, and mints its own. To
-    adopt an existing folder — after a hostname change, or when moving a worker —
-    write that node-<digest> name into TRAIL_ID_FILE before the next run.
-
-    Only the ABSENCE of the file may mint — not an unusable value in it. A file
-    that exists but does not parse is a half-written or damaged identity, and
-    reminting over it would orphan the history it points at, the failure this
-    whole function exists to prevent, so that case stops and asks for a human.
-    Emptiness is one of those values, not a second kind of absence: minting
-    publishes the ID by linking a fully written temp file into place, so an empty
-    file is never something this code produced, and treating it as absent means
-    minting, failing to link over the file that is already there, and reading the
-    same emptiness again.
-
-    Linking is what makes minting safe to race: it is atomic and fails if another
-    process got there first, so concurrent first runs converge on one ID and no
-    reader can observe a partial one. Losing that race re-enters this function
-    exactly once, because by then the file exists and must either parse or stop.
-    """
-    exists = True
-    try:
-        node_id = TRAIL_ID_FILE.read_text().strip()
-    except FileNotFoundError:
-        exists, node_id = False, ""
-    except OSError as e:
-        sys.exit(f"cannot read {TRAIL_ID_FILE}: {e}")
-    if NODE_ID_RE.fullmatch(node_id):
-        return node_id
-    if exists:
-        sys.exit(
-            f"{TRAIL_ID_FILE} holds {node_id!r}, which is not a node-<12 hex digits> "
-            f"name. Refusing to mint a replacement: this worker would start a second "
-            f"folder and re-upload history it has already reported. Write the correct "
-            f"existing name into the file, or delete it to start a genuinely new node."
-        )
-    TRAIL_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
-    minted = f"node-{secrets.token_hex(6)}"
-    fd, tmp = tempfile.mkstemp(dir=TRAIL_ID_FILE.parent, prefix=".trail_id.")
-    try:
-        with os.fdopen(fd, "w") as fh:
-            fh.write(minted + "\n")
-            fh.flush()
-            os.fsync(fh.fileno())
-        try:
-            os.link(tmp, TRAIL_ID_FILE)
-        except FileExistsError:
-            # Another process minted between our read and our link. Its ID is as
-            # good as ours and it is the one on disk, so adopt it.
-            return _minted_trail_node_id()
-    finally:
-        os.unlink(tmp)
-    return minted
-
-
 def resolve_machine() -> str:
-    """This machine's data-repo folder name.
-
-    Ephemeral workers get an opaque nested name under data/trail/, so hostnames
-    and job identifiers never enter tracked paths. Durable machines use one of
-    three intentionally public role labels.
-    """
-    trail = os.environ.get(TRAIL_ENV, "").strip()
-    if trail:
-        if trail.lower() in ("1", "true", "yes"):
-            return f"data/trail/{_minted_trail_node_id()}"
-        return f"data/trail/{_opaque_node_id(trail)}"
+    """This machine's data-repo folder name: one of three public role labels."""
     if not NODE_NAME_FILE.exists():
-        sys.exit(
-            f"missing {NODE_NAME_FILE}: write one of {sorted(DURABLE_NODES)}, "
-            f"or set {TRAIL_ENV}=1 on an ephemeral worker"
-        )
+        sys.exit(f"missing {NODE_NAME_FILE}: write one of {sorted(DURABLE_NODES)}")
     node_name = NODE_NAME_FILE.read_text().strip().lower()
     if node_name not in DURABLE_NODES:
         sys.exit(f"invalid {NODE_NAME_FILE}: expected one of {sorted(DURABLE_NODES)}")
     return f"data/{node_name}"
+
 
 GIT_TIMEOUT_SECONDS = 30
 
@@ -151,7 +60,7 @@ def repo_git_lock(wait_seconds: float) -> Iterator[bool]:
     Not reentrant: a nested acquire flocks a second descriptor against this
     process's own lock, which conflicts even in one process. It would yield False
     after the wait rather than hang, but the caller would then skip work for no
-    reason. Take the lock once, at the top of a run — see compact_trails.main().
+    reason. Take the lock once, at the top of a run.
     """
     GIT_LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(GIT_LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o644)
