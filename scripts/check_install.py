@@ -15,10 +15,9 @@ from pathlib import Path
 from install_launchd import LABEL, load_multica_environment
 from usage_sources import multica_codex_session_roots, codex_source_summary
 
-REQUIRED_BINARIES = ("uv", "ccusage", "zstd")
+REQUIRED_BINARIES = ("uv", "ccusage")
 MULTICA_ENVIRONMENT = frozenset({
-    "MULTICA_PROFILE", "MULTICA_WORKSPACE_ID", "MULTICA_DSH_PROFILE",
-    "MULTICA_TASK_WORKSPACES_ROOT",
+    "MULTICA_PROFILE", "MULTICA_WORKSPACE_ID", "MULTICA_TASK_WORKSPACES_ROOT",
 })
 
 
@@ -45,16 +44,6 @@ def installation_issues(home: Path = Path.home()) -> list[str]:
     workspace_root = expected_environment.get("MULTICA_TASK_WORKSPACES_ROOT")
     if workspace_root is not None and not Path(workspace_root).is_dir():
         issues.append("configured Multica workspace root is missing")
-
-    expected_dsh_profile = expected_environment.get("MULTICA_DSH_PROFILE")
-    binding_path = home / ".config" / "token-activity" / "multica_dsh_profile"
-    if expected_dsh_profile is not None and binding_path.exists():
-        try:
-            bound_dsh_profile = binding_path.read_text(encoding="utf-8").strip()
-        except OSError:
-            bound_dsh_profile = ""
-        if bound_dsh_profile != expected_dsh_profile:
-            issues.append("Multica DSH source binding differs from multica.json")
 
     plist_path = home / "Library" / "LaunchAgents" / f"{LABEL}.plist"
     try:

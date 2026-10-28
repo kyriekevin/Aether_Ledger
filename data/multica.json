@@ -29,13 +29,6 @@
           "failed": 0,
           "total": 5
         },
-        "dsh": {
-          "cancelled": 0,
-          "completed": 1,
-          "durationSeconds": 187,
-          "failed": 3,
-          "total": 4
-        },
         "traex": {
           "cancelled": 0,
           "completed": 14,

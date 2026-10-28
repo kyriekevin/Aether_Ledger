@@ -7,7 +7,7 @@ from datetime import date, timedelta
 COMPONENTS = ("inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens")
 COUNTS = ("calls", "identifiedCalls", "totalTokens", *COMPONENTS, "pricedCalls")
 METRICS = ("usage", "modelEffort", "speed", "cost", "quota")
-SOURCES = {"codex": "codex", "codex-multica": "codex", "claude": "claude", "traex": "traex", "dsh": "dsh", "dsh-multica": "dsh"}
+SOURCES = {"codex": "codex", "codex-multica": "codex", "claude": "claude", "traex": "traex"}
 RUN_METRIC_VERSIONS = {"runs": 1, "runDuration": 1, "runConfiguration": 1, "runUsage": 1}
 STATUSES = ("completed", "failed", "cancelled", "running", "queued", "unknown")
 RUN_COUNTS = ("total", *STATUSES, "durationSeconds", "durationKnownRuns", "linkedRuns", "linkedCalls", "linkedTokens")

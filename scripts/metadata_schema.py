@@ -70,7 +70,7 @@ def validate_snapshot(value: object, models: set[str]) -> None:
     for row in value["configurations"]:
         if not isinstance(row, dict) or set(row) != {"role", "harness", "model", "effort", "agents", "archivedAgents", "issues"}:
             raise ValueError("invalid configuration fields")
-        if row["role"] not in roles or row["harness"] not in {"codex", "claude", "traex", "dsh"} or row["model"] not in models or row["effort"] not in EFFORTS:
+        if row["role"] not in roles or row["harness"] not in {"codex", "claude", "traex"} or row["model"] not in models or row["effort"] not in EFFORTS:
             raise ValueError("non-public configuration")
         key = tuple(row[k] for k in ("role", "harness", "model", "effort"))
         if key in seen or not count(row["agents"]) or not count(row["archivedAgents"]):

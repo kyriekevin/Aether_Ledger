@@ -39,7 +39,6 @@ class CheckInstallTests(unittest.TestCase):
                 "HOME": str(root),
                 "MULTICA_PROFILE": "profile-one",
                 "MULTICA_WORKSPACE_ID": "workspace-one",
-                "MULTICA_DSH_PROFILE": "profile-two",
                 "MULTICA_TASK_WORKSPACES_ROOT": str(root / "workspaces"),
             },
         }
@@ -78,14 +77,9 @@ class CheckInstallTests(unittest.TestCase):
             home = self.make_home(Path(directory))
             roles = home / ".config" / "token-activity" / "multica_runtime_roles.json"
             roles.unlink()
-            binding = home / ".config" / "token-activity" / "multica_dsh_profile"
-            binding.write_text("another-profile\n")
 
             issues = installation_issues(home)
             self.assertNotIn("multica_runtime_roles.json is missing", issues)
-            self.assertIn(
-                "Multica DSH source binding differs from multica.json", issues
-            )
 
     @patch("check_install.shutil.which", return_value="/bin/example")
     def test_reports_a_missing_configured_workspace(self, _which) -> None:

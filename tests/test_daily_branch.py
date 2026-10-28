@@ -534,6 +534,52 @@ class SquashUsageBranchTests(unittest.TestCase):
 
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
 
+    def squash(self) -> bool:
+        with patch.object(squash_usage_branch, "git") as mocked_git:
+            mocked_git.side_effect = lambda *args, **kwargs: subprocess.run(
+                ["git", *args], cwd=self.repo, check=False, text=True,
+                capture_output=kwargs.get("capture", False),
+            )
+            return squash_usage_branch.squash("usage/2026-08-07")
+
+    def test_retired_store_modified_on_the_branch_stays_deleted(self) -> None:
+        retired = self.repo / "data/work/dsh.json"
+        retired.write_text("{}\n")
+        self.git("add", ".")
+        self.git("commit", "-qm", "retired store")
+        self.git("switch", "-qc", "usage/2026-08-07")
+        retired.write_text('{"tokens": 1}\n')
+        self.git("add", "data/work/dsh.json")
+        self.commit_store(2, "final snapshot")
+        self.git("switch", "-q", "main")
+        self.git("rm", "-q", "data/work/dsh.json")
+        self.git("commit", "-qm", "retire dsh")
+
+        self.assertTrue(self.squash())
+
+        self.assertFalse(retired.exists())
+        self.assertEqual(
+            (self.repo / "data/work/codex.json").read_text(), '{"tokens": 2}\n'
+        )
+        self.assertNotIn("dsh", self.git("ls-files").stdout)
+
+    def test_retired_store_created_on_the_branch_is_not_merged(self) -> None:
+        self.git("switch", "-qc", "usage/2026-08-07")
+        trail = self.repo / "data/trail/node-0123456789ab"
+        trail.mkdir(parents=True)
+        (trail / "opencode.json").write_text("{}\n")
+        (trail / "codex.json").write_text("{}\n")
+        self.git("add", ".")
+        self.git("commit", "-qm", "old writer")
+        self.git("switch", "-q", "main")
+
+        self.assertTrue(self.squash())
+
+        self.assertEqual(
+            self.git("ls-files", "data/trail").stdout,
+            "data/trail/node-0123456789ab/codex.json\n",
+        )
+
 
 class RealRepositoryCleanupTests(unittest.TestCase):
     """Drive the deletion rule against a real repository instead of mocked git.

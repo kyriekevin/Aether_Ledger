@@ -13,7 +13,6 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import sync_usage
 import usage_ccusage
-import usage_dsh
 import usage_git
 import usage_schema
 import usage_sources
@@ -33,14 +32,11 @@ class PipelineTests(unittest.TestCase):
         self.stack.enter_context(redirect_stdout(io.StringIO()))
         self.stack.enter_context(redirect_stderr(io.StringIO()))
         self.unified = self.stack.enter_context(patch.object(
-            usage_ccusage, "fetch_daily_since", return_value=(row(11), row(22), row(33))))
+            usage_ccusage, "fetch_daily_since", return_value=(row(11), row(22))))
         self.multica = self.stack.enter_context(patch.object(
             usage_ccusage, "fetch_multica_codex_daily", return_value=row(44)))
         self.stack.enter_context(patch.object(usage_sources, "multica_codex_session_roots", return_value=[]))
-        self.stack.enter_context(patch.object(usage_sources, "multica_dsh_session_roots", return_value=[]))
         self.stack.enter_context(patch.object(usage_ccusage, "fetch_codex_home_daily", return_value=row(55)))
-        self.stack.enter_context(patch.object(
-            usage_dsh, "collect_dsh_daily_since", side_effect=lambda since, roots=None: row(66 if roots is None else 77)))
         self.stack.enter_context(patch.object(usage_git, "_current_branch", return_value="usage/2026-09-07"))
         self.stack.enter_context(patch.object(usage_git, "prepare_daily_branch", return_value=True))
         self.stack.enter_context(patch.object(usage_git, "git_catch_up", return_value=True))
@@ -53,10 +49,20 @@ class PipelineTests(unittest.TestCase):
 
     def test_each_reader_reaches_its_own_store(self):
         self.assertEqual(sync_usage._sync("data/work", no_push=True), 0)
-        for name, tokens in {"claude": 11, "codex": 22, "opencode": 33,
-                             "codex-multica": 44, "traex": 55, "dsh": 66, "dsh-multica": 77}.items():
+        for name, tokens in {"claude": 11, "codex": 22, "codex-multica": 44, "traex": 55}.items():
             self.assertEqual(self.stored(name)["2026-09-07"]["totalTokens"], tokens)
         self.push.assert_not_called()
+
+    def test_retired_stores_are_removed_from_the_machine_directory(self):
+        machine_dir = self.root / "data/work"
+        machine_dir.mkdir(parents=True)
+        for filename in usage_schema.RETIRED_STORES:
+            (machine_dir / filename).write_text("{}")
+        self.assertEqual(sync_usage._sync("data/work", no_push=True), 0)
+        self.assertEqual(
+            {p.name for p in machine_dir.iterdir()},
+            set(usage_schema.AGENT_STORES.values()),
+        )
 
     def test_old_schedule_flags_still_publish_only_token_stores(self):
         with patch.object(sys, "argv", ["sync_usage.py", "--include-statistics", "--include-multica-tasks"]), \
@@ -73,7 +79,7 @@ class PipelineTests(unittest.TestCase):
     def test_failed_source_keeps_history_and_other_sources_publish(self):
         sync_usage._sync("data/work", no_push=True)
         self.multica.side_effect = OSError("private path must not enter diagnostics")
-        self.unified.return_value = (row(12), row(23), row(34))
+        self.unified.return_value = (row(12), row(23))
         self.assertEqual(sync_usage._sync("data/work", no_push=False), 1)
         self.assertEqual(self.stored("codex-multica")["2026-09-07"]["totalTokens"], 44)
         self.assertEqual(self.stored("codex")["2026-09-07"]["totalTokens"], 23)
@@ -84,7 +90,7 @@ class PipelineTests(unittest.TestCase):
         sync_usage._sync("data/work", no_push=True)
         before = self.stored("codex")
         self.multica.side_effect = OSError()
-        self.unified.return_value = (row(1), row(2), row(3))
+        self.unified.return_value = (row(1), row(2))
         self.assertEqual(sync_usage._sync("data/work", no_push=True,
                                          reconcile_since=date(2026, 9, 7)), 1)
         self.assertEqual(self.stored("codex"), before)

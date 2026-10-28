@@ -19,7 +19,6 @@ import compact_trails  # noqa: E402
 import render_dashboard  # noqa: E402
 import squash_usage_branch  # noqa: E402
 import usage_ccusage
-import usage_dsh
 import usage_git
 import usage_schema
 import usage_sources
@@ -35,10 +34,10 @@ class SharedStoreCoverageTests(unittest.TestCase):
     def test_every_writable_store_is_registered_everywhere(self) -> None:
         """A store the writer creates but a consumer ignores is a silent hole.
 
-        `dsh.json` is the one this caught: audit_public would never schema-check
-        it, render_dashboard would drop it from every chart, compact_trails would
-        strand it in expired trail pods, and squash_usage_branch would treat its
-        conflicts as human work. Each of those fails quietly, so they are
+        A store missing from any consumer fails quietly: audit_public would never
+        schema-check it, render_dashboard would drop it from every chart,
+        compact_trails would strand it in expired trail pods, and
+        squash_usage_branch would treat its conflicts as human work. Each of those fails quietly, so they are
         asserted together against the writer rather than one at a time.
 
         The expected set is read out of `sync_usage.AGENT_STORES` rather than
@@ -779,12 +778,11 @@ class OfficialPricingFetchTests(unittest.TestCase):
             return completed
 
         with patch.object(sync_usage.subprocess, "run", side_effect=fake_run):
-            cc, cx, op = usage_ccusage.fetch_daily_since(date(2026, 1, 1))
+            cc, cx = usage_ccusage.fetch_daily_since(date(2026, 1, 1))
         self.captured = captured
         return {
             "claude": cc[0] if cc else None,
             "codex": cx[0] if cx else None,
-            "opencode": op[0] if op else None,
         }
 
     def test_a_zero_ccusage_cost_falls_back_to_the_official_standard_rate(self) -> None:
@@ -830,7 +828,7 @@ class OfficialPricingFetchTests(unittest.TestCase):
 
     def test_claude_now_carries_a_per_model_breakdown(self) -> None:
         # Claude was the one agent that stored only totals; it now mirrors codex
-        # and opencode with a per-model token map.
+        # with a per-model token map.
         out = self.fetch({"claude": [
             {"modelName": "claude-opus-5", "inputTokens": 100, "cost": 4.0},
             {"modelName": "claude-sonnet-5", "outputTokens": 50, "cost": 1.5},
@@ -864,6 +862,18 @@ class OfficialPricingFetchTests(unittest.TestCase):
         self.assertEqual(out["claude"]["models"]["gpt-5.5"]["totalTokens"], 20)
         self.assertEqual(out["codex"]["totalTokens"], 30)
         self.assertEqual(out["codex"]["models"]["gpt-5.5"]["totalTokens"], 30)
+
+    def test_agents_without_a_store_are_ignored(self) -> None:
+        out = self.fetch({
+            "opencode": [
+                {"modelName": "deepseek-v4-pro", "inputTokens": 100, "cost": 1.0},
+            ],
+            "codex": [
+                {"modelName": "gpt-5.5", "inputTokens": 30, "cost": 0.6},
+            ],
+        })
+        self.assertIsNone(out["claude"])
+        self.assertEqual(out["codex"]["totalTokens"], 30)
 
     def test_requests_exact_agent_breakdowns(self) -> None:
         self.fetch({})
@@ -1201,453 +1211,6 @@ class ReconcileStubTests(unittest.TestCase):
             reconcile_since=date(2026, 7, 18),
         )
         self.assertEqual(self.read()["2026-07-25"]["totalTokens"], 722_000_000)
-
-
-class DshSessionTests(unittest.TestCase):
-    """collect_dsh_daily_since parses dsh's own append-only session log.
-
-    ccusage has no dsh reader, so nothing here is delegated: the log's
-    `request/header` names the model, `assistant/message` carries one call's
-    TokenUsage, and dsh's counts are disjoint (cached input is reported apart
-    from `inputTokens`), so the four components add up to the billed total.
-    """
-
-    def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(self._tmp.cleanup)
-        self.home = Path(self._tmp.name)
-        self.root = self.home / "sessions"
-
-    def write_session(
-        self, project: str, session: str, events: list[dict]
-    ) -> Path:
-        path = self.root / project / session / "session.jsonl"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            "\n".join(json.dumps(event) for event in events) + "\n",
-            encoding="utf-8",
-        )
-        return path
-
-    @staticmethod
-    def header(seq: int, millis: int, model: str, effort: str | None = None) -> dict:
-        config = {"provider": "deepseek-official", "model": model}
-        if effort is not None:
-            config["reasoningEffort"] = effort
-        return {
-            "type": "request/header", "seq": seq, "time": millis,
-            "data": {"header": {"config": config}, "reason": "initial"},
-        }
-
-    @staticmethod
-    def message(
-        seq: int, millis: int, usage: dict, *, turn: int = 1, step: int | None = None
-    ) -> dict:
-        return {
-            "type": "assistant/message", "seq": seq, "time": millis,
-            "data": {
-                "turn": turn, "step": seq if step is None else step,
-                "message": {}, "usage": usage,
-            },
-        }
-
-    def collect(self, since: date = date(2024, 1, 1)) -> list[dict]:
-        return usage_dsh.collect_dsh_daily_since(
-            since, usage_sources.dsh_session_roots(self.home)
-        )
-
-    def test_one_call_becomes_a_priced_day(self) -> None:
-        # 2026-08-20T12:00:00+08:00
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            {"type": "session", "version": 0, "id": "session-a", "createdAt": millis},
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {
-                "inputTokens": 1_000_000, "outputTokens": 1_000_000,
-            }),
-        ])
-        entries = self.collect()
-        self.assertEqual(len(entries), 1)
-        entry = entries[0]
-        self.assertEqual(entry["date"], "2026-08-20")
-        self.assertEqual(entry["totalTokens"], 2_000_000)
-        # 1M input at $0.44 + 1M output at $1.32.
-        self.assertAlmostEqual(entry["totalCost"], 1.76)
-        self.assertEqual(entry["costSource"], "official")
-        self.assertEqual(
-            entry["models"]["deepseek-v4-flash"],
-            {
-                "totalTokens": 2_000_000,
-                "inputTokens": 1_000_000,
-                "outputTokens": 1_000_000,
-                "cacheCreationTokens": 0,
-                "cacheReadTokens": 0,
-            },
-        )
-
-    def test_cached_input_is_counted_and_priced_apart_from_input(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-pro"),
-            self.message(2, millis, {
-                "inputTokens": 1_000_000,
-                "outputTokens": 0,
-                "cacheReadTokens": 1_000_000,
-                "cacheWriteTokens": 1_000_000,
-            }),
-        ])
-        entry = self.collect()[0]
-        # dsh's counts are disjoint, so all three input kinds are billed.
-        self.assertEqual(entry["totalTokens"], 3_000_000)
-        self.assertAlmostEqual(entry["totalCost"], 1.32 + 1.32 + 0.044)
-        model = entry["models"]["deepseek-v4-pro"]
-        self.assertEqual(model["cacheReadTokens"], 1_000_000)
-        self.assertEqual(model["cacheCreationTokens"], 1_000_000)
-
-    def test_calls_accumulate_across_steps_and_sessions(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
-            self.message(3, millis + 1000, {"inputTokens": 20, "outputTokens": 2}),
-        ])
-        self.write_session("other", "session-b", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 5, "outputTokens": 0}),
-        ])
-        entry = self.collect()[0]
-        self.assertEqual(entry["totalTokens"], 10 + 1 + 20 + 2 + 5)
-
-    def test_a_tree_beside_the_default_one_is_not_collected(self) -> None:
-        """One root per store, for the reason codex-multica.json exists.
-
-        Summing several trees into one day puts that day's high-water mark back
-        under a sum whose composition can change: remove the relocated tree and
-        max() cannot tell the loss from ordinary growth. A second tree that
-        genuinely appears needs its own store, not a bigger dsh.json.
-        """
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
-        ])
-        relocated = self.home / "dsh-sessions" / "proj" / "session-c"
-        relocated.mkdir(parents=True)
-        (relocated / "session.jsonl").write_text(
-            "\n".join(json.dumps(event) for event in (
-                self.header(1, millis, "deepseek-v4-flash"),
-                self.message(2, millis, {"inputTokens": 100, "outputTokens": 0}),
-            )) + "\n",
-            encoding="utf-8",
-        )
-        self.assertEqual(usage_sources.dsh_session_roots(self.home), (self.root,))
-        self.assertEqual(self.collect()[0]["totalTokens"], 10)
-
-    def test_multica_store_requires_one_selected_profile_tree(self) -> None:
-        multica_home = self.home / ".multica"
-        binding = self.home / "multica_dsh_profile"
-        first = multica_home / "profiles" / "first" / "dsh-sessions"
-        second = multica_home / "profiles" / "second" / "dsh-sessions"
-        first.mkdir(parents=True)
-        second.mkdir(parents=True)
-        with self.assertRaisesRegex(ValueError, "multiple Multica profiles"):
-            usage_sources.multica_dsh_session_roots(
-                multica_home, binding_file=binding
-            )
-
-        self.assertEqual(
-            usage_sources.multica_dsh_session_roots(
-                multica_home, profile="second", binding_file=binding
-            ),
-            (second,),
-        )
-        self.assertEqual(binding.read_text().strip(), "second")
-
-    def test_multica_store_does_not_rebind_when_its_only_profile_changes(self) -> None:
-        multica_home = self.home / ".multica"
-        binding = self.home / "multica_dsh_profile"
-        first = multica_home / "profiles" / "first" / "dsh-sessions"
-        second = multica_home / "profiles" / "second" / "dsh-sessions"
-        first.mkdir(parents=True)
-
-        self.assertEqual(
-            usage_sources.multica_dsh_session_roots(
-                multica_home, binding_file=binding
-            ),
-            (first,),
-        )
-        self.assertEqual(binding.read_text().strip(), "first")
-
-        first.rename(first.parent / "retired")
-        second.mkdir(parents=True)
-        with self.assertRaisesRegex(ValueError, "bound Multica DSH profile 'first'"):
-            usage_sources.multica_dsh_session_roots(
-                multica_home, binding_file=binding
-            )
-        self.assertEqual(binding.read_text().strip(), "first")
-
-    def test_multica_store_refuses_to_override_its_binding(self) -> None:
-        multica_home = self.home / ".multica"
-        binding = self.home / "multica_dsh_profile"
-        first = multica_home / "profiles" / "first" / "dsh-sessions"
-        second = multica_home / "profiles" / "second" / "dsh-sessions"
-        first.mkdir(parents=True)
-        second.mkdir(parents=True)
-        binding.write_text("first\n")
-
-        with self.assertRaisesRegex(ValueError, "refusing to switch"):
-            usage_sources.multica_dsh_session_roots(
-                multica_home, profile="second", binding_file=binding
-            )
-
-    def test_the_same_session_step_is_counted_once_across_files(self) -> None:
-        millis = 1787198400000
-        events = [
-            {"type": "session", "id": "same-session", "createdAt": millis},
-            self.header(1, millis, "deepseek-v4-flash", effort="high"),
-            self.message(
-                2, millis, {"inputTokens": 10, "outputTokens": 0}, step=1
-            ),
-        ]
-        original = self.write_session("proj", "original", events)
-        copied_root = self.home / "copied-sessions"
-        copied = copied_root / "other" / "copy" / "session.jsonl"
-        copied.parent.mkdir(parents=True)
-        copied.write_text(original.read_text(), encoding="utf-8")
-
-        entry = usage_dsh.collect_dsh_daily_since(
-            date(2024, 1, 1), (self.root, copied_root)
-        )[0]
-        self.assertEqual(entry["totalTokens"], 10)
-        self.assertNotIn("routing", entry)
-        self.assertNotIn("same-session", json.dumps(entry))
-
-    def test_a_route_change_reattributes_the_calls_after_it(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
-            {
-                "type": "request/context", "seq": 3, "time": millis,
-                "data": {"provider": "opencode-go", "model": "deepseek-v4-pro"},
-            },
-            self.message(4, millis, {"inputTokens": 20, "outputTokens": 0}),
-        ])
-        models = self.collect()[0]["models"]
-        self.assertEqual(models["deepseek-v4-flash"]["totalTokens"], 10)
-        self.assertEqual(models["deepseek-v4-pro"]["totalTokens"], 20)
-
-    def test_a_model_with_no_official_rate_keeps_its_tokens_at_zero_cost(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "glm-5.1"),
-            self.message(2, millis, {"inputTokens": 1_000_000, "outputTokens": 0}),
-        ])
-        with patch.object(sync_usage.sys, "stderr", io.StringIO()) as err:
-            entry = self.collect()[0]
-        self.assertEqual(entry["totalTokens"], 1_000_000)
-        self.assertEqual(entry["totalCost"], 0.0)
-        self.assertEqual(entry["costSource"], "unpriced")
-        self.assertIn("glm-5.1", err.getvalue())
-
-
-    def test_days_split_on_the_shanghai_calendar(self) -> None:
-        # 2026-08-20T23:30 and 2026-08-21T00:30, Asia/Shanghai.
-        self.write_session("proj", "session-a", [
-            self.header(1, 1787239800000, "deepseek-v4-flash"),
-            self.message(2, 1787239800000, {"inputTokens": 10, "outputTokens": 0}),
-            self.message(3, 1787243400000, {"inputTokens": 20, "outputTokens": 0}),
-        ])
-        entries = self.collect()
-        self.assertEqual([entry["date"] for entry in entries],
-                         ["2026-08-20", "2026-08-21"])
-
-    def test_calls_before_the_since_date_are_dropped(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
-        ])
-        self.assertEqual(self.collect(since=date(2026, 8, 21)), [])
-
-    def test_a_torn_final_line_does_not_lose_the_calls_before_it(self) -> None:
-        millis = 1787198400000
-        path = self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 0}),
-        ])
-        with path.open("a", encoding="utf-8") as stream:
-            stream.write('{"type":"assistant/message","seq":3,"time":')
-        self.assertEqual(self.collect()[0]["totalTokens"], 10)
-
-    def test_a_message_with_no_usage_or_no_route_contributes_nothing(self) -> None:
-        millis = 1787198400000
-        self.write_session("proj", "no-usage", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            {
-                "type": "assistant/message", "seq": 2, "time": millis,
-                "data": {"turn": 1, "step": 1, "message": {}},
-            },
-        ])
-        self.write_session("proj", "no-header", [
-            self.message(1, millis, {"inputTokens": 10, "outputTokens": 0}),
-        ])
-        self.assertEqual(self.collect(), [])
-
-    def test_a_home_with_no_sessions_yields_nothing(self) -> None:
-        self.assertEqual(usage_sources.dsh_session_roots(self.home), ())
-        self.assertEqual(self.collect(), [])
-
-    @unittest.skipUnless(
-        shutil.which("zstd") is not None,
-        "no zstd decoder available to build the fixture",
-    )
-    def test_a_compressed_log_reads_the_same_as_a_plain_one(self) -> None:
-        millis = 1787198400000
-        plain = self.write_session("proj", "session-a", [
-            self.header(1, millis, "deepseek-v4-flash"),
-            self.message(2, millis, {"inputTokens": 10, "outputTokens": 1}),
-        ])
-        # dsh appends one independently decodable frame per durable batch, so the
-        # artifact is a concatenation of frames rather than one stream.
-        raw = plain.read_bytes()
-        frames = b"".join(
-            subprocess.run(
-                ["zstd", "-q", "-c", "-"], input=line + b"\n",
-                capture_output=True, check=True,
-            ).stdout
-            for line in raw.splitlines()
-        )
-        plain.unlink()
-        (plain.parent / "session.jsonl.zstd").write_bytes(frames)
-        entry = self.collect()[0]
-        self.assertEqual(entry["totalTokens"], 11)
-
-
-class ZstdFrameDecodingTests(unittest.TestCase):
-    """A dsh artifact is concatenated frames, one per durable batch.
-
-    The decoder returns whatever decoded plus whether it reached the end. It does
-    not try to tell a live session's unfinished last frame from a damaged one:
-    zstd reports single-byte corruption under seven different messages, one of
-    them the same "premature end" a live tail gives, and frame boundaries cannot
-    be found by scanning for the frame magic because those bytes also occur
-    inside compressed payloads.
-
-    Decoding therefore stops at the first frame that will not decode and does not
-    resume past it. These tests pin the exact prefix that survives, because the
-    cost of that choice is real and should fail loudly if it ever moves.
-    """
-
-    @staticmethod
-    def frame(payload: bytes) -> bytes:
-        return subprocess.run(
-            ["zstd", "-q", "-c", "-"], input=payload,
-            capture_output=True, check=True,
-        ).stdout
-
-    def setUp(self) -> None:
-        if shutil.which("zstd") is None:
-            self.skipTest("no zstd decoder available to build the fixture")
-        self.a = self.frame(b"alpha\n")
-        self.b = self.frame(b"bravo\n")
-        self.c = self.frame(b"charlie\n")
-
-    def test_whole_frames_decode_completely(self) -> None:
-        text, complete = usage_dsh._zstd_frames_text(self.a + self.b + self.c)
-        self.assertEqual(text, "alpha\nbravo\ncharlie\n")
-        self.assertTrue(complete)
-
-    def test_an_unfinished_last_frame_keeps_what_decoded_and_reports_partial(
-        self,
-    ) -> None:
-        """A live session always ends mid-frame.
-
-        The prefix is real and safe to keep: frames are append-only and every run
-        recomputes the day from the whole artifact, so an early partial read is
-        superseded by the completed one rather than added to it.
-        """
-        text, complete = usage_dsh._zstd_frames_text(
-            self.a + self.b + self.c[: len(self.c) // 2]
-        )
-        self.assertEqual(text, "alpha\nbravo\n")
-        self.assertFalse(complete)
-
-    def test_a_partial_read_ends_on_a_record_boundary(self) -> None:
-        """`zstd -dc` emits the bytes it decoded, which stop mid-record.
-
-        Trimming to the last newline keeps a partial read to whole records, and
-        keeps the in-process and subprocess decoders returning the same prefix
-        for the same artifact.
-        """
-        torn = self.frame(b'{"n":"charlie"}\n')
-        text, complete = usage_dsh._zstd_frames_text(
-            self.frame(b'{"n":"alpha"}\n') + torn[: len(torn) // 2]
-        )
-        self.assertEqual(text, '{"n":"alpha"}\n')
-        self.assertFalse(complete)
-
-    def test_a_frame_damaged_mid_file_costs_the_frames_after_it(self) -> None:
-        """The accepted price of not guessing at frame boundaries.
-
-        Recovering `charlie` would mean locating the frame that follows the
-        damage, and the only cheap way to do that — scanning for the frame magic
-        — splits valid frames, because those four bytes occur inside compressed
-        payloads too. Stalling is preferred to corrupting; the per-day high-water
-        merge keeps the days already recorded from dropping while it stalls.
-        """
-        damaged = bytearray(self.b)
-        damaged[len(damaged) // 2 : len(damaged) // 2 + 4] = b"\xff\xff\xff\xff"
-        text, complete = usage_dsh._zstd_frames_text(
-            self.a + bytes(damaged) + self.c
-        )
-        self.assertEqual(text, "alpha\n")
-        self.assertNotIn("charlie", text)
-        self.assertFalse(complete)
-
-    def test_both_decoder_backends_agree(self) -> None:
-        """The in-process path (3.14+) and the `zstd -dc` fallback are one contract.
-
-        Only one of them runs on any given interpreter, so a divergence would
-        surface as a machine-dependent total rather than as a failure here.
-        """
-        try:
-            importlib.import_module("compression.zstd")
-        except ImportError:
-            self.skipTest("no in-process zstd decoder to compare against")
-        torn = self.a + self.b + self.c[: len(self.c) // 2]
-        cases = (b"", self.a, self.a + self.b, torn, b"not a zstd artifact")
-        for raw in cases:
-            with self.subTest(raw=raw[:16]):
-                in_process = usage_dsh._zstd_frames_text(raw)
-                with patch.dict(sys.modules, {"compression.zstd": None}):
-                    subprocess_path = usage_dsh._zstd_frames_text(raw)
-                self.assertEqual(in_process, subprocess_path)
-
-    def test_bytes_that_are_not_zstd_report_unreadable_rather_than_empty(
-        self,
-    ) -> None:
-        """An unreadable log and an empty one need different reports.
-
-        Returning "" for an artifact nothing can read would let it pass as a
-        session that genuinely recorded nothing, and the operator would never
-        learn a log had stopped being readable.
-        """
-        text, complete = usage_dsh._zstd_frames_text(b"this is not a zstd artifact")
-        self.assertIsNone(text)
-        self.assertFalse(complete)
-
-    def test_an_empty_artifact_is_an_empty_session_not_a_failure(self) -> None:
-        self.assertEqual(usage_dsh._zstd_frames_text(b""), ("", True))
-
-    def test_a_damaged_frame_keeps_the_prefix_and_reports_partial(self) -> None:
-        damaged = bytearray(self.b)
-        damaged[len(damaged) // 2] ^= 0xFF
-        text, complete = usage_dsh._zstd_frames_text(
-            self.a + bytes(damaged) + self.c
-        )
-        self.assertIn("alpha", text)
-        self.assertFalse(complete)
 
 
 class MulticaCodexTests(unittest.TestCase):

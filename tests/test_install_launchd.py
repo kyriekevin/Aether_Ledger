@@ -156,6 +156,7 @@ class InstallLaunchdTests(unittest.TestCase):
             config.write_text(json.dumps({
                 "profile": "profile-one",
                 "workspaceId": "workspace-one",
+                # Retired source key: still accepted, no longer exported.
                 "dshProfile": "profile-two",
                 "taskWorkspacesRoot": "/private/task-workspaces",
             }))
@@ -163,7 +164,6 @@ class InstallLaunchdTests(unittest.TestCase):
             self.assertEqual(load_multica_environment(home), {
                 "MULTICA_PROFILE": "profile-one",
                 "MULTICA_WORKSPACE_ID": "workspace-one",
-                "MULTICA_DSH_PROFILE": "profile-two",
                 "MULTICA_TASK_WORKSPACES_ROOT": "/private/task-workspaces",
             })
 

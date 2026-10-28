@@ -13,28 +13,25 @@ Model names and input/output/cache components remain necessary for pricing and r
 | `claude.json` | ccusage Claude logs, including Multica/Trae-launched Claude sessions in the same log tree |
 | `codex.json` | ccusage ordinary Codex logs |
 | `codex-multica.json` | ccusage over discovered shared and task-private Multica Codex session trees |
-| `opencode.json` | ccusage OpenCode logs |
 | `traex.json` | ccusage Codex parser over the TRAE CLI home, with normalized model names |
-| `dsh.json` | Local DSH JSONL and compressed logs |
-| `dsh-multica.json` | DSH logs from the bound Multica profile |
 
 Each source retains a separate cumulative store to avoid mixing its high-water mark with another
-source. Multica Codex discovery deduplicates copied rollouts before ccusage reads them. DSH
-messages are deduplicated by session and step. Removing this discovery would omit token usage.
+source. Multica Codex discovery deduplicates copied rollouts before ccusage reads them. Removing
+this discovery would omit token usage. DSH and OpenCode are no longer collected, and their stores
+have been removed.
 
 Private source settings live in `~/.config/token-activity/multica.json`; use
-[`config/multica.example.json`](../config/multica.example.json) as a template. `dshProfile`
-selects the DSH profile and `taskWorkspacesRoot` locates task-private Codex logs. Existing
-`profile` and `workspaceId` keys are accepted for configuration compatibility; no task API is called.
-DSH keeps its profile binding in `~/.config/token-activity/multica_dsh_profile`; changing it
-requires deliberate reconciliation so two cumulative sources are not mixed.
+[`config/multica.example.json`](../config/multica.example.json) as a template.
+`taskWorkspacesRoot` locates task-private Codex logs. Existing `profile` and `workspaceId` keys are
+accepted for configuration compatibility; no task API is called. A leftover `dshProfile` key is
+ignored.
 
 ## Setup
 
 Python is pinned to 3.11. On macOS, install dependencies and verify the ccusage runtime:
 
 ```sh
-brew install uv ccusage gh rust zstd
+brew install uv ccusage gh rust
 uv run python scripts/ccusage_runtime.py --install
 uv run python scripts/ccusage_runtime.py --check
 mkdir -p ~/.config/token-activity
@@ -227,7 +224,7 @@ on one writer only: inactive worker stores older than seven days are added into 
 and removed in the same commit.
 
 Before reconciliation, preserve a copy of the stores and confirm source completeness. Reported
-collection failures abort reconciliation before writes, but empty sources and partial DSH reads
+collection failures abort reconciliation before writes, but empty sources
 can still omit data. Absent dates retain their values; present dates can be lowered. The option
 affects all collected stores and cannot reconstruct missing logs.
 
