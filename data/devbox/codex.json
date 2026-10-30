@@ -1988,13 +1988,27 @@
     "models": {
       "gpt-5.6-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 4837888,
-        "inputTokens": 398906,
-        "outputTokens": 70915,
-        "totalTokens": 5307709
+        "cacheReadTokens": 5842816,
+        "inputTokens": 465442,
+        "outputTokens": 87987,
+        "totalTokens": 6396245
       }
     },
-    "totalCost": 9.8981584,
-    "totalTokens": 5307709
+    "totalCost": 11.9172688,
+    "totalTokens": 6396245
+  },
+  "2026-10-30": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1922944,
+        "inputTokens": 160351,
+        "outputTokens": 47038,
+        "totalTokens": 2130333
+      }
+    },
+    "totalCost": 4.7026832,
+    "totalTokens": 2130333
   }
 }
