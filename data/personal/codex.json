@@ -2099,20 +2099,20 @@
       },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 2086016,
-        "inputTokens": 169644,
-        "outputTokens": 2157,
-        "totalTokens": 2257817
+        "cacheReadTokens": 2098944,
+        "inputTokens": 275659,
+        "outputTokens": 4984,
+        "totalTokens": 2379587
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 187192320,
-        "inputTokens": 2241117,
-        "outputTokens": 127299,
-        "totalTokens": 189560736
+        "cacheReadTokens": 187296384,
+        "inputTokens": 2273522,
+        "outputTokens": 127829,
+        "totalTokens": 189697735
       }
     },
-    "totalCost": 73.05988608000001,
-    "totalTokens": 197707420
+    "totalCost": 75.64977488000001,
+    "totalTokens": 197966189
   }
 }
