@@ -2092,20 +2092,20 @@
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 403328,
-        "inputTokens": 48521,
-        "outputTokens": 2484,
-        "totalTokens": 454333
+        "cacheReadTokens": 769024,
+        "inputTokens": 112690,
+        "outputTokens": 4007,
+        "totalTokens": 885721
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 2316800,
-        "inputTokens": 110905,
-        "outputTokens": 9033,
-        "totalTokens": 2436738
+        "cacheReadTokens": 4931968,
+        "inputTokens": 184511,
+        "outputTokens": 12993,
+        "totalTokens": 5129472
       }
     },
-    "totalCost": 0.56457156,
-    "totalTokens": 2891071
+    "totalCost": 1.03487568,
+    "totalTokens": 6015193
   }
 }
