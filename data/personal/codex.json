@@ -2099,10 +2099,10 @@
       },
       "gpt-6-astra": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1205120,
-        "inputTokens": 136004,
-        "outputTokens": 1588,
-        "totalTokens": 1342712
+        "cacheReadTokens": 2086016,
+        "inputTokens": 169644,
+        "outputTokens": 2157,
+        "totalTokens": 2257817
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
@@ -2112,7 +2112,7 @@
         "totalTokens": 189560736
       }
     },
-    "totalCost": 70.56839408,
-    "totalTokens": 196792315
+    "totalCost": 73.05988608000001,
+    "totalTokens": 197707420
   }
 }
