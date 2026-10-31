@@ -2093,19 +2093,19 @@
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 2281984,
-        "inputTokens": 285181,
-        "outputTokens": 6438,
-        "totalTokens": 2573603
+        "inputTokens": 313987,
+        "outputTokens": 6529,
+        "totalTokens": 2602500
       },
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 37597312,
-        "inputTokens": 620723,
-        "outputTokens": 57840,
-        "totalTokens": 38275875
+        "cacheReadTokens": 38381952,
+        "inputTokens": 627519,
+        "outputTokens": 58126,
+        "totalTokens": 39067597
       }
     },
-    "totalCost": 6.70151148,
-    "totalTokens": 40849478
+    "totalCost": 6.802297880000001,
+    "totalTokens": 41670097
   }
 }
