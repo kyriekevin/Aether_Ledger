@@ -321,5 +321,19 @@
     },
     "totalCost": 72.65598139999992,
     "totalTokens": 85122211
+  },
+  "2026-11-02": {
+    "costSource": "official",
+    "models": {
+      "claude-opus-5-5": {
+        "cacheCreationTokens": 231147,
+        "cacheReadTokens": 14292082,
+        "inputTokens": 312,
+        "outputTokens": 76941,
+        "totalTokens": 14600482
+      }
+    },
+    "totalCost": 6.247660400000002,
+    "totalTokens": 14600482
   }
 }
