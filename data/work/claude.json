@@ -1665,5 +1665,19 @@
     },
     "totalCost": 13.593943750000001,
     "totalTokens": 4195579
+  },
+  "2026-11-05": {
+    "costSource": "unpriced",
+    "models": {
+      "deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 286080,
+        "inputTokens": 144133,
+        "outputTokens": 16509,
+        "totalTokens": 446722
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 446722
   }
 }
