@@ -5556,5 +5556,26 @@
     },
     "totalCost": 40.1360676,
     "totalTokens": 164257068
+  },
+  "2026-11-06": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1137792,
+        "inputTokens": 75891,
+        "outputTokens": 22570,
+        "totalTokens": 1236253
+      },
+      "traex/deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 566144,
+        "inputTokens": 145838,
+        "outputTokens": 6214,
+        "totalTokens": 718196
+      }
+    },
+    "totalCost": 0.9825224,
+    "totalTokens": 1954449
   }
 }
