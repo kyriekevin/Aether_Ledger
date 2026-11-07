@@ -2155,13 +2155,13 @@
     "models": {
       "gpt-6.1-sol": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1417600,
-        "inputTokens": 132579,
-        "outputTokens": 3619,
-        "totalTokens": 1553798
+        "cacheReadTokens": 2856832,
+        "inputTokens": 219562,
+        "outputTokens": 7437,
+        "totalTokens": 3083831
       }
     },
-    "totalCost": 0.886216,
-    "totalTokens": 1553798
+    "totalCost": 1.5983544,
+    "totalTokens": 3083831
   }
 }
