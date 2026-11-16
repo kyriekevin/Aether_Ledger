@@ -605,5 +605,19 @@
     },
     "totalCost": 0.1895366,
     "totalTokens": 536900
+  },
+  "2026-11-16": {
+    "costSource": "official",
+    "models": {
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 236935,
+        "cacheReadTokens": 9050242,
+        "inputTokens": 1968,
+        "outputTokens": 34157,
+        "totalTokens": 9323302
+      }
+    },
+    "totalCost": 1.8428677000000002,
+    "totalTokens": 9323302
   }
 }

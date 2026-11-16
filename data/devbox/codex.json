@@ -2059,5 +2059,19 @@
     },
     "totalCost": 0.8544816,
     "totalTokens": 1280714
+  },
+  "2026-11-16": {
+    "costSource": "unpriced",
+    "models": {
+      "traex/gpt-6.1-sol": {
+        "cacheCreationTokens": 643795,
+        "cacheReadTokens": 10106858,
+        "inputTokens": 369,
+        "outputTokens": 62233,
+        "totalTokens": 10813255
+      }
+    },
+    "totalCost": 0.0,
+    "totalTokens": 10813255
   }
 }
