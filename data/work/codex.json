@@ -5491,7 +5491,7 @@
         "totalTokens": 9540460
       }
     },
-    "totalCost": 19.632024960000003,
+    "totalCost": 19.605806280000003,
     "totalTokens": 64249190
   },
   "2026-11-04": {
@@ -5519,7 +5519,7 @@
         "totalTokens": 408881
       }
     },
-    "totalCost": 7.66312296,
+    "totalCost": 7.66185152,
     "totalTokens": 17587317
   },
   "2026-11-05": {
@@ -5554,7 +5554,7 @@
         "totalTokens": 11750421
       }
     },
-    "totalCost": 40.1360676,
+    "totalCost": 39.832412919999996,
     "totalTokens": 164257068
   },
   "2026-11-06": {
@@ -5610,7 +5610,7 @@
         "totalTokens": 5716240
       }
     },
-    "totalCost": 6.08651736,
+    "totalCost": 6.04326036,
     "totalTokens": 33428805
   },
   "2026-11-10": {
@@ -5638,7 +5638,7 @@
         "totalTokens": 184501
       }
     },
-    "totalCost": 15.564429120000002,
+    "totalCost": 15.561791720000002,
     "totalTokens": 60437614
   },
   "2026-11-11": {
@@ -5659,7 +5659,7 @@
         "totalTokens": 3017081
       }
     },
-    "totalCost": 0.041864240000000004,
+    "totalCost": 0.020932120000000002,
     "totalTokens": 3581976
   },
   "2026-11-13": {
@@ -5701,7 +5701,7 @@
         "totalTokens": 6802466
       }
     },
-    "totalCost": 0.047319440000000004,
+    "totalCost": 0.023659720000000002,
     "totalTokens": 7237791
   },
   "2026-11-16": {
@@ -5773,5 +5773,40 @@
     },
     "totalCost": 0.6860672,
     "totalTokens": 25446239
+  },
+  "2026-11-20": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1842688,
+        "inputTokens": 116542,
+        "outputTokens": 5294,
+        "totalTokens": 1964524
+      },
+      "gpt-6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 34944,
+        "inputTokens": 26004,
+        "outputTokens": 337,
+        "totalTokens": 61285
+      },
+      "gpt-6.1-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 3986176,
+        "inputTokens": 277342,
+        "outputTokens": 8789,
+        "totalTokens": 4272307
+      },
+      "traex/deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 6571136,
+        "inputTokens": 209822,
+        "outputTokens": 41710,
+        "totalTokens": 6822668
+      }
+    },
+    "totalCost": 1.10770656,
+    "totalTokens": 13120784
   }
 }
