@@ -5814,20 +5814,34 @@
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 260224,
-        "inputTokens": 48620,
-        "outputTokens": 1787,
-        "totalTokens": 310631
+        "cacheReadTokens": 646272,
+        "inputTokens": 113987,
+        "outputTokens": 4501,
+        "totalTokens": 764760
+      },
+      "gpt-6.2-astra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1701632,
+        "inputTokens": 90985,
+        "outputTokens": 8715,
+        "totalTokens": 1801332
       },
       "traex/deepseek-v4.1-flash": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 4019072,
-        "inputTokens": 265403,
-        "outputTokens": 42388,
-        "totalTokens": 4326863
+        "cacheReadTokens": 5766016,
+        "inputTokens": 402998,
+        "outputTokens": 53121,
+        "totalTokens": 6222135
+      },
+      "traex/gpt-6.1-sol": {
+        "cacheCreationTokens": 109315,
+        "cacheReadTokens": 217640,
+        "inputTokens": 9,
+        "outputTokens": 592,
+        "totalTokens": 327556
       }
     },
-    "totalCost": 0.017072880000000002,
-    "totalTokens": 4637494
+    "totalCost": 0.04112404000000001,
+    "totalTokens": 9115783
   }
 }
