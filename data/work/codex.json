@@ -5848,14 +5848,14 @@
         "totalTokens": 28308043
       },
       "traex/gpt-6.1-sol": {
-        "cacheCreationTokens": 2616541,
-        "cacheReadTokens": 40456705,
-        "inputTokens": 675,
-        "outputTokens": 121984,
-        "totalTokens": 43195905
+        "cacheCreationTokens": 2623201,
+        "cacheReadTokens": 42867780,
+        "inputTokens": 441005,
+        "outputTokens": 128556,
+        "totalTokens": 46060542
       }
     },
     "totalCost": 0.13680924000000003,
-    "totalTokens": 87438184
+    "totalTokens": 90302821
   }
 }
