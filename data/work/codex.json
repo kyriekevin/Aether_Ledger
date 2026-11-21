@@ -5808,5 +5808,54 @@
     },
     "totalCost": 1.10770656,
     "totalTokens": 13120784
+  },
+  "2026-11-21": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 2503552,
+        "inputTokens": 376481,
+        "outputTokens": 9535,
+        "totalTokens": 2889568
+      },
+      "gpt-6.2-astra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7723392,
+        "inputTokens": 385775,
+        "outputTokens": 41355,
+        "totalTokens": 8150522
+      },
+      "gpt-6.2-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1160576,
+        "inputTokens": 54166,
+        "outputTokens": 2774,
+        "totalTokens": 1217516
+      },
+      "traex/deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9293824,
+        "inputTokens": 595276,
+        "outputTokens": 136720,
+        "totalTokens": 10025820
+      },
+      "traex/gpt-6-astra": {
+        "cacheCreationTokens": 2083689,
+        "cacheReadTokens": 25720197,
+        "inputTokens": 330559,
+        "outputTokens": 173598,
+        "totalTokens": 28308043
+      },
+      "traex/gpt-6.1-sol": {
+        "cacheCreationTokens": 2623201,
+        "cacheReadTokens": 42867780,
+        "inputTokens": 441005,
+        "outputTokens": 128556,
+        "totalTokens": 46060542
+      }
+    },
+    "totalCost": 0.13680924000000003,
+    "totalTokens": 96652011
   }
 }
