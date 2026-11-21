@@ -5814,10 +5814,10 @@
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1659392,
-        "inputTokens": 189114,
-        "outputTokens": 7077,
-        "totalTokens": 1855583
+        "cacheReadTokens": 1819904,
+        "inputTokens": 196613,
+        "outputTokens": 7321,
+        "totalTokens": 2023838
       },
       "gpt-6.2-astra": {
         "cacheCreationTokens": 0,
@@ -5833,15 +5833,22 @@
         "outputTokens": 53121,
         "totalTokens": 6222135
       },
+      "traex/gpt-6-astra": {
+        "cacheCreationTokens": 40270,
+        "cacheReadTokens": 36013,
+        "inputTokens": 6,
+        "outputTokens": 187,
+        "totalTokens": 76476
+      },
       "traex/gpt-6.1-sol": {
-        "cacheCreationTokens": 472952,
-        "cacheReadTokens": 15681792,
-        "inputTokens": 249,
-        "outputTokens": 45983,
-        "totalTokens": 16200976
+        "cacheCreationTokens": 706327,
+        "cacheReadTokens": 19304342,
+        "inputTokens": 321,
+        "outputTokens": 58816,
+        "totalTokens": 20069806
       }
     },
-    "totalCost": 0.07950304000000001,
-    "totalTokens": 26080026
+    "totalCost": 0.08450588,
+    "totalTokens": 30193587
   }
 }
