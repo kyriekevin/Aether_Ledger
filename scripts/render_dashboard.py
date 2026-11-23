@@ -19,6 +19,8 @@ from html import escape
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from pricing import load_pricing, standard_cost
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = REPO_ROOT / "assets" / "token-activity.svg"
 AGENT_FILES = frozenset({
@@ -103,6 +105,7 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
     root = Path(root)
     data_root = root / "data"
     records: list[UsageRecord] = []
+    pricing = load_pricing()
     for path in discover_agent_files(root):
         relative = path.relative_to(data_root)
         role = relative.parts[0]
@@ -130,6 +133,14 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
             cost = entry.get("totalCost", 0.0)
             if isinstance(cost, bool) or not isinstance(cost, (int, float)):
                 cost = 0.0
+            if entry.get("costSource") == "unpriced":
+                # Recover standard costs from published token buckets without
+                # replacing a higher stored estimate or changing the snapshots.
+                cost = max(cost, sum(
+                    standard_cost(model, day, breakdown, pricing)
+                    for model, breakdown in entry.get("models", {}).items()
+                    if isinstance(breakdown, dict)
+                ))
             records.append(
                 UsageRecord(
                     day=day,

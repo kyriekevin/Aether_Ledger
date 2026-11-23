@@ -10,6 +10,8 @@ from datetime import date
 from pathlib import Path
 from typing import Iterator
 
+from usage_schema import _normalise_model
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRICING_PATH = REPO_ROOT / "config" / "official-pricing.json"
 PER_MILLION = 1_000_000.0
@@ -24,7 +26,7 @@ def load_pricing(path: Path = PRICING_PATH) -> dict:
 
 def active_rate(model: str, day: date, pricing: dict | None = None) -> dict | None:
     pricing = pricing or load_pricing()
-    model_entry = pricing["models"].get(model)
+    model_entry = pricing["models"].get(_normalise_model(model))
     if model_entry is None:
         return None
     eligible = [
@@ -36,7 +38,7 @@ def active_rate(model: str, day: date, pricing: dict | None = None) -> dict | No
 
 def model_is_registered(model: str, pricing: dict | None = None) -> bool:
     pricing = pricing or load_pricing()
-    return model in pricing["models"]
+    return _normalise_model(model) in pricing["models"]
 
 
 def ccusage_long_context_supported(
@@ -46,7 +48,7 @@ def ccusage_long_context_supported(
     if "longContextThreshold" not in rate:
         return True
     pricing = pricing or load_pricing()
-    return model in pricing.get("ccusage", {}).get("longContextModels", [])
+    return _normalise_model(model) in pricing.get("ccusage", {}).get("longContextModels", [])
 
 
 def token_breakdown(raw: dict) -> dict[str, int]:
@@ -91,7 +93,11 @@ def official_cost_from_ccusage(
     config_rate = active_rate(model, config_day, pricing)
     if usage_rate is None:
         return 0.0
-    if usage_rate == config_rate:
+    if (
+        usage_rate == config_rate
+        and model == _normalise_model(model)
+        and ccusage_long_context_supported(model, usage_rate, pricing)
+    ):
         # The pinned override should make this nonzero. Falling back to the
         # standard calculation makes a malformed/partial ccusage result harmless,
         # while a larger value retains its per-request Fast/long-context premium.
@@ -136,6 +142,11 @@ def ccusage_config(day: date, pricing: dict | None = None) -> dict:
     for model in sorted(pricing["models"]):
         rate = active_rate(model, day, pricing)
         if rate is not None and not ccusage_long_context_supported(model, rate, pricing):
+            if pricing["models"][model].get("ccusageStandardOnly"):
+                # Calculate from returned token buckets, without the runtime's
+                # incorrect threshold or its bundled rate.
+                overrides[model] = _override(None)
+                continue
             raise ValueError(
                 f"{model} long-context pricing is not verified in the pinned ccusage version"
             )

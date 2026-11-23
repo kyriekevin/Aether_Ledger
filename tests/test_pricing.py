@@ -95,6 +95,18 @@ class PricingTableTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "long-context pricing is not verified"):
             pricing.ccusage_config(date(2026, 8, 10), table)
 
+    def test_unverified_gpt_62_uses_standard_cost_even_if_ccusage_reports_more(self) -> None:
+        day = date(2026, 11, 22)
+        tokens = {"inputTokens": 1_000_000, "cacheReadTokens": 1_000_000}
+        overrides = pricing.ccusage_config(day)["defaults"]["pricingOverrides"]
+        for model, expected in (("gpt-6.2-astra", 8.4), ("gpt-6.2-sol", 2.1)):
+            with self.subTest(model=model):
+                self.assertEqual(overrides[model]["inputCostPerToken"], 0)
+                self.assertAlmostEqual(
+                    pricing.official_cost_from_ccusage(model, day, day, tokens, 99),
+                    expected,
+                )
+
     def test_ccusage_fast_premium_is_kept_but_zero_falls_back_to_standard(self) -> None:
         tokens = {"inputTokens": 1_000_000}
         day = date(2026, 8, 10)
