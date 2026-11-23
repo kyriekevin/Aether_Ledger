@@ -181,8 +181,13 @@ store names contribute to the heatmap; other retained data is still audited.
 Rates come from `config/official-pricing.json`. ccusage runs offline with generated overrides,
 while retaining request-level Fast and long-context classification for correct prices. Missing
 official prices contribute tokens with provisional zero cost (`costSource: "unpriced"`). A later
-applicable rate can repair that amount even if tokens are unchanged. Cost is an API-equivalent
-estimate, not a subscription bill.
+applicable rate can repair that amount even if tokens are unchanged. For an unpriced snapshot,
+the dashboard uses the higher of its stored cost and the sum estimated from its model token
+breakdowns at standard rates, without changing the snapshot. TRAE routing prefixes are resolved
+before looking up a model's price. Models marked `ccusageStandardOnly` use short-context
+standard estimates until ccusage's request-level pricing is verified for them. The DeepSeek Flash
+estimate uses the published peak rate. The dashboard reports API-equivalent estimates, separate
+from subscription billing.
 
 ```sh
 uv run --script scripts/update_pricing.py

@@ -114,6 +114,13 @@
         {"effectiveFrom": "2026-10-14", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.1}
       ]
     },
+    "deepseek-v4.1-flash": {
+      "provider": "deepseek",
+      "officialName": "deepseek-flash",
+      "rates": [
+        {"effectiveFrom": "2026-09-10", "input": 0.3, "output": 1.2, "cacheWrite": 0.3, "cacheRead": 0.006}
+      ]
+    },
     "deepseek-v4-flash": {
       "provider": "deepseek",
       "officialName": "deepseek-v4-flash",
@@ -151,6 +158,13 @@
         {"effectiveFrom": "2026-09-07", "input": 10.0, "output": 50.0, "cacheWrite": 12.5, "cacheRead": 1.0, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 20.0, "longOutput": 75.0, "longCacheWrite": 25.0, "longCacheRead": 2.0}
       ]
     },
+    "gpt-6-luna": {
+      "provider": "openai",
+      "officialName": "gpt-6-luna",
+      "rates": [
+        {"effectiveFrom": "2026-09-22", "input": 0.1, "output": 0.5, "cacheWrite": 0.125, "cacheRead": 0.01, "longContextThreshold": 272000, "longInput": 0.2, "longOutput": 0.75, "longCacheWrite": 0.25, "longCacheRead": 0.02}
+      ]
+    },
     "gpt-6-sol": {
       "provider": "openai",
       "officialName": "gpt-6-sol",
@@ -163,6 +177,22 @@
       "officialName": "gpt-6.1-sol",
       "rates": [
         {"effectiveFrom": "2026-10-07", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.1, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 4.0, "longOutput": 15.0, "longCacheWrite": 5.0, "longCacheRead": 0.2}
+      ]
+    },
+    "gpt-6.2-astra": {
+      "provider": "openai",
+      "officialName": "gpt-6.2-astra",
+      "ccusageStandardOnly": true,
+      "rates": [
+        {"effectiveFrom": "2026-11-17", "input": 8.0, "output": 40.0, "cacheWrite": 10.0, "cacheRead": 0.4, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 16.0, "longOutput": 60.0, "longCacheWrite": 20.0, "longCacheRead": 0.8}
+      ]
+    },
+    "gpt-6.2-sol": {
+      "provider": "openai",
+      "officialName": "gpt-6.2-sol",
+      "ccusageStandardOnly": true,
+      "rates": [
+        {"effectiveFrom": "2026-11-17", "input": 2.0, "output": 10.0, "cacheWrite": 2.5, "cacheRead": 0.1, "fastMultiplier": 2.0, "longContextThreshold": 272000, "longInput": 4.0, "longOutput": 15.0, "longCacheWrite": 5.0, "longCacheRead": 0.2}
       ]
     },
     "gpt-5.2": {

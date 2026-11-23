@@ -48,6 +48,28 @@ class AggregateDailyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "date-keyed object"):
                 aggregate_daily(Path(directory))
 
+    def test_reprices_historical_unpriced_rows_with_routed_models(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "data" / "work" / "codex.json"
+            path.parent.mkdir(parents=True)
+            entry = {
+                "totalTokens": 1_000_000,
+                "totalCost": 0.3,
+                "costSource": "unpriced",
+                "models": {"traex/gpt-6.1-sol": {"inputTokens": 1_000_000}},
+            }
+            path.write_text(json.dumps({
+                "2026-11-20": entry,
+                "2026-11-21": {**entry, "totalCost": 3.0},
+                "2026-11-22": {**entry, "costSource": "official"},
+            }), encoding="utf-8")
+            self.assertEqual(aggregate_daily(root), {
+                date(2026, 11, 20): DailyTotals(tokens=1_000_000, cost=2.0),
+                date(2026, 11, 21): DailyTotals(tokens=1_000_000, cost=3.0),
+                date(2026, 11, 22): DailyTotals(tokens=1_000_000, cost=0.3),
+            })
+
 
 class DashboardTests(unittest.TestCase):
     def test_svg_contains_accessible_stats_and_daily_cells(self) -> None:

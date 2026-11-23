@@ -32,6 +32,7 @@ from pricing import (
     ccusage_long_context_supported,
     load_pricing,
 )
+from usage_schema import _normalise_model
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
@@ -413,7 +414,7 @@ def observed_models() -> set[str]:
             continue
         for entry in store.values():
             if isinstance(entry, dict) and isinstance(entry.get("models"), dict):
-                models.update(entry["models"])
+                models.update(_normalise_model(name) for name in entry["models"])
     return models
 
 

@@ -46,6 +46,9 @@ def _normalise_model(name: str) -> str:
     the real slug they front before the (already lowercased) name is returned.
     """
     lowered = name.lower()
+    route, _, model = lowered.partition("/")
+    if route in {"traex", "traex-cn", "traex-sg"} and model:
+        lowered = model
     for prefix, real in _ALIAS_PREFIXES:
         if lowered.startswith(prefix):
             return real
