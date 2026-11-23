@@ -124,7 +124,7 @@ done
 
 数据位于 `data/{work,personal,devbox}/`，JSON 以日期为键。每天保存 `totalTokens`、`totalCost`，以及来源可提供的模型 token 明细；定价来源标记不完整或尚未定价的观测。只有上述四类 token 文件计入热力图，其余保留数据仍接受公开数据审计。
 
-价格来自 `config/official-pricing.json`。ccusage 离线运行，使用生成的价格覆盖文件，按请求识别 Fast 和长上下文。缺少官方价格的模型仍计入 token，暂记零成本并标注 `costSource: "unpriced"`。后续补入适用于该日期的价格后，即使 token 不变也可修正成本。对于标注 `unpriced` 的快照，看板从模型 token 明细按标准价复算，取复算金额和原金额的较高值，快照仍保留原值。查价前会解析 TRAE 路由前缀。标注 `ccusageStandardOnly` 的模型暂按短上下文标准价估算，直到 ccusage 通过该模型的逐请求定价验证。DeepSeek Flash 按官方高峰价估算。看板展示 API 等价成本，订阅账单另计。
+价格来自 `config/official-pricing.json`。ccusage 离线运行，使用生成的价格覆盖文件，按请求识别 Fast 和长上下文。缺少官方价格的模型仍计入 token，暂记零成本并标注 `costSource: "unpriced"`。后续补入适用于该日期的价格后，即使 token 不变也可修正成本。对于标注 `unpriced` 的快照，看板用模型 token 明细按标准价估算成本下限。对于 `historicalUnpricedModels` 收录的历史观测，看板还会在原金额上补算当时缺价的模型，保留已计入的溢价。这项调整只匹配原始文件、日期、token 明细和金额都相同的观测，避免新数据重复加价。查价前会解析 TRAE 路由前缀。标注 `ccusageStandardOnly` 的模型暂按短上下文标准价估算，直到 ccusage 通过该模型的逐请求定价验证。DeepSeek Flash 按官方高峰价估算。看板展示 API 等价成本，订阅账单另计。
 
 ```sh
 uv run --script scripts/update_pricing.py

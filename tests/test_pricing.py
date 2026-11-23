@@ -419,6 +419,31 @@ columns:[{title:`Model`},{title:`Input`},{title:`Output`},{title:`Cached Input`}
             ])
         self.assertEqual(status, 1)
 
+    def test_updater_saves_new_rates_for_a_standard_only_model(self) -> None:
+        table = pricing.load_pricing()
+        model = "gpt-6.2-sol"
+        entry = table["models"][model]
+        table["models"] = {model: entry}
+        table["sources"] = {"openai": table["sources"]["openai"]}
+        candidate = {key: value for key, value in entry["rates"][0].items()
+                     if key != "effectiveFrom"}
+        candidate["input"] = 1.5
+        with (
+            patch.object(update_pricing, "load_pricing", return_value=table),
+            patch.object(update_pricing, "fetch_text", return_value="pricing"),
+            patch.object(update_pricing, "observed_models", return_value={model}),
+            patch.dict(update_pricing.PARSERS, {"openai": lambda *_: {model: candidate}}),
+            patch.object(update_pricing, "_atomic_write") as write,
+        ):
+            status = update_pricing.main([
+                "--apply", "--as-of", "2026-11-23", "--effective-from", "2026-11-23",
+            ])
+        self.assertEqual(status, 0)
+        write.assert_called_once()
+        self.assertEqual(pricing.active_rate(model, date(2026, 11, 23), table)["input"], 1.5)
+        config = pricing.ccusage_config(date(2026, 11, 23), table)
+        self.assertEqual(config["defaults"]["pricingOverrides"][model]["inputCostPerToken"], 0)
+
     def test_checked_in_pricing_is_valid_json(self) -> None:
         table = json.loads(pricing.PRICING_PATH.read_text())
         self.assertEqual(table["schemaVersion"], 1)

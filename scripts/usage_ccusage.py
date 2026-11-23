@@ -16,8 +16,8 @@ from typing import Iterable, Iterator
 import usage_schema
 import usage_sources
 from pricing import (
-    active_rate, ccusage_config_file, load_pricing, official_cost_from_ccusage,
-    standard_cost, token_breakdown,
+    active_rate, ccusage_config_file, ccusage_standard_only, load_pricing,
+    official_cost_from_ccusage, standard_cost, token_breakdown,
 )
 
 
@@ -206,8 +206,8 @@ def fetch_codex_home_daily(
     detail this aggregate drops — which calls ran on the priority tier, which ones
     crossed a model's long-context threshold — and neither can be reconstructed
     from a day's totals, so the standard-rate sum silently under-bills them. The
-    larger of the two is taken, exactly as official_cost_from_ccusage does for the
-    unified fetch.
+    larger of the two is taken after adding costs for standard-only models that
+    the ccusage configuration explicitly prices at zero.
     """
     if lowercase_models:
         with _lowercased_codex_home(codex_home) as mirror:
@@ -234,6 +234,7 @@ def fetch_codex_home_daily(
         d = row["date"]
         tokens = row.get("totalTokens", 0)
         cost = 0.0
+        standard_only_cost = 0.0
         models = {}
         fully_priced = True
         repriced = False
@@ -243,20 +244,25 @@ def fetch_codex_home_daily(
             model_tokens = raw_model.get("totalTokens", sum(breakdown.values()))
             models[name] = {"totalTokens": model_tokens, **breakdown}
             canonical = usage_schema._normalise_model(name)
+            usage_rate = active_rate(canonical, usage_day, pricing)
             if model_tokens and (
-                active_rate(canonical, usage_day, pricing) is None
-                or sum(breakdown.values()) != model_tokens
+                usage_rate is None or sum(breakdown.values()) != model_tokens
             ):
                 fully_priced = False
-            cost += standard_cost(canonical, usage_day, breakdown, pricing)
-            if active_rate(canonical, usage_day, pricing) != active_rate(
-                canonical, config_day, pricing
-            ):
+            model_cost = standard_cost(canonical, usage_day, breakdown, pricing)
+            cost += model_cost
+            if ccusage_standard_only(canonical, pricing):
+                standard_only_cost += model_cost
+                # A routed name may have missed ccusage's zero override.
+                if name != canonical:
+                    repriced = True
+            elif usage_rate != active_rate(canonical, config_day, pricing):
                 # ccusage priced this row against config_day's table, so its
                 # number does not describe usage_day's rates.
                 repriced = True
         if trust_row_cost and fully_priced and not repriced:
-            cost = max(float(row.get("costUSD", 0.0) or 0.0), cost)
+            ccusage_cost = float(row.get("costUSD", 0.0) or 0.0)
+            cost = max(ccusage_cost + standard_only_cost, cost)
         # Tokens are accurate regardless of whether the official table knows the
         # model. Unknown shares remain visible in models and contribute zero cost.
         if tokens or models:

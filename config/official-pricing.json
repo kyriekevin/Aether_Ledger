@@ -43,6 +43,31 @@
       "referenceUrl": "https://developers.openai.com/api/docs/pricing"
     }
   },
+  "historicalUnpricedModels": {
+    "028c41566c72c54f713c8614922e959ae8b8a8f3f15f9539241ffd3854d13f9c": ["traex/deepseek-v4.1-flash"],
+    "17a6fc104086ab7e7685df35f1d7b105db098a93b7501121650e9a8ba286aca5": ["deepseek-v4.1-flash"],
+    "1b8ceead92d0b80cffa7ba0e21ede5cb148e9c9d8e0f6fb352f52af701b685bb": ["gpt-6.2-sol"],
+    "2eb1d97861c0433867aafb049ff31700c65a85c042064e63acfac7e05f321dc8": ["gpt-6.2-sol"],
+    "2fce6c35af7771e7451764fce98c7c84f92d213cfc6b51d4b5c11f9e74c957fa": ["traex/deepseek-v4.1-flash"],
+    "45ce9deabbf6e8aac01cd5113a96ae26146ac82ceb58a2f6b20328526d824cc6": ["traex/deepseek-v4.1-flash"],
+    "524d1c6660d7d25f3da2133d4e05068a478da2c5a4e43d9ea20ffe299b1366e1": ["traex/deepseek-v4.1-flash"],
+    "63e8de01675d2b72500669505095793c26f675cb4170116c5358c5cc2907d1ef": ["traex/deepseek-v4.1-flash"],
+    "6db1d05d1861063b01c388070e5682c8efed9fcd66246d2ecb657aa268c30507": ["gpt-6-luna", "traex/deepseek-v4.1-flash"],
+    "6f396b2ce89f0733617d024a37a6e227c993999aeb5bf687a74d6b9e0360ec2a": ["gpt-6-luna", "traex/deepseek-v4.1-flash"],
+    "782b261b243d962e7472347aecb8c7076bbd4ae1753a9dda98f2c342ca2edbe1": ["gpt-6.2-astra", "gpt-6.2-sol", "traex/deepseek-v4.1-flash", "traex/gpt-6-astra", "traex/gpt-6.1-sol"],
+    "839323d5a184cd2cb5588da9cd9f3d81464f7badbfbd4a76a19fbc86ece46e83": ["gpt-6-luna", "traex/deepseek-v4.1-flash"],
+    "83e2c22e3efafa07d10cc314a751a3a1b7bbeecc9396bfbd11e8b547a40e71be": ["traex/gpt-6.1-sol"],
+    "9d3d1dc392137f634301b306e9c1569498c9e4ab081e1457236b9d6132c92fe5": ["traex/deepseek-v4.1-flash"],
+    "9dc6b12363802dd5d4ac3eb5d1ce81ee3a8b625001fc0d62a8b51e10199449d3": ["deepseek-v4.1-flash"],
+    "ac5e6bb19eb161407ce61cc05c1e59ed7205872d06b661c16754e1a323fa0e9d": ["gpt-6.2-sol"],
+    "b5f18dc9592212f37eae0c42370597b964787e83a3eee62f2c9e5dfdde4b4e72": ["traex/deepseek-v4.1-flash", "traex/gpt-6.1-sol"],
+    "bcb9c67a94cc619c9a053f9685d6b286f3a0cb4f638caa77ac73a1c744853c38": ["traex/gpt-6.1-sol"],
+    "c9de0d3e85411143e1d68bcee2208d6adda2fbfd779e967c81a5e0d5d5389c12": ["traex/gpt-6.1-sol"],
+    "d49d3517ec18b9dafb3ef0499cc8ffcfad8570795b20d72ca270adbc79b22402": ["gpt-6.2-astra", "gpt-6.2-sol", "traex/deepseek-v4.1-flash", "traex/gpt-6.1-sol"],
+    "e0ad5e6a0b163a876f98c08ec9c26549b893542c4bdd04cd9699d1fde92552ec": ["gpt-6-luna"],
+    "e629adb33bbf1d0bd0895be331be4d87e784e985090801b624b3cfa11480d065": ["traex/gpt-6.1-sol"],
+    "fc47a5cb80a6db04bb75cad516122a13a5d7783e5ae5173b7fa1beb0e9b12c2f": ["traex/deepseek-v4.1-flash"]
+  },
   "models": {
     "claude-fable-5": {
       "provider": "anthropic",

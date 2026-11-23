@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import hashlib
 import json
 import os
 import tempfile
@@ -106,6 +107,7 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
     data_root = root / "data"
     records: list[UsageRecord] = []
     pricing = load_pricing()
+    historical_unpriced = pricing.get("historicalUnpricedModels", {})
     for path in discover_agent_files(root):
         relative = path.relative_to(data_root)
         role = relative.parts[0]
@@ -134,13 +136,18 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
             if isinstance(cost, bool) or not isinstance(cost, (int, float)):
                 cost = 0.0
             if entry.get("costSource") == "unpriced":
-                # Recover standard costs from published token buckets without
-                # replacing a higher stored estimate or changing the snapshots.
-                cost = max(cost, sum(
-                    standard_cost(model, day, breakdown, pricing)
+                model_costs = {
+                    model: standard_cost(model, day, breakdown, pricing)
                     for model, breakdown in entry.get("models", {}).items()
                     if isinstance(breakdown, dict)
-                ))
+                }
+                # Only add the known gap to the exact observation that lacked
+                # those prices. A later collection may already include them.
+                key = pricing_observation_key(relative, raw_day, entry)
+                missing_cost = sum(
+                    model_costs[model] for model in historical_unpriced.get(key, ())
+                )
+                cost = max(cost + missing_cost, sum(model_costs.values()))
             records.append(
                 UsageRecord(
                     day=day,
@@ -151,6 +158,12 @@ def load_usage_records(root: Path) -> tuple[UsageRecord, ...]:
                 )
             )
     return tuple(records)
+
+
+def pricing_observation_key(store: Path, day: str, entry: dict) -> str:
+    fields = [store.as_posix(), day, entry.get("totalTokens"), entry.get("totalCost"),
+              entry.get("models", {})]
+    return hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
 
 
 def aggregate_daily(root: Path) -> dict[date, DailyTotals]:
