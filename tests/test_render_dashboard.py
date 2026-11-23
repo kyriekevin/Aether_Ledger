@@ -7,10 +7,14 @@ import unittest
 import xml.etree.ElementTree as ET
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from render_dashboard import DailyTotals, _compact_number, aggregate_daily, generate, render_svg
+from render_dashboard import (
+    DailyTotals, _compact_number, aggregate_daily, generate, load_pricing,
+    pricing_observation_key, render_svg,
+)
 
 
 class AggregateDailyTests(unittest.TestCase):
@@ -69,6 +73,30 @@ class AggregateDailyTests(unittest.TestCase):
                 date(2026, 11, 21): DailyTotals(tokens=1_000_000, cost=3.0),
                 date(2026, 11, 22): DailyTotals(tokens=1_000_000, cost=0.3),
             })
+
+    def test_historical_backfill_adds_only_missing_cost_to_the_stored_premium(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            relative = Path("work/codex.json")
+            path = root / "data" / relative
+            path.parent.mkdir(parents=True)
+            day = "2026-11-05"
+            entry = {
+                "totalTokens": 2_000_000, "totalCost": 4.0, "costSource": "unpriced",
+                "models": {
+                    "gpt-6.1-sol": {"inputTokens": 1_000_000},
+                    "traex/gpt-6.1-sol": {"inputTokens": 1_000_000},
+                },
+            }
+            pricing = load_pricing()
+            pricing["historicalUnpricedModels"] = {
+                pricing_observation_key(relative, day, entry): ["traex/gpt-6.1-sol"],
+            }
+            with patch("render_dashboard.load_pricing", return_value=pricing):
+                path.write_text(json.dumps({day: entry}), encoding="utf-8")
+                self.assertEqual(aggregate_daily(root)[date.fromisoformat(day)].cost, 6.0)
+                path.write_text(json.dumps({day: {**entry, "totalCost": 6.0}}), encoding="utf-8")
+                self.assertEqual(aggregate_daily(root)[date.fromisoformat(day)].cost, 6.0)
 
 
 class DashboardTests(unittest.TestCase):

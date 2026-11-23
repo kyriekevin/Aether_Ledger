@@ -51,6 +51,11 @@ def ccusage_long_context_supported(
     return _normalise_model(model) in pricing.get("ccusage", {}).get("longContextModels", [])
 
 
+def ccusage_standard_only(model: str, pricing: dict) -> bool:
+    entry = pricing["models"].get(_normalise_model(model), {})
+    return entry.get("ccusageStandardOnly", False)
+
+
 def token_breakdown(raw: dict) -> dict[str, int]:
     return {
         "inputTokens": int(raw.get("inputTokens", 0)),
@@ -96,6 +101,7 @@ def official_cost_from_ccusage(
     if (
         usage_rate == config_rate
         and model == _normalise_model(model)
+        and not ccusage_standard_only(model, pricing)
         and ccusage_long_context_supported(model, usage_rate, pricing)
     ):
         # The pinned override should make this nonzero. Falling back to the
@@ -141,12 +147,11 @@ def ccusage_config(day: date, pricing: dict | None = None) -> dict:
     overrides = {}
     for model in sorted(pricing["models"]):
         rate = active_rate(model, day, pricing)
+        if ccusage_standard_only(model, pricing):
+            # The collector prices these buckets at the standard rate.
+            overrides[model] = _override(None)
+            continue
         if rate is not None and not ccusage_long_context_supported(model, rate, pricing):
-            if pricing["models"][model].get("ccusageStandardOnly"):
-                # Calculate from returned token buckets, without the runtime's
-                # incorrect threshold or its bundled rate.
-                overrides[model] = _override(None)
-                continue
             raise ValueError(
                 f"{model} long-context pricing is not verified in the pinned ccusage version"
             )

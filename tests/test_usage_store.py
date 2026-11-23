@@ -1108,6 +1108,17 @@ class MulticaCodexTests(unittest.TestCase):
         )
         self.assertEqual(out[0]["totalCost"], 5.0)
 
+    def test_mixed_row_keeps_ccusage_premium_and_standard_only_cost(self) -> None:
+        out = self.fetch([{
+            "date": "2026-11-22", "totalTokens": 2_000_000, "costUSD": 4.0,
+            "models": {
+                "gpt-6.1-sol": {"totalTokens": 1_000_000, "inputTokens": 1_000_000},
+                "gpt-6.2-sol": {"totalTokens": 1_000_000, "inputTokens": 1_000_000},
+            },
+        }], trust_row_cost=True)
+        self.assertEqual(out[0]["totalCost"], 6.0)
+        self.assertEqual(out[0]["costSource"], "official")
+
     def test_a_row_holding_an_unpriced_model_ignores_ccusages_cost(self) -> None:
         # ccusage would price the unknown model from its own table, which is not
         # this repository's, so the mixed row falls back to component pricing.

@@ -30,6 +30,7 @@ from pricing import (
     PRICING_PATH,
     active_rate,
     ccusage_long_context_supported,
+    ccusage_standard_only,
     load_pricing,
 )
 from usage_schema import _normalise_model
@@ -505,8 +506,10 @@ def main(argv: list[str] | None = None) -> int:
             and not (entry and entry.get("unpricedReason"))
         ):
             missing_observed_price = True
-        if candidate is not None and not ccusage_long_context_supported(
-            model, candidate, pricing
+        if (
+            candidate is not None
+            and not ccusage_standard_only(model, pricing)
+            and not ccusage_long_context_supported(model, candidate, pricing)
         ):
             print(
                 f"UNSUPPORTED {model}: long-context pricing is not verified "

@@ -182,8 +182,11 @@ Rates come from `config/official-pricing.json`. ccusage runs offline with genera
 while retaining request-level Fast and long-context classification for correct prices. Missing
 official prices contribute tokens with provisional zero cost (`costSource: "unpriced"`). A later
 applicable rate can repair that amount even if tokens are unchanged. For an unpriced snapshot,
-the dashboard uses the higher of its stored cost and the sum estimated from its model token
-breakdowns at standard rates, without changing the snapshot. TRAE routing prefixes are resolved
+the dashboard uses the model token breakdown and standard rates as a minimum estimate.
+For historical observations listed in `historicalUnpricedModels`, it also adds the newly priced
+models to the stored cost, preserving any existing premiums. The lookup matches the original
+store, date, token counts and cost so an updated observation does not receive the old adjustment.
+TRAE routing prefixes are resolved
 before looking up a model's price. Models marked `ccusageStandardOnly` use short-context
 standard estimates until ccusage's request-level pricing is verified for them. The DeepSeek Flash
 estimate uses the published peak rate. The dashboard reports API-equivalent estimates, separate
