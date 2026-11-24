@@ -2029,21 +2029,14 @@
         "totalTokens": 491637
       },
       "gpt-6.1-sol": {
-        "cacheCreationTokens": 0,
-        "cacheReadTokens": 242944,
-        "inputTokens": 37453,
-        "outputTokens": 2312,
-        "totalTokens": 282709
-      },
-      "traex/gpt-6.1-sol": {
         "cacheCreationTokens": 231885,
-        "cacheReadTokens": 857900,
-        "inputTokens": 90,
-        "outputTokens": 8268,
-        "totalTokens": 1098143
+        "cacheReadTokens": 1100844,
+        "inputTokens": 37543,
+        "outputTokens": 10580,
+        "totalTokens": 1380852
       }
     },
-    "totalCost": 1.2511615999999999,
+    "totalCost": 1.9995241,
     "totalTokens": 1908298
   },
   "2026-11-09": {
@@ -2061,9 +2054,9 @@
     "totalTokens": 1280714
   },
   "2026-11-16": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
-      "traex/gpt-6.1-sol": {
+      "gpt-6.1-sol": {
         "cacheCreationTokens": 643795,
         "cacheReadTokens": 10106858,
         "inputTokens": 369,
@@ -2071,7 +2064,7 @@
         "totalTokens": 10813255
       }
     },
-    "totalCost": 0.0,
+    "totalCost": 3.2432412999999998,
     "totalTokens": 10813255
   }
 }

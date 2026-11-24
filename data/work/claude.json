@@ -1667,7 +1667,7 @@
     "totalTokens": 4195579
   },
   "2026-11-05": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "deepseek-v4.1-flash": {
         "cacheCreationTokens": 0,
@@ -1677,11 +1677,11 @@
         "totalTokens": 446722
       }
     },
-    "totalCost": 0.0,
+    "totalCost": 0.06476718,
     "totalTokens": 446722
   },
   "2026-11-06": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "deepseek-v4.1-flash": {
         "cacheCreationTokens": 0,
@@ -1691,7 +1691,7 @@
         "totalTokens": 2822330
       }
     },
-    "totalCost": 0.0,
+    "totalCost": 0.102345384,
     "totalTokens": 2822330
   }
 }

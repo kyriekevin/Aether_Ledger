@@ -353,7 +353,7 @@
         "outputTokens": 7451,
         "totalTokens": 129414
       },
-      "traex/openrouter-4o": {
+      "openrouter-4o": {
         "cacheCreationTokens": 0,
         "cacheReadTokens": 17332,
         "inputTokens": 6,
