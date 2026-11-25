@@ -2221,7 +2221,7 @@
     "totalTokens": 627342
   },
   "2026-11-15": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-6-luna": {
         "cacheCreationTokens": 0,
@@ -2231,11 +2231,11 @@
         "totalTokens": 1262728
       }
     },
-    "totalCost": 0.0,
+    "totalCost": 0.0452456,
     "totalTokens": 1262728
   },
   "2026-11-19": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
@@ -2259,11 +2259,11 @@
         "totalTokens": 45488936
       }
     },
-    "totalCost": 0.39418676,
+    "totalCost": 6.361124360000001,
     "totalTokens": 46279918
   },
   "2026-11-20": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
@@ -2280,11 +2280,11 @@
         "totalTokens": 59720569
       }
     },
-    "totalCost": 0.30744088,
+    "totalCost": 8.20759808,
     "totalTokens": 63041759
   },
   "2026-11-21": {
-    "costSource": "unpriced",
+    "costSource": "official",
     "models": {
       "gpt-6.2-sol": {
         "cacheCreationTokens": 0,
@@ -2294,7 +2294,42 @@
         "totalTokens": 2815501
       }
     },
-    "totalCost": 0.0,
+    "totalCost": 1.0849364,
     "totalTokens": 2815501
+  },
+  "2026-11-25": {
+    "costSource": "official",
+    "models": {
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 9720832,
+        "inputTokens": 440671,
+        "outputTokens": 14867,
+        "totalTokens": 10176370
+      },
+      "gpt-5.6-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 7296,
+        "inputTokens": 39574,
+        "outputTokens": 21,
+        "totalTokens": 46891
+      },
+      "gpt-6.2-astra": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 1810048,
+        "inputTokens": 77567,
+        "outputTokens": 5029,
+        "totalTokens": 1892644
+      },
+      "gpt-6.2-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 150345728,
+        "inputTokens": 627894,
+        "outputTokens": 107819,
+        "totalTokens": 151081441
+      }
+    },
+    "totalCost": 19.37629164,
+    "totalTokens": 163197346
   }
 }
