@@ -6032,5 +6032,40 @@
     },
     "totalCost": 4.71630418,
     "totalTokens": 381485067
+  },
+  "2026-11-26": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 25496064,
+        "inputTokens": 1620535,
+        "outputTokens": 23631,
+        "totalTokens": 27140230
+      },
+      "gpt-6.2-sol": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 14353280,
+        "inputTokens": 204860,
+        "outputTokens": 35249,
+        "totalTokens": 14593389
+      },
+      "group/deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 23257856,
+        "inputTokens": 458850,
+        "outputTokens": 80974,
+        "totalTokens": 23797680
+      },
+      "group/gpt-6.1-sol": {
+        "cacheCreationTokens": 5090992,
+        "cacheReadTokens": 207993168,
+        "inputTokens": 432423,
+        "outputTokens": 657655,
+        "totalTokens": 214174238
+      }
+    },
+    "totalCost": 3.05992348,
+    "totalTokens": 279705537
   }
 }
