@@ -6073,10 +6073,10 @@
     "models": {
       "gpt-5.6-luna": {
         "cacheCreationTokens": 0,
-        "cacheReadTokens": 1165184,
-        "inputTokens": 559056,
-        "outputTokens": 1293,
-        "totalTokens": 1725533
+        "cacheReadTokens": 1212672,
+        "inputTokens": 605079,
+        "outputTokens": 1577,
+        "totalTokens": 1819328
       },
       "gpt-6.2-sol": {
         "cacheCreationTokens": 0,
@@ -6086,11 +6086,11 @@
         "totalTokens": 14615870
       },
       "group/gpt-6-astra": {
-        "cacheCreationTokens": 384101,
-        "cacheReadTokens": 2988710,
-        "inputTokens": 27,
-        "outputTokens": 4881,
-        "totalTokens": 3377719
+        "cacheCreationTokens": 1226246,
+        "cacheReadTokens": 9434929,
+        "inputTokens": 105,
+        "outputTokens": 13213,
+        "totalTokens": 10674493
       },
       "group/gpt-6.1-sol": {
         "cacheCreationTokens": 695043,
@@ -6100,7 +6100,35 @@
         "totalTokens": 4121628
       }
     },
-    "totalCost": 2.56295368,
-    "totalTokens": 23840750
+    "totalCost": 2.57344884,
+    "totalTokens": 31231319
+  },
+  "2026-11-28": {
+    "costSource": "unpriced",
+    "models": {
+      "gpt-5.6-luna": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 826496,
+        "inputTokens": 196284,
+        "outputTokens": 2205,
+        "totalTokens": 1024985
+      },
+      "group/deepseek-v4.1-flash": {
+        "cacheCreationTokens": 0,
+        "cacheReadTokens": 54411648,
+        "inputTokens": 517683,
+        "outputTokens": 81576,
+        "totalTokens": 55010907
+      },
+      "group/gpt-6-astra": {
+        "cacheCreationTokens": 2199485,
+        "cacheReadTokens": 33779786,
+        "inputTokens": 249,
+        "outputTokens": 26085,
+        "totalTokens": 36005605
+      }
+    },
+    "totalCost": 0.05843272,
+    "totalTokens": 92041497
   }
 }
